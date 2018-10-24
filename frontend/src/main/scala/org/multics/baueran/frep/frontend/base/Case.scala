@@ -123,11 +123,11 @@ object Case {
         td(
           button(`type` := "button", cls := "btn dropdown-toggle btn-sm", style := "width: 45px;", data.toggle := "dropdown", weight),
           div(cls := "dropdown-menu",
-            a(cls := "dropdown-item", href := "#", onclick := { (event: Event) => crub.rubricWeight = 0; weight() = "0" }, "0 (ignore)"),
-            a(cls := "dropdown-item", href := "#", onclick := { (event: Event) => crub.rubricWeight = 1; weight() = "1" }, "1 (normal)"),
-            a(cls := "dropdown-item", href := "#", onclick := { (event: Event) => crub.rubricWeight = 2; weight() = "2" }, "2 (important)"),
-            a(cls := "dropdown-item", href := "#", onclick := { (event: Event) => crub.rubricWeight = 3; weight() = "3" }, "3 (very important)"),
-            a(cls := "dropdown-item", href := "#", onclick := { (event: Event) => crub.rubricWeight = 4; weight() = "4" }, "4 (essential)")
+            a(cls := "dropdown-item", href := "#caseSectionOfPage", onclick := { (event: Event) => crub.rubricWeight = 0; weight() = "0" }, "0 (ignore)"),
+            a(cls := "dropdown-item", href := "#caseSectionOfPage", onclick := { (event: Event) => crub.rubricWeight = 1; weight() = "1" }, "1 (normal)"),
+            a(cls := "dropdown-item", href := "#caseSectionOfPage", onclick := { (event: Event) => crub.rubricWeight = 2; weight() = "2" }, "2 (important)"),
+            a(cls := "dropdown-item", href := "#caseSectionOfPage", onclick := { (event: Event) => crub.rubricWeight = 3; weight() = "3" }, "3 (very important)"),
+            a(cls := "dropdown-item", href := "#caseSectionOfPage", onclick := { (event: Event) => crub.rubricWeight = 4; weight() = "4" }, "4 (essential)")
           )
         ),
         td(crub.repertoryAbbrev),
@@ -168,7 +168,8 @@ object Case {
             th(attr("scope"):="col", "Rep."),
             th(attr("scope"):="col", "Symptom"),
             th(attr("scope"):="col",
-              a(cls:="underline", href:="#", style:="color:white;",
+              a(scalatags.JsDom.attrs.id:="caseSectionOfPage",
+                cls:="underline", href:="#caseSectionOfPage", style:="color:white;",
                 onclick:={ (event: Event) => $("#remediesFormatButton").click() },
                 "Remedies")
             ),
