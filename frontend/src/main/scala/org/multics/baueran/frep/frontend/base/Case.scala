@@ -2,17 +2,21 @@ package org.multics.baueran.frep.frontend.base
 
 import scalatags.JsDom.all.{id, _}
 import scalatags.rx.all._
-import rx.{Rx, Var}
 import rx.Ctx.Owner.Unsafe._
+import rx._
+import rx.{Rx, Var}
 import org.scalajs.dom.Event
 import org.querki.jquery._
 import scala.collection.mutable
 import org.multics.baueran.frep.shared._
+import RemedyFormat._
+import org.multics.baueran.frep.frontend.util.BetterCaseRubric
 
 object Case {
   var id = ""
   var cRubrics = mutable.ArrayBuffer[CaseRubric]()
   var remedyScores = mutable.HashMap[String,Integer]()
+  var remedyFormat = RemedyFormat.NotFormatted
 
   // ------------------------------------------------------------------------------------------------------------------
   def isEmpty() = id.length() == 0 && cRubrics.size == 0
@@ -101,8 +105,18 @@ object Case {
   }
 
   // ------------------------------------------------------------------------------------------------------------------
-  def toHTML() = {
+  def toHTML(format: RemedyFormat) = {
+    remedyFormat = format
+
     def caseRow(crub: CaseRubric) = {
+      implicit def crToCR(cr: CaseRubric) = new BetterCaseRubric(cr)
+
+      val remedies =
+        if (remedyFormat == RemedyFormat.NotFormatted)
+          crub.getRawRemedies()
+        else
+          crub.getFormattedRemedies()
+
       val weight = Var(crub.rubricWeight.toString())
 
       tr(scalatags.JsDom.attrs.id:="crub_" + crub.rubric.id + crub.repertoryAbbrev,
@@ -118,9 +132,7 @@ object Case {
         ),
         td(crub.repertoryAbbrev),
         td(crub.rubric.fullPath),
-        td(crub.weightedRemedies.map {
-          case (rem, weight) => rem.nameAbbrev + (if (weight > 1) " (" + weight + ")" else "")
-        }.toList.sorted.mkString(", ")),
+        td(remedies.take(remedies.size - 1).map(l => span(l, ", ")) ::: List(remedies.last)),
         td(cls:="text-right",
           button(cls:="btn btn-sm", `type`:="button",
             scalatags.JsDom.attrs.id:=("rmBut_" + crub.rubric.id + crub.repertoryAbbrev),
@@ -155,7 +167,12 @@ object Case {
             th(attr("scope"):="col", "Weight"),
             th(attr("scope"):="col", "Rep."),
             th(attr("scope"):="col", "Symptom"),
-            th(attr("scope"):="col", "Remedies"),
+            th(attr("scope"):="col",
+              a(cls:="underline", href:="#", style:="color:white;",
+                onclick:={ (event: Event) => $("#remediesFormatButton").click() },
+                "Remedies")
+            ),
+
             th(attr("scope"):="col", " ")
           ),
           tbody(scalatags.JsDom.attrs.id:="caseTBody", cRubrics.map(crub => caseRow(crub)))

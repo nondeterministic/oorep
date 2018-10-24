@@ -27,16 +27,12 @@ import rx.Ctx.Owner.Unsafe._
 import rx._
 import rx.{Rx, Var}
 import org.multics.baueran.frep.shared._
+
 import scala.scalajs.js
+import RemedyFormat._
+import org.multics.baueran.frep.frontend.util.BetterCaseRubric
 
 object Repertorise {
-
-  object RemedyFormat extends Enumeration {
-    type RemedyFormat = Value
-    val Formatted = Value("Formatted")
-    val NotFormatted = Value("NotFormatted")
-  }
-  import RemedyFormat._
 
   var remedyFilter = ""
   var symptomQuery = ""
@@ -75,35 +71,13 @@ object Repertorise {
 
     def resultRow(result: CaseRubric) = {
 
-      def getFormattedRemedies() = {
-        result.weightedRemedies.toList.sortBy(_._1.nameAbbrev).map {
-          case (r, w) =>
-            if (w == 2)
-              b(r.nameAbbrev)
-            else if (w == 3)
-              b(r.nameAbbrev.toUpperCase())
-            else if (w >= 4)
-              u(b(r.nameAbbrev.toUpperCase()))
-            else
-              span(r.nameAbbrev)
-        }
-      }
-
-      def getRawRemedies() = {
-        result.weightedRemedies.toList.sortBy(_._1.nameAbbrev).map {
-          case (r, w) =>
-            if (w > 1)
-              span(r.nameAbbrev + " (" + w.toString() + ")")
-            else
-              span(r.nameAbbrev)
-        }
-      }
+      implicit def crToCR(cr: CaseRubric) = new BetterCaseRubric(cr)
 
       val remedies =
         if (remedyFormat == RemedyFormat.NotFormatted)
-          getRawRemedies()
+          result.getRawRemedies()
         else
-          getFormattedRemedies()
+          result.getFormattedRemedies()
 
       tr(
         td(result.rubric.fullPath),
@@ -172,7 +146,8 @@ object Repertorise {
           thead(cls:="thead-dark", scalatags.JsDom.attrs.id:="resultsTHead",
             th(attr("scope"):="col", "Symptom"),
             th(attr("scope"):="col",
-              a(cls:="underline", href:="#", style:="color:white;",
+              a(scalatags.JsDom.attrs.id:="remediesFormatButton",
+                cls:="underline", href:="#", style:="color:white;",
                 onclick:={ (event: Event) =>
                   if (remedyFormat == RemedyFormat.NotFormatted)
                     remedyFormat = RemedyFormat.Formatted
@@ -180,6 +155,7 @@ object Repertorise {
                     remedyFormat = RemedyFormat.NotFormatted
 
                   showResults()
+                  showCase()
                 },
                 "Remedies")
             ),
@@ -199,7 +175,7 @@ object Repertorise {
   // ------------------------------------------------------------------------------------------------------------------
   private def showCase() = {
     $("#caseDiv").empty()
-    $("#caseDiv").append(Case.toHTML().render)
+    $("#caseDiv").append(Case.toHTML(remedyFormat).render)
     Case.updateAnalysisView()
   }
 
@@ -218,61 +194,7 @@ object Repertorise {
       return
     }
 
-//    val request = new XMLHttpRequest()
-//    request.open("GET",
-//      "http://localhost:9000/" +
-//        "lookup?symptom=splinter&repertory=kent"
-//    )
-//    request.withCredentials = true
-//    request.onload = { (e: Event) =>
-//      if (request.status == 200) {
-//        println("Response: " + request.getAllResponseHeaders())
-//      }
-//    }
-//    request.send()
-
-
-
-
-
-
-
-
-
-
-
-
-//    val request = HttpRequest("http://localhost:3000/send_cookie")
-//    request
-//      .withCredentials(true)
-//      .send()
-//      .onComplete({
-//        case response: Success[SimpleHttpResponse] => {
-//
-//          println("Headers: " + response.get.headers.mkString("; "))
-//          js.eval("console.log('Cookie: ' + document.cookie);")
-//          println("Status: " + response.get.statusCode)
-//        }
-//        case error: Failure[SimpleHttpResponse] => {
-//          println("Lookup failed: " + error.toString())
-//        }
-//      })
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        val request = HttpRequest("http://localhost:9000/lookup")
-    request
+    HttpRequest("http://localhost:9000/lookup")
       .withQueryParameters(("symptom", symptom), ("repertory", repertory))
       .withCredentials(true)
       .send()
@@ -322,8 +244,8 @@ object Repertorise {
     )
 
     def updateAvailableRepertories() = {
-      val request = HttpRequest("http://localhost:9000/availableReps")
-      request.send().onComplete({
+      HttpRequest("http://localhost:9000/availableReps")
+        .send().onComplete({
         case response: Success[SimpleHttpResponse] => {
           parse(response.get.body) match {
             case Right(json) => {
@@ -389,7 +311,7 @@ object Repertorise {
         div(cls:="container-fluid", id:="resultDiv"),
         div(cls:="span12", id:="caseDiv", {
           if (Case.size() > 0)
-            Case.toHTML()
+            Case.toHTML(remedyFormat)
           else ""
         })
       )

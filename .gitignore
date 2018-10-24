@@ -6,8 +6,13 @@ logs
 repertories
 target
 tmp
+/.cache*
+/.classpath
+/.g8
 /.idea
 /.idea_modules
+/.js
+/.jvm
 /.classpath
 /.project
 /.settings
