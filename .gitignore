@@ -1,0 +1,14 @@
+*~
+*.iml
+app
+bin
+logs
+repertories
+target
+tmp
+/.idea
+/.idea_modules
+/.classpath
+/.project
+/.settings
+/RUNNING_PID

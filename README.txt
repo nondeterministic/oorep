@@ -1,0 +1,12 @@
+https://stackoverflow.com/questions/15280839/how-to-set-heap-size-for-sbt#
+
+As of March 2015, if you are using sbt on OSX with Homebrew then you should edit the file /usr/local/etc/sbtopts
+
+e.g.
+
+# set memory options
+#
+#-mem   <integer>
+-mem 2048
+
+
