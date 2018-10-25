@@ -16,8 +16,8 @@ object Main {
 
   def main(args: Array[String]): Unit = {
     $("#nav_bar").empty()
-//    $("#nav_bar").append(hspace.apply().render)
     $("#nav_bar").append(NavBar.apply().render)
     $("#content").append(Repertorise.apply().render)
+    $("#content_bottom").append(Disclaimer.toHTML().render)
   }
 }
