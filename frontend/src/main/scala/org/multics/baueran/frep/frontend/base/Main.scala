@@ -10,14 +10,14 @@ import org.querki.jquery._
 
 import scalatags.JsDom.all._
 
-@JSExportTopLevel("ScalaJsExample")
-object ScalaJSExample {
+@JSExportTopLevel("Main")
+object Main {
   val hspace = div(cls:="col-xs-12", style:="height:50px;")
 
   def main(args: Array[String]): Unit = {
     $("#nav_bar").empty()
-    $("#nav_bar").append(hspace.apply().render)
-//    $("#nav_bar").append(NavBar.apply().render)
+//    $("#nav_bar").append(hspace.apply().render)
+    $("#nav_bar").append(NavBar.apply().render)
     $("#content").append(Repertorise.apply().render)
   }
 }
