@@ -155,7 +155,8 @@ object Repertorise {
                     remedyFormat = RemedyFormat.NotFormatted
 
                   showResults()
-                  showCase()
+                  if (Case.size() > 0)
+                    showCase()
                 },
                 "Remedies")
             ),
