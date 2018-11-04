@@ -8,9 +8,13 @@ lazy val backend = (project in file("backend")).settings(commonSettings).setting
   compile in Compile := ((compile in Compile) dependsOn scalaJSPipeline).value,
   libraryDependencies ++= Seq(
     "com.vmunier" %% "scalajs-scripts" % "1.1.2",
+    jdbc,
+    evolutions,
+    "org.postgresql" % "postgresql" % "42.2.5",
+    "io.getquill" %% "quill-jdbc" % "2.5.4",
     "io.circe" %% "circe-core" % "0.9.3",
-  	"io.circe" %% "circe-generic" % "0.9.3",
-  	"io.circe" %% "circe-parser" % "0.9.3",    
+    "io.circe" %% "circe-generic" % "0.9.3",
+    "io.circe" %% "circe-parser" % "0.9.3",    
     guice,
     specs2 % Test
   ),

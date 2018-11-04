@@ -5,6 +5,8 @@
 
 # An example controller showing a sample home page
 GET     /                           org.multics.baueran.frep.backend.controllers.HomeController.index
+GET     /get/:id               		org.multics.baueran.frep.backend.controllers.HomeController.get(id: Long)
+GET     /insert/:id            		org.multics.baueran.frep.backend.controllers.HomeController.insert(id: Long)
 GET     /stuff/:id          		org.multics.baueran.frep.backend.controllers.HomeController.show(id: Long)
 POST   	/myPostRequest				org.multics.baueran.frep.backend.controllers.Post.myPostRequest
 GET		/lookup						org.multics.baueran.frep.backend.controllers.HomeController.repertorise(repertory: String, symptom: String)

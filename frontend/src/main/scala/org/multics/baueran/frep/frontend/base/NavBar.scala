@@ -27,6 +27,7 @@ object NavBar {
               a(cls:="nav-link", href:="#", onclick:={ (event: Event) => {
                 event.stopPropagation()
                 val loginForm = new FormLogin()
+                $("#nav_bar").empty()
                 $("#content").empty()
                 $("#content_bottom").empty()
                 $("#content").append(loginForm.toHTML().render)
