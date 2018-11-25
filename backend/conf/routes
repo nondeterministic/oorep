@@ -9,6 +9,7 @@ GET     /get/:id               		org.multics.baueran.frep.backend.controllers.Ho
 GET     /insert/:id            		org.multics.baueran.frep.backend.controllers.HomeController.insert(id: Long)
 GET     /stuff/:id          		org.multics.baueran.frep.backend.controllers.HomeController.show(id: Long)
 POST   	/myPostRequest				org.multics.baueran.frep.backend.controllers.Post.myPostRequest
+POST   	/login                      org.multics.baueran.frep.backend.controllers.Post.login
 GET		/lookup						org.multics.baueran.frep.backend.controllers.HomeController.repertorise(repertory: String, symptom: String)
 GET     /availableReps              org.multics.baueran.frep.backend.controllers.HomeController.availableReps
 

@@ -6,8 +6,6 @@ import play.api.mvc._
 import play.api.libs.json
 import play.api.libs.json.Json
 
-// curl --header "Content-type: application/json" --request POST --data '{"symbol":"GOOG", "price":900.00}'  http://localhost:9000/myPostRequest 
-
 class Post @Inject()(cc: ControllerComponents) extends AbstractController(cc) {
   def myPostRequest() = Action { 
     request: Request[AnyContent] => 
@@ -16,9 +14,14 @@ class Post @Inject()(cc: ControllerComponents) extends AbstractController(cc) {
         case Some(text) => println("OK"); Ok("Got: " + text)
         case None => println("!OK"); BadRequest("Nothing received?!")
       }
-//      request.body.asFormUrlEncoded.flatMap(m => m.get("inputField").flatMap(_.headOption)) match {
-//        case Some(text) => println("Received: " + text); Ok("Got: " + text)
-//        case None => println("Form empty?"); Ok("Form empty?") // BadRequest("Form empty?!")
-//      }
   }
+
+  def login() = Action {
+    request: Request[AnyContent] =>
+      println("Play: Req1: " + request.headers.toString())
+      println("Play: Req2: " + request.body.asFormUrlEncoded.get("inputEmail"))
+      println("Play: Req2: " + request.body.asFormUrlEncoded.get("inputPassword"))
+      Ok
+  }
+
 }

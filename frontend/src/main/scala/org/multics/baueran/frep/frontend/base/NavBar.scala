@@ -24,14 +24,7 @@ object NavBar {
             li(cls:="navbar-item active", a(cls:="nav-link", href:="", onclick:={ () => println("pressed2") })("FAQ")),
             li(cls:="navbar-item active", a(cls:="nav-link", href:="", onclick:={ () => println("pressed2") })("Contact")),
             li(cls:="navbar-item active", style:="background-color: DarkGreen; margin-right: 5px; margin-left:10px;",
-              a(cls:="nav-link", href:="#", onclick:={ (event: Event) => {
-                event.stopPropagation()
-                val loginForm = new FormLogin()
-                $("#nav_bar").empty()
-                $("#content").empty()
-                $("#content_bottom").empty()
-                $("#content").append(loginForm.toHTML().render)
-              }})("Login")),
+              a(cls:="nav-link", href:="login.html")("Login")),
             li(cls:="navbar-item active", style:="background-color: FireBrick;",
               a(cls:="nav-link", href:="", onclick:={ () => println("pressed2") })("Register"))
           )
