@@ -33,7 +33,9 @@ lazy val frontend = (project in file("frontend")).settings(commonSettings).setti
   dependencyOverrides += "org.webjars.npm" % "js-tokens" % "3.0.2",
   
   skip in packageJSDependencies := false,
-  
+ 
+  resolvers += Resolver.bintrayRepo("hmil", "maven"),
+
   libraryDependencies ++= Seq(
     "org.scala-js" %%% "scalajs-dom" % "0.9.5",
     "com.lihaoyi" %%% "scalatags" % "0.6.7",
@@ -41,8 +43,8 @@ lazy val frontend = (project in file("frontend")).settings(commonSettings).setti
     "io.circe" %%% "circe-core" % "0.9.3",
   	"io.circe" %%% "circe-generic" % "0.9.3",
   	"io.circe" %%% "circe-parser" % "0.9.3",    
-    "fr.hmil" %%% "roshttp" % "200.1.0",
-    "com.timushev" %%% "scalatags-rx" % "0.3.0"
+    "fr.hmil" %%% "roshttp" % "2.2.3", // "200.1.0",
+   "com.timushev" %%% "scalatags-rx" % "0.3.0"
   ),
 ).enablePlugins(ScalaJSPlugin, ScalaJSWeb)
  .dependsOn(sharedJs)
