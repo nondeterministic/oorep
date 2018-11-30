@@ -1,11 +1,11 @@
-package org.multics.baueran.frep.frontend.base
+package org.multics.baueran.frep.frontend.public.base
 
 import scalatags.JsDom.TypedTag
 import scalatags.JsDom.all.{li, _}
 import scalatags.JsDom.tags2.nav
 import org.scalajs.dom.Event
 import org.querki.jquery._
-import org.multics.baueran.frep.frontend.authentication.FormLogin
+import org.multics.baueran.frep.frontend.public.authentication.FormLogin
 
 object NavBar {
   def apply(): TypedTag[org.scalajs.dom.html.Element] = {

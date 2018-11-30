@@ -1,4 +1,4 @@
-package org.multics.baueran.frep.frontend.base
+package org.multics.baueran.frep.frontend.public.base
 
 import scalatags.JsDom.all.{id, _}
 import scalatags.rx.all._
@@ -10,7 +10,7 @@ import org.querki.jquery._
 import scala.collection.mutable
 import org.multics.baueran.frep.shared._
 import RemedyFormat._
-import org.multics.baueran.frep.frontend.util.BetterCaseRubric
+import org.multics.baueran.frep.frontend.public.util.BetterCaseRubric
 
 object Case {
   var id = ""

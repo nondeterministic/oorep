@@ -1,4 +1,4 @@
-package org.multics.baueran.frep.frontend.authentication
+package org.multics.baueran.frep.frontend.public.authentication
 
 import scalatags.JsDom.TypedTag
 import scalatags.JsDom.all.{li, _}

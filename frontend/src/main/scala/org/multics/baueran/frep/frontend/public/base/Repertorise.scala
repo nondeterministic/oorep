@@ -1,4 +1,4 @@
-package org.multics.baueran.frep.frontend.base
+package org.multics.baueran.frep.frontend.public.base
 
 import scalatags.JsDom.TypedTag
 import scalatags.JsDom.all._
@@ -30,7 +30,7 @@ import org.multics.baueran.frep.shared._
 
 import scala.scalajs.js
 import RemedyFormat._
-import org.multics.baueran.frep.frontend.util.BetterCaseRubric
+import org.multics.baueran.frep.frontend.public.util.BetterCaseRubric
 
 object Repertorise {
 

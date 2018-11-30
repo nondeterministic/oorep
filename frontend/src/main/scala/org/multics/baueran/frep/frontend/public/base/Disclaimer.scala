@@ -1,4 +1,4 @@
-package org.multics.baueran.frep.frontend.base
+package org.multics.baueran.frep.frontend.public.base
 
 import scalatags.JsDom.TypedTag
 import scalatags.JsDom.all.{li, _}

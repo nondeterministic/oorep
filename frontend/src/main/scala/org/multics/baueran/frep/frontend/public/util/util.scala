@@ -1,4 +1,4 @@
-package org.multics.baueran.frep.frontend.util
+package org.multics.baueran.frep.frontend.public.util
 
 import scalatags.JsDom.all._
 import org.multics.baueran.frep.shared._

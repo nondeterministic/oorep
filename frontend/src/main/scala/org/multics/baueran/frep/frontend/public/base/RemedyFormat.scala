@@ -1,4 +1,4 @@
-package org.multics.baueran.frep.frontend.base
+package org.multics.baueran.frep.frontend.public.base
 
 object RemedyFormat extends Enumeration {
   type RemedyFormat = Value

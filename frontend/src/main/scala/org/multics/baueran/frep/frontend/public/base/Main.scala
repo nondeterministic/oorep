@@ -1,4 +1,4 @@
-package org.multics.baueran.frep.frontend.base
+package org.multics.baueran.frep.frontend.public.base
 
 import org.scalajs.dom
 import org.scalajs.dom.html
