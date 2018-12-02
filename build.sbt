@@ -36,6 +36,10 @@ lazy val frontend = (project in file("frontend")).settings(commonSettings).setti
  
   resolvers += Resolver.bintrayRepo("hmil", "maven"),
 
+  // https://stackoverflow.com/questions/37127313/scalajs-to-simply-redirect-complication-output-to-specified-directory
+  artifactPath in(Compile, fastOptJS) :=
+    baseDirectory.value / ".." / "backend" / "public" / "javascripts" / "frontend-fastOpt.js",
+ 
   libraryDependencies ++= Seq(
     "org.scala-js" %%% "scalajs-dom" % "0.9.5",
     "com.lihaoyi" %%% "scalatags" % "0.6.7",
