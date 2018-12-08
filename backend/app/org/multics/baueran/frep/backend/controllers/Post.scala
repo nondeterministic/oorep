@@ -21,8 +21,7 @@ class Post @Inject()(cc: ControllerComponents) extends AbstractController(cc) {
       println("Play: Req1: " + request.headers.toString())
       println("Play: Req2: " + request.body.asFormUrlEncoded.get("inputEmail"))
       println("Play: Req2: " + request.body.asFormUrlEncoded.get("inputPassword"))
-      Redirect("http://www.google.de/")
-//      Ok.sendFile(new java.io.File("/home/baueran/hotelrechnung.pdf"))
+      Redirect("http://localhost:9000/assets/html/private/index.html")
   }
 
 }
