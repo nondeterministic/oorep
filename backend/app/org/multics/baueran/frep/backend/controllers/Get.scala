@@ -18,23 +18,11 @@ import org.multics.baueran.frep.backend.db.db.DBContext
  */
 
 @Singleton
-class HomeController @Inject()(cc: ControllerComponents, dbContext: DBContext) extends AbstractController(cc) {
+class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends AbstractController(cc) {
   private val users = new UsersDao(dbContext)
 
-  /**
-   * Create an Action to render an HTML page.
-   *
-   * The configuration in the `routes` file means that this method
-   * will be called when the application receives a `GET` request with
-   * a path of `/`.
-   */
   def index() = Action { request: Request[AnyContent] =>
     Redirect("http://localhost:9000/assets/html/public/index.html")
-  }
-
-  def show(id: Long) = Action { request: Request[AnyContent] =>
-    println("show called on server: " + id)
-    Ok("show called: " + id)
   }
 
   def get(id: Long) = Action { request: Request[AnyContent] =>

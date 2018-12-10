@@ -4,17 +4,16 @@
 # ~~~~
 
 # An example controller showing a sample home page
-GET     /                           org.multics.baueran.frep.backend.controllers.HomeController.index
-GET     /get/:id               		org.multics.baueran.frep.backend.controllers.HomeController.get(id: Long)
-GET     /insert/:id            		org.multics.baueran.frep.backend.controllers.HomeController.insert(id: Long)
-GET     /stuff/:id          		org.multics.baueran.frep.backend.controllers.HomeController.show(id: Long)
+GET     /                           org.multics.baueran.frep.backend.controllers.Get.index
+GET     /get/:id               		org.multics.baueran.frep.backend.controllers.Get.get(id: Long)
+GET     /insert/:id            		org.multics.baueran.frep.backend.controllers.Get.insert(id: Long)
 
 +nocsrf
 POST   	/login                      org.multics.baueran.frep.backend.controllers.Post.login
 
-GET		/authenticate               org.multics.baueran.frep.backend.controllers.HomeController.authenticate
-GET		/lookup						org.multics.baueran.frep.backend.controllers.HomeController.repertorise(repertory: String, symptom: String)
-GET     /availableReps              org.multics.baueran.frep.backend.controllers.HomeController.availableReps
+GET		/authenticate               org.multics.baueran.frep.backend.controllers.Get.authenticate
+GET		/lookup						org.multics.baueran.frep.backend.controllers.Get.repertorise(repertory: String, symptom: String)
+GET     /availableReps              org.multics.baueran.frep.backend.controllers.Get.availableReps
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
