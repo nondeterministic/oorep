@@ -45,9 +45,9 @@ lazy val frontend = (project in file("frontend")).settings(commonSettings).setti
     "com.lihaoyi" %%% "scalatags" % "0.6.7",
     "org.querki" %%% "jquery-facade" % "1.2",
     "io.circe" %%% "circe-core" % "0.9.3",
-  	"io.circe" %%% "circe-generic" % "0.9.3",
-  	"io.circe" %%% "circe-parser" % "0.9.3",    
-    "fr.hmil" %%% "roshttp" % "2.2.3", // "200.1.0",
+    "io.circe" %%% "circe-generic" % "0.9.3",
+    "io.circe" %%% "circe-parser" % "0.9.3",    
+    "fr.hmil" %%% "roshttp" % "2.2.3", 
    "com.timushev" %%% "scalatags-rx" % "0.3.0"
   ),
 ).enablePlugins(ScalaJSPlugin, ScalaJSWeb)
@@ -70,9 +70,9 @@ lazy val sec_frontend = (project in file("sec_frontend")).settings(commonSetting
     "com.lihaoyi" %%% "scalatags" % "0.6.7",
     "org.querki" %%% "jquery-facade" % "1.2",
     "io.circe" %%% "circe-core" % "0.9.3",
-  	"io.circe" %%% "circe-generic" % "0.9.3",
-  	"io.circe" %%% "circe-parser" % "0.9.3",    
-    "fr.hmil" %%% "roshttp" % "2.2.3", // "200.1.0",
+    "io.circe" %%% "circe-generic" % "0.9.3",
+    "io.circe" %%% "circe-parser" % "0.9.3",    
+    "fr.hmil" %%% "roshttp" % "2.2.3", 
    "com.timushev" %%% "scalatags-rx" % "0.3.0"
   ),
 ).enablePlugins(ScalaJSPlugin, ScalaJSWeb)

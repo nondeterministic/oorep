@@ -18,10 +18,20 @@ class Post @Inject()(cc: ControllerComponents) extends AbstractController(cc) {
 
   def login() = Action {
     request: Request[AnyContent] =>
-      println("Play: Req1: " + request.headers.toString())
-      println("Play: Req2: " + request.body.asFormUrlEncoded.get("inputEmail"))
-      println("Play: Req2: " + request.body.asFormUrlEncoded.get("inputPassword"))
-      Redirect("http://localhost:9000/assets/html/private/index.html")
+//      println("Play: Req1: " + request.headers.toString())
+//      println("Play: Req2: " + inputEmail)
+//      println("Play: Req2: " + request.body.asFormUrlEncoded.get("inputPassword"))
+
+      val inputEmail: String = request.body.asFormUrlEncoded.get("inputEmail").head
+      val inputPassword: String = request.body.asFormUrlEncoded.get("inputPassword").head
+
+      // TODO: Do some sensible authentication here...
+      if (inputEmail == "ssj@ksks.com") {
+        Redirect("http://localhost:9000/assets/html/private/index.html")
+          .withCookies(Cookie("oorep_user_email", inputEmail), Cookie("oorep_user_password", inputPassword))
+      }
+      else
+        BadRequest("Not authorized.")
   }
 
 }

@@ -69,6 +69,24 @@ class HomeController @Inject()(cc: ControllerComponents, dbContext: DBContext) e
     Ok("inserted!")
   }
 
+  /**
+    * If method is called, it is expected that the browser has sent a cookie with the
+    * request.  The method then checks, if this cookie authenticates the user for access
+    * of further application functionality.
+    */
+
+  def authenticate() = Action { request: Request[AnyContent] =>
+    (request.cookies.get("oorep_user_email"), request.cookies.get("oorep_user_password")) match {
+      case (Some(cookie_email), Some(cookie_password)) => {
+        println("Cookie user email: " + cookie_email.value)
+        println("Cookie user pass: " + cookie_password.value)
+        Ok.withCookies(cookie_email, cookie_password)
+      }
+      case _ =>
+        BadRequest("Not authorized.")
+    }
+  }
+
   def availableReps() = Action { request: Request[AnyContent] =>
     Ok(RepDatabase.availableRepertories().asJson.toString())
   }
