@@ -20,19 +20,18 @@ object Main {
   val hspace = div(cls:="col-xs-12", style:="height:50px;")
 
   def main(args: Array[String]): Unit = {
+    // No access without valid cookies!
     HttpRequest("http://localhost:9000/authenticate")
       .withCrossDomainCookies(true)
       .send()
       .onComplete({
         case response: Success[SimpleHttpResponse] => {
-          println("Authenticated: " + response.get.headers.toString)
           $("#nav_bar").empty()
           $("#nav_bar").append(NavBar.apply().render)
           $("#content").append(Repertorise.apply().render)
           $("#content_bottom").append(Disclaimer.toHTML().render)
         }
         case error: Failure[SimpleHttpResponse] => {
-          println("Error")
           $("#content").append(p("Not authorized.").render)
         }
       })

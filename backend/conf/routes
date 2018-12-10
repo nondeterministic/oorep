@@ -8,7 +8,6 @@ GET     /                           org.multics.baueran.frep.backend.controllers
 GET     /get/:id               		org.multics.baueran.frep.backend.controllers.HomeController.get(id: Long)
 GET     /insert/:id            		org.multics.baueran.frep.backend.controllers.HomeController.insert(id: Long)
 GET     /stuff/:id          		org.multics.baueran.frep.backend.controllers.HomeController.show(id: Long)
-POST   	/myPostRequest				org.multics.baueran.frep.backend.controllers.Post.myPostRequest
 
 +nocsrf
 POST   	/login                      org.multics.baueran.frep.backend.controllers.Post.login

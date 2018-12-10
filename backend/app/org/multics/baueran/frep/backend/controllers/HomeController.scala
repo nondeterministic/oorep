@@ -29,14 +29,7 @@ class HomeController @Inject()(cc: ControllerComponents, dbContext: DBContext) e
    * a path of `/`.
    */
   def index() = Action { request: Request[AnyContent] =>
-    import java.text._
-    import java.util._
-    val dateFormatter = new SimpleDateFormat("dd/MM/yyyy hh:mm aa")
-    var submittedDateConvert = new java.util.Date()
-    val submitDate = dateFormatter.format(submittedDateConvert)
-
-    // https://stackoverflow.com/questions/43488821/play-framework-session-management
-    Ok("Welcome!").withSession("connected" -> submitDate)
+    Redirect("http://localhost:9000/assets/html/public/index.html")
   }
 
   def show(id: Long) = Action { request: Request[AnyContent] =>
@@ -120,23 +113,7 @@ class HomeController @Inject()(cc: ControllerComponents, dbContext: DBContext) e
             }
           }
 
-          println("Returning " + resultSet.size + " results to client.")
-          println("Request: " + request.body.toString)
-          println("Session: " + request.session.get("connected"))
-          println("Cookies: " + request.cookies.toString())
-
-          request.cookies.get("connected") match {
-            case Some(key) => {
-              println("OLD SESSION SENT")
-              Ok(resultSet.asJson.toString()).withSession(request.session)
-            }
-            case None => {
-              println("NEW SESSION SENT")
-               Ok(resultSet.asJson.toString())
-                 .withCookies(Cookie("connected", "blue", httpOnly = false))
-            }
-          }
-
+          Ok(resultSet.asJson.toString())
         }
       case None => BadRequest(s"Repertory $repertoryAbbrev not found. Available repertories: " + RepDatabase.availableRepertories().map(_.abbrev).mkString(", "))
     }
