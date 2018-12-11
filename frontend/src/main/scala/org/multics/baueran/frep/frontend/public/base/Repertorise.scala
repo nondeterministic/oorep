@@ -9,6 +9,8 @@ import org.scalajs.dom.{Element, Event, MouseEvent, html}
 import org.scalajs.dom.raw.HTMLFormElement
 import org.scalajs.dom.raw.HTMLInputElement
 import org.scalajs.dom
+import org.scalajs.dom.document
+import scalatags.rx.all._
 
 import scala.collection.mutable
 import org.querki.jquery._
@@ -26,6 +28,9 @@ import org.scalajs.dom.raw.WebSocket
 import rx.Ctx.Owner.Unsafe._
 import rx._
 import rx.{Rx, Var}
+import rx.Ctx.Owner.Unsafe._
+import rx.{Var, _}
+
 import org.multics.baueran.frep.shared._
 
 import scala.scalajs.js
@@ -38,7 +43,14 @@ object Repertorise {
   var symptomQuery = ""
   var remedyFormat = RemedyFormat.NotFormatted
   var selectedRepertory = ""
-  var results = mutable.ListBuffer[CaseRubric]()
+  val results = Var(mutable.ListBuffer[CaseRubric]())
+
+  val tmpHeadline = Rx {
+    if (results().size == 0)
+      "Repertorisationn"
+    else
+      "R"
+  }
 
   // ------------------------------------------------------------------------------------------------------------------
   // Render HTML for the results of a repertory lookup directly to page.
@@ -52,7 +64,7 @@ object Repertorise {
     def resultingRemedies() = {
       var remedies = mutable.HashMap[Remedy, (Integer, Integer)]()
 
-      for (cr <- results) {
+      for (cr <- results.now) {
         for ((r,w) <- cr.weightedRemedies) {
           if (remedies.contains(r)) {
             val weight = remedies.get(r).get._1 + w
@@ -102,7 +114,7 @@ object Repertorise {
     $("#resultStatus").append(
       div(cls:="alert alert-secondary", role:="alert",
         b(a(href:="#", onclick:={ (event: Event) => remedyFilter = ""; showResults() },
-          results.size + " result(s) for '" + symptomQuery + "'. ")),
+          results.now.size + " result(s) for '" + symptomQuery + "'. ")),
         if (numberOfMultiOccurrences > 1) {
           val relevantMultiRemedies = resultingRemedies().toList
             .sortBy(-_._2._2)
@@ -168,9 +180,9 @@ object Repertorise {
     )
 
     if (remedyFilter.length == 0)
-      results.foreach(result => $("#resultsTBody").append(resultRow(result).render))
+      results.now.foreach(result => $("#resultsTBody").append(resultRow(result).render))
     else
-      results.filter(_.containsRemedyAbbrev(remedyFilter)).foreach(result => $("#resultsTBody").append(resultRow(result).render))
+      results.now.filter(_.containsRemedyAbbrev(remedyFilter)).foreach(result => $("#resultsTBody").append(resultRow(result).render))
   }
 
   // ------------------------------------------------------------------------------------------------------------------
@@ -206,8 +218,9 @@ object Repertorise {
             val cursor = json.hcursor
             cursor.as[List[CaseRubric]] match {
               case Right(newResults) => {
-                results.clear()
-                results ++= newResults
+                results.now.clear()
+                // results ++= newResults
+                results() = results.now ++ newResults
                 symptomQuery = symptom
                 showResults()
                 if (Case.size() > 0)
@@ -281,7 +294,8 @@ object Repertorise {
       div(cls:="container-fluid",
         div(cls:="container-fluid text-center",
           div(cls:="col-sm-12 text-center",
-            h2("Repertorisation")
+            h2(tmpHeadline)
+//            h2("Repertorisation")
           ),
           div(cls:="row", style:="margin-top:20px;",
             div(cls:="col-sm-1"),
@@ -318,6 +332,6 @@ object Repertorise {
       )
 
     updateAvailableRepertories()
-    myHTML
+    myHTML()
   }
 }
