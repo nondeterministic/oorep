@@ -5,6 +5,7 @@ import play.api._
 import play.api.mvc._
 import play.api.libs.json
 import play.api.libs.json.Json
+import org.multics.baueran.frep.shared.Defs._
 
 class Post @Inject()(cc: ControllerComponents) extends AbstractController(cc) {
   def login() = Action {
@@ -14,7 +15,7 @@ class Post @Inject()(cc: ControllerComponents) extends AbstractController(cc) {
 
       // TODO: Do some sensible authentication here...
       if (inputEmail == "ssj@ksks.com") {
-        Redirect("http://localhost:9000/assets/html/private/index.html")
+        Redirect(serverUrl() + "/assets/html/private/index.html")
           .withCookies(Cookie("oorep_user_email", inputEmail), Cookie("oorep_user_password", inputPassword))
       }
       else

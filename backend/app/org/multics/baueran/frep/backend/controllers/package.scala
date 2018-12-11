@@ -27,5 +27,4 @@ package object controllers {
         List.empty
     }
   }
-
 }

@@ -11,6 +11,7 @@ import org.multics.baueran.frep.shared._
 import org.multics.baueran.frep.backend.models.Users
 import org.multics.baueran.frep.backend.dao.UsersDao
 import org.multics.baueran.frep.backend.db.db.DBContext
+import org.multics.baueran.frep.shared.Defs._
 
 /**
  * This controller creates an `Action` to handle HTTP requests to the
@@ -22,7 +23,10 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
   private val users = new UsersDao(dbContext)
 
   def index() = Action { request: Request[AnyContent] =>
-    Redirect("http://localhost:9000/assets/html/public/index.html")
+    if (authorizedRequestCookies(request) == List.empty)
+      Redirect(serverUrl() + "/assets/html/public/index.html")
+    else
+      Redirect(serverUrl() + "/assets/html/private/index.html")
   }
 
   def get(id: Long) = Action { request: Request[AnyContent] =>
