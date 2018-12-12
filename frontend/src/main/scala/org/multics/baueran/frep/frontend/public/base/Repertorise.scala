@@ -9,8 +9,6 @@ import org.scalajs.dom.{Element, Event, MouseEvent, html}
 import org.scalajs.dom.raw.HTMLFormElement
 import org.scalajs.dom.raw.HTMLInputElement
 import org.scalajs.dom
-import org.scalajs.dom.document
-import scalatags.rx.all._
 
 import scala.collection.mutable
 import org.querki.jquery._
@@ -30,12 +28,15 @@ import rx._
 import rx.{Rx, Var}
 import rx.Ctx.Owner.Unsafe._
 import rx.{Var, _}
+import org.scalajs.dom.document
+import scalatags.rx.all._
 
 import org.multics.baueran.frep.shared._
 
 import scala.scalajs.js
 import RemedyFormat._
 import org.multics.baueran.frep.frontend.public.util.BetterCaseRubric
+import org.multics.baueran.frep.shared.Defs._
 
 object Repertorise {
 
@@ -45,19 +46,17 @@ object Repertorise {
   var selectedRepertory = ""
   val results = Var(mutable.ListBuffer[CaseRubric]())
 
-  val tmpHeadline = Rx {
-    if (results().size == 0)
-      "Repertorisationn"
-    else
-      "R"
-  }
-
   // ------------------------------------------------------------------------------------------------------------------
   // Render HTML for the results of a repertory lookup directly to page.
   //
   // containingRemedyAbbrev, if not empty, will lead to only those rows drawn, that contain remedy
   // with abbrev. containingRemedyAbbrev.
   private def showResults(): Unit = {
+
+    def resetContentView() = {
+      $("#content").empty()
+      $("#content").append(Repertorise.apply().render)
+    }
 
     // This method is just to display the remedy-summary at the top of the results table.
     // It is not strictly necessary for displaying the results themselves.
@@ -110,6 +109,7 @@ object Repertorise {
       )
     }
 
+    resetContentView()
     $("#resultStatus").empty()
     $("#resultStatus").append(
       div(cls:="alert alert-secondary", role:="alert",
@@ -207,7 +207,7 @@ object Repertorise {
       return
     }
 
-    HttpRequest("http://localhost:9000/lookup")
+    HttpRequest(serverUrl() + "/lookup")
       .withQueryParameters(("symptom", symptom), ("repertory", repertory))
       .withCrossDomainCookies(true)
       .send()
@@ -244,8 +244,9 @@ object Repertorise {
   }
 
   // ------------------------------------------------------------------------------------------------------------------
+  // def apply(): TypedTag[Div] = {
   def apply() = {
-    val ulRepertorySelection = Rx(
+    val ulRepertorySelection =
       div(cls:="dropdown col-sm-2",
         button(`type`:="button",
           style:="overflow: hidden;",
@@ -255,10 +256,9 @@ object Repertorise {
           "Repertories"),
         div(cls:="dropdown-menu", `id`:="repSelectionDropDown")
       )
-    )
 
     def updateAvailableRepertories() = {
-      HttpRequest("http://localhost:9000/availableReps")
+      HttpRequest(serverUrl() + "/availableReps")
         .send().onComplete({
         case response: Success[SimpleHttpResponse] => {
           parse(response.get.body) match {
@@ -291,18 +291,15 @@ object Repertorise {
     }
 
     val myHTML =
-      div(cls:="container-fluid",
-        div(cls:="container-fluid text-center",
-          div(cls:="col-sm-12 text-center",
-            h2(tmpHeadline)
-//            h2("Repertorisation")
-          ),
-          div(cls:="row", style:="margin-top:20px;",
-            div(cls:="col-sm-1"),
-            div(cls:="row col-sm-10",
-              ulRepertorySelection.now,
-              div(cls:="col-sm-9",
-                input(cls:="form-control", `id`:="inputField",
+      div(cls := "container-fluid",
+        div(cls := "container-fluid text-center",
+          { if (results.now.size == 0) div(cls := "col-sm-12 text-center", h2("Repertorisation")) else div() },
+          div(cls := "row", style := "margin-top:20px;",
+            div(cls := "col-sm-1"),
+            div(cls := "row col-sm-10",
+              ulRepertorySelection,
+              div(cls:="col-sm-" + (if (results.now.size > 0)  "7" else "9"),
+                input(cls := "form-control", `id` := "inputField",
                   onkeydown := { (event: dom.KeyboardEvent) =>
                     if (event.keyCode == 13) {
                       remedyFilter = ""
@@ -310,21 +307,38 @@ object Repertorise {
                       onSubmitSymptom(event)
                     }
                   },
-                  `placeholder`:="Enter a symptom (for example: head, pain, left)")
-              )
+                  `placeholder` := "Enter a symptom (for example: head, pain, left)")
+              ),
+              {
+                if (results.now.size > 0) {
+                  span(button(cls := "btn btn-dark btn-primary", style := "width: 80px; margin-right:5px;", `type` := "button",
+                    onclick := { (event: Event) => remedyFilter = ""; onSubmitSymptom(event); event.stopPropagation() },
+                    span(cls:="oi oi-magnifying-glass", title:="Find", aria.hidden:="true")),
+                  button(cls := "btn", style := "width: 80px;", `type` := "button",
+                    onclick := { (event: Event) => $("#inputField").value(""); event.stopPropagation() },
+                    span(cls:="oi oi-trash", title:="Clear", aria.hidden:="true"))
+                  )
+                }
+                else
+                  div()
+              }
             ),
-            div(cls:="col-sm-1")
+            div(cls := "col-sm-1")
           ),
-          div(cls:="col-sm-12 text-center", style:="margin-top:20px;",
-            button(cls:="btn btn-dark btn-primary", style:="width: 120px; margin-right:5px;", `type`:="button",
-              onclick:={ (event: Event) => remedyFilter = ""; onSubmitSymptom(event); event.stopPropagation() }, "Find"),
-            button(cls:="btn", style:="width: 100px;", `type`:="button",
-              onclick:={ (event: Event) => $("#inputField").value(""); event.stopPropagation() }, "Clear")
-          ),
+          { if (results.now.size == 0)
+              div(cls := "col-sm-12 text-center", style := "margin-top:20px;",
+                button(cls := "btn btn-dark btn-primary", style := "width: 120px; margin-right:5px;", `type` := "button",
+                  onclick := { (event: Event) => remedyFilter = ""; onSubmitSymptom(event); event.stopPropagation() }, "Find"),
+                button(cls := "btn", style := "width: 100px;", `type` := "button",
+                  onclick := { (event: Event) => $("#inputField").value(""); event.stopPropagation() }, "Clear")
+              )
+            else
+              div()
+          },
         ),
-        div(cls:="container-fluid", style:="margin-top: 23px;", id:="resultStatus"),
-        div(cls:="container-fluid", id:="resultDiv"),
-        div(cls:="span12", id:="caseDiv", {
+        div(cls := "container-fluid", style := "margin-top: 23px;", id := "resultStatus"),
+        div(cls := "container-fluid", id := "resultDiv"),
+        div(cls := "span12", id := "caseDiv", {
           if (Case.size() > 0)
             Case.toHTML(remedyFormat)
           else ""
@@ -332,6 +346,6 @@ object Repertorise {
       )
 
     updateAvailableRepertories()
-    myHTML()
+    myHTML
   }
 }
