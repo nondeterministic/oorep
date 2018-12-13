@@ -33,7 +33,7 @@ lazy val backend = (project in file("backend")).settings(commonSettings).setting
 lazy val frontend = (project in file("frontend")).settings(commonSettings).settings(
   scalaJSUseMainModuleInitializer := true,
   // cf. https://stackoverflow.com/questions/51481152/unresolved-webjars-dependency-even-though-it-seems-to-be-in-maven-central
-  dependencyOverrides += "org.webjars.npm" % "js-tokens" % "3.0.2",
+  // dependencyOverrides += "org.webjars.npm" % "js-tokens" % "3.0.2",
   
   skip in packageJSDependencies := false,
  
@@ -57,7 +57,7 @@ lazy val frontend = (project in file("frontend")).settings(commonSettings).setti
 lazy val sec_frontend = (project in file("sec_frontend")).settings(commonSettings).settings(
   scalaJSUseMainModuleInitializer := true,
   // cf. https://stackoverflow.com/questions/51481152/unresolved-webjars-dependency-even-though-it-seems-to-be-in-maven-central
-  dependencyOverrides += "org.webjars.npm" % "js-tokens" % "3.0.2",
+  // dependencyOverrides += "org.webjars.npm" % "js-tokens" % "3.0.2",
   
   skip in packageJSDependencies := false,
  
@@ -77,10 +77,9 @@ lazy val sec_frontend = (project in file("sec_frontend")).settings(commonSetting
 ).enablePlugins(ScalaJSPlugin, ScalaJSWeb)
  .dependsOn(sharedJs)
 
-lazy val shared =
-  crossProject(JSPlatform, JVMPlatform)
-    .crossType(CrossType.Pure)
-    .in(file("shared"))
+lazy val shared = crossProject(JSPlatform, JVMPlatform)
+  .crossType(CrossType.Pure)
+  .in(file("shared"))
   .settings(
     dependencyOverrides += "org.webjars.npm" % "js-tokens" % "3.0.2",
     libraryDependencies ++= Seq(

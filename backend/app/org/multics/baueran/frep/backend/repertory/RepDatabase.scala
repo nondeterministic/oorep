@@ -1,6 +1,7 @@
 package org.multics.baueran.frep.backend.repertory
 
 import org.multics.baueran.frep.shared._
+import org.multics.baueran.frep.shared.Defs._
 
 import java.io.{ File }
 import scala.collection.mutable
@@ -8,7 +9,6 @@ import scala.io.Source
 import io.circe.parser._
 
 object RepDatabase {
-  private val repPath = "/home/baueran/Development/Scala/frep/project/backend/public/repertories/"
   private var repertories = mutable.HashMap[String, Repertory]()
   private var availableRepertoriesAbbrevs = mutable.HashSet[String]()
 
@@ -17,7 +17,7 @@ object RepDatabase {
     */
   def availableRepertories(): List[Info] = {
     def loadInfo(abbrev: String) = {
-      val lines = Source.fromFile(repPath + abbrev + "_info.json").getLines.map(_.trim).mkString(" ")
+      val lines = Source.fromFile(localRepPath() + abbrev + "_info.json").getLines.map(_.trim).mkString(" ")
       parse(lines) match {
         case Right(json) => {
           val cursor = json.hcursor
@@ -30,7 +30,7 @@ object RepDatabase {
       }
     }
 
-    val folder = new File(repPath)
+    val folder = new File(localRepPath())
     val arrayOfFiles = folder.listFiles()
     var repInfos = mutable.Set[Info]()
 
@@ -52,7 +52,7 @@ object RepDatabase {
 
   def loadRepertory(abbrev: String) = {
     if (availableRepertoriesAbbrevs.contains(abbrev)) {
-      repertories.put(abbrev, Repertory.loadFrom(repPath, abbrev))
+      repertories.put(abbrev, Repertory.loadFrom(localRepPath(), abbrev))
       println(s"Server: repertory $abbrev loaded.")
     }
   }
