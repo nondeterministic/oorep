@@ -1,45 +1,25 @@
 package org.multics.baueran.frep.shared.frontend
 
-import io.circe.parser.parse
-import org.multics.baueran.frep.shared.Defs.serverUrl
-import org.multics.baueran.frep.shared.{CaseRubric, Info, Remedy, RepAccess}
-import scalatags.JsDom.TypedTag
 import scalatags.JsDom.all._
-import scalatags.JsDom.tags.{input, label}
+import scalatags.JsDom.tags.input
+
 import org.scalajs.dom
-import org.scalajs.dom.html._
-import org.scalajs.dom.{Element, Event, MouseEvent, html}
-import org.scalajs.dom.raw.HTMLFormElement
+import org.scalajs.dom.Event
 import org.scalajs.dom.raw.HTMLInputElement
-import org.scalajs.dom
+
+import io.circe.parser.parse
 
 import scala.collection.mutable
-import org.querki.jquery._
-import fr.hmil.roshttp.{BackendConfig, HttpRequest}
-import org.scalajs.dom.XMLHttpRequest
-
 import scala.util.{Failure, Success}
+
+import org.querki.jquery._
+
+import fr.hmil.roshttp.HttpRequest
 import fr.hmil.roshttp.response.SimpleHttpResponse
 import monix.execution.Scheduler.Implicits.global
-import io.circe.Json
-import io.circe._
-import io.circe.parser._
-import io.circe.generic.semiauto._
-import org.scalajs.dom.raw.WebSocket
+
 import org.multics.baueran.frep.shared._
-
-import scala.scalajs.js
-import RemedyFormat._
-
-import scala.collection.mutable
-import scala.util.{Failure, Success}
-import scala.collection.mutable
-import org.querki.jquery._
-import org.scalajs.dom.XMLHttpRequest
-import org.querki.jquery._
-import scalatags.JsDom.all._
-import fr.hmil.roshttp.HttpRequest
-import monix.execution.Scheduler.Implicits.global
+import org.multics.baueran.frep.shared.Defs.serverUrl
 
 object Repertorise {
 

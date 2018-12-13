@@ -18,7 +18,6 @@ object RepDatabase {
   def availableRepertories(): List[Info] = {
     def loadInfo(abbrev: String) = {
       val lines = Source.fromFile(repPath + abbrev + "_info.json").getLines.map(_.trim).mkString(" ")
-      println(lines)
       parse(lines) match {
         case Right(json) => {
           val cursor = json.hcursor
