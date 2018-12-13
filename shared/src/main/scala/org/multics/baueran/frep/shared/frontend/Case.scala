@@ -1,16 +1,19 @@
-package org.multics.baueran.frep.frontend.public.base
+package org.multics.baueran.frep.shared.frontend
 
-import scalatags.JsDom.all.{id, _}
+import org.multics.baueran.frep.shared.frontend.RemedyFormat.RemedyFormat
+import org.multics.baueran.frep.shared.{BetterString, CaseRubric, BetterCaseRubric}
+import org.querki.jquery.$
+import org.scalajs.dom.Event
+// import scalatags.JsDom.all.{`type`, a, attr, b, button, cls, div, h5, href, onclick, role, span, style, tabindex, table, tbody, td, th, thead, title, tr}
+import scalatags.JsDom._
+import scalatags.JsDom.all._
+
+import scala.collection.mutable
+
 import scalatags.rx.all._
 import rx.Ctx.Owner.Unsafe._
 import rx._
 import rx.{Rx, Var}
-import org.scalajs.dom.Event
-import org.querki.jquery._
-import scala.collection.mutable
-import org.multics.baueran.frep.shared._
-import RemedyFormat._
-import org.multics.baueran.frep.frontend.public.util.BetterCaseRubric
 
 object Case {
   var id = ""

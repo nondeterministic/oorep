@@ -1,20 +1,19 @@
 package org.multics.baueran.frep.frontend.public.base
 
+import org.multics.baueran.frep.shared.frontend.Repertorise
 import org.scalajs.dom
 import org.scalajs.dom.html
 import org.scalajs.dom.raw._
 import org.scalajs.dom.document
 import scalatags.JsDom.all._
-
 import rx._
-import rx.{Rx, Var, _ }
+import rx.{Rx, Var, _}
 import scalatags.rx.all._
 import rx.Ctx.Owner.Unsafe._
 
 import scala.scalajs.js.annotation.JSExportTopLevel
 import scala.scalajs.js.annotation._
 import org.querki.jquery._
-
 import scalatags.JsDom.all._
 
 @JSExportTopLevel("Main")

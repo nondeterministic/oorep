@@ -18,15 +18,16 @@ object RepDatabase {
   def availableRepertories(): List[Info] = {
     def loadInfo(abbrev: String) = {
       val lines = Source.fromFile(repPath + abbrev + "_info.json").getLines.map(_.trim).mkString(" ")
+      println(lines)
       parse(lines) match {
         case Right(json) => {
           val cursor = json.hcursor
           cursor.as[Info] match {
             case Right(content) => println("Info loaded: " + content.abbrev); Some(content)
-            case Left(_) => println("Info parsing of JSON failed: wrong data?"); None
+            case Left(error) => println("Info parsing of JSON failed: wrong data?" + error); None
           }
         }
-        case Left(_) => println("Info parsing failed: no JSON-input?"); None
+        case Left(error) => println("Info parsing failed: no JSON-input? " + error); None
       }
     }
 

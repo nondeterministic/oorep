@@ -1,5 +1,8 @@
-package org.multics.baueran.frep.frontend.public.base
+package org.multics.baueran.frep.shared.frontend
 
+import io.circe.parser.parse
+import org.multics.baueran.frep.shared.Defs.serverUrl
+import org.multics.baueran.frep.shared.{CaseRubric, Info, Remedy, RepAccess}
 import scalatags.JsDom.TypedTag
 import scalatags.JsDom.all._
 import scalatags.JsDom.tags.{input, label}
@@ -23,20 +26,20 @@ import io.circe._
 import io.circe.parser._
 import io.circe.generic.semiauto._
 import org.scalajs.dom.raw.WebSocket
-import rx.Ctx.Owner.Unsafe._
-import rx._
-import rx.{Rx, Var}
-import rx.Ctx.Owner.Unsafe._
-import rx.{Var, _}
-import org.scalajs.dom.document
-import scalatags.rx.all._
-
 import org.multics.baueran.frep.shared._
 
 import scala.scalajs.js
 import RemedyFormat._
-import org.multics.baueran.frep.frontend.public.util.BetterCaseRubric
-import org.multics.baueran.frep.shared.Defs._
+
+import scala.collection.mutable
+import scala.util.{Failure, Success}
+import scala.collection.mutable
+import org.querki.jquery._
+import org.scalajs.dom.XMLHttpRequest
+import org.querki.jquery._
+import scalatags.JsDom.all._
+import fr.hmil.roshttp.HttpRequest
+import monix.execution.Scheduler.Implicits.global
 
 object Repertorise {
 
@@ -44,7 +47,7 @@ object Repertorise {
   var symptomQuery = ""
   var remedyFormat = RemedyFormat.NotFormatted
   var selectedRepertory = ""
-  val results = Var(mutable.ListBuffer[CaseRubric]())
+  val results = mutable.ListBuffer[CaseRubric]()
 
   // ------------------------------------------------------------------------------------------------------------------
   // Render HTML for the results of a repertory lookup directly to page.
@@ -63,7 +66,7 @@ object Repertorise {
     def resultingRemedies() = {
       var remedies = mutable.HashMap[Remedy, (Integer, Integer)]()
 
-      for (cr <- results.now) {
+      for (cr <- results) {
         for ((r,w) <- cr.weightedRemedies) {
           if (remedies.contains(r)) {
             val weight = remedies.get(r).get._1 + w
@@ -114,7 +117,7 @@ object Repertorise {
     $("#resultStatus").append(
       div(cls:="alert alert-secondary", role:="alert",
         b(a(href:="#", onclick:={ (event: Event) => remedyFilter = ""; showResults() },
-          results.now.size + " result(s) for '" + symptomQuery + "'. ")),
+          results.size + " result(s) for '" + symptomQuery + "'. ")),
         if (numberOfMultiOccurrences > 1) {
           val relevantMultiRemedies = resultingRemedies().toList
             .sortBy(-_._2._2)
@@ -180,9 +183,9 @@ object Repertorise {
     )
 
     if (remedyFilter.length == 0)
-      results.now.foreach(result => $("#resultsTBody").append(resultRow(result).render))
+      results.foreach(result => $("#resultsTBody").append(resultRow(result).render))
     else
-      results.now.filter(_.containsRemedyAbbrev(remedyFilter)).foreach(result => $("#resultsTBody").append(resultRow(result).render))
+      results.filter(_.containsRemedyAbbrev(remedyFilter)).foreach(result => $("#resultsTBody").append(resultRow(result).render))
   }
 
   // ------------------------------------------------------------------------------------------------------------------
@@ -218,9 +221,9 @@ object Repertorise {
             val cursor = json.hcursor
             cursor.as[List[CaseRubric]] match {
               case Right(newResults) => {
-                results.now.clear()
-                // results ++= newResults
-                results() = results.now ++ newResults
+                results.clear()
+                results ++= newResults
+                // results() = results.now ++ newResults
                 symptomQuery = symptom
                 showResults()
                 if (Case.size() > 0)
@@ -293,12 +296,12 @@ object Repertorise {
     val myHTML =
       div(cls := "container-fluid",
         div(cls := "container-fluid text-center",
-          { if (results.now.size == 0) div(cls := "col-sm-12 text-center", h2("Repertorisation")) else div() },
+          { if (results.size == 0) div(cls := "col-sm-12 text-center", h2("Repertorisation")) else div() },
           div(cls := "row", style := "margin-top:20px;",
             div(cls := "col-sm-1"),
             div(cls := "row col-sm-10",
               ulRepertorySelection,
-              div(cls:="col-sm-" + (if (results.now.size > 0)  "7" else "9"),
+              div(cls:="col-sm-" + (if (results.size > 0)  "7" else "9"),
                 input(cls := "form-control", `id` := "inputField",
                   onkeydown := { (event: dom.KeyboardEvent) =>
                     if (event.keyCode == 13) {
@@ -310,7 +313,7 @@ object Repertorise {
                   `placeholder` := "Enter a symptom (for example: head, pain, left)")
               ),
               {
-                if (results.now.size > 0) {
+                if (results.size > 0) {
                   span(button(cls := "btn btn-dark btn-primary", style := "width: 80px; margin-right:5px;", `type` := "button",
                     onclick := { (event: Event) => remedyFilter = ""; onSubmitSymptom(event); event.stopPropagation() },
                     span(cls:="oi oi-magnifying-glass", title:="Find", aria.hidden:="true")),
@@ -325,7 +328,7 @@ object Repertorise {
             ),
             div(cls := "col-sm-1")
           ),
-          { if (results.now.size == 0)
+          { if (results.size == 0)
               div(cls := "col-sm-12 text-center", style := "margin-top:20px;",
                 button(cls := "btn btn-dark btn-primary", style := "width: 120px; margin-right:5px;", `type` := "button",
                   onclick := { (event: Event) => remedyFilter = ""; onSubmitSymptom(event); event.stopPropagation() }, "Find"),

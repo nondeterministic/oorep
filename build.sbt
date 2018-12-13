@@ -1,4 +1,11 @@
-import sbtcrossproject.{crossProject, CrossType}
+import sbt.Keys.libraryDependencies
+import sbtcrossproject.{CrossType, crossProject}
+
+val scalaJSReactVersion = "1.2.3"
+val scalaCssVersion = "0.5.5"
+val reactJSVersion = "16.3.2"
+
+resolvers += Resolver.bintrayRepo("hmil", "maven")
 
 lazy val backend = (project in file("backend")).settings(commonSettings).settings(
   scalaJSProjects := Seq(frontend, sec_frontend),
@@ -20,12 +27,8 @@ lazy val backend = (project in file("backend")).settings(commonSettings).setting
   ),
   // Compile the project before generating Eclipse files, so that generated .scala or .class files for views and routes are present
   EclipseKeys.preTasks := Seq(compile in Compile)
-).enablePlugins(PlayScala).
-  dependsOn(sharedJvm)
-
-val scalaJSReactVersion = "1.2.3"
-val scalaCssVersion = "0.5.5"
-val reactJSVersion = "16.3.2"
+).enablePlugins(PlayScala)
+ .dependsOn(sharedJvm)
 
 lazy val frontend = (project in file("frontend")).settings(commonSettings).settings(
   scalaJSUseMainModuleInitializer := true,
@@ -34,8 +37,6 @@ lazy val frontend = (project in file("frontend")).settings(commonSettings).setti
   
   skip in packageJSDependencies := false,
  
-  resolvers += Resolver.bintrayRepo("hmil", "maven"),
-
   // https://stackoverflow.com/questions/37127313/scalajs-to-simply-redirect-complication-output-to-specified-directory
   artifactPath in(Compile, fastOptJS) :=
     baseDirectory.value / ".." / "backend" / "public" / "javascripts" / "frontend-pub-fastOpt.js",
@@ -60,8 +61,6 @@ lazy val sec_frontend = (project in file("sec_frontend")).settings(commonSetting
   
   skip in packageJSDependencies := false,
  
-  resolvers += Resolver.bintrayRepo("hmil", "maven"),
-
   artifactPath in(Compile, fastOptJS) :=
     baseDirectory.value / ".." / "backend" / "public" / "javascripts" / "frontend-priv-fastOpt.js",
 
@@ -78,16 +77,44 @@ lazy val sec_frontend = (project in file("sec_frontend")).settings(commonSetting
 ).enablePlugins(ScalaJSPlugin, ScalaJSWeb)
  .dependsOn(sharedJs)
 
-lazy val shared = crossProject(JSPlatform, JVMPlatform)
-  .crossType(CrossType.Pure)
-  .in(file("shared"))
-  .settings(commonSettings).settings(
+lazy val shared =
+  crossProject(JSPlatform, JVMPlatform)
+    .crossType(CrossType.Pure)
+    .in(file("shared"))
+  .settings(
+    dependencyOverrides += "org.webjars.npm" % "js-tokens" % "3.0.2",
     libraryDependencies ++= Seq(
-      "io.circe" %%% "circe-core" % "0.9.3",
-      "io.circe" %%% "circe-generic" % "0.9.3",
-      "io.circe" %%% "circe-parser" % "0.9.3"
+      "io.circe" %% "circe-core" % "0.9.3",
+      "io.circe" %% "circe-generic" % "0.9.3",
+      "io.circe" %% "circe-parser" % "0.9.3",
+      "org.scala-js" %%% "scalajs-dom" % "0.9.5",
+      "com.lihaoyi" %%% "scalatags" % "0.6.7",
+      "org.querki" %%% "jquery-facade" % "1.2",
+      "fr.hmil" %%% "roshttp" % "2.2.3",
+      "com.timushev" %%% "scalatags-rx" % "0.3.0"
     )
   )
+//  .jsSettings(
+//    // skip in packageJSDependencies := false,
+//    libraryDependencies ++= Seq(
+//      "io.circe" %%% "circe-core" % "0.9.3",
+//      "io.circe" %%% "circe-generic" % "0.9.3",
+//      "io.circe" %%% "circe-parser" % "0.9.3",
+//      "org.scala-js" %%% "scalajs-dom" % "0.9.5",
+//      "com.lihaoyi" %%% "scalatags" % "0.6.7",
+//      "org.querki" %%% "jquery-facade" % "1.2",
+//      "fr.hmil" %%% "roshttp" % "2.2.3"
+//    )
+//  )
+//  .jvmSettings(
+//    libraryDependencies ++= Seq(
+//      "io.circe" %% "circe-core" % "0.9.3",
+//      "io.circe" %% "circe-generic" % "0.9.3",
+//      "io.circe" %% "circe-parser" % "0.9.3"
+//    )
+//  )
+  .enablePlugins(ScalaJSPlugin, ScalaJSWeb)
+
 lazy val sharedJvm = shared.jvm
 lazy val sharedJs = shared.js
 

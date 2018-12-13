@@ -14,6 +14,7 @@ import org.querki.jquery._
 import scalatags.JsDom.all._
 
 import scala.util.{Failure, Success}
+import org.multics.baueran.frep.shared.frontend.Repertorise
 
 @JSExportTopLevel("MainSecure")
 object Main {
