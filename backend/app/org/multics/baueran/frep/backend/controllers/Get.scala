@@ -6,6 +6,7 @@ import play.api.mvc._
 import io.circe.syntax._
 
 import org.multics.baueran.frep.backend.repertory._
+// import org.multics.baueran.frep.backend.views.html._
 import org.multics.baueran.frep.shared._
 
 import org.multics.baueran.frep.backend.models.Users
@@ -24,7 +25,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
 
   def index() = Action { request: Request[AnyContent] =>
     if (authorizedRequestCookies(request) == List.empty)
-      Redirect(serverUrl() + "/assets/html/public/index.html")
+      Redirect(serverUrl() + "/assets/html/index.html")
     else
       Redirect(serverUrl() + "/assets/html/private/index.html")
   }

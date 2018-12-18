@@ -1,19 +1,15 @@
-package org.multics.baueran.frep.frontend.secure.base
+package org.multics.baueran.frep.frontend.public.base
 
 import scalatags.JsDom.TypedTag
 import scalatags.JsDom.all.{li, _}
 import scalatags.JsDom.tags2.nav
 
-object Disclaimer {
+object Features {
   def toHTML() = {
-    div(cls:="jumbotron jumbo-dark horizontal-center", id:="content_bottom", style:="position: relative; margin-top: 20px;",
-      a(href:="https://github.com/you",
-        img(style:="position: absolute; top: 0; right: 0; border: 0;", src:="https://s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png", alt:="Fork me on GitHub")
-      ),
-      br,
+    div(cls:="jumbotron jumbo-light horizontal-center", id:="features", style:="position: relative;",
       div(style:="font-size:11px; max-width:700px;",
         h3(style:="text-align:center; margin-bottom: 10px",
-          span("Hinweis/Disclaimer")
+          span("Features")
         ),
         p("""
             Diese Website richtet sich speziell an Studenten der Homöopathie bzw. professionelle Homöopathen und ist ausschließlich für Übungszwecke gedacht.

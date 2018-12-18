@@ -5,19 +5,18 @@ import org.scalajs.dom.Event
 import scalatags.JsDom.all._
 
 import scala.collection.mutable
-
 import rx.Var
 import rx.Ctx.Owner.Unsafe._
 import scalatags.rx.all._
-
 import org.multics.baueran.frep.shared.frontend.RemedyFormat.RemedyFormat
-import org.multics.baueran.frep.shared.{BetterString, CaseRubric, BetterCaseRubric}
+import org.multics.baueran.frep.shared.{BetterCaseRubric, BetterString, CaseRubric}
+import org.multics.baueran.frep.shared.Defs.AppMode
 
 object Case {
+
   var id = ""
   var cRubrics = mutable.ArrayBuffer[CaseRubric]()
   var remedyScores = mutable.HashMap[String,Integer]()
-  var remedyFormat = RemedyFormat.NotFormatted
 
   // ------------------------------------------------------------------------------------------------------------------
   def isEmpty() = id.length() == 0 && cRubrics.size == 0
@@ -106,8 +105,7 @@ object Case {
   }
 
   // ------------------------------------------------------------------------------------------------------------------
-  def toHTML(format: RemedyFormat) = {
-    remedyFormat = format
+  def toHTML(remedyFormat: RemedyFormat, appMode: AppMode.AppMode) = {
 
     def caseRow(crub: CaseRubric) = {
       implicit def crToCR(cr: CaseRubric) = new BetterCaseRubric(cr)
@@ -120,7 +118,7 @@ object Case {
 
       val weight = Var(crub.rubricWeight.toString())
 
-      tr(scalatags.JsDom.attrs.id:="crub_" + crub.rubric.id + crub.repertoryAbbrev,
+      tr(scalatags.JsDom.attrs.id := "crub_" + crub.rubric.id + crub.repertoryAbbrev,
         td(
           button(`type` := "button", cls := "btn dropdown-toggle btn-sm", style := "width: 45px;", data.toggle := "dropdown", weight),
           div(cls := "dropdown-menu",
@@ -134,11 +132,11 @@ object Case {
         td(crub.repertoryAbbrev),
         td(crub.rubric.fullPath),
         td(remedies.take(remedies.size - 1).map(l => span(l, ", ")) ::: List(remedies.last)),
-        td(cls:="text-right",
-          button(cls:="btn btn-sm", `type`:="button",
-            scalatags.JsDom.attrs.id:=("rmBut_" + crub.rubric.id + crub.repertoryAbbrev),
-            style:="vertical-align: middle; display: inline-block",
-            onclick:={ (event: Event) => {
+        td(cls := "text-right",
+          button(cls := "btn btn-sm", `type` := "button",
+            scalatags.JsDom.attrs.id := ("rmBut_" + crub.rubric.id + crub.repertoryAbbrev),
+            style := "vertical-align: middle; display: inline-block",
+            onclick := { (event: Event) => {
               event.stopPropagation()
               cRubrics.remove(cRubrics.indexOf(crub))
               $("#crub_" + crub.rubric.id + crub.repertoryAbbrev).remove()
@@ -152,16 +150,66 @@ object Case {
       )
     }
 
+    val header =
+      if (appMode == AppMode.Secure && id.length() > 0) {
+        div(
+          b("Case '" + id + "':",
+            button(cls:="btn btn-sm btn-dark disabled", `type`:="button", data.toggle:="modal", data.target:="#caseAnalysisModal", style:="margin-left:25px; margin-bottom: 5px;",
+              onclick:={ (event: Event) => {
+                updateAnalysisView()
+              }}, "New..."),
+            button(cls:="btn btn-sm btn-dark", `type`:="button", data.toggle:="modal", data.target:="#caseAnalysisModal", style:="margin-left:5px; margin-bottom: 5px;",
+              onclick:={ (event: Event) => {
+                updateAnalysisView()
+              }}, "Add analysis"),
+            button(cls:="btn btn-sm btn-primary", `type`:="button", data.toggle:="modal", data.target:="#caseAnalysisModal", style:="margin-left:5px; margin-bottom: 5px;",
+              onclick:={ (event: Event) => {
+                updateAnalysisView()
+              }}, "Analyse...")
+          )
+        )
+      }
+      else if (appMode == AppMode.Secure && id.length() == 0) {
+        div(
+          b("Case: "),
+          button(cls:="btn btn-sm btn-dark", `type`:="button", data.toggle:="modal", data.target:="#caseAnalysisModal", style:="margin-left:25px; margin-bottom: 5px;",
+            onclick:={ (event: Event) => {
+              updateAnalysisView()
+            }}, "New..."),
+          button(cls:="btn btn-sm btn-dark disabled", `type`:="button", data.toggle:="modal", data.target:="#caseAnalysisModal", style:="margin-left:5px; margin-bottom: 5px;",
+            onclick:={ (event: Event) => {
+              updateAnalysisView()
+            }}, "Add to file"),
+          button(cls:="btn btn-sm btn-primary", `type`:="button", data.toggle:="modal", data.target:="#caseAnalysisModal", style:="margin-left:5px; margin-bottom: 5px;",
+            onclick:={ (event: Event) => {
+              updateAnalysisView()
+            }}, "Analyse...")
+        )
+      }
+      else { // if (appMode == AppMode.Public)
+        div(
+          b("Case: "),
+          button(cls:="btn btn-sm btn-dark disabled", `type`:="button", data.toggle:="modal", data.target:="#caseAnalysisModal", style:="margin-left:25px; margin-bottom: 5px;",
+            onclick:={ (event: Event) => {
+              updateAnalysisView()
+            }}, "New..."),
+          button(cls:="btn btn-sm btn-dark disabled", `type`:="button", data.toggle:="modal", data.target:="#caseAnalysisModal", style:="margin-left:5px; margin-bottom: 5px;",
+            onclick:={ (event: Event) => {
+              updateAnalysisView()
+            }}, "Add analysis"),
+          button(cls:="btn btn-sm btn-primary", `type`:="button", data.toggle:="modal", data.target:="#caseAnalysisModal", style:="margin-left:5px; margin-bottom: 5px;",
+            onclick:={ (event: Event) => {
+              updateAnalysisView()
+            }}, "Analyse...")
+        )
+      }
+
     div(cls:="container-fluid",
       analysisModalDialogHTML(),
 
       // HTML which is visible right from the start...
-      div(
-        b("Case '" + id + "':"),
-        button(cls:="btn btn-sm btn-dark", `type`:="button", data.toggle:="modal", data.target:="#caseAnalysisModal", style:="margin-left:25px; margin-bottom: 5px;",
-          onclick:= { (event: Event) => {
-            updateAnalysisView()
-          }}, "Analyse...")),
+      div(h1("Case"), hr),
+      div(header),
       div(cls:="table-responsive",
         table(cls:="table table-striped table-sm table-bordered",
           thead(cls:="thead-dark", scalatags.JsDom.attrs.id:="caseTHead",

@@ -5,6 +5,8 @@ logs
 repertories
 target
 tmp
+*fastOpt*
+*fastopt*
 /.cache*
 /.classpath
 /.g8

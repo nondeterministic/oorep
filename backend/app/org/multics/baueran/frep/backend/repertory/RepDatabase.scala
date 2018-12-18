@@ -55,6 +55,8 @@ object RepDatabase {
       repertories.put(abbrev, Repertory.loadFrom(localRepPath(), abbrev))
       println(s"Server: repertory $abbrev loaded.")
     }
+    else
+      println(s"Server: failed to load repertory ${abbrev} as it is not available.")
   }
 
   def repertory(abbrev: String): Option[Repertory] = {

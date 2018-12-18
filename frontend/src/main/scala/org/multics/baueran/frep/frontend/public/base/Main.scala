@@ -1,37 +1,53 @@
 package org.multics.baueran.frep.frontend.public.base
 
-import org.multics.baueran.frep.shared.frontend.Repertorise
 import org.scalajs.dom
 import org.scalajs.dom.html
 import org.scalajs.dom.raw._
 import org.scalajs.dom.document
 import scalatags.JsDom.all._
-import rx._
-import rx.{Rx, Var, _}
-import scalatags.rx.all._
-import rx.Ctx.Owner.Unsafe._
 
 import scala.scalajs.js.annotation.JSExportTopLevel
 import scala.scalajs.js.annotation._
 import org.querki.jquery._
 import scalatags.JsDom.all._
 
+import org.multics.baueran.frep.shared.Defs._
+import org.multics.baueran.frep.shared.frontend.Repertorise
+import org.multics.baueran.frep.shared.frontend.Disclaimer
+
 @JSExportTopLevel("Main")
 object Main {
-  val hspace = div(cls:="col-xs-12", style:="height:50px;")
 
   def main(args: Array[String]): Unit = {
-
-// Alternatively to JQuery selector:
-//
-//    import org.scalajs.dom.document
-//    document.body.appendChild(
-//      div(style:="width:100%; margin-bottom:100px;",
-//        scalatags.JsDom.attrs.id:="nav_bar").render)
+    $(dom.document.body).append(div(style:="width:100%;", id:="nav_bar").render)
+    $(dom.document.body).append(div(style:="width:100%;", id:="content").render)
+    $(dom.document.body).append(div(style:="width:100%;", id:="content_bottom").render)
 
     $("#nav_bar").empty()
     $("#nav_bar").append(NavBar.apply().render)
     $("#content").append(Repertorise.apply().render)
+    $("#content").append(About.toHTML().render)
+    $("#content").append(Features.toHTML().render)
     $("#content_bottom").append(Disclaimer.toHTML().render)
+
+    // Stuff to make the NavBar (dis)appear dynamically
+    var navBarDark = false
+    $(dom.window).scroll(() => {
+      if (Repertorise.results.size == 0) {
+        if ($(document).scrollTop() > 150) {
+          if (!navBarDark) {
+            $("#public_nav_bar").addClass("bg-dark navbar-dark shadow p-3 mb-5")
+            $("#nav_bar_logo").append(a(cls := "navbar-brand py-0", href := serverUrl(), "OOREP").render)
+            navBarDark = true
+          }
+        }
+        else {
+          $("#public_nav_bar").removeClass("bg-dark navbar-dark shadow p-3 mb-5")
+          $("#nav_bar_logo").empty()
+          navBarDark = false
+        }
+      }
+    })
+
   }
 }

@@ -19,10 +19,11 @@ import fr.hmil.roshttp.response.SimpleHttpResponse
 import monix.execution.Scheduler.Implicits.global
 
 import org.multics.baueran.frep.shared._
-import org.multics.baueran.frep.shared.Defs.serverUrl
+import org.multics.baueran.frep.shared.Defs.{ serverUrl, AppMode }
 
 object Repertorise {
 
+  var appMode = AppMode.Public
   var remedyFilter = ""
   var symptomQuery = ""
   var remedyFormat = RemedyFormat.NotFormatted
@@ -171,7 +172,7 @@ object Repertorise {
   // ------------------------------------------------------------------------------------------------------------------
   private def showCase() = {
     $("#caseDiv").empty()
-    $("#caseDiv").append(Case.toHTML(remedyFormat).render)
+    $("#caseDiv").append(Case.toHTML(remedyFormat, appMode).render)
     Case.updateAnalysisView()
   }
 
@@ -227,7 +228,12 @@ object Repertorise {
   }
 
   // ------------------------------------------------------------------------------------------------------------------
-  // def apply(): TypedTag[Div] = {
+  def applySecure() = {
+    appMode = AppMode.Secure
+    apply()
+  }
+
+  // ------------------------------------------------------------------------------------------------------------------
   def apply() = {
     val ulRepertorySelection =
       div(cls:="dropdown col-sm-2",
@@ -274,61 +280,98 @@ object Repertorise {
     }
 
     val myHTML =
-      div(cls := "container-fluid",
-        div(cls := "container-fluid text-center",
-          { if (results.size == 0) div(cls := "col-sm-12 text-center", h2("Repertorisation")) else div() },
-          div(cls := "row", style := "margin-top:20px;",
-            div(cls := "col-sm-1"),
-            div(cls := "row col-sm-10",
-              ulRepertorySelection,
-              div(cls:="col-sm-" + (if (results.size > 0)  "7" else "9"),
-                input(cls := "form-control", `id` := "inputField",
-                  onkeydown := { (event: dom.KeyboardEvent) =>
-                    if (event.keyCode == 13) {
-                      remedyFilter = ""
-                      event.stopImmediatePropagation()
-                      onSubmitSymptom(event)
-                    }
-                  },
-                  `placeholder` := "Enter a symptom (for example: head, pain, left)")
+      // Fresh page...
+      if (results.size == 0) {
+        div(cls := "container-fluid",
+          div(cls := "container-fluid text-center",
+            div(cls:="col-sm-12 text-center", img(src:="logo_small.png")),
+            div(cls := "row", style := "margin-top:20px;",
+              div(cls := "col-sm-1"),
+              div(cls := "row col-sm-10",
+                ulRepertorySelection,
+                div(cls := "col-sm-9",
+                  input(cls := "form-control", `id` := "inputField",
+                    onkeydown := { (event: dom.KeyboardEvent) =>
+                      if (event.keyCode == 13) {
+                        remedyFilter = ""
+                        event.stopImmediatePropagation()
+                        onSubmitSymptom(event)
+                      }
+                    },
+                    `placeholder` := "Enter a symptom (for example: head, pain, left)")
+                ),
               ),
-              {
-                if (results.size > 0) {
-                  span(button(cls := "btn btn-dark btn-primary", style := "width: 80px; margin-right:5px;", `type` := "button",
-                    onclick := { (event: Event) => remedyFilter = ""; onSubmitSymptom(event); event.stopPropagation() },
-                    span(cls:="oi oi-magnifying-glass", title:="Find", aria.hidden:="true")),
+              div(cls := "col-sm-1")
+            ),
+            div(cls := "col-sm-12 text-center", style := "margin-top:20px;",
+              button(cls := "btn btn-primary", style := "width: 120px; margin-right:5px;", `type` := "button",
+                onclick := { (event: Event) => remedyFilter = ""; onSubmitSymptom(event); event.stopPropagation() }, "Find"),
+              button(cls := "btn", style := "width: 100px;", `type` := "button",
+                onclick := { (event: Event) => $("#inputField").value(""); event.stopPropagation() }, "Clear")
+            )
+          ),
+          div(cls := "container-fluid", style := "margin-top: 23px;", id := "resultStatus"),
+          div(cls := "container-fluid", id := "resultDiv"),
+          div(cls := "span12", id := "caseDiv", {
+            if (Case.size() > 0)
+              Case.toHTML(remedyFormat, appMode)
+            else ""
+          })
+        )
+      }
+      // Page with some results after search...
+      else {
+        div(cls := "container-fluid",
+          div(cls := "container-fluid text-center",
+            div(cls := "row", style := "margin-top:20px;",
+              div(cls := "col-sm-1"),
+              div(cls := "row col-sm-10",
+                ulRepertorySelection,
+                div(cls := "col-sm-7",
+                  input(cls := "form-control", `id` := "inputField",
+                    onkeydown := { (event: dom.KeyboardEvent) =>
+                      if (event.keyCode == 13) {
+                        remedyFilter = ""
+                        event.stopImmediatePropagation()
+                        onSubmitSymptom(event)
+                      }
+                    },
+                    `placeholder` := "Enter a symptom (for example: head, pain, left)")
+                ),
+                span(button(cls := "btn btn-primary", style := "width: 80px; margin-right:5px;", `type` := "button",
+                  onclick := { (event: Event) => remedyFilter = ""; onSubmitSymptom(event); event.stopPropagation() },
+                  span(cls := "oi oi-magnifying-glass", title := "Find", aria.hidden := "true")),
                   button(cls := "btn", style := "width: 80px;", `type` := "button",
                     onclick := { (event: Event) => $("#inputField").value(""); event.stopPropagation() },
-                    span(cls:="oi oi-trash", title:="Clear", aria.hidden:="true"))
-                  )
-                }
-                else
-                  div()
-              }
-            ),
-            div(cls := "col-sm-1")
+                    span(cls := "oi oi-trash", title := "Clear", aria.hidden := "true"))
+                )
+              ),
+              div(cls := "col-sm-1")
+            )
           ),
-          { if (results.size == 0)
-              div(cls := "col-sm-12 text-center", style := "margin-top:20px;",
-                button(cls := "btn btn-dark btn-primary", style := "width: 120px; margin-right:5px;", `type` := "button",
-                  onclick := { (event: Event) => remedyFilter = ""; onSubmitSymptom(event); event.stopPropagation() }, "Find"),
-                button(cls := "btn", style := "width: 100px;", `type` := "button",
-                  onclick := { (event: Event) => $("#inputField").value(""); event.stopPropagation() }, "Clear")
-              )
-            else
-              div()
-          },
-        ),
-        div(cls := "container-fluid", style := "margin-top: 23px;", id := "resultStatus"),
-        div(cls := "container-fluid", id := "resultDiv"),
-        div(cls := "span12", id := "caseDiv", {
-          if (Case.size() > 0)
-            Case.toHTML(remedyFormat)
-          else ""
-        })
-      )
+          div(cls := "container-fluid", style := "margin-top: 23px;", id := "resultStatus"),
+          div(cls := "container-fluid", id := "resultDiv"),
+          div(cls := "span12", id := "caseDiv", {
+            if (Case.size() > 0)
+              Case.toHTML(remedyFormat, appMode)
+            else ""
+          })
+        )
+      }
 
     updateAvailableRepertories()
-    myHTML
+
+    // If initial page, then vertically center search form
+    if (results.size == 0) {
+      div(cls := "introduction", div(cls := "vertical-align", myHTML))
+    }
+    // If there are already some search results, do without center and fix nav bar prior to rendering
+    else {
+      if (dom.document.getElementById("nav_bar_logo").innerHTML.length() == 0) {
+        $("#public_nav_bar").addClass("bg-dark navbar-dark shadow p-3 mb-5")
+        $("#nav_bar_logo").append(a(cls := "navbar-brand py-0", href := serverUrl(), "OOREP").render)
+      }
+      div(style:="margin-top:100px;", myHTML)
+    }
   }
 }

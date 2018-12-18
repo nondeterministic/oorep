@@ -24,9 +24,9 @@ lazy val backend = (project in file("backend")).settings(commonSettings).setting
     "io.circe" %% "circe-parser" % "0.9.3",    
     guice,
     specs2 % Test
-  ),
+  )
   // Compile the project before generating Eclipse files, so that generated .scala or .class files for views and routes are present
-  EclipseKeys.preTasks := Seq(compile in Compile)
+  // EclipseKeys.preTasks := Seq(compile in Compile)
 ).enablePlugins(PlayScala)
  .dependsOn(sharedJvm)
 

@@ -9,4 +9,6 @@ e.g.
 #-mem   <integer>
 -mem 2048
 
+or:
 
+https://stackoverflow.com/questions/41116318/why-play-framework-2-5-doesnt-respect-jvm-memory-settings-in-sbt
