@@ -4,13 +4,13 @@ import scala.collection.mutable.ListBuffer
 import javax.inject._
 import play.api.mvc._
 import io.circe.syntax._
-
+import org.multics.baueran.frep.backend.dao.RepertoryDao
 import org.multics.baueran.frep.backend.repertory._
 // import org.multics.baueran.frep.backend.views.html._
 import org.multics.baueran.frep.shared._
 
-import org.multics.baueran.frep.backend.models.Users
-import org.multics.baueran.frep.backend.dao.UsersDao
+import org.multics.baueran.frep.backend.models.Member
+import org.multics.baueran.frep.backend.dao.MemberDao
 import org.multics.baueran.frep.backend.db.db.DBContext
 import org.multics.baueran.frep.shared.Defs._
 
@@ -21,7 +21,22 @@ import org.multics.baueran.frep.shared.Defs._
 
 @Singleton
 class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends AbstractController(cc) {
-  private val users = new UsersDao(dbContext)
+  private val members = new MemberDao(dbContext)
+  private val repertoryDAO = new RepertoryDao(dbContext)
+
+  availRepositories = RepDatabase.availableRepertories()
+  storeRepositoriesInDB(repertoryDAO)
+
+  def storeRepositoriesInDB(dao: RepertoryDao) = {
+    availRepositories.foreach(repInfo => {
+      if (dao.getInfo(repInfo.abbrev).size == 0) {
+        dao.insert(repInfo)
+        println(s"INFO: Inserted info for ${repInfo.abbrev} in DB.")
+      }
+      else
+        println(s"INFO: ${repInfo.abbrev} already in DB.")
+    })
+  }
 
   def index() = Action { request: Request[AnyContent] =>
     if (authorizedRequestCookies(request) == List.empty)
@@ -31,10 +46,10 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
   }
 
   def get(id: Long) = Action { request: Request[AnyContent] =>
-    val user = users.get(id)
-    val username = user.head.realname
+    val member = members.get(id)
+    val membername = member.head.realname
 
-    Ok("test called: " + username)
+    Ok("test called: " + membername)
   }
 
   def insert(id: Long) = Action { request: Request[AnyContent] =>
@@ -47,10 +62,10 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     // https://stackoverflow.com/questions/32202155/java-simpledateformat-correct-format-for-postgres-timestamp-with-timezone-da
     val today = java.sql.Date.valueOf(LocalDate.now)
 
-    val new_user = Users(id, "baueran", "md5_hash", "Andi Bauer", "email@email.com", "de", None, None, //      student_until: Option[Date] = None,
+    val new_member = Member(id, "baueran", "md5_hash", "Andi Bauer", "email@email.com", "de", None, None, //      student_until: Option[Date] = None,
       Some(today), None)
 
-    users.insert(new_user)
+    members.insert(new_member)
 
     Ok("inserted!")
   }
@@ -68,8 +83,6 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
   }
 
   def availableReps() = Action { request: Request[AnyContent] =>
-    val availRepositories = RepDatabase.availableRepertories()
-
     if (authorizedRequestCookies(request) == List.empty)
       Ok(availRepositories.filter(r => r.access == RepAccess.Default || r.access == RepAccess.Public).asJson.toString())
     else

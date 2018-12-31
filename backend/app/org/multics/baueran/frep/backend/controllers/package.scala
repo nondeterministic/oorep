@@ -8,11 +8,13 @@ import io.circe.syntax._
 import org.multics.baueran.frep.backend.repertory._
 import org.multics.baueran.frep.shared._
 
-import org.multics.baueran.frep.backend.models.Users
-import org.multics.baueran.frep.backend.dao.UsersDao
+import org.multics.baueran.frep.backend.models.Member
+import org.multics.baueran.frep.backend.dao.MemberDao
 import org.multics.baueran.frep.backend.db.db.DBContext
 
 package object controllers {
+
+  var availRepositories: List[Info] = _
 
   /**
     * Returns empty list if request does not contain valid cookies for authorization.

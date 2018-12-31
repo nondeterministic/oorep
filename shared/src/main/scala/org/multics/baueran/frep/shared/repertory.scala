@@ -16,9 +16,9 @@ object RepAccess extends Enumeration {
 import RepAccess._
 
 // ------------------------------------------------------------------------------------------------------------------
-case class Info(abbrev: String, title: String, language: String, 
-                authorLastName: Option[String], authorFirstName: Option[String], 
-                year: Option[Integer], publisher: Option[String], edition: Option[Integer],
+case class Info(abbrev: String, title: String, languag: String,
+                authorLastName: Option[String], authorFirstName: Option[String],
+                yearr: Option[Int], publisher: Option[String], edition: Option[Int],
                 access: RepAccess)
 
 object Info {
@@ -35,15 +35,15 @@ object Info {
         case Right(name) => Some(name)
         case Left(_) => None
       }
-      val year = c.downField("year").as[Integer] match {
-        case Right(year) => Some(year)
+      val yearr = c.downField("year").as[Int] match {
+        case Right(yearr) => Some(yearr)
         case Left(_) => None
       }
       val publisher = c.downField("publisher").as[String] match {
         case Right(publisher) => Some(publisher)
         case Left(_) => None
       }
-      val edition = c.downField("edition").as[Integer] match {
+      val edition = c.downField("edition").as[Int] match {
         case Right(edition) => Some(edition)
         case Left(_) => None
       }
@@ -55,7 +55,7 @@ object Info {
       val result = Info(abbrev, title, language,
         authorLastName,
         authorFirstName,
-        year,
+        yearr,
         publisher,
         edition,
         access)
@@ -67,7 +67,7 @@ object Info {
     def apply(i: Info): Json = Json.obj(
       ("abbrev", Json.fromString(i.abbrev)),
       ("title", Json.fromString(i.title)),
-      ("language", Json.fromString(i.language)),
+      ("language", Json.fromString(i.languag)),
       ("authorLastName", i.authorLastName match {
         case Some(lastName) => Json.fromString(lastName)
         case None => Json.Null
@@ -76,7 +76,7 @@ object Info {
         case Some(firstName) => Json.fromString(firstName)
         case None => Json.Null
       }),
-      ("year", i.year match {
+      ("year", i.yearr match {
         case Some(year) => Json.fromInt(year)
         case None => Json.Null
       }),
@@ -94,7 +94,7 @@ object Info {
 }
 
 // ------------------------------------------------------------------------------------------------------------------
-case class Chapter(id: Integer, text: String)
+case class Chapter(id: Int, text: String)
 
 object Chapter {
   implicit val chapterDecoder: Decoder[Chapter] = deriveDecoder[Chapter]
@@ -102,7 +102,7 @@ object Chapter {
 }
 
 // ------------------------------------------------------------------------------------------------------------------
-case class RubricRemedy(rubricId: Integer, remedyId: Integer, weight: Integer, chapterId: Integer)
+case class RubricRemedy(rubricId: Int, remedyId: Int, weight: Int, chapterId: Int)
 
 object RubricRemedy {
   implicit val rRemedyDecoder: Decoder[RubricRemedy] = deriveDecoder[RubricRemedy]
@@ -110,7 +110,7 @@ object RubricRemedy {
 }
 
 // ------------------------------------------------------------------------------------------------------------------
-case class Remedy(val id: Integer, val nameAbbrev: String, val nameLong: String)
+case class Remedy(val id: Int, val nameAbbrev: String, val nameLong: String)
 
 object Remedy {
   implicit val remedyDecoder: Decoder[Remedy] = deriveDecoder[Remedy]
@@ -118,7 +118,7 @@ object Remedy {
 }
 
 // ------------------------------------------------------------------------------------------------------------------
-case class ChapterRemedy(remedyId: Integer, chapterId: Integer)
+case class ChapterRemedy(remedyId: Int, chapterId: Int)
 
 object ChapterRemedy {
   implicit val cRemedyDecoder: Decoder[ChapterRemedy] = deriveDecoder[ChapterRemedy]
@@ -126,8 +126,8 @@ object ChapterRemedy {
 }
 
 // ------------------------------------------------------------------------------------------------------------------
-case class Rubric(id: Integer, mother: Option[Integer], isMother: Option[Boolean],  
-                  chapterId: Integer, fullPath: String, path: Option[String], text: Option[String]) 
+case class Rubric(id: Int, mother: Option[Int], isMother: Option[Boolean],
+                  chapterId: Int, fullPath: String, path: Option[String], text: Option[String])
 {
   /**
    * Looks for a word, word, within some other text passage, x, where
@@ -186,9 +186,9 @@ case class Rubric(id: Integer, mother: Option[Integer], isMother: Option[Boolean
       isPosMatch
   }
   
-  def remedyWeightTuples(allRemedies: Seq[Remedy], rubricRemedies: Seq[RubricRemedy]): Seq[(Remedy, Integer)] = {
-    var result: ArrayBuffer[(Remedy, Integer)] = new ArrayBuffer[(Remedy,Integer)]
-    val remedyIdWeightTuples: Seq[(Integer, Integer)] = rubricRemedies.filter(_.rubricId == id).map(rr => (rr.remedyId, rr.weight))
+  def remedyWeightTuples(allRemedies: Seq[Remedy], rubricRemedies: Seq[RubricRemedy]): Seq[(Remedy, Int)] = {
+    var result: ArrayBuffer[(Remedy, Int)] = new ArrayBuffer[(Remedy,Int)]
+    val remedyIdWeightTuples: Seq[(Int, Int)] = rubricRemedies.filter(_.rubricId == id).map(rr => (rr.remedyId, rr.weight))
     
     remedyIdWeightTuples.foreach { case (rid, rweight) =>  
       allRemedies.find(_.id == rid) match { 
@@ -207,11 +207,11 @@ object Rubric {
 }
 
 // ------------------------------------------------------------------------------------------------------------------
-class Repertory(val info: Info, val chapters: Seq[Chapter], val remedies: Seq[Remedy],
+case class Repertory(val info: Info, val chapters: Seq[Chapter], val remedies: Seq[Remedy],
                 val chapterRemedies: Seq[ChapterRemedy], val rubrics: Seq[Rubric],
                 val rubricRemedies: Seq[RubricRemedy]) 
 {
-  def chapter(chapterId: Integer): Option[Chapter] = { 
+  def chapter(chapterId: Int): Option[Chapter] = {
     chapters.toList.filter(_.id == chapterId) match {
       case c :: cs => Some(c)
       case Nil     => None

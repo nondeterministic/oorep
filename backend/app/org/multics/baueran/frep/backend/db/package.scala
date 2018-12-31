@@ -1,6 +1,6 @@
 package org.multics.baueran.frep.backend.db
 
-import io.getquill.{PostgresJdbcContext, SnakeCase}
+import io.getquill.{PostgresJdbcContext, SnakeCase, Literal}
 import com.zaxxer.hikari.HikariDataSource
 import play.api.db.Database
 import javax.inject._
@@ -11,6 +11,6 @@ package object db {
   // class DBContext(db: Database) extends PostgresJdbcContext(SnakeCase, db.dataSource.asInstanceOf[HikariDataSource])
 
   @Singleton
-  class DBContext @Inject()(db: Database) extends PostgresJdbcContext(SnakeCase, db.dataSource.asInstanceOf[HikariDataSource])
+  class DBContext @Inject()(db: Database) extends PostgresJdbcContext(Literal, db.dataSource.asInstanceOf[HikariDataSource])
 }
 

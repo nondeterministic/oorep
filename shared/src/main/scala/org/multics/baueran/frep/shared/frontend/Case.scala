@@ -208,7 +208,6 @@ object Case {
       analysisModalDialogHTML(),
 
       // HTML which is visible right from the start...
-      div(h1("Case"), hr),
       div(header),
       div(cls:="table-responsive",
         table(cls:="table table-striped table-sm table-bordered",
