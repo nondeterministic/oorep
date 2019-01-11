@@ -5,16 +5,11 @@ import javax.inject._
 import play.api.mvc._
 import io.circe.syntax._
 
-import org.multics.baueran.frep.backend.repertory._
-import org.multics.baueran.frep.shared._
-
-import org.multics.baueran.frep.backend.models.Member
 import org.multics.baueran.frep.backend.dao.MemberDao
-import org.multics.baueran.frep.backend.db.db.DBContext
 
 package object controllers {
 
-  var availRepositories: List[Info] = _
+  var members: MemberDao = _
 
   /**
     * Returns empty list if request does not contain valid cookies for authorization.
@@ -28,5 +23,15 @@ package object controllers {
       case _ =>
         List.empty
     }
+  }
+
+  def getFrom(cookies: List[Cookie], attribute: String) = {
+    val resultCookies = cookies.filter(_.name == attribute)
+    if (resultCookies.length > 0) {
+      println("INFO: getFrom(Cookies): " + resultCookies.head.value)
+      Some(resultCookies.head.value)
+    }
+    else
+      None
   }
 }

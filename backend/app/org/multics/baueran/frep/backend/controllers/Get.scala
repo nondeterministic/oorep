@@ -4,12 +4,11 @@ import scala.collection.mutable.ListBuffer
 import javax.inject._
 import play.api.mvc._
 import io.circe.syntax._
+
 import org.multics.baueran.frep.backend.dao.RepertoryDao
 import org.multics.baueran.frep.backend.repertory._
 // import org.multics.baueran.frep.backend.views.html._
 import org.multics.baueran.frep.shared._
-
-import org.multics.baueran.frep.backend.models.Member
 import org.multics.baueran.frep.backend.dao.MemberDao
 import org.multics.baueran.frep.backend.db.db.DBContext
 import org.multics.baueran.frep.shared.Defs._
@@ -21,22 +20,9 @@ import org.multics.baueran.frep.shared.Defs._
 
 @Singleton
 class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends AbstractController(cc) {
-  private val members = new MemberDao(dbContext)
-  private val repertoryDAO = new RepertoryDao(dbContext)
 
-  availRepositories = RepDatabase.availableRepertories()
-  storeRepositoriesInDB(repertoryDAO)
-
-  def storeRepositoriesInDB(dao: RepertoryDao) = {
-    availRepositories.foreach(repInfo => {
-      if (dao.getInfo(repInfo.abbrev).size == 0) {
-        dao.insert(repInfo)
-        println(s"INFO: Inserted info for ${repInfo.abbrev} in DB.")
-      }
-      else
-        println(s"INFO: ${repInfo.abbrev} already in DB.")
-    })
-  }
+  members = new MemberDao(dbContext)
+  RepDatabase.setup(dbContext)
 
   def index() = Action { request: Request[AnyContent] =>
     if (authorizedRequestCookies(request) == List.empty)
@@ -45,48 +31,36 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
       Redirect(serverUrl() + "/assets/html/private/index.html")
   }
 
-  def get(id: Long) = Action { request: Request[AnyContent] =>
-    val member = members.get(id)
-    val membername = member.head.realname
-
-    Ok("test called: " + membername)
-  }
-
-  def insert(id: Long) = Action { request: Request[AnyContent] =>
-    import java.util.Date
-    import java.sql.Timestamp
-    import java.sql.Date
-    import java.time.LocalDate
-
-    // https://stackoverflow.com/questions/32133033/java-jdbc-how-to-insert-current-date-but-formatted-into-database
-    // https://stackoverflow.com/questions/32202155/java-simpledateformat-correct-format-for-postgres-timestamp-with-timezone-da
-    val today = java.sql.Date.valueOf(LocalDate.now)
-
-    val new_member = Member(id, "baueran", "md5_hash", "Andi Bauer", "email@email.com", "de", None, None, //      student_until: Option[Date] = None,
-      Some(today), None)
-
-    members.insert(new_member)
-
-    Ok("inserted!")
-  }
-
   /**
     * If method is called, it is expected that the browser has sent a cookie with the
     * request.  The method then checks, if this cookie authenticates the user for access
     * of further application functionality.
     */
   def authenticate() = Action { request: Request[AnyContent] =>
+    import play.api.http.{ContentTypeOf, ContentTypes, Writeable}
+
     authorizedRequestCookies(request) match {
-      case Nil => BadRequest("Not authorized.")
-      case cookies => Ok.withCookies(cookies:_*)
+      case Nil => BadRequest("Not authorized: bad request")
+      case cookies => {
+        getFrom(cookies, "oorep_user_email") match {
+          case None => BadRequest("Not authorized: user not in database.")
+          case Some(memberEmail) => {
+            members.getFromEmail(memberEmail) match {
+              case Nil => BadRequest(s"Not authorized: user ${memberEmail} not in database.")
+              case member :: _ => Writeable.writeableOf_JsValue.transform
+                Ok(member.member_id.toString()).withCookies(cookies:_*)
+            }
+          }
+        }
+      }
     }
   }
 
   def availableReps() = Action { request: Request[AnyContent] =>
     if (authorizedRequestCookies(request) == List.empty)
-      Ok(availRepositories.filter(r => r.access == RepAccess.Default || r.access == RepAccess.Public).asJson.toString())
+      Ok(RepDatabase.availableRepertories().filter(r => r.access == RepAccess.Default || r.access == RepAccess.Public).asJson.toString())
     else
-      Ok(availRepositories.asJson.toString())
+      Ok(RepDatabase.availableRepertories().asJson.toString())
   }
 
   def repertorise(repertoryAbbrev: String, symptom: String) = Action { request: Request[AnyContent] =>
@@ -112,13 +86,13 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
                 // case class CaseRubric(rubric: Rubric, repertoryAbbrev: String, rubricWeight: Int, weightedRemedies: Map[Remedy, Integer])
                 // contains sth. like this: (68955) Bladder, afternoon: None, None: Chel.(2), Sulph.(2), Lil-t.(1), Sabad.(1), Petr.(1), Nux-v.(2), Merc.(1), Hyper.(1), Ferr.(1), Equis.(1), Cic.(1), Chin-s.(1), Bell.(1), Indg.(1), Aloe(1), Lyc.(3), Spig.(1), Lith-c.(1), Sep.(1), Coc-c.(1), Chlol.(1), Alumn.(1), Bov.(1)
                 resultSet += CaseRubric(rubric, repertoryAbbrev, 1,
-                  remedyWeightTuples.foldLeft(Map[Remedy, Integer]()) { (e1, e2) => e1 + (e2._1 -> e2._2) })
+                  remedyWeightTuples.foldLeft(Map[Remedy, Int]()) { (e1, e2) => e1 + (e2._1 -> e2._2) })
               }
               case None => ;
             }
           }
 
-          Ok(resultSet.asJson.toString())
+          Ok(resultSet.asJson.toString()) // .withCookies(request.cookies.toList:_*).bakeCookies()
         }
       case None => BadRequest(s"Repertory $repertoryAbbrev not found. Available repertories: " + RepDatabase.availableRepertories().map(_.abbrev).mkString(", "))
     }

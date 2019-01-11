@@ -123,4 +123,4 @@ lazy val commonSettings = Seq(
 )
 
 // loads the frontend project at sbt startup
-onLoad in Global := (onLoad in Global).value andThen {s: State => "project frontend" :: s}
+onLoad in Global := (onLoad in Global).value andThen {s: State => "project backend" :: s}

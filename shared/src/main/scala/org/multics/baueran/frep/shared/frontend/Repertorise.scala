@@ -257,13 +257,15 @@ object Repertorise {
                 case Right(infos) => {
                   infos.foreach(info => {
                     $("#repSelectionDropDown")
-                      .append(a(cls := "dropdown-item", href := "#", data.value := info.abbrev,
+                      .append(a(cls:="dropdown-item", href:="#", data.value:=info.abbrev,
                         onclick := { (event: Event) =>
                           selectedRepertory = info.abbrev
                           $("#repSelectionDropDownButton").text("Repertory: " + selectedRepertory)
                         }, info.abbrev).render)
 
-                    if (info.access == RepAccess.Default) {
+                    if (selectedRepertory.length > 0)
+                      $("#repSelectionDropDownButton").text("Repertory: " + selectedRepertory)
+                    else if (info.access == RepAccess.Default) {
                       selectedRepertory = info.abbrev
                       $("#repSelectionDropDownButton").text("Repertory: " + selectedRepertory)
                     }

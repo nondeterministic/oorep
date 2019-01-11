@@ -10,7 +10,7 @@ class RepertoryDao(dbContext: db.db.DBContext) {
 
   private val tableInfo = quote { querySchema[Info]("Info", _.abbrev -> "abbrev") }
 
-  def getInfo(abbrev: String) = { // : Future[Option[User]] = {
+  def getInfo(abbrev: String) = {
     implicit val decodeRepAccess = MappedEncoding[String, RepAccess.RepAccess](RepAccess.withName(_))
 
     val select = quote {
@@ -26,6 +26,11 @@ class RepertoryDao(dbContext: db.db.DBContext) {
       tableInfo.insert(lift(info))
     }
     run(insert)
+  }
+
+  def getChapter(chapterId: Int) = {
+    val get = quote(query[Chapter].filter(_.id == lift(chapterId)))
+    run(get)
   }
 
   def insert(chapter: Chapter) = {
@@ -53,11 +58,18 @@ class RepertoryDao(dbContext: db.db.DBContext) {
     run(insert)
   }
 
-// Why not something like this?!
-//
-//  def insert[T](elem: T) = {
-//    val insert = quote(query[T].insert(lift(elem)))
-//    run(insert)
-//  }
+  def insert(cr: CaseRubric) = {
+    implicit val encodeCaseRubric = MappedEncoding[CaseRubric, String](_.toString())
+
+    val insert = quote(query[CaseRubric].insert(lift(cr)))
+    run(insert)
+  }
+
+  def insert(c: org.multics.baueran.frep.shared.Case) = {
+    implicit val encodeCase = MappedEncoding[org.multics.baueran.frep.shared.Case, String](_.toString())
+
+    val insert = quote(query[org.multics.baueran.frep.shared.Case].insert(lift(c)))
+    run(insert)
+  }
 
 }

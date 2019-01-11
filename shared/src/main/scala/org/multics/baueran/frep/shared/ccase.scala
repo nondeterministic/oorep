@@ -7,8 +7,8 @@ import io.circe.syntax._
 
 case class CaseRubric(rubric: Rubric,
                       repertoryAbbrev: String,
-                      var rubricWeight: Integer,
-                      weightedRemedies: Map[Remedy, Integer])
+                      var rubricWeight: Int,
+                      weightedRemedies: Map[Remedy, Int])
 {
   def containsRemedyAbbrev(remedyAbbrev: String) = {
     weightedRemedies.filter(_._1.nameAbbrev == remedyAbbrev).size > 0

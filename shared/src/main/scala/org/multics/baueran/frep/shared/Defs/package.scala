@@ -1,5 +1,7 @@
 package org.multics.baueran.frep.shared
 
+import org.multics.baueran.frep
+
 package object Defs {
   def serverUrl() = "http://localhost:9000"
 

@@ -1,25 +1,26 @@
 package org.multics.baueran.frep.shared.frontend
 
 import org.querki.jquery.$
-import org.scalajs.dom.Event
+import org.scalajs.dom
+import dom.Event
 import scalatags.JsDom.all._
+import scalajs.js
 
 import scala.collection.mutable
 import rx.Var
 import rx.Ctx.Owner.Unsafe._
 import scalatags.rx.all._
-import org.multics.baueran.frep.shared.frontend.RemedyFormat.RemedyFormat
-import org.multics.baueran.frep.shared.{BetterCaseRubric, BetterString, CaseRubric}
-import org.multics.baueran.frep.shared.Defs.AppMode
+
+import org.multics.baueran.frep.shared
+import shared.{BetterCaseRubric, BetterString, CaseRubric}
+import shared.Defs.AppMode
+import shared.frontend.RemedyFormat.RemedyFormat
 
 object Case {
 
-  var id = ""
+  var descr: Option[shared.Case] = None
   var cRubrics = mutable.ArrayBuffer[CaseRubric]()
   var remedyScores = mutable.HashMap[String,Integer]()
-
-  // ------------------------------------------------------------------------------------------------------------------
-  def isEmpty() = id.length() == 0 && cRubrics.size == 0
 
   // ------------------------------------------------------------------------------------------------------------------
   def size() = cRubrics.size
@@ -105,6 +106,50 @@ object Case {
   }
 
   // ------------------------------------------------------------------------------------------------------------------
+  // The modal-dialog HTML-code for editing case description
+  def editDescrModalDialogHTML() = {
+    div(cls:="modal fade", tabindex:="-1", role:="dialog", scalatags.JsDom.attrs.id:="caseDescriptionModal",
+      div(cls:="modal-dialog modal-dialog-centered", role:="document", style:="min-width: 80%;",
+        div(cls:="modal-content",
+          div(cls:="modal-header",
+            h5(cls:="modal-title", "Case description"),
+            button(`type`:="button", cls:="close", data.dismiss:="modal", "\u00d7")
+          ),
+          div(cls:="modal-body",
+            div(cls:="table-responsive",
+              form(
+                div(cls:="form-group",
+                  label(`for`:="caseDescrId", "ID"),
+                  input(cls:="form-control", id:="caseDescrId", placeholder:="A simple, unique case identifier")
+                ),
+                div(cls:="form-group",
+                  label(`for`:="caseDescrDescr", "Description"),
+                  textarea(cls:="form-control", id:="caseDescrDescr", rows:="3", placeholder:="A more verbose description of the case")
+                ),
+                div(
+                  button(data.dismiss:="modal", cls:="btn mb-2", "Cancel"),
+                  button(cls:="btn btn-primary mb-2", `type` := "button",
+                    "Submit",
+                    onclick:={(event: Event) =>
+                      event.stopPropagation()
+
+                      val caseIdTxt = $("#caseDescrId").text()
+                      val caseDescrTxt = $("#caseDescrDescr").text()
+                      val caseDate = new js.Date()
+
+                      // descr = Some(shared.Case(caseIdTxt, "owner", new java.sql.Date(caseDate.getFullYear(), caseDate.getMonth(), caseDate.getDay()), caseDescrTxt, List.empty))
+                      println("Submit pressed by " + dom.document.cookie.toString)
+                    })
+                )
+              )
+            )
+          )
+        )
+      )
+    )
+  }
+
+  // ------------------------------------------------------------------------------------------------------------------
   def toHTML(remedyFormat: RemedyFormat, appMode: AppMode.AppMode) = {
 
     def caseRow(crub: CaseRubric) = {
@@ -138,74 +183,93 @@ object Case {
             style := "vertical-align: middle; display: inline-block",
             onclick := { (event: Event) => {
               event.stopPropagation()
+              crub.rubricWeight = 1
               cRubrics.remove(cRubrics.indexOf(crub))
               $("#crub_" + crub.rubric.id + crub.repertoryAbbrev).remove()
               updateDataStructures()
 
               // Enable add-button in results, if removed symptom was in the displayed results list...
               $("#button_" + crub.repertoryAbbrev + "_" + crub.rubric.id).removeAttr("disabled")
+
+              // If this was last case-rubric, clear case div
+              if (cRubrics.size == 0)
+                $("#caseDiv").empty()
             }
             }, "Remove")
         )
       )
     }
 
-    val header =
-      if (appMode == AppMode.Secure && id.length() > 0) {
+    def header() = {
+      val analyseButton =
+        button(cls:="btn btn-sm btn-primary", `type`:="button", data.toggle:="modal", data.target:="#caseAnalysisModal", style:="margin-left:5px; margin-bottom: 5px;",
+          onclick := { (event: Event) => {
+            updateAnalysisView()
+          }}, "Analyse")
+      val editDescrButton =
+        button(cls:="btn btn-sm btn-dark", `type`:="button", data.toggle:="modal", data.target:="#caseDescriptionModal", style:="margin-left:5px; margin-bottom: 5px;",
+          onclick := { (event: Event) => {
+            println("TODO: Case Description Modal")
+          }
+          }, "Edit description")
+      val addToFileButton =
+        button(cls:="btn btn-sm btn-dark", `type`:="button", data.toggle:="modal", data.target:="#TODO", style:="margin-left:5px; margin-bottom: 5px;",
+          onclick := { (event: Event) => {
+            println("TODO")
+          }
+          }, "Add to file")
+      val removeFromFileButton =
+        button(cls:="btn btn-sm btn-dark", `type`:="button", data.toggle:="modal", data.target:="#TODO", style:="margin-left:5px; margin-bottom: 5px;",
+          onclick := { (event: Event) => {
+            println("TODO")
+          }
+          }, "Remove from file")
+      val showFileButton =
+        button(cls:="btn btn-sm btn-dark", `type`:="button", data.toggle:="modal", data.target:="#TODO", style:="margin-left:5px; margin-bottom: 5px;",
+          onclick := { (event: Event) => {
+            println("TODO")
+          }
+          }, "Show file")
+
+
+      if (appMode == AppMode.Secure && descr != None) {
         div(
           b("Case '" + id + "':",
-            button(cls:="btn btn-sm btn-dark disabled", `type`:="button", data.toggle:="modal", data.target:="#caseAnalysisModal", style:="margin-left:25px; margin-bottom: 5px;",
-              onclick:={ (event: Event) => {
+            button(cls := "btn btn-sm btn-dark disabled", `type` := "button", data.toggle := "modal", data.target := "#caseAnalysisModal", style := "margin-left:25px; margin-bottom: 5px;",
+              onclick := { (event: Event) => {
                 updateAnalysisView()
-              }}, "New..."),
-            button(cls:="btn btn-sm btn-dark", `type`:="button", data.toggle:="modal", data.target:="#caseAnalysisModal", style:="margin-left:5px; margin-bottom: 5px;",
-              onclick:={ (event: Event) => {
+              }
+              }, "New..."),
+            button(cls := "btn btn-sm btn-dark", `type` := "button", data.toggle := "modal", data.target := "#caseAnalysisModal", style := "margin-left:5px; margin-bottom: 5px;",
+              onclick := { (event: Event) => {
                 updateAnalysisView()
-              }}, "Add analysis"),
-            button(cls:="btn btn-sm btn-primary", `type`:="button", data.toggle:="modal", data.target:="#caseAnalysisModal", style:="margin-left:5px; margin-bottom: 5px;",
-              onclick:={ (event: Event) => {
-                updateAnalysisView()
-              }}, "Analyse...")
+              }
+              }, "Add analysis"),
+            analyseButton
           )
         )
       }
-      else if (appMode == AppMode.Secure && id.length() == 0) {
+      else if (appMode == AppMode.Secure && descr == None) {
         div(
           b("Case: "),
-          button(cls:="btn btn-sm btn-dark", `type`:="button", data.toggle:="modal", data.target:="#caseAnalysisModal", style:="margin-left:25px; margin-bottom: 5px;",
-            onclick:={ (event: Event) => {
-              updateAnalysisView()
-            }}, "New..."),
-          button(cls:="btn btn-sm btn-dark disabled", `type`:="button", data.toggle:="modal", data.target:="#caseAnalysisModal", style:="margin-left:5px; margin-bottom: 5px;",
-            onclick:={ (event: Event) => {
-              updateAnalysisView()
-            }}, "Add to file"),
-          button(cls:="btn btn-sm btn-primary", `type`:="button", data.toggle:="modal", data.target:="#caseAnalysisModal", style:="margin-left:5px; margin-bottom: 5px;",
-            onclick:={ (event: Event) => {
-              updateAnalysisView()
-            }}, "Analyse...")
+          editDescrButton,
+          addToFileButton,
+          analyseButton
         )
       }
       else { // if (appMode == AppMode.Public)
         div(
           b("Case: "),
-          button(cls:="btn btn-sm btn-dark disabled", `type`:="button", data.toggle:="modal", data.target:="#caseAnalysisModal", style:="margin-left:25px; margin-bottom: 5px;",
-            onclick:={ (event: Event) => {
-              updateAnalysisView()
-            }}, "New..."),
-          button(cls:="btn btn-sm btn-dark disabled", `type`:="button", data.toggle:="modal", data.target:="#caseAnalysisModal", style:="margin-left:5px; margin-bottom: 5px;",
-            onclick:={ (event: Event) => {
-              updateAnalysisView()
-            }}, "Add analysis"),
-          button(cls:="btn btn-sm btn-primary", `type`:="button", data.toggle:="modal", data.target:="#caseAnalysisModal", style:="margin-left:5px; margin-bottom: 5px;",
-            onclick:={ (event: Event) => {
-              updateAnalysisView()
-            }}, "Analyse...")
+          editDescrButton,
+          addToFileButton,
+          analyseButton
         )
       }
+    }
 
     div(cls:="container-fluid",
       analysisModalDialogHTML(),
+      editDescrModalDialogHTML(),
 
       // HTML which is visible right from the start...
       div(header),

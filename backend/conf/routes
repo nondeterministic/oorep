@@ -5,8 +5,6 @@
 
 # An example controller showing a sample home page
 GET     /                           org.multics.baueran.frep.backend.controllers.Get.index
-GET     /get/:id               		org.multics.baueran.frep.backend.controllers.Get.get(id: Long)
-GET     /insert/:id            		org.multics.baueran.frep.backend.controllers.Get.insert(id: Long)
 
 +nocsrf
 POST   	/login                      org.multics.baueran.frep.backend.controllers.Post.login

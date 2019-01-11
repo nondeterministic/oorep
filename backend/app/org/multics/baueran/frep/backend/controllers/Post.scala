@@ -14,9 +14,10 @@ class Post @Inject()(cc: ControllerComponents) extends AbstractController(cc) {
       val inputPassword: String = request.body.asFormUrlEncoded.get("inputPassword").head
 
       // TODO: Do some sensible authentication here...
-      if (inputEmail == "ssj@ksks.com") {
+      if (inputEmail == "ssj@ksks.com" || inputEmail == "aa@aa.com") {
         Redirect(serverUrl() + "/assets/html/private/index.html")
           .withCookies(Cookie("oorep_user_email", inputEmail), Cookie("oorep_user_password", inputPassword))
+          // .bakeCookies()
       }
       else
         BadRequest("Not authorized.")
