@@ -25,6 +25,13 @@ package object controllers {
     }
   }
 
+  /**
+    * Extract data from a cookie
+    *
+    * @param cookies
+    * @param attribute
+    * @return
+    */
   def getFrom(cookies: List[Cookie], attribute: String) = {
     val resultCookies = cookies.filter(_.name == attribute)
     if (resultCookies.length > 0) {

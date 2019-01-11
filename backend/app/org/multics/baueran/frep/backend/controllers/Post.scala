@@ -13,14 +13,13 @@ class Post @Inject()(cc: ControllerComponents) extends AbstractController(cc) {
       val inputEmail: String = request.body.asFormUrlEncoded.get("inputEmail").head
       val inputPassword: String = request.body.asFormUrlEncoded.get("inputPassword").head
 
-      // TODO: Do some sensible authentication here...
-      if (inputEmail == "ssj@ksks.com" || inputEmail == "aa@aa.com") {
-        Redirect(serverUrl() + "/assets/html/private/index.html")
-          .withCookies(Cookie("oorep_user_email", inputEmail), Cookie("oorep_user_password", inputPassword))
-          // .bakeCookies()
+      // TODO: Password is still ignored!!
+      members.getFromEmail(inputEmail) match {
+        case Nil => BadRequest("Not authorized: user not in DB")
+        case member :: _ =>
+          Redirect(serverUrl() + "/assets/html/private/index.html")
+            .withCookies(Cookie("oorep_user_email", inputEmail), Cookie("oorep_user_password", inputPassword))
       }
-      else
-        BadRequest("Not authorized.")
   }
 
 }
