@@ -18,7 +18,10 @@ class Post @Inject()(cc: ControllerComponents) extends AbstractController(cc) {
         case Nil => BadRequest("Not authorized: user not in DB")
         case member :: _ =>
           Redirect(serverUrl() + "/assets/html/private/index.html")
-            .withCookies(Cookie("oorep_user_email", inputEmail), Cookie("oorep_user_password", inputPassword))
+            .withCookies(Cookie("oorep_member_email", inputEmail, httpOnly = false),
+              Cookie("oorep_member_password", inputPassword, httpOnly = false),
+              Cookie("oorep_member_id", member.member_id.toString, httpOnly = false)
+            )
       }
   }
 

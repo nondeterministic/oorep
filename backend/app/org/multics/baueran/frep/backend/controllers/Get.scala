@@ -37,18 +37,16 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     * of further application functionality.
     */
   def authenticate() = Action { request: Request[AnyContent] =>
-    import play.api.http.{ContentTypeOf, ContentTypes, Writeable}
-
     authorizedRequestCookies(request) match {
       case Nil => BadRequest("Not authorized: bad request")
       case cookies => {
-        getFrom(cookies, "oorep_user_email") match {
+        getFrom(cookies, "oorep_member_email") match {
           case None => BadRequest("Not authorized: user not in database.")
           case Some(memberEmail) => {
             members.getFromEmail(memberEmail) match {
               case Nil => BadRequest(s"Not authorized: user ${memberEmail} not in database.")
-              case member :: _ => Writeable.writeableOf_JsValue.transform
-                Ok(member.member_id.toString()).withCookies(cookies:_*)
+              case member :: _ => Ok(member.member_id.toString()).withCookies(cookies.map({ c => Cookie(name = c.name, value = c.value, httpOnly = false) }):_*)
+                // Ok(member.member_id.toString()).withCookies(cookies:_*)
             }
           }
         }

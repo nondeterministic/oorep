@@ -17,9 +17,9 @@ package object controllers {
     */
   // TODO: Add database lookup for cookie-data validation!
   def authorizedRequestCookies(request: Request[AnyContent]): List[Cookie] = {
-    (request.cookies.get("oorep_user_email"), request.cookies.get("oorep_user_password")) match {
-      case (Some(cookie_email), Some(cookie_password)) =>
-        List(cookie_email, cookie_password)
+    (request.cookies.get("oorep_member_email"), request.cookies.get("oorep_member_password"), request.cookies.get("oorep_member_id")) match {
+      case (Some(cookie_email), Some(cookie_password), Some(cookie_id)) =>
+        List(cookie_email, cookie_password, cookie_id)
       case _ =>
         List.empty
     }

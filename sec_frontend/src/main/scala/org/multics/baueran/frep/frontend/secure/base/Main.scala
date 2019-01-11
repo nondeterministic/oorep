@@ -31,6 +31,8 @@ object Main {
       .send()
       .onComplete({
         case response: Success[SimpleHttpResponse] => {
+          println(dom.document.cookie)
+
           $("#nav_bar").empty()
           $("#nav_bar").append(NavBar.apply().render)
           $("#content").append(Repertorise.applySecure().render)
