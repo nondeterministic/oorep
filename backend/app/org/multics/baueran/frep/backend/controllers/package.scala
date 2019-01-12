@@ -26,7 +26,7 @@ package object controllers {
   }
 
   /**
-    * Extract data from a cookie
+    * Extract data from a cookie, e.g. a cookie like this "attribute=data;"
     *
     * @param cookies
     * @param attribute

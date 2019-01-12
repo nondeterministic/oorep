@@ -16,7 +16,7 @@ class MemberDao(dbContext: db.db.DBContext) {
     run(insert)
   }
 
-  def get(id: Long) = { // : Future[Option[User]] = {
+  def get(id: Int) = { // : Future[Option[User]] = {
     val select = quote {
       tableMember.filter(_.member_id == lift(id))
     }

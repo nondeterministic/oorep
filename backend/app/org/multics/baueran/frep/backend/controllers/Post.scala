@@ -6,6 +6,8 @@ import play.api.mvc._
 import play.api.libs.json
 import play.api.libs.json.Json
 import org.multics.baueran.frep.shared.Defs._
+import org.multics.baueran.frep.shared.Member
+import Member._
 
 class Post @Inject()(cc: ControllerComponents) extends AbstractController(cc) {
   def login() = Action {
@@ -21,6 +23,9 @@ class Post @Inject()(cc: ControllerComponents) extends AbstractController(cc) {
             .withCookies(Cookie("oorep_member_email", inputEmail, httpOnly = false),
               Cookie("oorep_member_password", inputPassword, httpOnly = false),
               Cookie("oorep_member_id", member.member_id.toString, httpOnly = false)
+
+              // Does not work because JSON contains invalid Cookie values. :-(
+              // Cookie("oorep_member_id", Member.memberEncoder(member).toString(), httpOnly=false)
             )
       }
   }
