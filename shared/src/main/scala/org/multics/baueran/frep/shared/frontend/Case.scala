@@ -136,9 +136,33 @@ object Case {
                       val caseIdTxt = $("#caseDescrId").text()
                       val caseDescrTxt = $("#caseDescrDescr").text()
                       val caseDate = new js.Date()
+                      val memberId = getCookieData(dom.document.cookie, "oorep_member_id") match {
+                        case Some(id) => id
+                        case None => -1 // TODO: Force user to relogin; the identification cookie has disappeared!!!!!!!!!!
+                      }
+
+                      // val member = members.
+
+//                      case class Member(member_id: Long,
+//                                        member_name: String,
+//                                        md5: String,
+//                                        realname: String,
+//                                        email: String,
+//                                        country: String,
+//                                        company: Option[String] = None,
+//                                        title: Option[String] = None,
+//                                        student_until: Option[Date] = None,
+//                                        profession: Option[String] = None)
+
+                      //                      case class Case(id: String,
+//                                      owner: Member,
+//                                      date: Date,
+//                                      description: String,
+//                                      results: List[CaseRubric])
 
                       // descr = Some(shared.Case(caseIdTxt, "owner", new java.sql.Date(caseDate.getFullYear(), caseDate.getMonth(), caseDate.getDay()), caseDescrTxt, List.empty))
-                      println("Submit pressed by " + dom.document.cookie.toString)
+                      println("Submit pressed by " + dom.document.cookie)
+                      // println("Cookie data " + )
                     })
                 )
               )
