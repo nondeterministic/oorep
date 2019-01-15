@@ -123,15 +123,29 @@ object Case {
               form(
                 div(cls:="form-group",
                   label(`for`:="caseDescrId", "ID"),
-                  input(cls:="form-control", id:="caseDescrId", placeholder:="A simple, unique case identifier")
+                  descr match {
+                    case None => input(cls:="form-control", id:="caseDescrId", placeholder:="A simple, unique case identifier")
+                    case Some(d) => input(cls:="form-control", id:="caseDescrId", placeholder:="A simple, unique case identifier", value:=d.description)
+                  },
                 ),
                 div(cls:="form-group",
                   label(`for`:="caseDescrDescr", "Description"),
                   textarea(cls:="form-control", id:="caseDescrDescr", rows:="3", placeholder:="A more verbose description of the case")
                 ),
                 div(
-                  button(data.dismiss:="modal", cls:="btn mb-2", "Cancel"),
-                  button(cls:="btn btn-primary mb-2", `type` := "button",
+                  button(data.dismiss:="modal", cls:="btn mb-2",
+                    "Cancel",
+                    onclick:={ (event: Event) =>
+                      descr match {
+                        case Some(descr) =>
+                          $("#caseDescrId").`val`(descr.id)
+                          $("#caseDescrDescr").`val`(descr.description)
+                        case None =>
+                          $("#caseDescrId").`val`("")
+                          $("#caseDescrDescr").`val`("")
+                      }
+                    }),
+                  button(cls:="btn btn-primary mb-2", `type`:="button",
                     "Submit",
                     onclick:={(event: Event) =>
                       event.stopPropagation()
@@ -143,15 +157,9 @@ object Case {
                         case None => -1 // TODO: Force user to relogin; the identification cookie has disappeared!!!!!!!!!!
                       }
 
-//                      case class Case(id: String,
-//                                      owner: Member,
-//                                      date: Date,
-//                                      description: String,
-//                                      results: List[CaseRubric])
-
-                      descr = Some(shared.Case(caseIdTxt, memberId, new Date(), caseDescrTxt, List.empty))
+                      descr = Some(shared.Case(caseIdTxt, memberId, new Date(), caseDescrTxt, cRubrics.toList))
                       println("Submit pressed by " + dom.document.cookie)
-                      println("Descr.: " + descr)
+                      js.eval("$('#caseDescriptionModal').modal('hide');") // TODO: https://stackoverflow.com/questions/50429272/how-to-invoke-modal-close-in-scala-js
                     })
                 )
               )
@@ -222,7 +230,12 @@ object Case {
       val editDescrButton =
         button(cls:="btn btn-sm btn-dark", `type`:="button", data.toggle:="modal", data.target:="#caseDescriptionModal", style:="margin-left:5px; margin-bottom: 5px;",
           onclick := { (event: Event) => {
-            println("TODO: Case Description Modal")
+            descr match {
+              case Some(descr) =>
+                $("#caseDescrId").`val`(descr.id)
+                $("#caseDescrDescr").`val`(descr.description)
+              case None => ;
+            }
           }
           }, "Edit description")
       val addToFileButton =
@@ -243,7 +256,6 @@ object Case {
             println("TODO")
           }
           }, "Show file")
-
 
       if (appMode == AppMode.Secure && descr != None) {
         div(
