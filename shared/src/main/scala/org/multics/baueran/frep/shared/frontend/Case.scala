@@ -124,8 +124,8 @@ object Case {
                 div(cls:="form-group",
                   label(`for`:="caseDescrId", "ID"),
                   descr match {
-                    case None => input(cls:="form-control", id:="caseDescrId", placeholder:="A simple, unique case identifier")
-                    case Some(d) => input(cls:="form-control", id:="caseDescrId", placeholder:="A simple, unique case identifier", value:=d.description)
+                    case None => input(cls:="form-control", id:="caseDescrId", placeholder:="A simple, unique case identifier", required)
+                    case Some(d) => input(cls:="form-control", id:="caseDescrId", placeholder:="A simple, unique case identifier", required, value:=d.description)
                   },
                 ),
                 div(cls:="form-group",
@@ -259,17 +259,9 @@ object Case {
 
       if (appMode == AppMode.Secure && descr != None) {
         div(
-          b("Case '" + id + "':",
-            button(cls := "btn btn-sm btn-dark disabled", `type` := "button", data.toggle := "modal", data.target := "#caseAnalysisModal", style := "margin-left:25px; margin-bottom: 5px;",
-              onclick := { (event: Event) => {
-                updateAnalysisView()
-              }
-              }, "New..."),
-            button(cls := "btn btn-sm btn-dark", `type` := "button", data.toggle := "modal", data.target := "#caseAnalysisModal", style := "margin-left:5px; margin-bottom: 5px;",
-              onclick := { (event: Event) => {
-                updateAnalysisView()
-              }
-              }, "Add analysis"),
+          b("Case '" + descr.get.id + "':",
+            editDescrButton,
+            addToFileButton,
             analyseButton
           )
         )
