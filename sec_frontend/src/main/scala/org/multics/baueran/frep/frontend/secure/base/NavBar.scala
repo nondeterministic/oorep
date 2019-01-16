@@ -17,8 +17,13 @@ object NavBar {
         div( // cls:="ml-auto",
           ul(cls:="navbar-nav",
             li(cls:="navbar-item", a(cls:="nav-link", href:="", onclick:={ () => println("pressed1") })("Repertory")),
-            li(cls:="navbar-item", a(cls:="nav-link", href:="", onclick:={ () => println("pressed1") })("Materia Media")),
-            li(cls:="navbar-item", a(cls:="nav-link", href:="", onclick:={ () => println("pressed2") })("File"))
+            li(cls:="navbar-item", a(cls:="nav-link", href:="", onclick:={ () => println("pressed1") })("Materia Medica")),
+            li(cls:="navbar-item dropdown", a(cls:="nav-link dropdown-toggle", href:="#", data.toggle:="dropdown")("File"),
+              div(cls:="dropdown-menu",
+                a(cls:="dropdown-item", href:="#")("Action1"),
+                a(cls:="dropdown-item", href:="#")("Action2")
+              )
+            )
           )
         ),
         div(cls:="ml-auto",
