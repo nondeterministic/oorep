@@ -158,7 +158,7 @@ object Case {
                       }
 
                       descr = Some(shared.Case(caseIdTxt, memberId, new Date(), caseDescrTxt, cRubrics.toList))
-                      println("Submit pressed by " + dom.document.cookie)
+                      dom.document.getElementById("caseHeader").textContent = s"Case '${descr.get.id}':"
                       js.eval("$('#caseDescriptionModal').modal('hide');") // TODO: https://stackoverflow.com/questions/50429272/how-to-invoke-modal-close-in-scala-js
                     })
                 )
@@ -259,16 +259,15 @@ object Case {
 
       if (appMode == AppMode.Secure && descr != None) {
         div(
-          b("Case '" + descr.get.id + "':",
-            editDescrButton,
-            addToFileButton,
-            analyseButton
-          )
+          b(id:="caseHeader", "Case '" + descr.get.id + "':"),
+          editDescrButton,
+          addToFileButton,
+          analyseButton
         )
       }
       else if (appMode == AppMode.Secure && descr == None) {
         div(
-          b("Case: "),
+          b(id:="caseHeader", "Case: "),
           editDescrButton,
           addToFileButton,
           analyseButton
@@ -276,7 +275,7 @@ object Case {
       }
       else { // if (appMode == AppMode.Public)
         div(
-          b("Case: "),
+          b(id:="caseHeader", "Case: "),
           editDescrButton,
           addToFileButton,
           analyseButton
