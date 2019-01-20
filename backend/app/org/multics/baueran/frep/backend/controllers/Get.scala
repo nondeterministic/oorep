@@ -77,7 +77,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
             (loadedRepertory.chapter(rubric.chapterId): Option[Chapter]) match {
               case Some(chapter) => {
                 val remedyWeightTuples = rubric.remedyWeightTuples(loadedRepertory.remedies, loadedRepertory.rubricRemedies)
-                val response = ("(" + rubric.id + ") " + rubric.fullPath + ": " + rubric.path + ", " + rubric.text + ": "
+                val response = ("(" + rubric.id + ") " + rubric.fullPath + ": " + rubric.path + ", " + rubric.textt + ": "
                                + remedyWeightTuples.map { case (r, w) => r.nameAbbrev + "(" + w + ")" }.mkString(", "))
                 // println(response)
 

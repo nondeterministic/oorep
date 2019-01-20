@@ -35,6 +35,36 @@ CREATE TABLE INFO(
   ACCESS       VARCHAR(255)
 );
 
+CREATE TABLE RUBRIC(
+  ID          INT PRIMARY KEY NOT NULL,
+  MOTHER      INT,
+  ISMOTHER    BOOLEAN,
+  CHAPTERID   INT NOT NULL,
+  FULLPATH    VARCHAR(255) NOT NULL,
+  PATH        VARCHAR(255),
+  TEXTT       VARCHAR(255)
+);
+
+--case class Remedy(val id: Int, val nameAbbrev: String, val nameLong: String)
+
+CREATE TABLE REMEDY(
+  ID          INT PRIMARY KEY NOT NULL,
+  NAMEABBREV  VARCHAR(10) NOT NULL,
+  NAMELONG    VARCHAR(40) NOT NULL
+);
+
+CREATE TABLE CAZE(
+  MEMBER_ID   INT NOT NULL,
+  DATE_       DATE NOT NULL,
+  DESCRIPTION VARCHAR(1024) NOT NULL,
+  RESULTS
+);
+
+--id: String,
+--                member_id: Int,
+--                date: Date,
+--                description: String,
+--                results: List[CaseRubric])
 # --- !Downs
 
 DROP TABLE ACTIVITY;

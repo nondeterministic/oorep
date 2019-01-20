@@ -65,10 +65,10 @@ class RepertoryDao(dbContext: db.db.DBContext) {
     run(insert)
   }
 
-  def insert(c: org.multics.baueran.frep.shared.Case) = {
-    implicit val encodeCase = MappedEncoding[org.multics.baueran.frep.shared.Case, String](_.toString())
+  def insert(c: org.multics.baueran.frep.shared.Caze) = {
+    implicit val encodeCase = MappedEncoding[org.multics.baueran.frep.shared.Caze, String](_.toString())
 
-    val insert = quote(query[org.multics.baueran.frep.shared.Case].insert(lift(c)))
+    val insert = quote(query[org.multics.baueran.frep.shared.Caze].insert(lift(c)))
     run(insert)
   }
 

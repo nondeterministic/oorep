@@ -21,7 +21,7 @@ import shared.frontend.RemedyFormat.RemedyFormat
 
 object Case {
 
-  var descr: Option[shared.Case] = None
+  var descr: Option[shared.Caze] = None
   var cRubrics = mutable.ArrayBuffer[CaseRubric]()
   var remedyScores = mutable.HashMap[String,Integer]()
 
@@ -157,7 +157,7 @@ object Case {
                         case None => -1 // TODO: Force user to relogin; the identification cookie has disappeared!!!!!!!!!!
                       }
 
-                      descr = Some(shared.Case(caseIdTxt, memberId, new Date(), caseDescrTxt, cRubrics.toList))
+                      descr = Some(shared.Caze(caseIdTxt, memberId, new Date(), caseDescrTxt, cRubrics.toList))
                       dom.document.getElementById("caseHeader").textContent = s"Case '${descr.get.id}':"
                       js.eval("$('#caseDescriptionModal').modal('hide');") // TODO: https://stackoverflow.com/questions/50429272/how-to-invoke-modal-close-in-scala-js
                     })

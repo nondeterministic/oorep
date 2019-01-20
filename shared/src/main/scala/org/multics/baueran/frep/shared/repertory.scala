@@ -127,7 +127,7 @@ object ChapterRemedy {
 
 // ------------------------------------------------------------------------------------------------------------------
 case class Rubric(id: Int, mother: Option[Int], isMother: Option[Boolean],
-                  chapterId: Int, fullPath: String, path: Option[String], text: Option[String])
+                  chapterId: Int, fullPath: String, path: Option[String], textt: Option[String])
 {
   /**
    * Looks for a word, word, within some other text passage, x, where
@@ -142,7 +142,7 @@ case class Rubric(id: Int, mother: Option[Int], isMother: Option[Boolean],
 
         if (!caseSensitive) {
           wordMod = word.toLowerCase
-          xMod = x.toLowerCase          
+          xMod = x.toLowerCase
         }
 
         val searchSpace = xMod.replaceAll("[^A-Za-z0-9 \\-]", "").split(" ")
@@ -155,18 +155,18 @@ case class Rubric(id: Int, mother: Option[Int], isMother: Option[Boolean],
 
           val searchPattern = wordMod.replaceAll("\\*", ".*").r
           searchSpace.filter(searchPattern.findFirstMatchIn(_).isDefined).length > 0
-        }            
+        }
         else
           searchSpace.contains(wordMod)
       }
     }
   }
-  
+
   /**
    * Checks if rubric matches all words in posStrings, so long as it doesn't match a word in negStrings.
    */
   def isMatchFor(posStrings: List[String], negStrings: List[String], caseSensitive: Boolean = false): Boolean = {
-    def isWordInText(word: String, caseSensitive: Boolean) = isWordInX(word, text, caseSensitive)
+    def isWordInText(word: String, caseSensitive: Boolean) = isWordInX(word, textt, caseSensitive)
     def isWordInPath(word: String, caseSensitive: Boolean) = isWordInX(word, path, caseSensitive)
     def isWordInFullPath(word: String, caseSensitive: Boolean) = isWordInX(word, Some(fullPath), caseSensitive)
 

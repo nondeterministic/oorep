@@ -23,6 +23,9 @@ case class CaseRubric(rubric: Rubric,
   }
 }
 
+// case class weightedRemediesForRubric(caseRubric: CaseRubric, remedy: Remedy, weight: Int)
+
+
 object CaseRubric {
 
   // TODO: This seems a bit stupid: I provide a custom keyDe/Encoder, which
