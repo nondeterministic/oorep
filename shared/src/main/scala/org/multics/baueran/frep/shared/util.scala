@@ -9,8 +9,8 @@ class BetterString(val s: String) {
 class BetterCaseRubric(val cr: CaseRubric) {
 
   def getFormattedRemedies() = {
-    cr.weightedRemedies.toList.sortBy(_._1.nameAbbrev).map {
-      case (r, w) =>
+    cr.weightedRemedies.toList.sortBy(_.remedy.nameAbbrev).map {
+      case WeightedRemedy(r, w) =>
         if (w == 2)
           b(r.nameAbbrev)
         else if (w == 3)
@@ -23,8 +23,8 @@ class BetterCaseRubric(val cr: CaseRubric) {
   }
 
   def getRawRemedies() = {
-    cr.weightedRemedies.toList.sortBy(_._1.nameAbbrev).map {
-      case (r, w) =>
+    cr.weightedRemedies.toList.sortBy(_.remedy.nameAbbrev).map {
+      case WeightedRemedy(r, w) =>
         if (w > 1)
           span(r.nameAbbrev + " (" + w.toString() + ")")
         else

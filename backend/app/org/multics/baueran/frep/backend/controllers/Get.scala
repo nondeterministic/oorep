@@ -12,6 +12,7 @@ import org.multics.baueran.frep.shared._
 import org.multics.baueran.frep.backend.dao.MemberDao
 import org.multics.baueran.frep.backend.db.db.DBContext
 import org.multics.baueran.frep.shared.Defs._
+import org.multics.baueran.frep.shared.WeightedRemedy
 
 /**
  * This controller creates an `Action` to handle HTTP requests to the
@@ -84,7 +85,8 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
                 // case class CaseRubric(rubric: Rubric, repertoryAbbrev: String, rubricWeight: Int, weightedRemedies: Map[Remedy, Integer])
                 // contains sth. like this: (68955) Bladder, afternoon: None, None: Chel.(2), Sulph.(2), Lil-t.(1), Sabad.(1), Petr.(1), Nux-v.(2), Merc.(1), Hyper.(1), Ferr.(1), Equis.(1), Cic.(1), Chin-s.(1), Bell.(1), Indg.(1), Aloe(1), Lyc.(3), Spig.(1), Lith-c.(1), Sep.(1), Coc-c.(1), Chlol.(1), Alumn.(1), Bov.(1)
                 resultSet += CaseRubric(rubric, repertoryAbbrev, 1,
-                  remedyWeightTuples.foldLeft(Map[Remedy, Int]()) { (e1, e2) => e1 + (e2._1 -> e2._2) })
+                  remedyWeightTuples.map(f => WeightedRemedy(f._1, f._2)).toList)
+                  // remedyWeightTuples.foldLeft(Map[Remedy, Int]()) { (e1, e2) => e1 + (e2._1 -> e2._2) })
               }
               case None => ;
             }

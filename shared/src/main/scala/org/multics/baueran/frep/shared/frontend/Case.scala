@@ -15,7 +15,7 @@ import rx.Ctx.Owner.Unsafe._
 import scalatags.rx.all._
 import org.multics.baueran.frep.shared
 import org.scalajs.dom.raw.HTMLInputElement
-import shared.{BetterCaseRubric, BetterString, CaseRubric}
+import shared.{BetterCaseRubric, BetterString, CaseRubric, WeightedRemedy}
 import shared.Defs.AppMode
 import shared.frontend.RemedyFormat.RemedyFormat
 
@@ -38,7 +38,7 @@ object Case {
   def updateDataStructures() = {
     remedyScores.clear()
     cRubrics.foreach(caseRubric => {
-      caseRubric.weightedRemedies.foreach { case (r, w) => {
+      caseRubric.weightedRemedies.foreach { case WeightedRemedy(r, w) => {
         remedyScores.put(r.nameAbbrev, remedyScores.getOrElseUpdate(r.nameAbbrev, 0) + caseRubric.rubricWeight * w)
       }}
     })

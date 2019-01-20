@@ -48,7 +48,7 @@ object Repertorise {
       var remedies = mutable.HashMap[Remedy, (Integer, Integer)]()
 
       for (cr <- results) {
-        for ((r,w) <- cr.weightedRemedies) {
+        for (WeightedRemedy(r,w) <- cr.weightedRemedies) {
           if (remedies.contains(r)) {
             val weight = remedies.get(r).get._1 + w
             val occurrence = remedies.get(r).get._2 + 1

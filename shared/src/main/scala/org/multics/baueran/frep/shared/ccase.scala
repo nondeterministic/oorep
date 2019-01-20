@@ -5,28 +5,9 @@ import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe._, io.circe.parser._
 import io.circe.syntax._
 
-case class CaseRubric(rubric: Rubric,
-                      repertoryAbbrev: String,
-                      var rubricWeight: Int,
-                      weightedRemedies: Map[Remedy, Int])
-{
-  def containsRemedyAbbrev(remedyAbbrev: String) = {
-    weightedRemedies.filter(_._1.nameAbbrev == remedyAbbrev).size > 0
-  }
+case class WeightedRemedy(remedy: Remedy, weight: Int)
 
-  def getRemedyWeight(remedyAbbrev: String): Integer = {
-    val remedy = weightedRemedies.filter(_._1.nameAbbrev == remedyAbbrev)
-    if (remedy.size > 0)
-      remedy.head._2
-    else
-      0
-  }
-}
-
-// case class weightedRemediesForRubric(caseRubric: CaseRubric, remedy: Remedy, weight: Int)
-
-
-object CaseRubric {
+object WeightedRemedy {
 
   // TODO: This seems a bit stupid: I provide a custom keyDe/Encoder, which
   // uses the derived Remedy de/encoder.  Is this really necessary?
@@ -52,6 +33,30 @@ object CaseRubric {
     }
   }
 
+  implicit val wrEncoder: Encoder[WeightedRemedy] = deriveEncoder[WeightedRemedy]
+  implicit val wrDecoder: Decoder[WeightedRemedy] = deriveDecoder[WeightedRemedy]
+
+}
+
+case class CaseRubric(rubric: Rubric,
+                      repertoryAbbrev: String,
+                      var rubricWeight: Int,
+                      weightedRemedies: List[WeightedRemedy])
+{
+  def containsRemedyAbbrev(remedyAbbrev: String) = {
+    weightedRemedies.filter(_.remedy.nameAbbrev == remedyAbbrev).size > 0
+  }
+
+  def getRemedyWeight(remedyAbbrev: String): Integer = {
+    val remedy = weightedRemedies.filter(_.remedy.nameAbbrev == remedyAbbrev)
+    if (remedy.size > 0)
+      remedy.head.weight
+    else
+      0
+  }
+}
+
+object CaseRubric {
   implicit val caseRubricEncoder: Encoder[CaseRubric] = deriveEncoder[CaseRubric]
   implicit val caseRubricDecoder: Decoder[CaseRubric] = deriveDecoder[CaseRubric]
 }
