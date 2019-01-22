@@ -45,29 +45,42 @@ CREATE TABLE RUBRIC(
   TEXTT       VARCHAR(255)
 );
 
---case class Remedy(val id: Int, val nameAbbrev: String, val nameLong: String)
-
 CREATE TABLE REMEDY(
   ID          INT PRIMARY KEY NOT NULL,
   NAMEABBREV  VARCHAR(10) NOT NULL,
   NAMELONG    VARCHAR(40) NOT NULL
 );
 
-CREATE TABLE CAZE(
-  MEMBER_ID   INT NOT NULL,
-  DATE_       DATE NOT NULL,
-  DESCRIPTION VARCHAR(1024) NOT NULL,
-  RESULTS
+--CREATE TABLE CAZE(
+--  CAZE_ID     INT NOT NULL,
+--  MEMBER_ID   INT NOT NULL,
+--  DATE_       DATE NOT NULL,
+--  DESCRIPTION VARCHAR(1024) NOT NULL
+--);
+
+-- https://stackoverflow.com/questions/14225397/postgresql-insert-an-array-of-composite-type-containing-arrays
+CREATE TYPE WEIGHTEDREMEDY AS (REMEDY_ID INT, WEIGHT INT);
+
+-- WORKS: insert into caserubric VALUES (  ROW(0, NULL, NULL, 0, 'FP', NULL, NULL), 'kent', 1, ARRAY[ROW(1,1)::WEIGHTEDREMEDY]  );
+CREATE TABLE CASERUBRIC(
+   RUBRIC_         RUBRIC NOT NULL,
+   REPERTORYABBREV VARCHAR(40) NOT NULL,
+   RUBRICWEIGHT    INT NOT NULL,
+   WEIGHTEDREMEDIES WEIGHTEDREMEDY[] NOT NULL
 );
 
---id: String,
---                member_id: Int,
---                date: Date,
---                description: String,
---                results: List[CaseRubric])
+--case class CaseRubric(rubric: Rubric,
+--                      repertoryAbbrev: String,
+--                      var rubricWeight: Int,
+--                      weightedRemedies: List[WeightedRemedy])
+
 # --- !Downs
 
 DROP TABLE ACTIVITY;
 DROP TABLE MEMBER;
-
+DROP TABLE CASERUBRIC;
 DROP TABLE INFO;
+DROP TABLE RUBRIC;
+DROP TABLE REMEDY;
+
+DROP TYPE WEIGHTEDREMEDY;
