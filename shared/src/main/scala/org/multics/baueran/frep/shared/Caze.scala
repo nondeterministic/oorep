@@ -5,7 +5,6 @@ import java.util.Date
 
 import io.circe._
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
-// import io.circe.cursor._
 
 case class Caze(header: String,
                 member_id: Int,
@@ -31,25 +30,8 @@ object Caze {
     )
   }
 
-//  case class CaseRubric(rubric: Rubric,
-//                        repertoryAbbrev: String,
-//                        var rubricWeight: Int,
-//                        weightedRemedies: List[WeightedRemedy])
-
-//  implicit val jsonDecodeListCaseRubric: Decoder[List[CaseRubric]] = new Decoder[List[CaseRubric]] {
-//    final def apply(c: HCursor): Decoder.Result[List[CaseRubric]] =
-//      Right(List.empty)
-//  }
-
   implicit val caseRubricListEncoder: Encoder[List[CaseRubric]] = deriveEncoder[List[CaseRubric]]
   implicit val caseRubricListDecoder: Decoder[List[CaseRubric]] = deriveDecoder[List[CaseRubric]]
-
-  //  implicit val jsonEncodeListCaseRubric: Encoder[List[CaseRubric]] = new Encoder[List[CaseRubric]] {
-//    final def apply(caseRubricList: List[CaseRubric]): Json = Json.fromValues(
-//
-//    )
-//  }
-
 
   implicit val jsonCazeDecoder: Decoder[Caze] = deriveDecoder[Caze]
   implicit val jsonCazeEncoder: Encoder[Caze] = deriveEncoder[Caze]

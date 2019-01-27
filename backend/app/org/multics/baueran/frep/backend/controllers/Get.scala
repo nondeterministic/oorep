@@ -2,10 +2,10 @@ package org.multics.baueran.frep.backend.controllers
 
 import scala.collection.mutable.ListBuffer
 import javax.inject._
+import java.util.Date
 import play.api.mvc._
 import io.circe.syntax._
-
-import org.multics.baueran.frep.backend.dao.RepertoryDao
+import org.multics.baueran.frep.backend.dao.{CazeDao, RepertoryDao}
 import org.multics.baueran.frep.backend.repertory._
 // import org.multics.baueran.frep.backend.views.html._
 import org.multics.baueran.frep.shared._
@@ -24,6 +24,24 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
 
   members = new MemberDao(dbContext)
   RepDatabase.setup(dbContext)
+
+  // //////////////////////////////////////////////////////////////////////////////////
+  def testDao() = {
+    println("********************************** S-DAO *************************************")
+    val cazeDao = new CazeDao(dbContext)
+    val caze = Caze("header", 1, new Date(), "descr", List.empty)
+    if (cazeDao.get("header", 1).length == 0) {
+      println("INSERTING.")
+      cazeDao.insert(caze)
+    }
+    else {
+      println("NOTHING INSERTED.")
+    }
+    println("********************************** E-DAO *************************************")
+  }
+  testDao()
+  // //////////////////////////////////////////////////////////////////////////////////
+
 
   def index() = Action { request: Request[AnyContent] =>
     if (authorizedRequestCookies(request) == List.empty)

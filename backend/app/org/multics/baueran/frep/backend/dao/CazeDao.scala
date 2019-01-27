@@ -4,8 +4,6 @@ import org.multics.baueran.frep._
 import backend.db
 import shared.{CaseRubric, Caze}
 
-import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
-
 class CazeDao(dbContext: db.db.DBContext) {
 
   import dbContext._
