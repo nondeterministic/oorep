@@ -138,7 +138,7 @@ object Case {
                     onclick:={ (event: Event) =>
                       descr match {
                         case Some(descr) =>
-                          $("#caseDescrId").`val`(descr.id)
+                          $("#caseDescrId").`val`(descr.header)
                           $("#caseDescrDescr").`val`(descr.description)
                         case None =>
                           $("#caseDescrId").`val`("")
@@ -158,7 +158,7 @@ object Case {
                       }
 
                       descr = Some(shared.Caze(caseIdTxt, memberId, new Date(), caseDescrTxt, cRubrics.toList))
-                      dom.document.getElementById("caseHeader").textContent = s"Case '${descr.get.id}':"
+                      dom.document.getElementById("caseHeader").textContent = s"Case '${descr.get.header}':"
                       js.eval("$('#caseDescriptionModal').modal('hide');") // TODO: https://stackoverflow.com/questions/50429272/how-to-invoke-modal-close-in-scala-js
                     })
                 )
@@ -232,7 +232,7 @@ object Case {
           onclick := { (event: Event) => {
             descr match {
               case Some(descr) =>
-                $("#caseDescrId").`val`(descr.id)
+                $("#caseDescrId").`val`(descr.header)
                 $("#caseDescrDescr").`val`(descr.description)
               case None => ;
             }
@@ -259,7 +259,7 @@ object Case {
 
       if (appMode == AppMode.Secure && descr != None) {
         div(
-          b(id:="caseHeader", "Case '" + descr.get.id + "':"),
+          b(id:="caseHeader", "Case '" + descr.get.header + "':"),
           editDescrButton,
           addToFileButton,
           analyseButton
