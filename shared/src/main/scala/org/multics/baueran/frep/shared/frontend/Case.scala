@@ -6,6 +6,10 @@ import java.text.SimpleDateFormat
 import org.querki.jquery.$
 import org.scalajs.dom
 import dom.Event
+import fr.hmil.roshttp.HttpRequest
+import fr.hmil.roshttp.body.{MultiPartBody, PlainTextBody}
+import fr.hmil.roshttp.response.SimpleHttpResponse
+import monix.execution.Scheduler.Implicits.global
 import scalatags.JsDom.all._
 
 import scalajs.js
@@ -15,9 +19,16 @@ import rx.Ctx.Owner.Unsafe._
 import scalatags.rx.all._
 import org.multics.baueran.frep.shared
 import org.scalajs.dom.raw.HTMLInputElement
-import shared.{BetterCaseRubric, BetterString, CaseRubric, WeightedRemedy}
-import shared.Defs.AppMode
+import shared._
+import shared.Defs.{AppMode, serverUrl}
 import shared.frontend.RemedyFormat.RemedyFormat
+
+import scala.util.Success
+
+import io.circe.{Decoder, Encoder}
+import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
+import io.circe._, io.circe.parser._
+import io.circe.syntax._
 
 object Case {
 
@@ -157,7 +168,7 @@ object Case {
                         case None => -1 // TODO: Force user to relogin; the identification cookie has disappeared!!!!!!!!!!
                       }
 
-                      descr = Some(shared.Caze(caseIdTxt, memberId, new Date(), caseDescrTxt, cRubrics.toList))
+                      descr = Some(shared.Caze(caseIdTxt, memberId, (new js.Date()).toISOString(), caseDescrTxt, cRubrics.toList))
                       dom.document.getElementById("caseHeader").textContent = s"Case '${descr.get.header}':"
                       js.eval("$('#caseDescriptionModal').modal('hide');") // TODO: https://stackoverflow.com/questions/50429272/how-to-invoke-modal-close-in-scala-js
                     })
@@ -241,7 +252,15 @@ object Case {
       val addToFileButton =
         button(cls:="btn btn-sm btn-dark", `type`:="button", data.toggle:="modal", data.target:="#TODO", style:="margin-left:5px; margin-bottom: 5px;",
           onclick := { (event: Event) => {
-            println("TODO")
+            println("descr.results.size: " + descr.get.results.size)
+            HttpRequest(serverUrl() + "/savecase")
+              // .post(PlainTextBody(Caze.encoder(descr.get).toString()))
+              .post(PlainTextBody(descr.get.asJson.toString()))
+              .onComplete({
+                case response: Success[SimpleHttpResponse] => println("Received: " + response.toString())
+                case _ => println("Failure!")
+              })
+            println("TODO2")
           }
           }, "Add to file")
       val removeFromFileButton =

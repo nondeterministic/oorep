@@ -1,6 +1,7 @@
 package org.multics.baueran.frep.shared
 
 import scalatags.JsDom.all._
+import scalajs.js
 
 class BetterString(val s: String) {
   def shorten = if (s.length <= 66) s else s.substring(0,62) + "..."
@@ -32,4 +33,16 @@ class BetterCaseRubric(val cr: CaseRubric) {
     }
   }
 
+}
+
+class MyDate(isoDateString: String) {
+  def this() = {
+    this((new js.Date()).toISOString())
+  }
+
+  def this(javaScriptDate: js.Date) = {
+    this(javaScriptDate.toISOString())
+  }
+
+  override def toString() = isoDateString
 }

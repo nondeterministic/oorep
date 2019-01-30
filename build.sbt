@@ -4,6 +4,9 @@ import sbtcrossproject.{CrossType, crossProject}
 val scalaJSReactVersion = "1.2.3"
 val scalaCssVersion = "0.5.5"
 val reactJSVersion = "16.3.2"
+// val circeVersion = "0.9.3"
+val circeVersion = "0.10.0"
+val scalaTestVersion = "3.1.0"
 
 resolvers += Resolver.bintrayRepo("hmil", "maven")
 
@@ -19,9 +22,10 @@ lazy val backend = (project in file("backend")).settings(commonSettings).setting
     evolutions,
     "org.postgresql" % "postgresql" % "42.2.5",
     "io.getquill" %% "quill-jdbc" % "2.5.4",
-    "io.circe" %% "circe-core" % "0.9.3",
-    "io.circe" %% "circe-generic" % "0.9.3",
-    "io.circe" %% "circe-parser" % "0.9.3",    
+    "io.circe" %% "circe-core" % circeVersion,
+    "io.circe" %% "circe-generic" % circeVersion,
+    "io.circe" %% "circe-parser" % circeVersion,
+    "org.scalatestplus.play" %% "scalatestplus-play" % scalaTestVersion % "test",
     guice,
     specs2 % Test
   )
@@ -45,9 +49,9 @@ lazy val frontend = (project in file("frontend")).settings(commonSettings).setti
     "org.scala-js" %%% "scalajs-dom" % "0.9.5",
     "com.lihaoyi" %%% "scalatags" % "0.6.7",
     "org.querki" %%% "jquery-facade" % "1.2",
-    "io.circe" %%% "circe-core" % "0.9.3",
-    "io.circe" %%% "circe-generic" % "0.9.3",
-    "io.circe" %%% "circe-parser" % "0.9.3",    
+    "io.circe" %%% "circe-core" % circeVersion,
+    "io.circe" %%% "circe-generic" % circeVersion,
+    "io.circe" %%% "circe-parser" % circeVersion,
     "fr.hmil" %%% "roshttp" % "2.2.3", 
    "com.timushev" %%% "scalatags-rx" % "0.3.0"
   ),
@@ -68,9 +72,9 @@ lazy val sec_frontend = (project in file("sec_frontend")).settings(commonSetting
     "org.scala-js" %%% "scalajs-dom" % "0.9.5",
     "com.lihaoyi" %%% "scalatags" % "0.6.7",
     "org.querki" %%% "jquery-facade" % "1.2",
-    "io.circe" %%% "circe-core" % "0.9.3",
-    "io.circe" %%% "circe-generic" % "0.9.3",
-    "io.circe" %%% "circe-parser" % "0.9.3",    
+    "io.circe" %%% "circe-core" % circeVersion,
+    "io.circe" %%% "circe-generic" % circeVersion,
+    "io.circe" %%% "circe-parser" % circeVersion,
     "fr.hmil" %%% "roshttp" % "2.2.3", 
    "com.timushev" %%% "scalatags-rx" % "0.3.0"
   ),
@@ -83,9 +87,9 @@ lazy val shared = crossProject(JSPlatform, JVMPlatform)
   .settings(
     dependencyOverrides += "org.webjars.npm" % "js-tokens" % "3.0.2",
     libraryDependencies ++= Seq(
-      "io.circe" %% "circe-core" % "0.9.3",
-      "io.circe" %% "circe-generic" % "0.9.3",
-      "io.circe" %% "circe-parser" % "0.9.3",
+      "io.circe" %% "circe-core" % circeVersion,
+      "io.circe" %% "circe-generic" % circeVersion,
+      "io.circe" %% "circe-parser" % circeVersion,
       "org.scala-js" %%% "scalajs-dom" % "0.9.5",
       "com.lihaoyi" %%% "scalatags" % "0.6.7",
       "org.querki" %%% "jquery-facade" % "1.2",

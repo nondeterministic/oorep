@@ -2,6 +2,7 @@ package org.multics.baueran.frep.backend.controllers
 
 import scala.collection.mutable.ListBuffer
 import javax.inject._
+import java.text.SimpleDateFormat
 import java.util.Date
 import play.api.mvc._
 import io.circe.syntax._
@@ -11,6 +12,7 @@ import org.multics.baueran.frep.backend.repertory._
 import org.multics.baueran.frep.shared._
 import org.multics.baueran.frep.backend.dao.MemberDao
 import org.multics.baueran.frep.backend.db.db.DBContext
+import org.multics.baueran.frep.backend.db.MyDate
 import org.multics.baueran.frep.shared.Defs._
 import org.multics.baueran.frep.shared.WeightedRemedy
 
@@ -29,7 +31,8 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
   def testDao() = {
     println("********************************** S-DAO *************************************")
     val cazeDao = new CazeDao(dbContext)
-    val caze = Caze("header", 1, new Date(), "descr", List.empty)
+    val myDate = new MyDate(new Date())
+    val caze = Caze("header", 1, myDate.toString(), "descr", List.empty)
     if (cazeDao.get("header", 1).length == 0) {
       println("INSERTING.")
       cazeDao.insert(caze)

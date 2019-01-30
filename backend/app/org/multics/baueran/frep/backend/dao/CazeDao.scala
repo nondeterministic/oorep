@@ -22,8 +22,11 @@ class CazeDao(dbContext: db.db.DBContext) {
     }
   )
 
+  // TODO: THIS IS WRONG! FIX!
   implicit val encodeListCaseRubrics = MappedEncoding[List[CaseRubric], String](
-    Caze.caseRubricListEncoder(_).toString()
+    l => l.map(Caze.caseRubricEncoder(_).toString()).toString()
+
+    // _ => "" // Caze.caseRubricListEncoder(_).toString()
   )
 
   def insert(c: Caze) = {
