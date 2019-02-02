@@ -120,13 +120,18 @@ class HomeControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injecting
       val dbContext = app.injector.instanceOf[DBContext]
       val cazeDao = new CazeDao(dbContext)
       cazeDao.insert(caze)
-      println("Inserted: " + caze)
     }
 
     "be able to get Caze from DB" in {
       val dbContext = app.injector.instanceOf[DBContext]
       val cazeDao = new CazeDao(dbContext)
-      println("Gotten: " + cazeDao.get("a", -4711).head)
+      assert(cazeDao.get("a", -4711).head == caze)
+    }
+
+    "be able to delete Caze from DB" in {
+      val dbContext = app.injector.instanceOf[DBContext]
+      val cazeDao = new CazeDao(dbContext)
+      cazeDao.delete("a", -4711)
     }
 
   }

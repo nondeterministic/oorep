@@ -39,4 +39,10 @@ class CazeDao(dbContext: db.db.DBContext) {
     run(select)
   }
 
+  def delete(header: String, member_id: Int) = {
+    val delete = quote {
+      tableCaze.filter(caze => caze.header == lift(header) && caze.member_id == lift(member_id)).delete
+    }
+    run(delete)
+  }
 }
