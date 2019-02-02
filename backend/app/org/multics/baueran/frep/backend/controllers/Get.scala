@@ -27,25 +27,6 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
   members = new MemberDao(dbContext)
   RepDatabase.setup(dbContext)
 
-  // //////////////////////////////////////////////////////////////////////////////////
-  def testDao() = {
-    println("********************************** S-DAO *************************************")
-    val cazeDao = new CazeDao(dbContext)
-    val myDate = new MyDate(new Date())
-    val caze = Caze("header", 1, myDate.toString(), "descr", List.empty)
-    if (cazeDao.get("header", 1).length == 0) {
-      println("INSERTING.")
-      cazeDao.insert(caze)
-    }
-    else {
-      println("NOTHING INSERTED.")
-    }
-    println("********************************** E-DAO *************************************")
-  }
-  testDao()
-  // //////////////////////////////////////////////////////////////////////////////////
-
-
   def index() = Action { request: Request[AnyContent] =>
     if (authorizedRequestCookies(request) == List.empty)
       Redirect(serverUrl() + "/assets/html/index.html")

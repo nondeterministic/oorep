@@ -3,6 +3,7 @@ package org.multics.baueran.frep.backend.dao
 import org.multics.baueran.frep._
 import backend.db
 import shared.{CaseRubric, Caze}
+import io.circe.syntax._
 
 class CazeDao(dbContext: db.db.DBContext) {
 
@@ -10,23 +11,20 @@ class CazeDao(dbContext: db.db.DBContext) {
 
   private val tableCaze = quote { querySchema[Caze]("Caze", _.date -> "date_") }
 
-  implicit val decodeRepAccess = MappedEncoding[String, List[CaseRubric]](
-    io.circe.parser.parse(_) match {
+  implicit val decodeRepAccess = MappedEncoding[String, List[CaseRubric]](caseRubricList =>
+    io.circe.parser.parse(caseRubricList) match {
       case Right(json) =>
         val cursor = json.hcursor
         cursor.as[List[CaseRubric]] match {
           case Right(l) => l
-          case _ => List[CaseRubric]()
+          case Left(err) => throw new IllegalArgumentException("Error decoding List[CaseRubric]: " + caseRubricList.toString() + "; " + err)
         }
-      case _ => List[CaseRubric]()
+      case Left(err) => throw new IllegalArgumentException("Error parsing List[CaseRubric]: " + caseRubricList.toString() + "; " + err)
     }
   )
 
-  // TODO: THIS IS WRONG! FIX!
   implicit val encodeListCaseRubrics = MappedEncoding[List[CaseRubric], String](
-    l => l.map(Caze.caseRubricEncoder(_).toString()).toString()
-
-    // _ => "" // Caze.caseRubricListEncoder(_).toString()
+    l => l.map(CaseRubric.caseRubricEncoder(_)).asJson.toString()
   )
 
   def insert(c: Caze) = {

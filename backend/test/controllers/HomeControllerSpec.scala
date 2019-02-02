@@ -20,11 +20,11 @@ import play.api.test.Helpers._
 
 class HomeControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
 
-  val jsonString =
+  val jsonCaze =
 """
 {
   "header" : "a",
-  "member_id" : -1,
+  "member_id" : -4711,
   "date" : "2019-01-30T19:42:01.299Z",
   "description" : "b",
   "results" : [
@@ -94,22 +94,43 @@ class HomeControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injecting
 }
 """
 
-  "CazeDao " should {
-    "decode JSON-representation of List[CaseRubric]" in {
-      println("********************************************************")
-      val dbContext = app.injector.instanceOf[DBContext]
-      val cazeDao = new CazeDao(dbContext)
-      println("********************************************************")
+  var caze: Caze = _
 
-      io.circe.parser.parse(jsonString) match {
+  "Caze " should {
+
+    "decode JSON-representation of Caze" in {
+      io.circe.parser.parse(jsonCaze) match {
         case Right(json) => json.hcursor.as[Caze] match {
-          case Right(caze) => println("FUCK YEAH: " + caze.toString)
-          case _ => println("Decoding failed.")
+          case Right(c) => caze = c
+          case Left(err) => println("Decoding of Caze failed: " + err)
         }
-        case _ => println("Parsing failed.")
+        case Left(err) => println("Parsing of Caze failed: " + err)
       }
     }
+
+    "encode JSON-representation of Caze" in {
+      assert(Caze.encoder(caze).toString().trim == jsonCaze.trim)
+    }
+
   }
+
+  "CazeDao " should {
+
+    "be able to insert Caze into DB" in {
+      val dbContext = app.injector.instanceOf[DBContext]
+      val cazeDao = new CazeDao(dbContext)
+      cazeDao.insert(caze)
+      println("Inserted: " + caze)
+    }
+
+    "be able to get Caze from DB" in {
+      val dbContext = app.injector.instanceOf[DBContext]
+      val cazeDao = new CazeDao(dbContext)
+      println("Gotten: " + cazeDao.get("a", -4711).head)
+    }
+
+  }
+
 
 //  "HomeController GET" should {
 //
