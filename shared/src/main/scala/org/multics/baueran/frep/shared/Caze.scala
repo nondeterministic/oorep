@@ -11,10 +11,6 @@ case class Caze(header: String,
 
 object Caze {
 
-  // TODO: Do we need those because we use them in CazeDao?
-  //  implicit val caseRubricListEncoder: Encoder[List[CaseRubric]] = deriveEncoder[List[CaseRubric]]
-  //  implicit val caseRubricListDecoder: Decoder[List[CaseRubric]] = deriveDecoder[List[CaseRubric]]
-
   implicit val caseRubricEncoder: Encoder[CaseRubric] = deriveEncoder[CaseRubric]
   implicit val caseRubricDecoder: Decoder[CaseRubric] = deriveDecoder[CaseRubric]
 
