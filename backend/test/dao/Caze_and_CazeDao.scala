@@ -18,7 +18,7 @@ import play.api.test.Helpers._
 
 // see also: https://www.playframework.com/documentation/2.6.x/ScalaTestingWithScalaTest
 
-class HomeControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
+class Caze_and_CazeDao extends PlaySpec with GuiceOneAppPerTest with Injecting {
 
   val jsonCaze =
 """
