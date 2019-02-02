@@ -24,7 +24,7 @@ import org.multics.baueran.frep.shared.WeightedRemedy
 @Singleton
 class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends AbstractController(cc) {
 
-  members = new MemberDao(dbContext)
+  memberDao = new MemberDao(dbContext)
   RepDatabase.setup(dbContext)
 
   def index() = Action { request: Request[AnyContent] =>
@@ -46,7 +46,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
         getFrom(cookies, "oorep_member_email") match {
           case None => BadRequest("Not authorized: user not in database.")
           case Some(memberEmail) => {
-            members.getFromEmail(memberEmail) match {
+            memberDao.getFromEmail(memberEmail) match {
               case Nil => BadRequest(s"Not authorized: user ${memberEmail} not in database.")
               case member :: _ => Ok(member.member_id.toString()).withCookies(cookies.map({ c => Cookie(name = c.name, value = c.value, httpOnly = false) }):_*)
                 // Ok(member.member_id.toString()).withCookies(cookies:_*)

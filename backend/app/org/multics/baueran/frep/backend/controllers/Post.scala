@@ -12,7 +12,7 @@ import backend.db.db.DBContext
 import shared.Caze
 
 class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends AbstractController(cc) {
-  cazes = new CazeDao(dbContext)
+  cazeDao = new CazeDao(dbContext)
 
   def login() = Action {
     request: Request[AnyContent] =>
@@ -20,7 +20,7 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
       val inputPassword: String = request.body.asFormUrlEncoded.get("inputPassword").head
 
       // TODO: Password is still ignored!!
-      members.getFromEmail(inputEmail) match {
+      memberDao.getFromEmail(inputEmail) match {
         case Nil => BadRequest("Not authorized: user not in DB")
         case member :: _ =>
           Redirect(serverUrl() + "/assets/html/private/index.html")
@@ -35,34 +35,15 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
   }
 
   def saveCaze() = Action { request: Request[AnyContent] =>
-    val cazeString =  request.body.asText.get
-    println("Caze received: " + cazeString)
-
-    io.circe.parser.parse(cazeString) match {
-      case Right(cazeJson) =>
-        val cursor = cazeJson.hcursor
-        cursor.as[Caze] match {
-          case Right(caze) => cazes.insert(caze); Ok
-          case Left(error) => println("Failed to decode case-JSON: " + error); BadRequest("Failed to decode case-JSON: " + error)
-        }
-      case Left(error) => println("Failed to decode case-JSON: " + error); BadRequest("Failed to parse case-JSON: " + error)
+    val cazeString = request.body.asText.get
+    try {
+      val caze = Caze.decode(cazeString)
+      cazeDao.insert(caze)
+    } catch {
+      case e:IllegalArgumentException => BadRequest("Saving of caze failed. Json wrong?")
+      case _ => BadRequest("Saving of caze failed. Unknown error.")
     }
+    Ok
   }
-
-
-//  def saveCaze() = Action { request: Request[AnyContent] =>
-//    val cazeString =  request.body.asJson
-//    println("Caze received: " + cazeString)
-//
-//    io.circe.parser.parse(cazeString) match {
-//      case Right(cazeJson) =>
-//        val cursor = cazeJson.hcursor
-//        cursor.as[Caze] match {
-//          case Right(caze) => cazes.insert(caze); Ok
-//          case Left(error) => BadRequest("Failed to decode case-JSON: " + error)
-//        }
-//      case Left(error) => BadRequest("Failed to parse case-JSON: " + error)
-//    }
-//  }
 
 }

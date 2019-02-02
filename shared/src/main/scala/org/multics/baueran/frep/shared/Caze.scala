@@ -16,4 +16,15 @@ object Caze {
 
   implicit val decoder: Decoder[Caze] = deriveDecoder[Caze]
   implicit val encoder: Encoder[Caze] = deriveEncoder[Caze]
+
+  def decode(jsonCaze: String) = {
+    io.circe.parser.parse(jsonCaze) match {
+      case Right(json) => json.hcursor.as[Caze] match {
+        case Right(c) => c
+        case Left(err) => throw new IllegalArgumentException("Error decoding Caze: " + jsonCaze + "; " + err)
+      }
+      case Left(err) => throw new IllegalArgumentException("Error parsing Caze: " + jsonCaze + "; " + err)
+    }
+  }
+
 }

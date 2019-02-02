@@ -53,6 +53,12 @@ object Case {
         remedyScores.put(r.nameAbbrev, remedyScores.getOrElseUpdate(r.nameAbbrev, 0) + caseRubric.rubricWeight * w)
       }}
     })
+
+    if (descr != None)
+      descr = Some(shared.Caze(descr.get.header, descr.get.member_id, (new js.Date()).toISOString(), descr.get.description, cRubrics.toList))
+
+    if (cRubrics.size == 0)
+      descr = None
   }
 
   // ------------------------------------------------------------------------------------------------------------------

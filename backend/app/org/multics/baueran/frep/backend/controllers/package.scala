@@ -8,8 +8,8 @@ import org.multics.baueran.frep.backend.dao.{CazeDao, MemberDao}
 
 package object controllers {
 
-  var members: MemberDao = _
-  var cazes: CazeDao = _
+  var memberDao: MemberDao = _
+  var cazeDao: CazeDao = _
 
   /**
     * Returns empty list if request does not contain valid cookies for authorization.
