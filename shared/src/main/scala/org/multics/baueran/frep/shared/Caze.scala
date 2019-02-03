@@ -3,7 +3,8 @@ package org.multics.baueran.frep.shared
 import io.circe._
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 
-case class Caze(header: String,
+case class Caze(id: Int,
+                header: String,
                 member_id: Int,
                 date: String,
                 description: String,

@@ -55,7 +55,7 @@ object Case {
     })
 
     if (descr != None)
-      descr = Some(shared.Caze(descr.get.header, descr.get.member_id, (new js.Date()).toISOString(), descr.get.description, cRubrics.toList))
+      descr = Some(shared.Caze(descr.get.id, descr.get.header, descr.get.member_id, (new js.Date()).toISOString(), descr.get.description, cRubrics.toList))
 
     if (cRubrics.size == 0)
       descr = None
@@ -143,7 +143,7 @@ object Case {
                   descr match {
                     case None => input(cls:="form-control", id:="caseDescrId", placeholder:="A simple, unique case identifier", required)
                     case Some(d) => input(cls:="form-control", id:="caseDescrId", placeholder:="A simple, unique case identifier", required, value:=d.description)
-                  },
+                  }
                 ),
                 div(cls:="form-group",
                   label(`for`:="caseDescrDescr", "Description"),
@@ -174,9 +174,9 @@ object Case {
                         case None => -1 // TODO: Force user to relogin; the identification cookie has disappeared!!!!!!!!!!
                       }
 
-                      descr = Some(shared.Caze(caseIdTxt, memberId, (new js.Date()).toISOString(), caseDescrTxt, cRubrics.toList))
+                      descr = Some(shared.Caze(0, caseIdTxt, memberId, (new js.Date()).toISOString(), caseDescrTxt, cRubrics.toList))
                       dom.document.getElementById("caseHeader").textContent = s"Case '${descr.get.header}':"
-                      js.eval("$('#caseDescriptionModal').modal('hide');") // TODO: https://stackoverflow.com/questions/50429272/how-to-invoke-modal-close-in-scala-js
+                      js.eval("$('#caseDescriptionModal').modal('hide');")
                     })
                 )
               )

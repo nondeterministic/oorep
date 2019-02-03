@@ -1,105 +1,25 @@
-package controllers
+package dao
 
 import org.multics.baueran.frep.backend.controllers.Get
 import org.multics.baueran.frep.backend.dao.CazeDao
 import org.multics.baueran.frep.shared.Caze
 import org.multics.baueran.frep.backend.db.db.DBContext
+
 import org.scalatestplus.play._
 import org.scalatestplus.play.guice._
 import play.api.test._
 import play.api.test.Helpers._
 
-/**
- * Add your spec here.
- * You can mock out a whole application including requests, plugins etc.
- *
- * For more information, see https://www.playframework.com/documentation/latest/ScalaTestingWithScalaTest
- */
-
 // see also: https://www.playframework.com/documentation/2.6.x/ScalaTestingWithScalaTest
 
 class Caze_and_CazeDao extends PlaySpec with GuiceOneAppPerTest with Injecting {
-
-  val jsonCaze =
-"""
-{
-  "header" : "a",
-  "member_id" : -4711,
-  "date" : "2019-01-30T19:42:01.299Z",
-  "description" : "b",
-  "results" : [
-    {
-      "rubric" : {
-        "id" : 61832,
-        "mother" : null,
-        "isMother" : null,
-        "chapterId" : 32,
-        "fullPath" : "Throat, pain, splinter, as from a, swallowing, on",
-        "path" : null,
-        "textt" : null
-      },
-      "repertoryAbbrev" : "kent",
-      "rubricWeight" : 1,
-      "weightedRemedies" : [
-        {
-          "remedy" : {
-            "id" : 305,
-            "nameAbbrev" : "Hep.",
-            "nameLong" : "Hepar Sulphur"
-          },
-          "weight" : 3
-        },
-        {
-          "remedy" : {
-            "id" : 60,
-            "nameAbbrev" : "Apis",
-            "nameLong" : "Apis Mellifera"
-          },
-          "weight" : 2
-        },
-        {
-          "remedy" : {
-            "id" : 71,
-            "nameAbbrev" : "Arg-n.",
-            "nameLong" : "Argentum Nitricum"
-          },
-          "weight" : 2
-        }
-      ]
-    },
-    {
-      "rubric" : {
-        "id" : 61831,
-        "mother" : null,
-        "isMother" : null,
-        "chapterId" : 32,
-        "fullPath" : "Throat, pain, splinter, as from a, oesophagus",
-        "path" : null,
-        "textt" : null
-      },
-      "repertoryAbbrev" : "kent",
-      "rubricWeight" : 1,
-      "weightedRemedies" : [
-        {
-          "remedy" : {
-            "id" : 73,
-            "nameAbbrev" : "Ars.",
-            "nameLong" : "Arsenicum Album"
-          },
-          "weight" : 1
-        }
-      ]
-    }
-  ]
-}
-"""
 
   var caze: Caze = _
 
   "Caze " should {
 
     "decode JSON-representation of Caze" in {
-      io.circe.parser.parse(jsonCaze) match {
+      io.circe.parser.parse(Defs.jsonCaze) match {
         case Right(json) => json.hcursor.as[Caze] match {
           case Right(c) => caze = c
           case Left(err) => println("Decoding of Caze failed: " + err)
@@ -109,7 +29,7 @@ class Caze_and_CazeDao extends PlaySpec with GuiceOneAppPerTest with Injecting {
     }
 
     "encode JSON-representation of Caze" in {
-      assert(Caze.encoder(caze).toString().trim == jsonCaze.trim)
+      assert(Caze.encoder(caze).toString().trim == Defs.jsonCaze.trim)
     }
 
   }
@@ -136,34 +56,4 @@ class Caze_and_CazeDao extends PlaySpec with GuiceOneAppPerTest with Injecting {
 
   }
 
-
-//  "HomeController GET" should {
-//
-//    "render the index page from a new instance of controller" in {
-//      val controller = new Get(stubControllerComponents(), null)
-//      val home = controller.index().apply(FakeRequest(GET, "/"))
-//
-//      status(home) mustBe OK
-//      contentType(home) mustBe Some("text/html")
-//      contentAsString(home) must include ("Welcome to Play")
-//    }
-//
-//    "render the index page from the application" in {
-//      val controller = inject[Get]
-//      val home = controller.index().apply(FakeRequest(GET, "/"))
-//
-//      status(home) mustBe OK
-//      contentType(home) mustBe Some("text/html")
-//      contentAsString(home) must include ("Welcome to Play")
-//    }
-//
-//    "render the index page from the router" in {
-//      val request = FakeRequest(GET, "/")
-//      val home = route(app, request).get
-//
-//      status(home) mustBe OK
-//      contentType(home) mustBe Some("text/html")
-//      contentAsString(home) must include ("Welcome to Play")
-//    }
-//  }
 }
