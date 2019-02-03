@@ -14,4 +14,14 @@ object FIle {
   implicit val decoder: Decoder[FIle] = deriveDecoder[FIle]
   implicit val encoder: Encoder[FIle] = deriveEncoder[FIle]
 
+  def decode(jsonFile: String) = {
+    io.circe.parser.parse(jsonFile) match {
+      case Right(json) => json.hcursor.as[FIle] match {
+        case Right(f) => Some(f)
+        case Left(err) => None
+      }
+      case Left(err) => None
+    }
+  }
+
 }

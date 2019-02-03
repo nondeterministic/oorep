@@ -1,13 +1,10 @@
 package org.multics.baueran.frep.shared.frontend
 
-import java.util.Date
-import java.text.SimpleDateFormat
-
 import org.querki.jquery.$
 import org.scalajs.dom
 import dom.Event
 import fr.hmil.roshttp.HttpRequest
-import fr.hmil.roshttp.body.{MultiPartBody, PlainTextBody}
+import fr.hmil.roshttp.body.PlainTextBody
 import fr.hmil.roshttp.response.SimpleHttpResponse
 import monix.execution.Scheduler.Implicits.global
 import scalatags.JsDom.all._
@@ -25,9 +22,6 @@ import shared.frontend.RemedyFormat.RemedyFormat
 
 import scala.util.Success
 
-import io.circe.{Decoder, Encoder}
-import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
-import io.circe._, io.circe.parser._
 import io.circe.syntax._
 
 object Case {

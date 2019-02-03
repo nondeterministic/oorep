@@ -9,7 +9,7 @@ import org.multics.baueran.frep._
 import shared.Defs._
 import backend.dao.{CazeDao, MemberDao}
 import backend.db.db.DBContext
-import shared.Caze
+import shared.{Caze, FIle}
 
 class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends AbstractController(cc) {
   cazeDao = new CazeDao(dbContext)
@@ -38,6 +38,13 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
     Caze.decode(request.body.asText.get) match {
       case Some(caze) => cazeDao.replace(caze); Ok
       case None => BadRequest("Saving of caze failed. Json wrong?")
+    }
+  }
+
+  def saveFile() = Action { request: Request[AnyContent] =>
+    FIle.decode(request.body.asText.get) match {
+      case Some(file) => println("Received: " + file); Ok
+      case None => BadRequest("Saving of file failed. Json wrong?")
     }
   }
 

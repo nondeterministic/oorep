@@ -12,6 +12,9 @@ POST   	/login                      org.multics.baueran.frep.backend.controllers
 +nocsrf
 POST   	/savecase                   org.multics.baueran.frep.backend.controllers.Post.saveCaze
 
++nocsrf
+POST   	/savefile                   org.multics.baueran.frep.backend.controllers.Post.saveFile
+
 GET		/authenticate               org.multics.baueran.frep.backend.controllers.Get.authenticate
 GET		/lookup						org.multics.baueran.frep.backend.controllers.Get.repertorise(repertory: String, symptom: String)
 GET     /availableReps              org.multics.baueran.frep.backend.controllers.Get.availableReps
