@@ -4,6 +4,7 @@ import org.multics.baueran.frep._
 import backend.db
 import shared.{CaseRubric, Caze}
 import io.circe.syntax._
+import play.api.Logger
 
 class CazeDao(dbContext: db.db.DBContext) {
 
@@ -30,6 +31,20 @@ class CazeDao(dbContext: db.db.DBContext) {
   def insert(c: Caze) = {
     val insert = quote { tableCaze.insert(lift(c)) }
     run(insert)
+  }
+
+  /**
+    * Like insert, but will delete old case(s) first if one or more with same header and member_id already exist.
+    */
+
+  def replace(c: Caze) = {
+    val existingCases = get(c.header, c.member_id)
+    existingCases.foreach(caze => {
+      // TODO: Add check that if c == caze, we do nothing! For this, implement Caze.equals()!
+      delete(caze.header, caze.member_id)
+      Logger.debug("CazeDao: replace(): Replacing " + caze.toString())
+    })
+    insert(c)
   }
 
   def get(header: String, member_id: Int) = {

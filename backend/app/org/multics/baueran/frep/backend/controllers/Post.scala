@@ -35,15 +35,10 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
   }
 
   def saveCaze() = Action { request: Request[AnyContent] =>
-    val cazeString = request.body.asText.get
-    try {
-      val caze = Caze.decode(cazeString)
-      cazeDao.insert(caze)
-    } catch {
-      case e:IllegalArgumentException => BadRequest("Saving of caze failed. Json wrong?")
-      case _ => BadRequest("Saving of caze failed. Unknown error.")
+    Caze.decode(request.body.asText.get) match {
+      case Some(caze) => cazeDao.replace(caze); Ok
+      case None => BadRequest("Saving of caze failed. Json wrong?")
     }
-    Ok
   }
 
 }
