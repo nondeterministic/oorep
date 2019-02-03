@@ -10,16 +10,18 @@ case class Caze(id: Int,
                 description: String,
                 results: List[CaseRubric]) {
 
-//  def canEqual(a: Any) = {
-//    a.isInstanceOf[Caze]
-//  }
-//
-//  override def equals(that: Any): Boolean =
-//    that match {
-//      case that: Caze => that.canEqual(this) && this.hashCode == that.hashCode
-//      case _ => false
-//    }
-//
+  def canEqual(a: Any) = {
+    a.isInstanceOf[Caze]
+  }
+
+  override def equals(that: Any): Boolean =
+    that match {
+      case that: Caze => that.canEqual(this) && that.header == header &&
+        that.member_id == member_id && that.date == date && that.description == description &&
+        that.results == results
+      case _ => false
+    }
+
 //  override def hashCode: Int = {
 //    val prime = 31
 //    var result = 1

@@ -5,7 +5,16 @@ import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe._, io.circe.parser._
 import io.circe.syntax._
 
-case class WeightedRemedy(remedy: Remedy, weight: Int)
+case class WeightedRemedy(remedy: Remedy, weight: Int) {
+
+  override def equals(that: Any) = {
+    that match {
+      case w: WeightedRemedy => w.weight == weight && w.remedy == remedy
+      case _ => false
+    }
+  }
+
+}
 
 object WeightedRemedy {
 
@@ -54,6 +63,16 @@ case class CaseRubric(rubric: Rubric,
     else
       0
   }
+
+  override def equals(that: Any) = {
+    that match {
+      case c: CaseRubric => c.rubric == rubric && c.repertoryAbbrev == repertoryAbbrev &&
+        c.rubricWeight == rubricWeight &&
+        c.weightedRemedies == weightedRemedies
+      case _ => false
+    }
+  }
+
 }
 
 object CaseRubric {

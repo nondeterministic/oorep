@@ -110,7 +110,16 @@ object RubricRemedy {
 }
 
 // ------------------------------------------------------------------------------------------------------------------
-case class Remedy(val id: Int, val nameAbbrev: String, val nameLong: String)
+case class Remedy(val id: Int, val nameAbbrev: String, val nameLong: String) {
+
+  override def equals(that: Any) = {
+    that match {
+      case r: Remedy => r.id == id && r.nameAbbrev == nameAbbrev && r.nameLong == nameLong
+      case _ => false
+    }
+  }
+
+}
 
 object Remedy {
   implicit val remedyDecoder: Decoder[Remedy] = deriveDecoder[Remedy]
@@ -129,6 +138,15 @@ object ChapterRemedy {
 case class Rubric(id: Int, mother: Option[Int], isMother: Option[Boolean],
                   chapterId: Int, fullPath: String, path: Option[String], textt: Option[String])
 {
+
+  override def equals(that: Any) = {
+    that match {
+      case r: Rubric => r.id == id && r.mother == mother && r.isMother == isMother && r.chapterId == chapterId &&
+        r.fullPath == fullPath && r.path == path && r.textt == textt
+      case _ => false
+    }
+  }
+
   /**
    * Looks for a word, word, within some other text passage, x, where
 	 * x is usually either fullPath, path or text of Rubric.

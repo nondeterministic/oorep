@@ -29,7 +29,7 @@ class CazeDao(dbContext: db.db.DBContext) {
   )
 
   def insert(c: Caze) = {
-    val insert = quote { tableCaze.insert(lift(c)) }
+    val insert = quote { tableCaze.insert(lift(c)).returning(_.id) }
     run(insert)
   }
 

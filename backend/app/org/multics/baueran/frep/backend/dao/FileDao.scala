@@ -57,11 +57,10 @@ class FileDao(dbContext: db.db.DBContext) {
       Some(dbFile(0, file.header, file.member_id, file.date, file.description, List.empty))
   }
 
-  // TODO: Any is not an acceptable return type here!
   def insert(f: FIle) = {
     fileToDBFile(f) match {
       case Some(newDBFile) => run(quote { tableFile.insert(lift(newDBFile)).returning(_.id) })
-      case _ => Logger.error("FileDao: insert() failed. Failed to convert FIle " + f.toString())
+      case _ => Logger.error("FileDao: insert() failed. Failed to convert FIle " + f.toString()); -1
     }
   }
 
