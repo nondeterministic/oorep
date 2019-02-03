@@ -7,12 +7,13 @@ import play.api.libs.json
 import play.api.libs.json.Json
 import org.multics.baueran.frep._
 import shared.Defs._
-import backend.dao.{CazeDao, MemberDao}
+import backend.dao.{CazeDao, FileDao, MemberDao}
 import backend.db.db.DBContext
 import shared.{Caze, FIle}
 
 class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends AbstractController(cc) {
   cazeDao = new CazeDao(dbContext)
+  fileDao = new FileDao(dbContext)
 
   def login() = Action {
     request: Request[AnyContent] =>
@@ -43,7 +44,7 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
 
   def saveFile() = Action { request: Request[AnyContent] =>
     FIle.decode(request.body.asText.get) match {
-      case Some(file) => println("Received: " + file); Ok
+      case Some(file) => fileDao.insert(file); Ok
       case None => BadRequest("Saving of file failed. Json wrong?")
     }
   }

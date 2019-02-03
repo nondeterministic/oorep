@@ -4,12 +4,13 @@ import scala.collection.mutable.ListBuffer
 import javax.inject._
 import play.api.mvc._
 import io.circe.syntax._
-import org.multics.baueran.frep.backend.dao.{CazeDao, MemberDao}
+import org.multics.baueran.frep.backend.dao.{CazeDao, FileDao, MemberDao}
 
 package object controllers {
 
   var memberDao: MemberDao = _
   var cazeDao: CazeDao = _
+  var fileDao: FileDao = _
 
   /**
     * Returns empty list if request does not contain valid cookies for authorization.

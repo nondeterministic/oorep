@@ -57,7 +57,7 @@ CREATE TABLE FILE(
   MEMBER_ID   INT NOT NULL,
   DATE_       VARCHAR(40),
   DESCRIPTION VARCHAR(2048),
-  CASE_IDS    INT[] NOT NULL
+  CASE_IDS    INT[]
 );
 
 -- https://stackoverflow.com/questions/14225397/postgresql-insert-an-array-of-composite-type-containing-arrays

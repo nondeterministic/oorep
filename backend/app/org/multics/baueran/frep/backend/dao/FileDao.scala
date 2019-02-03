@@ -41,22 +41,26 @@ class FileDao(dbContext: db.db.DBContext) {
   }
 
   private def fileToDBFile(file: FIle): Option[dbFile] = {
-    val cazeDao = new CazeDao(dbContext)
-    val cazeIds =
-      file.cazes
-      .map(caze => cazeDao.get(caze.header, caze.member_id)).flatten
-      .map(_.id)
+    if (file.cazes.length > 0) {
+      val cazeDao = new CazeDao(dbContext)
+      val cazeIds =
+        file.cazes
+          .map(caze => cazeDao.get(caze.header, caze.member_id)).flatten
+          .map(_.id)
 
-    if (cazeIds.length > 0)
-      Some(dbFile(0, file.header, file.member_id,file.date, file.description, cazeIds))
+      if (cazeIds.length > 0)
+        Some(dbFile(0, file.header, file.member_id, file.date, file.description, cazeIds))
+      else
+        None
+    }
     else
-      None
+      Some(dbFile(0, file.header, file.member_id, file.date, file.description, List.empty))
   }
 
   // TODO: Any is not an acceptable return type here!
   def insert(f: FIle) = {
     fileToDBFile(f) match {
-      case Some(newDBFile) => run(quote { tableFile.insert(lift(newDBFile)) })
+      case Some(newDBFile) => run(quote { tableFile.insert(lift(newDBFile)).returning(_.id) })
       case _ => Logger.error("FileDao: insert() failed. Failed to convert FIle " + f.toString())
     }
   }
