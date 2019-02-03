@@ -2,24 +2,20 @@ package org.multics.baueran.frep.shared.frontend
 
 import scalatags.JsDom.all._
 import scalatags.JsDom.tags.input
-
 import org.scalajs.dom
 import org.scalajs.dom.Event
 import org.scalajs.dom.raw.HTMLInputElement
-
 import io.circe.parser.parse
 
 import scala.collection.mutable
 import scala.util.{Failure, Success}
-
 import org.querki.jquery._
-
 import fr.hmil.roshttp.HttpRequest
 import fr.hmil.roshttp.response.SimpleHttpResponse
 import monix.execution.Scheduler.Implicits.global
-
 import org.multics.baueran.frep.shared._
-import org.multics.baueran.frep.shared.Defs.{ serverUrl, AppMode }
+import org.multics.baueran.frep.shared.Defs.{AppMode, serverUrl}
+import org.multics.baueran.frep.shared.sec_frontend.NewFileModal
 
 object Repertorise {
 
@@ -39,7 +35,8 @@ object Repertorise {
 
     def resetContentView() = {
       $("#content").empty()
-      $("#content").append(Repertorise.apply().render)
+      $("#content").append(NewFileModal().render)
+      $("#content").append(Repertorise().render)
     }
 
     // This method is just to display the remedy-summary at the top of the results table.
