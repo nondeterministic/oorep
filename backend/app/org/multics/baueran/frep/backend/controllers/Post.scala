@@ -44,7 +44,7 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
 
   def saveFile() = Action { request: Request[AnyContent] =>
     FIle.decode(request.body.asText.get) match {
-      case Some(file) => fileDao.insert(file); println(file); Ok
+      case Some(file) => fileDao.insert(file); println(request.body.asText.get); Ok
       case None => BadRequest("Saving of file failed. Json wrong? " + request.body.asText.get)
     }
   }

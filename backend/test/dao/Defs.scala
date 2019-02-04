@@ -76,4 +76,16 @@ object Defs {
 }
 """
 
+  val jsonFIle =
+"""
+{
+  "header" : "Test",
+  "member_id" : 2,
+  "date" : "2019-02-04T20:05:56.138Z",
+  "description" : "Me",
+  "cazes" : [
+  ]
+}
+"""
+
 }
