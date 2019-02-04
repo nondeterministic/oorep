@@ -5,6 +5,7 @@ import fr.hmil.roshttp.response.SimpleHttpResponse
 import org.scalajs.dom.document
 import monix.execution.Scheduler.Implicits.global
 import org.multics.baueran.frep.shared.Defs.serverUrl
+import org.multics.baueran.frep.shared.FIle
 import org.scalajs.dom
 
 import scala.scalajs.js.annotation.JSExportTopLevel

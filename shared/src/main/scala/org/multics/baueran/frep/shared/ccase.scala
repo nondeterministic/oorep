@@ -14,6 +14,16 @@ case class WeightedRemedy(remedy: Remedy, weight: Int) {
     }
   }
 
+  override def hashCode: Int = {
+    val prime = 31
+    var result = 1
+    result = prime * result + weight + remedy.hashCode()
+    result = prime * result +
+      (if (remedy == null) weight.toString.hashCode
+      else (weight.toString + remedy.toString).hashCode)
+    return result
+  }
+
 }
 
 object WeightedRemedy {
@@ -71,6 +81,14 @@ case class CaseRubric(rubric: Rubric,
         c.weightedRemedies == weightedRemedies
       case _ => false
     }
+  }
+
+  override def hashCode: Int = {
+    val prime = 31
+    var result = 1
+    result = prime * result + rubric.toString().hashCode + repertoryAbbrev.hashCode + rubricWeight + weightedRemedies.toString().hashCode
+    result = prime * result + rubric.toString().hashCode + repertoryAbbrev.hashCode + rubricWeight + weightedRemedies.toString().hashCode
+    return result
   }
 
 }

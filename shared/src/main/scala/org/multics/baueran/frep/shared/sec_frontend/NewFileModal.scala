@@ -1,11 +1,9 @@
 package org.multics.baueran.frep.shared.sec_frontend
 
 import org.querki.jquery.$
-
 import org.multics.baueran.frep.shared.Defs.serverUrl
 import org.multics.baueran.frep.shared.FIle
 import org.multics.baueran.frep.shared.frontend.getCookieData
-
 import fr.hmil.roshttp.HttpRequest
 import fr.hmil.roshttp.body.PlainTextBody
 import fr.hmil.roshttp.response.SimpleHttpResponse
@@ -13,15 +11,15 @@ import scalatags.JsDom.all.{id, input, _}
 import org.scalajs.dom
 import org.scalajs.dom.Event
 import org.scalajs.dom.raw.HTMLInputElement
-
 import monix.execution.Scheduler.Implicits.global
 
 import scala.scalajs.js
-import scala.util.Success
-
+import scala.util.{Failure, Success}
 import io.circe.syntax._
 
 object NewFileModal {
+
+  var currFIle: Option[FIle] = None
 
   def apply() = {
     div(cls:="modal fade", tabindex:="-1", role:="dialog", id:="newFileModal",
@@ -49,8 +47,14 @@ object NewFileModal {
                   button(data.dismiss:="modal", cls:="btn mb-2",
                     "Cancel",
                     onclick:={ (event: Event) =>
-                      $("#fileHeader").`val`("")
-                      $("#fileDescr").`val`("")
+                      currFIle match {
+                        case None =>
+                          $("#fileHeader").`val`("")
+                          $("#fileDescr").`val`("")
+                        case Some(file) =>
+                          $("#fileHeader").`val`(file.header)
+                          $("#fileDescr").`val`(file.description)
+                      }
                     }),
                   button(cls:="btn btn-primary mb-2", `type`:="button",
                     "Submit",
@@ -63,16 +67,19 @@ object NewFileModal {
                         case Some(id) => id.toInt
                         case None => -1 // TODO: Force user to relogin; the identification cookie has disappeared!!!!!!!!!!
                       }
-                      val newFIle = FIle(header, memberId, (new js.Date()).toISOString(), descr, List.empty)
+                      currFIle = Some(FIle(header, memberId, (new js.Date()).toISOString(), descr, List.empty))
 
                       HttpRequest(serverUrl() + "/savefile")
-                        .post(PlainTextBody(newFIle.asJson.toString()))
+                        .post(PlainTextBody(currFIle.get.asJson.toString()))
                         .onComplete({
-                          case response: Success[SimpleHttpResponse] => println("Received: " + response.toString())
-                          case _ => println("Failure!")
+                          case response: Success[SimpleHttpResponse] => {
+                            println("Received: " + response.get.body)
+                            js.eval("$('#newFileModal').modal('hide');")
+                          }
+                          case response: Failure[SimpleHttpResponse] => {
+                            println("Failure: " + response.get.body)
+                          }
                         })
-
-                      // js.eval("$('#newFileModal').modal('hide');")
                     })
                 )
               )

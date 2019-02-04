@@ -119,6 +119,16 @@ case class Remedy(val id: Int, val nameAbbrev: String, val nameLong: String) {
     }
   }
 
+  override def hashCode: Int = {
+    val prime = 31
+    var result = 1
+    result = prime * result + id + nameAbbrev.hashCode() + nameLong.hashCode
+    result = prime * result +
+      (if (nameAbbrev == null && nameLong == 0) id.toString.hashCode()
+      else (id.toString + nameAbbrev + nameLong).hashCode)
+    return result
+  }
+
 }
 
 object Remedy {
@@ -145,6 +155,14 @@ case class Rubric(id: Int, mother: Option[Int], isMother: Option[Boolean],
         r.fullPath == fullPath && r.path == path && r.textt == textt
       case _ => false
     }
+  }
+
+  override def hashCode: Int = {
+    val prime = 31
+    var result = 1
+    result = prime * result + id + mother.hashCode() + isMother.hashCode() + chapterId + fullPath.hashCode + path.hashCode() + textt.hashCode()
+    result = prime * result + (id + mother.hashCode() + isMother.hashCode() + chapterId + fullPath.hashCode + path.hashCode() + textt.hashCode())
+    return result
   }
 
   /**

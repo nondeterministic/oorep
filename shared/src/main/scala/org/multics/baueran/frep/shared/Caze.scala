@@ -14,21 +14,21 @@ case class Caze(id: Int,
     a.isInstanceOf[Caze]
   }
 
+  // Ignore id on purpose. It is DB-generated and two same Cazes with different id should be treated as equal!
   override def equals(that: Any): Boolean =
     that match {
-      case that: Caze => that.canEqual(this) && that.header == header &&
-        that.member_id == member_id && that.date == date && that.description == description &&
-        that.results == results
+      case that: Caze => that.canEqual(this) &&
+        that.header == header && that.member_id == member_id && that.date == date && that.description == description && that.results == results
       case _ => false
     }
 
-//  override def hashCode: Int = {
-//    val prime = 31
-//    var result = 1
-//    result = prime * result + member_id + results.length;
-//    result = prime * result + (if (header == null) 0 else (header + description + member_id.toString()).hashCode)
-//    return result
-//  }
+  // Ignore id on purpose. It is DB-generated and two same Cazes with different id should be treated as equal!
+  override def hashCode: Int = {
+    val prime = 31
+    var result = results.toString().hashCode
+    result = prime * result + header.hashCode + member_id + date.hashCode + description.hashCode + results.toString().hashCode
+    return result
+  }
 
 }
 
