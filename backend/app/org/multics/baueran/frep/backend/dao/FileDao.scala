@@ -3,7 +3,7 @@ package org.multics.baueran.frep.backend.dao
 import org.multics.baueran.frep._
 import backend.db
 import shared.FIle
-import io.circe.syntax._
+// import io.circe.syntax._
 import play.api.Logger
 
 case class dbFile(id: Int,
@@ -16,7 +16,6 @@ case class dbFile(id: Int,
 class FileDao(dbContext: db.db.DBContext) {
 
   import dbContext._
-  import dbContext.Result
 
   private val tableFile = quote {
     querySchema[dbFile]("File", _.date -> "date_")

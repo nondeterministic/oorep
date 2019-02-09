@@ -94,7 +94,7 @@ object Info {
 }
 
 // ------------------------------------------------------------------------------------------------------------------
-case class Chapter(id: Int, text: String)
+case class Chapter(abbrev: String, id: Int, text: String)
 
 object Chapter {
   implicit val chapterDecoder: Decoder[Chapter] = deriveDecoder[Chapter]
@@ -102,7 +102,7 @@ object Chapter {
 }
 
 // ------------------------------------------------------------------------------------------------------------------
-case class RubricRemedy(rubricId: Int, remedyId: Int, weight: Int, chapterId: Int)
+case class RubricRemedy(abbrev: String, rubricId: Int, remedyId: Int, weight: Int, chapterId: Int)
 
 object RubricRemedy {
   implicit val rRemedyDecoder: Decoder[RubricRemedy] = deriveDecoder[RubricRemedy]
@@ -110,7 +110,7 @@ object RubricRemedy {
 }
 
 // ------------------------------------------------------------------------------------------------------------------
-case class Remedy(val id: Int, val nameAbbrev: String, val nameLong: String) {
+case class Remedy(abbrev: String, val id: Int, val nameAbbrev: String, val nameLong: String) {
 
   override def equals(that: Any) = {
     that match {
@@ -137,7 +137,7 @@ object Remedy {
 }
 
 // ------------------------------------------------------------------------------------------------------------------
-case class ChapterRemedy(remedyId: Int, chapterId: Int)
+case class ChapterRemedy(abbrev: String, remedyId: Int, chapterId: Int)
 
 object ChapterRemedy {
   implicit val cRemedyDecoder: Decoder[ChapterRemedy] = deriveDecoder[ChapterRemedy]
@@ -145,7 +145,7 @@ object ChapterRemedy {
 }
 
 // ------------------------------------------------------------------------------------------------------------------
-case class Rubric(id: Int, mother: Option[Int], isMother: Option[Boolean],
+case class Rubric(abbrev: String, id: Int, mother: Option[Int], isMother: Option[Boolean],
                   chapterId: Int, fullPath: String, path: Option[String], textt: Option[String])
 {
 
