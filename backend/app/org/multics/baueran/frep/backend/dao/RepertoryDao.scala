@@ -8,7 +8,8 @@ class RepertoryDao(dbContext: db.db.DBContext) {
 
   import dbContext._
 
-  private val tableInfo = quote { querySchema[Info]("Info", _.abbrev -> "abbrev") }
+  private val tableInfo    = quote { querySchema[Info]("Info", _.abbrev -> "abbrev") }
+  private val tableChapter = quote { querySchema[Chapter]("Chapter", _.text -> "textt") }
 
   def getInfo(abbrev: String) = {
     implicit val decodeRepAccess = MappedEncoding[String, RepAccess.RepAccess](RepAccess.withName(_))
@@ -29,12 +30,12 @@ class RepertoryDao(dbContext: db.db.DBContext) {
   }
 
   def getChapter(chapterId: Int) = {
-    val get = quote(query[Chapter].filter(_.id == lift(chapterId)))
+    val get = quote{ tableChapter.filter(_.id == lift(chapterId)) }
     run(get)
   }
 
   def insert(chapter: Chapter) = {
-    val insert = quote(query[Chapter].insert(lift(chapter)))
+    val insert = quote{ tableChapter.insert(lift(chapter)) }
     run(insert)
   }
 
@@ -43,9 +44,24 @@ class RepertoryDao(dbContext: db.db.DBContext) {
     run(insert)
   }
 
+  def getRubricRemedy(rr: RubricRemedy) = {
+    val get = quote(query[RubricRemedy].filter(rubricRemedy => {
+      rubricRemedy.remedyId == lift(rr.remedyId) &&
+        rubricRemedy.abbrev == lift(rr.abbrev) &&
+        rubricRemedy.chapterId == lift(rr.chapterId) &&
+        rubricRemedy.rubricId == lift(rr.rubricId)
+    }))
+    run(get)
+  }
+
   def insert(r: Remedy) = {
     val insert = quote(query[Remedy].insert(lift(r)))
     run(insert)
+  }
+
+  def getRemedy(abbrev: String, id: Int) = {
+    val get = quote(query[Remedy].filter(remedy => remedy.abbrev == lift(abbrev) && remedy.id == lift(id)))
+    run(get)
   }
 
   def insert(cr: ChapterRemedy) = {
@@ -53,9 +69,25 @@ class RepertoryDao(dbContext: db.db.DBContext) {
     run(insert)
   }
 
+  def getChapterRemedy(cr: ChapterRemedy) = {
+    val get = quote(query[ChapterRemedy].filter(chapterRemedy => {
+      chapterRemedy.abbrev == lift(cr.abbrev) &&
+        chapterRemedy.chapterId == lift(cr.chapterId) &&
+        chapterRemedy.remedyId == lift(cr.remedyId)
+    }))
+    run(get)
+  }
+
   def insert(r: Rubric) = {
     val insert = quote(query[Rubric].insert(lift(r)))
     run(insert)
+  }
+
+  def getRubric(r: Rubric) = {
+    val get = quote(query[Rubric].filter(rubric =>
+      rubric.abbrev == lift(r.abbrev) && rubric.id == lift(r.id)
+    ))
+    run(get)
   }
 
   def insert(cr: CaseRubric) = {

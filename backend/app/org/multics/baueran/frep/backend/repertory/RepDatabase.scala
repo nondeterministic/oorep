@@ -7,6 +7,7 @@ import java.io.File
 import scala.collection.mutable
 import scala.io.Source
 import io.circe.parser._
+import play.api.Logger
 import org.multics.baueran.frep.backend.dao.RepertoryDao
 import org.multics.baueran.frep.backend.db.db.DBContext
 
@@ -26,15 +27,41 @@ object RepDatabase {
     dao = new RepertoryDao(dbContext)
 
     availableRepertories().foreach(repInfo => {
+      val repertory = loadRepertory(repInfo.abbrev)
+
       if (dao.getInfo(repInfo.abbrev).size == 0) {
+        Logger.debug("Inserting info into DB for " + repInfo.abbrev + ".")
         dao.insert(repInfo)
-
-
-        println(s"INFO: Inserted info for ${repInfo.abbrev} in DB.")
       }
-      else
-        println(s"INFO: ${repInfo.abbrev} already in DB.")
+
+      if (repertory.chapters.size > 0 && dao.getChapter(repertory.chapters.head.id).size == 0) {
+        Logger.debug("Inserting chapters into DB for " + repertory.info.abbrev + ".")
+        repertory.chapters.foreach(dao.insert(_))
+      }
+
+//      if (repertory.rubricRemedies.size > 0 && dao.getRubricRemedy(repertory.rubricRemedies.head).size == 0) {
+//        Logger.debug("Inserting rubric remedies into DB for " + repertory.info.abbrev + ".")
+//        repertory.rubricRemedies.foreach(dao.insert(_))
+//      }
+
+//      if (repertory.remedies.size > 0 && dao.getRemedy(repertory.remedies.head.abbrev, repertory.remedies.head.id).size == 0) {
+//        Logger.debug("Inserting remedies into DB for " + repertory.info.abbrev + ".")
+//        repertory.remedies.foreach(dao.insert(_))
+//      }
+      
+      if (repertory.chapterRemedies.size > 0 && dao.getChapterRemedy(repertory.chapterRemedies.head).size == 0) {
+        Logger.debug("Inserting chapter remedies into DB for " + repertory.info.abbrev + ".")
+        repertory.chapterRemedies.foreach(dao.insert(_))
+      }
+
+      if (repertory.rubrics.size > 0 && dao.getRubric(repertory.rubrics.head).size == 0) {
+        Logger.debug("Inserting rubrics into DB for " + repertory.info.abbrev + ".")
+        repertory.rubrics.foreach(dao.insert(_))
+      }
+
     })
+
+    Logger.debug("DB setup complete.")
   }
 
   /**
@@ -81,17 +108,21 @@ object RepDatabase {
   def loadedRepertories(): List[String] = repertories.keys.toList
 
   def loadRepertory(abbrev: String) = {
+    Repertory.loadFrom(localRepPath(), abbrev)
+  }
+
+  def loadAndPutRepertory(abbrev: String) = {
     if (availableRepertoriesAbbrevs.contains(abbrev)) {
       repertories.put(abbrev, Repertory.loadFrom(localRepPath(), abbrev))
-      println(s"INFO: Server: repertory $abbrev loaded.")
+      Logger.debug(s"INFO: Server: repertory $abbrev loaded.")
     }
     else
-      println(s"ERROR: Failed to load repertory ${abbrev} as it is not available.")
+      Logger.debug(s"ERROR: Failed to load repertory ${abbrev} as it is not available.")
   }
 
   def repertory(abbrev: String): Option[Repertory] = {
     if (availableRepertoriesAbbrevs.contains(abbrev) && !repertories.contains(abbrev))
-      loadRepertory(abbrev)
+      loadAndPutRepertory(abbrev)
     else if (!availableRepertoriesAbbrevs.contains(abbrev))
       None
 
