@@ -75,7 +75,7 @@ object Repertory {
         case Right(json) => {
           val cursor = json.hcursor
           cursor.as[List[Remedy]] match {
-            case Right(content) => { println("Remedies loaded."); content }
+            case Right(content) => content
             case Left(_) => println("Remedies parsing of JSON failed: wrong data?"); List()
           }
         }
@@ -90,7 +90,7 @@ object Repertory {
         case Right(json) => {
           val cursor = json.hcursor
           cursor.as[List[Rubric]] match {
-            case Right(content) => { println("Rubrics loaded."); content}
+            case Right(content) => content
             case Left(_) => println("Rubrics parsing of JSON failed: wrong data?"); List()
           }
         }
@@ -105,10 +105,7 @@ object Repertory {
         case Right(json) => {
           val cursor = json.hcursor
           cursor.as[Info] match {
-            case Right(content) => {
-              println("Info loaded.")
-              Some(content)
-            }
+            case Right(content) => Some(content)
             case Left(_) => println("Info parsing of JSON failed: wrong data?"); None
           }
         }
@@ -123,7 +120,7 @@ object Repertory {
         case Right(json) => {
           val cursor = json.hcursor
           cursor.as[List[ChapterRemedy]] match {
-            case Right(content) => { println("ChapterRemedies loaded."); content }
+            case Right(content) => content
             case Left(_) => println("ChapterRemedies parsing of JSON failed: wrong data?"); List()
           }
         }
@@ -138,7 +135,7 @@ object Repertory {
         case Right(json) => {
           val cursor = json.hcursor
           cursor.as[List[Chapter]] match {
-            case Right(content) => { println("Chapters loaded."); content }
+            case Right(content) => content
             case Left(_) => println("Chapters parsing of JSON failed: wrong data?"); List()
           }
         }
@@ -153,7 +150,7 @@ object Repertory {
         case Right(json) => {
           val cursor = json.hcursor
           cursor.as[List[RubricRemedy]] match {
-            case Right(content) => { println("RubricRemedies loaded."); content }
+            case Right(content) => content
             case Left(_) => println("RubricRemedies parsing of JSON failed: wrong data?"); List()
           }
         }
