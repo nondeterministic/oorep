@@ -2,19 +2,15 @@ package org.multics.baueran.frep.backend.controllers
 
 import scala.collection.mutable.ListBuffer
 import javax.inject._
-import java.text.SimpleDateFormat
-import java.util.Date
 
 import play.api.mvc._
 import io.circe.syntax._
-import org.multics.baueran.frep.backend.dao.{CazeDao, RepertoryDao}
-import org.multics.baueran.frep.backend.repertory.RepDatabase.dao
+import org.multics.baueran.frep.backend.dao.RepertoryDao
 import org.multics.baueran.frep.backend.repertory._
 // import org.multics.baueran.frep.backend.views.html._
 import org.multics.baueran.frep.shared._
 import org.multics.baueran.frep.backend.dao.MemberDao
 import org.multics.baueran.frep.backend.db.db.DBContext
-import org.multics.baueran.frep.backend.db.MyDate
 import org.multics.baueran.frep.shared.Defs._
 import org.multics.baueran.frep.shared.WeightedRemedy
 
@@ -60,23 +56,17 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
   }
 
   def availableReps() = Action { request: Request[AnyContent] =>
-    if (authorizedRequestCookies(request) == List.empty)
-      Ok(RepDatabase.availableRepertories().filter(r => r.access == RepAccess.Default || r.access == RepAccess.Public).asJson.toString())
-    else
-      Ok(RepDatabase.availableRepertories().asJson.toString())
-  }
+    val dao = new RepertoryDao(dbContext)
 
-//  def repertorise3(repertoryAbbrev: String, symptom: String) = Action { request: Request[AnyContent] =>
-//    val dao = new RepertoryDao(dbContext)
-//    val results = dao.filterRubric(repertoryAbbrev, symptom)
-//    println("Results: #"+ results.size)
-//    println("Results: " + results)
-//    Ok
-//  }
+    if (authorizedRequestCookies(request) == List.empty)
+      Ok(dao.getAllAvailableRepertoryInfos().filter(r => r.access == RepAccess.Default || r.access == RepAccess.Public).asJson.toString())
+    else
+      Ok(dao.getAllAvailableRepertoryInfos().asJson.toString())
+  }
 
   def repertorise(repertoryAbbrev: String, symptom: String) = Action { request: Request[AnyContent] =>
     val dao = new RepertoryDao(dbContext)
-    val results = dao.filterRubric(repertoryAbbrev, symptom)
+    val results = dao.lookupSymptom(repertoryAbbrev, symptom)
 
     if (results.size == 0)
       BadRequest("No results found.")
@@ -86,63 +76,17 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
 
       for (i <- 0 to math.min(100, results.size) - 1) {
         val rubric = results(i)
-        val remedyWeightTuples = dao.remedyWeightTuples(rubric) // rubric.remedyWeightTuples(loadedRepertory.remedies, loadedRepertory.rubricRemedies)
+        val remedyWeightTuples = dao.getRemediesForRubric(rubric)
         val response = ("(" + rubric.id + ") " + rubric.fullPath + ": " + rubric.path + ", " + rubric.textt + ": "
           + remedyWeightTuples.map { case (r, w) => r.nameAbbrev + "(" + w + ")" }.mkString(", "))
 
         // case class CaseRubric(rubric: Rubric, repertoryAbbrev: String, rubricWeight: Int, weightedRemedies: Map[Remedy, Integer])
         // contains sth. like this: (68955) Bladder, afternoon: None, None: Chel.(2), Sulph.(2), Lil-t.(1), Sabad.(1), Petr.(1), Nux-v.(2), Merc.(1), Hyper.(1), Ferr.(1), Equis.(1), Cic.(1), Chin-s.(1), Bell.(1), Indg.(1), Aloe(1), Lyc.(3), Spig.(1), Lith-c.(1), Sep.(1), Coc-c.(1), Chlol.(1), Alumn.(1), Bov.(1)
-        resultSet += CaseRubric(rubric, repertoryAbbrev, 1,
-          remedyWeightTuples.map(f => WeightedRemedy(f._1, f._2)).toList)
-        // remedyWeightTuples.foldLeft(Map[Remedy, Int]()) { (e1, e2) => e1 + (e2._1 -> e2._2) })
+        resultSet += CaseRubric(rubric, repertoryAbbrev, 1, remedyWeightTuples.map(rwt => WeightedRemedy(rwt._1, rwt._2)).toList)
       }
 
       Ok(resultSet.asJson.toString()) // .withCookies(request.cookies.toList:_*).bakeCookies()
     }
   }
 
-  def repertorise2(repertoryAbbrev: String, symptom: String) = Action { request: Request[AnyContent] =>
-    RepDatabase.repertory(repertoryAbbrev) match {
-      case Some(loadedRepertory) =>
-        val resultRubrics = loadedRepertory.findRubrics(symptom).filter(_.chapterId >= 0)
-
-        if (resultRubrics.size <= 0)
-          BadRequest("No results found.")
-        else {
-          val resultSetTooLarge = resultRubrics.size > 100
-          var resultSet = ListBuffer[CaseRubric]()
-
-          for (i <- 0 to math.min(100, resultRubrics.size) - 1) {
-            val rubric = resultRubrics(i)
-            (loadedRepertory.chapter(rubric.chapterId): Option[Chapter]) match {
-              case Some(_) => {
-                val remedyWeightTuples = rubric.remedyWeightTuples(loadedRepertory.remedies, loadedRepertory.rubricRemedies)
-                val response = ("(" + rubric.id + ") " + rubric.fullPath + ": " + rubric.path + ", " + rubric.textt + ": "
-                               + remedyWeightTuples.map { case (r, w) => r.nameAbbrev + "(" + w + ")" }.mkString(", "))
-                // println(response)
-
-                // case class CaseRubric(rubric: Rubric, repertoryAbbrev: String, rubricWeight: Int, weightedRemedies: Map[Remedy, Integer])
-                // contains sth. like this: (68955) Bladder, afternoon: None, None: Chel.(2), Sulph.(2), Lil-t.(1), Sabad.(1), Petr.(1), Nux-v.(2), Merc.(1), Hyper.(1), Ferr.(1), Equis.(1), Cic.(1), Chin-s.(1), Bell.(1), Indg.(1), Aloe(1), Lyc.(3), Spig.(1), Lith-c.(1), Sep.(1), Coc-c.(1), Chlol.(1), Alumn.(1), Bov.(1)
-                resultSet += CaseRubric(rubric, repertoryAbbrev, 1,
-                  remedyWeightTuples.map(f => WeightedRemedy(f._1, f._2)).toList)
-                  // remedyWeightTuples.foldLeft(Map[Remedy, Int]()) { (e1, e2) => e1 + (e2._1 -> e2._2) })
-              }
-              case None => ;
-            }
-          }
-
-
-          val dao = new RepertoryDao(dbContext)
-          val results = dao.filterRubric(repertoryAbbrev, symptom)
-          println("Results: #"+ results.size)
-          println("Results: " + results)
-
-
-
-
-          Ok(resultSet.asJson.toString()) // .withCookies(request.cookies.toList:_*).bakeCookies()
-        }
-      case None => BadRequest(s"Repertory $repertoryAbbrev not found. Available repertories: " + RepDatabase.availableRepertories().map(_.abbrev).mkString(", "))
-    }
-  }
 }

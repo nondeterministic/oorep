@@ -16,19 +16,20 @@ class RepertoryDao(dbContext: db.db.DBContext) {
   def getInfo(abbrev: String) = {
     implicit val decodeRepAccess = MappedEncoding[String, RepAccess.RepAccess](RepAccess.withName(_))
 
-    val select = quote {
-      tableInfo.filter(_.abbrev == lift(abbrev))
-    }
+    val select = quote { tableInfo.filter(_.abbrev == lift(abbrev)) }
     run(select)
   }
 
   def insert(info: Info) = {
     implicit val encodeRepAccess = MappedEncoding[RepAccess.RepAccess, String](_.toString())
 
-    val insert = quote {
-      tableInfo.insert(lift(info))
-    }
+    val insert = quote { tableInfo.insert(lift(info)) }
     run(insert)
+  }
+
+  def getAllAvailableRepertoryInfos() = {
+    implicit val decodeRepAccess = MappedEncoding[String, RepAccess.RepAccess](RepAccess.withName(_))
+    run(quote(tableInfo.filter(_ => true)))
   }
 
   def getChapter(chapterId: Int) = {
@@ -92,7 +93,7 @@ class RepertoryDao(dbContext: db.db.DBContext) {
     run(get)
   }
 
-  def filterRubric(abbrev: String, symptom: String): List[Rubric] = {
+  def lookupSymptom(abbrev: String, symptom: String): List[Rubric] = {
     val searchStrings = symptom.
                           trim.                                                    // Remove trailing spaces
                           replaceAll(" +", " ").              // Remove double spaces
@@ -108,7 +109,7 @@ class RepertoryDao(dbContext: db.db.DBContext) {
     run(get).filter(_.isMatchFor(posSearchTerms, negSearchTerms))
   }
 
-  def remedyWeightTuples(rubric: Rubric): Seq[(Remedy, Int)] = {
+  def getRemediesForRubric(rubric: Rubric): Seq[(Remedy, Int)] = {
     var result: ArrayBuffer[(Remedy, Int)] = new ArrayBuffer[(Remedy,Int)]
     val filter = quote { query[RubricRemedy].filter(rr => rr.rubricId == lift(rubric.id) && rr.abbrev == lift(rubric.abbrev)) }
     val remedyIdWeightTuples: Seq[(Int, Int)] = run(filter).map(rr => (rr.remedyId, rr.weight))

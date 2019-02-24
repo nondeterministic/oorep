@@ -1,6 +1,5 @@
 package org.multics.baueran.frep.shared
 
-import scala.collection.mutable.ArrayBuffer
 import io.circe.{Decoder, Encoder, Json}
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.HCursor
@@ -222,19 +221,6 @@ case class Rubric(abbrev: String, id: Int, mother: Option[Int], isMother: Option
       isPosMatch
   }
   
-  def remedyWeightTuples(allRemedies: Seq[Remedy], rubricRemedies: Seq[RubricRemedy]): Seq[(Remedy, Int)] = {
-    var result: ArrayBuffer[(Remedy, Int)] = new ArrayBuffer[(Remedy,Int)]
-    val remedyIdWeightTuples: Seq[(Int, Int)] = rubricRemedies.filter(_.rubricId == id).map(rr => (rr.remedyId, rr.weight))
-    
-    remedyIdWeightTuples.foreach { case (rid, rweight) =>  
-      allRemedies.find(_.id == rid) match { 
-        case Some(remedy) => result += ((remedy, rweight))
-        case None => ;  // TODO: Possibly log an error here?!
-      }
-    }
-    
-    result
-  }
 }
 
 object Rubric {
@@ -243,17 +229,14 @@ object Rubric {
 }
 
 // ------------------------------------------------------------------------------------------------------------------
+// Do not use this class any more!  Its purpose is for testing and repertory import/conversion only.
+// Repertory accesses for rubric lookups etc. should be made via RepertoryDao only!
 case class Repertory(val info: Info, val chapters: Seq[Chapter], val remedies: Seq[Remedy],
                 val chapterRemedies: Seq[ChapterRemedy], val rubrics: Seq[Rubric],
                 val rubricRemedies: Seq[RubricRemedy]) 
 {
-  def chapter(chapterId: Int): Option[Chapter] = {
-    chapters.toList.filter(_.id == chapterId) match {
-      case c :: cs => Some(c)
-      case Nil     => None
-    }
-  }
 
+  @deprecated("Use RepertoryDao.lookupSymptom() instead.","24-02-2019")
   def findRubrics(enteredSearchString: String, caseSensitive: Boolean = false): Seq[Rubric] = {
     val searchStrings = enteredSearchString.
                           trim.                               // Remove trailing spaces
@@ -265,4 +248,5 @@ case class Repertory(val info: Info, val chapters: Seq[Chapter], val remedies: S
     val negSearchTerms = searchStrings.filter(_.startsWith("-")).map(_.substring(1)).toList
     rubrics.filter(_.isMatchFor(posSearchTerms, negSearchTerms, caseSensitive))
   }
+
 }

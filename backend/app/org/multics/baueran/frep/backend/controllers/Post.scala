@@ -29,7 +29,7 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
               Cookie("oorep_member_password", inputPassword, httpOnly = false),
               Cookie("oorep_member_id", member.member_id.toString, httpOnly = false)
 
-              // Does not work because JSON contains invalid Cookie values. :-(
+              // Does not work because JSON contains (or rather is a) invalid Cookie values. :-(
               // Cookie("oorep_member_id", Member.memberEncoder(member).toString(), httpOnly=false)
             )
       }
