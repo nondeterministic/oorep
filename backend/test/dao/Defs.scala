@@ -12,6 +12,7 @@ object Defs {
   "results" : [
     {
       "rubric" : {
+        "abbrev" : "kent",
         "id" : 61832,
         "mother" : null,
         "isMother" : null,
@@ -25,6 +26,7 @@ object Defs {
       "weightedRemedies" : [
         {
           "remedy" : {
+            "abbrev" : "kent",
             "id" : 305,
             "nameAbbrev" : "Hep.",
             "nameLong" : "Hepar Sulphur"
@@ -33,6 +35,7 @@ object Defs {
         },
         {
           "remedy" : {
+            "abbrev" : "kent",
             "id" : 60,
             "nameAbbrev" : "Apis",
             "nameLong" : "Apis Mellifera"
@@ -41,6 +44,7 @@ object Defs {
         },
         {
           "remedy" : {
+            "abbrev" : "kent",
             "id" : 71,
             "nameAbbrev" : "Arg-n.",
             "nameLong" : "Argentum Nitricum"
@@ -51,6 +55,7 @@ object Defs {
     },
     {
       "rubric" : {
+        "abbrev" : "kent",
         "id" : 61831,
         "mother" : null,
         "isMother" : null,
@@ -64,6 +69,7 @@ object Defs {
       "weightedRemedies" : [
         {
           "remedy" : {
+            "abbrev" : "kent",
             "id" : 73,
             "nameAbbrev" : "Ars.",
             "nameLong" : "Arsenicum Album"
