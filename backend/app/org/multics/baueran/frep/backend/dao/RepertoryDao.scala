@@ -3,6 +3,7 @@ package org.multics.baueran.frep.backend.dao
 import io.getquill
 import org.multics.baueran.frep.shared._
 import org.multics.baueran.frep.backend.db
+import play.api.Logger
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -118,7 +119,7 @@ class RepertoryDao(dbContext: db.db.DBContext) {
       val allRemedies = quote { query[Remedy].filter(r => r.abbrev == lift(rubric.abbrev)) }
       run(allRemedies).find(_.id == rid) match {
         case Some(remedy) => result += ((remedy, rweight))
-        case None => ;  // TODO: Possibly log an error here?!
+        case None => Logger.warn("WARNING: RepertoryDao.getRemediesForRubric: No remedy found.")
       }
     }
 

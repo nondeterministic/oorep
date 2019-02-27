@@ -1,11 +1,13 @@
 package org.multics.baueran.frep.backend.controllers
 
+import io.circe.Encoder
+import io.circe.generic.semiauto.deriveEncoder
+
 import scala.collection.mutable.ListBuffer
 import javax.inject._
-
 import play.api.mvc._
 import io.circe.syntax._
-import org.multics.baueran.frep.backend.dao.RepertoryDao
+import org.multics.baueran.frep.backend.dao.{FileDao, RepertoryDao}
 import org.multics.baueran.frep.backend.repertory._
 // import org.multics.baueran.frep.backend.views.html._
 import org.multics.baueran.frep.shared._
@@ -13,6 +15,7 @@ import org.multics.baueran.frep.backend.dao.MemberDao
 import org.multics.baueran.frep.backend.db.db.DBContext
 import org.multics.baueran.frep.shared.Defs._
 import org.multics.baueran.frep.shared.WeightedRemedy
+import org.multics.baueran.frep.shared.FIle
 
 /**
  * This controller creates an `Action` to handle HTTP requests to the
@@ -62,6 +65,12 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
       Ok(dao.getAllAvailableRepertoryInfos().filter(r => r.access == RepAccess.Default || r.access == RepAccess.Public).asJson.toString())
     else
       Ok(dao.getAllAvailableRepertoryInfos().asJson.toString())
+  }
+
+  def availableFiles(memberId: Int) = Action { req: Request[AnyContent] =>
+    val dao = new FileDao(dbContext)
+
+    Ok(dao.getFilesForMember(memberId).asJson.toString())
   }
 
   def repertorise(repertoryAbbrev: String, symptom: String) = Action { request: Request[AnyContent] =>

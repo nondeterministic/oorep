@@ -19,7 +19,7 @@ object NavBar {
             li(cls:="navbar-item dropdown", a(cls:="nav-link dropdown-toggle", href:="#", data.toggle:="dropdown")("File"),
               div(cls:="dropdown-menu",
                 a(cls:="dropdown-item", href:="#", data.toggle:="modal", data.target:="#newFileModal")("New.."),
-                a(cls:="dropdown-item", href:="#")("Open...")
+                a(cls:="dropdown-item", href:="#", data.toggle:="modal", data.target:="#openFileModal")("Open...")
               )
             )
           )

@@ -16,4 +16,6 @@ package object Defs {
     val Public = Value("Public")
     val Secure = Value("Secure")
   }
+
+  var availableFiles: List[FIle] = List.empty
 }

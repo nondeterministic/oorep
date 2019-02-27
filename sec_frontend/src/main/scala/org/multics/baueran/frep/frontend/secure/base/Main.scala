@@ -13,9 +13,11 @@ import org.querki.jquery._
 import scalatags.JsDom.all._
 
 import scala.util.{Failure, Success}
+import org.multics.baueran.frep.shared.frontend.updateAvailableFiles
 import org.multics.baueran.frep.shared.frontend.Repertorise
 import org.multics.baueran.frep.shared.frontend.Disclaimer
-import org.multics.baueran.frep.shared.sec_frontend.NewFileModal
+import org.multics.baueran.frep.shared.sec_frontend.{NewFileModal,AddToFileModal}
+import org.multics.baueran.frep.shared.Defs.availableFiles
 
 @JSExportTopLevel("MainSecure")
 object Main {
@@ -36,8 +38,11 @@ object Main {
           $("#nav_bar").empty()
           $("#nav_bar").append(NavBar().render)
           $("#content").append(NewFileModal().render)
+//          $("#content").append(AddToFileModal().render)
           $("#content").append(Repertorise.applySecure().render)
           $("#content_bottom").append(Disclaimer.toHTML().render)
+
+//          updateAvailableFiles(response.get.body.toInt) // Response will contain the member ID!
         }
         case error: Failure[SimpleHttpResponse] => {
           $("#content").append(p("Not authorized.").render)

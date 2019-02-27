@@ -48,8 +48,10 @@ object Case {
       }}
     })
 
-    if (descr != None)
+    if (descr != None) {
       descr = Some(shared.Caze(descr.get.id, descr.get.header, descr.get.member_id, (new js.Date()).toISOString(), descr.get.description, cRubrics.toList))
+      updateAvailableFiles(descr.get.member_id) // A case cannot be added, unless a case description exists, at least!
+    }
 
     if (cRubrics.size == 0)
       descr = None
@@ -248,21 +250,25 @@ object Case {
               case None => ;
             }
           }
-          }, "Edit description")
+          }, "Edit case description")
       val addToFileButton =
-        button(cls:="btn btn-sm btn-dark", `type`:="button", data.toggle:="modal", data.target:="#TODO", style:="margin-left:5px; margin-bottom: 5px;",
-          onclick := { (event: Event) => {
-            println("descr.results.size: " + descr.get.results.size)
-            HttpRequest(serverUrl() + "/savecase")
-              // .post(PlainTextBody(Caze.encoder(descr.get).toString()))
-              .post(PlainTextBody(descr.get.asJson.toString()))
-              .onComplete({
-                case response: Success[SimpleHttpResponse] => println("Received: " + response.toString())
-                case _ => println("Failure!")
-              })
-            println("TODO2")
-          }
-          }, "Add to file")
+        button(cls:="btn btn-sm btn-dark", `type`:="button", data.toggle:="modal", data.target:="#addToFileModal", style:="margin-left:5px; margin-bottom: 5px;",
+          "Add case to file")
+
+//      val addToFileButton =
+//        button(cls:="btn btn-sm btn-dark", `type`:="button", data.toggle:="modal", data.target:="#TODO", style:="margin-left:5px; margin-bottom: 5px;",
+//          onclick := { (event: Event) => {
+//            println("descr.results.size: " + descr.get.results.size)
+//            HttpRequest(serverUrl() + "/savecase")
+//              .post(PlainTextBody(descr.get.asJson.toString()))
+//              .onComplete({
+//                case response: Success[SimpleHttpResponse] => println("Received: " + response.toString())
+//                case _ => println("Failure!")
+//              })
+//            println("TODO2")
+//          }
+//          }, "Add to file")
+
       val removeFromFileButton =
         button(cls:="btn btn-sm btn-dark", `type`:="button", data.toggle:="modal", data.target:="#TODO", style:="margin-left:5px; margin-bottom: 5px;",
           onclick := { (event: Event) => {

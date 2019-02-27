@@ -28,6 +28,18 @@ class FileDao(dbContext: db.db.DBContext) {
     run(select)
   }
 
+  def getFilesForMember(member_id: Int) = {
+    val select = quote {
+      tableFile.filter(_.member_id == lift(member_id))
+    }
+    run(select).map(dbFileToFIle(_)).filter { case Some(_) => true }
+  }
+
+  /**
+    * A dbFile can only be converted to a FIle by looking up the case IDs in the DB.
+    * Hence, this method is rather inefficient and should be AVOIDED if possible!
+    */
+
   private def dbFileToFIle(file: dbFile): Option[FIle] = {
     get(file.header, file.member_id) match {
       case singleDbFile :: Nil => {

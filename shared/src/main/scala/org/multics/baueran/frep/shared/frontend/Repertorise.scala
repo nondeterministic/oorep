@@ -15,7 +15,7 @@ import fr.hmil.roshttp.response.SimpleHttpResponse
 import monix.execution.Scheduler.Implicits.global
 import org.multics.baueran.frep.shared._
 import org.multics.baueran.frep.shared.Defs.{AppMode, serverUrl}
-import org.multics.baueran.frep.shared.sec_frontend.NewFileModal
+import org.multics.baueran.frep.shared.sec_frontend.{NewFileModal, AddToFileModal}
 
 object Repertorise {
 
@@ -35,6 +35,7 @@ object Repertorise {
 
     def resetContentView() = {
       $("#content").empty()
+      $("#content").append(AddToFileModal().render)
       $("#content").append(NewFileModal().render)
       $("#content").append(Repertorise().render)
     }

@@ -18,6 +18,7 @@ POST   	/savefile                   org.multics.baueran.frep.backend.controllers
 GET		/authenticate               org.multics.baueran.frep.backend.controllers.Get.authenticate
 GET		/lookup						org.multics.baueran.frep.backend.controllers.Get.repertorise(repertory: String, symptom: String)
 GET     /availableReps              org.multics.baueran.frep.backend.controllers.Get.availableReps
+GET     /availableFiles             org.multics.baueran.frep.backend.controllers.Get.availableFiles(memberId: Int)
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
