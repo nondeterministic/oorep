@@ -48,9 +48,13 @@ object Case {
       }}
     })
 
+    getCookieData(dom.document.cookie, "oorep_member_id") match {
+      case Some(id) => updateAvailableFiles(id.toInt)
+      case None => ;
+    }
+
     if (descr != None) {
       descr = Some(shared.Caze(descr.get.id, descr.get.header, descr.get.member_id, (new js.Date()).toISOString(), descr.get.description, cRubrics.toList))
-      updateAvailableFiles(descr.get.member_id) // A case cannot be added, unless a case description exists, at least!
     }
 
     if (cRubrics.size == 0)
@@ -185,6 +189,7 @@ object Case {
 
   // ------------------------------------------------------------------------------------------------------------------
   def toHTML(remedyFormat: RemedyFormat, appMode: AppMode.AppMode) = {
+    updateAnalysisView()
 
     def caseRow(crub: CaseRubric) = {
       implicit def crToCR(cr: CaseRubric) = new BetterCaseRubric(cr)
@@ -236,10 +241,7 @@ object Case {
 
     def header() = {
       val analyseButton =
-        button(cls:="btn btn-sm btn-primary", `type`:="button", data.toggle:="modal", data.target:="#caseAnalysisModal", style:="margin-left:5px; margin-bottom: 5px;",
-          onclick := { (event: Event) => {
-            updateAnalysisView()
-          }}, "Analyse")
+        button(cls:="btn btn-sm btn-primary", `type`:="button", data.toggle:="modal", data.target:="#caseAnalysisModal", style:="margin-left:5px; margin-bottom: 5px;", "Analyse")
       val editDescrButton =
         button(cls:="btn btn-sm btn-dark", `type`:="button", data.toggle:="modal", data.target:="#caseDescriptionModal", style:="margin-left:5px; margin-bottom: 5px;",
           onclick := { (event: Event) => {
@@ -252,23 +254,7 @@ object Case {
           }
           }, "Edit case description")
       val addToFileButton =
-        button(cls:="btn btn-sm btn-dark", `type`:="button", data.toggle:="modal", data.target:="#addToFileModal", style:="margin-left:5px; margin-bottom: 5px;",
-          "Add case to file")
-
-//      val addToFileButton =
-//        button(cls:="btn btn-sm btn-dark", `type`:="button", data.toggle:="modal", data.target:="#TODO", style:="margin-left:5px; margin-bottom: 5px;",
-//          onclick := { (event: Event) => {
-//            println("descr.results.size: " + descr.get.results.size)
-//            HttpRequest(serverUrl() + "/savecase")
-//              .post(PlainTextBody(descr.get.asJson.toString()))
-//              .onComplete({
-//                case response: Success[SimpleHttpResponse] => println("Received: " + response.toString())
-//                case _ => println("Failure!")
-//              })
-//            println("TODO2")
-//          }
-//          }, "Add to file")
-
+        button(cls:="btn btn-sm btn-dark", `type`:="button", data.toggle:="modal", data.target:="#addToFileModal", style:="margin-left:5px; margin-bottom: 5px;", "Add case to file")
       val removeFromFileButton =
         button(cls:="btn btn-sm btn-dark", `type`:="button", data.toggle:="modal", data.target:="#TODO", style:="margin-left:5px; margin-bottom: 5px;",
           onclick := { (event: Event) => {
