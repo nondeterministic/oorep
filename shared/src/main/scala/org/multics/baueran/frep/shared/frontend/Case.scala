@@ -4,7 +4,6 @@ import org.querki.jquery.$
 import org.scalajs.dom
 import dom.Event
 import fr.hmil.roshttp.HttpRequest
-import fr.hmil.roshttp.body.PlainTextBody
 import fr.hmil.roshttp.response.SimpleHttpResponse
 import monix.execution.Scheduler.Implicits.global
 import scalatags.JsDom.all._
@@ -15,14 +14,27 @@ import rx.Var
 import rx.Ctx.Owner.Unsafe._
 import scalatags.rx.all._
 import org.multics.baueran.frep.shared
+import org.multics.baueran.frep.shared.sec_frontend.AddToFileModal
 import org.scalajs.dom.raw.HTMLInputElement
 import shared._
 import shared.Defs.{AppMode, serverUrl}
 import shared.frontend.RemedyFormat.RemedyFormat
 
 import scala.util.Success
+// import io.circe.syntax._
 
-import io.circe.syntax._
+//import fr.hmil.roshttp.HttpRequest
+//import fr.hmil.roshttp.response.SimpleHttpResponse
+import org.multics.baueran.frep.shared.Defs.serverUrl
+import org.querki.jquery.$
+// import org.scalajs.dom
+// import scalatags.JsDom.all.p
+import io.circe.parser.parse
+// import monix.execution.Scheduler.Implicits.global
+// import scalatags.JsDom.all.{id, input, _}
+import org.scalajs.dom
+
+import scala.util.{Failure, Success}
 
 object Case {
 
@@ -40,7 +52,46 @@ object Case {
   }
 
   // ------------------------------------------------------------------------------------------------------------------
-  def updateDataStructures() = {
+  def updateAvailableFiles(memberId: Int) = {
+    HttpRequest(serverUrl() + "/availableFiles")
+      .withQueryParameter("memberId", memberId.toString)
+      .withCrossDomainCookies(true)
+      .send()
+      .onComplete({
+        case response: Success[SimpleHttpResponse] => {
+          parse(response.get.body) match {
+            case Right(json) => {
+              val cursor = json.hcursor
+              cursor.as[List[FIle]] match {
+                case Right(files) => {
+                  if (files.length > 0) {
+                    $("#availableFilesList").empty()
+                    files.map(file => {
+                      val listItem =
+                        a(cls := "list-group-item list-group-item-action", data.toggle := "list", href := "#list-profile", role := "tab",
+                          onclick:= { (event: Event) => AddToFileModal.selected_file_id = file.header },
+                          file.header)
+                      $("#availableFilesList").append(listItem.render)
+                    })
+                  }
+                }
+                case Left(t) => println("Decoding of available files failed: " + t)
+              }
+            }
+            case Left(_) => println("Parsing of available files failed (is it JSON?).")
+          }
+        }
+        case error: Failure[SimpleHttpResponse] => println("ERROR: " + error.get.body)
+      })
+  }
+
+  // ------------------------------------------------------------------------------------------------------------------
+  def updateAllCaseDataStructures() = {
+    getCookieData(dom.document.cookie, "oorep_member_id") match {
+      case Some(id) => updateAvailableFiles(id.toInt)
+      case None => println("WARNING: updateDataStructures() failed. Could not get memberID from cookie.")
+    }
+
     remedyScores.clear()
     cRubrics.foreach(caseRubric => {
       caseRubric.weightedRemedies.foreach { case WeightedRemedy(r, w) => {
@@ -48,14 +99,8 @@ object Case {
       }}
     })
 
-    getCookieData(dom.document.cookie, "oorep_member_id") match {
-      case Some(id) => updateAvailableFiles(id.toInt)
-      case None => ;
-    }
-
-    if (descr != None) {
+    if (descr != None)
       descr = Some(shared.Caze(descr.get.id, descr.get.header, descr.get.member_id, (new js.Date()).toISOString(), descr.get.description, cRubrics.toList))
-    }
 
     if (cRubrics.size == 0)
       descr = None
@@ -66,7 +111,7 @@ object Case {
     implicit def stringToString(s: String) = new BetterString(s) // For 'shorten'.
 
     // Update data structures
-    updateDataStructures()
+    updateAllCaseDataStructures()
 
     // Redraw table header
     $("#analysisTHead").empty()
@@ -225,7 +270,6 @@ object Case {
               crub.rubricWeight = 1
               cRubrics.remove(cRubrics.indexOf(crub))
               $("#crub_" + crub.rubric.id + crub.repertoryAbbrev).remove()
-              updateDataStructures()
 
               // Enable add-button in results, if removed symptom was in the displayed results list...
               $("#button_" + crub.repertoryAbbrev + "_" + crub.rubric.id).removeAttr("disabled")

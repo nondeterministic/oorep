@@ -3,7 +3,7 @@ package org.multics.baueran.frep.shared.sec_frontend
 import org.querki.jquery.$
 import org.multics.baueran.frep.shared.Defs.serverUrl
 import org.multics.baueran.frep.shared.FIle
-import org.multics.baueran.frep.shared.frontend.getCookieData
+import org.multics.baueran.frep.shared.frontend.{Case, getCookieData}
 import fr.hmil.roshttp.HttpRequest
 import fr.hmil.roshttp.body.PlainTextBody
 import fr.hmil.roshttp.response.SimpleHttpResponse
@@ -73,11 +73,11 @@ object NewFileModal {
                         .post(PlainTextBody(currFIle.get.asJson.toString()))
                         .onComplete({
                           case response: Success[SimpleHttpResponse] => {
-                            println("Received: " + response.get.body)
+                            Case.updateAllCaseDataStructures()
                             js.eval("$('#newFileModal').modal('hide');")
                           }
                           case response: Failure[SimpleHttpResponse] => {
-                            println("Failure: " + response.get.body)
+                            println("Failure in NewFileModal: " + response.get.body)
                           }
                         })
                     })

@@ -3,9 +3,9 @@ package org.multics.baueran.frep.shared.sec_frontend
 import org.querki.jquery.$
 import org.multics.baueran.frep.shared.Defs.serverUrl
 import org.multics.baueran.frep.shared.FIle
-import org.multics.baueran.frep.shared.frontend.getCookieData
+import org.multics.baueran.frep.shared.frontend.{Case, getCookieData}
 import fr.hmil.roshttp.HttpRequest
-import fr.hmil.roshttp.body.PlainTextBody
+import fr.hmil.roshttp.body.{ MultiPartBody, PlainTextBody }
 import fr.hmil.roshttp.response.SimpleHttpResponse
 import scalatags.JsDom.all.{id, input, _}
 import org.scalajs.dom
@@ -19,6 +19,8 @@ import io.circe.syntax._
 
 object AddToFileModal {
 
+  var selected_file_id: String = ""
+
   def apply() = {
     div(cls:="modal fade", tabindex:="-1", role:="dialog", id:="addToFileModal",
       div(cls:="modal-dialog modal-dialog-centered", role:="document", style:="min-width: 80%;",
@@ -30,24 +32,14 @@ object AddToFileModal {
           div(cls:="modal-body",
             div(cls:="form-group",
               div(cls:="list-group", role:="tablist", id:="availableFilesList", style:="height: 250px; overflow-y: scroll;",
-//                a(cls:="list-group-item list-group-item-action", id:="list-profile-list", data.toggle:="list", href:="#list-profile", role:="tab", "BLA"),
-//                a(cls:="list-group-item list-group-item-action", id:="list-profile-list", data.toggle:="list", href:="#list-profile", role:="tab", "BLA"),
-//                a(cls:="list-group-item list-group-item-action", id:="list-profile-list", data.toggle:="list", href:="#list-profile", role:="tab", "BLA"),
-//                a(cls:="list-group-item list-group-item-action", id:="list-profile-list", data.toggle:="list", href:="#list-profile", role:="tab", "BLA"),
-//                a(cls:="list-group-item list-group-item-action", id:="list-profile-list", data.toggle:="list", href:="#list-profile", role:="tab", "BLA"),
-//                a(cls:="list-group-item list-group-item-action", id:="list-profile-list", data.toggle:="list", href:="#list-profile", role:="tab", "BLA"),
-//                a(cls:="list-group-item list-group-item-action", id:="list-profile-list", data.toggle:="list", href:="#list-profile", role:="tab", "BLA"),
-//                a(cls:="list-group-item list-group-item-action", id:="list-profile-list", data.toggle:="list", href:="#list-profile", role:="tab", "BLA"),
-                a(cls:="list-group-item list-group-item-action", id:="list-profile-list", data.toggle:="list", href:="#list-profile", role:="tab", "BLA")
-              )
+                a(cls := "list-group-item list-group-item-action", data.toggle:="list", id:="none", href:="#list-profile", role:="tab", "<no files created yet>"))
             ),
             div(cls:="form-group",
               button(data.dismiss:="modal", cls:="btn mb-2", "Cancel"),
               button(cls:="btn btn-primary mb-2", `type`:="button",
                 "Submit",
                 onclick:={(event: Event) =>
-                  println("Clicked 2")
-                  event.stopPropagation()
+//                  event.stopPropagation()
 
 //                  val header = dom.document.getElementById("fileHeader").asInstanceOf[HTMLInputElement].value
 //                  val descr = dom.document.getElementById("fileDescr").asInstanceOf[HTMLInputElement].value
@@ -56,18 +48,26 @@ object AddToFileModal {
 //                    case None => -1 // TODO: Force user to relogin; the identification cookie has disappeared!!!!!!!!!!
 //                  }
 //                  currFIle = Some(FIle(header, memberId, (new js.Date()).toISOString(), descr, List.empty))
-//
-//                  HttpRequest(serverUrl() + "/savefile")
-//                    .post(PlainTextBody(currFIle.get.asJson.toString()))
-//                    .onComplete({
-//                      case response: Success[SimpleHttpResponse] => {
-//                        println("Received: " + response.get.body)
-//                        js.eval("$('#newFileModal').modal('hide');")
-//                      }
-//                      case response: Failure[SimpleHttpResponse] => {
-//                        println("Failure: " + response.get.body)
-//                      }
-//                    })
+
+                  Case.descr match {
+                    case Some(caze) => {
+                      HttpRequest(serverUrl() + "/savecase")
+                        .post(MultiPartBody(
+                          "case" -> PlainTextBody(caze.asJson.toString()),
+                          "fileheader" -> PlainTextBody(selected_file_id)))
+                        .onComplete({
+                          case response: Success[SimpleHttpResponse] => {
+                            println("Received: " + response.get.body)
+                            js.eval("$('#newFileModal').modal('hide');")
+                          }
+                          case response: Failure[SimpleHttpResponse] => {
+                            println("Failure: " + response.get.body)
+                          }
+                        })
+                    }
+                  }
+
+
                 })
 
             )

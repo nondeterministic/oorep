@@ -36,9 +36,20 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
   }
 
   def saveCaze() = Action { request: Request[AnyContent] =>
-    Caze.decode(request.body.asText.get) match {
-      case Some(caze) => cazeDao.replace(caze); Ok
-      case None => BadRequest("Saving of caze failed. Json wrong?")
+    val requestData = request.body.asMultipartFormData.get.dataParts
+    (requestData("fileheader"), requestData("case").toList) match {
+      case (_, Nil) | (Nil, _) => BadRequest("Decoding of caze failed. Json wrong?")
+      case (fileheader, cazeJson) => {
+        Caze.decode(cazeJson.head.toString) match {
+          case Some(caze) => {
+            println("fileheader: " + fileheader.head.toString)
+            println("Case: " + caze.toString)
+            Ok
+          }
+          case None => BadRequest("Decoding of caze failed. Json wrong?")
+        }
+      }
+      case _ => BadRequest("ERROR Server did not obtain proper file and case data to store in DB.")
     }
   }
 

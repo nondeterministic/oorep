@@ -13,11 +13,9 @@ import org.querki.jquery._
 import scalatags.JsDom.all._
 
 import scala.util.{Failure, Success}
-import org.multics.baueran.frep.shared.frontend.updateAvailableFiles
 import org.multics.baueran.frep.shared.frontend.Repertorise
 import org.multics.baueran.frep.shared.frontend.Disclaimer
-import org.multics.baueran.frep.shared.sec_frontend.{NewFileModal,AddToFileModal}
-import org.multics.baueran.frep.shared.Defs.availableFiles
+import org.multics.baueran.frep.shared.sec_frontend.{NewFileModal}
 
 @JSExportTopLevel("MainSecure")
 object Main {
