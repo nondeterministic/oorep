@@ -88,7 +88,7 @@ class FileDao(dbContext: db.db.DBContext) {
     val update = quote {
       tableFile
         .filter(f => f.member_id == lift(caze.member_id) && f.header == lift(fileheader))
-        .update(f => f.case_ids -> lift((dbCaze.id :: tmp_case_ids).distinct))
+        .update(_.case_ids -> lift((dbCaze.id :: tmp_case_ids).distinct))
     }
 
     run(update)

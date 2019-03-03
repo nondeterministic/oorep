@@ -175,10 +175,7 @@ object Case {
               form(
                 div(cls:="form-group",
                   label(`for`:="caseDescrId", "ID"),
-                  descr match {
-                    case None => input(cls:="form-control", id:="caseDescrId", placeholder:="A simple, unique case identifier", required)
-                    case Some(d) => input(cls:="form-control", id:="caseDescrId", placeholder:="A simple, unique case identifier", required, value:=d.description)
-                  }
+                  input(cls:="form-control", id:="caseDescrId", placeholder:="A simple, unique case identifier", required)
                 ),
                 div(cls:="form-group",
                   label(`for`:="caseDescrDescr", "Description"),
@@ -203,6 +200,7 @@ object Case {
                       event.stopPropagation()
 
                       val caseIdTxt = dom.document.getElementById("caseDescrId").asInstanceOf[HTMLInputElement].value
+                      dom.document.getElementById("caseDescrId").asInstanceOf[HTMLInputElement].setAttribute("readonly", "readonly")
                       val caseDescrTxt = dom.document.getElementById("caseDescrDescr").asInstanceOf[HTMLInputElement].value
                       val memberId = getCookieData(dom.document.cookie, "oorep_member_id") match {
                         case Some(id) => id.toInt
@@ -211,7 +209,12 @@ object Case {
 
                       descr = Some(shared.Caze(0, caseIdTxt, memberId, (new js.Date()).toISOString(), caseDescrTxt, cRubrics.toList))
                       dom.document.getElementById("caseHeader").textContent = s"Case '${descr.get.header}':"
+                      $("#openNewCaseButton").hide()
+                      $("#editDescrButton").show()
+                      $("#closeCaseButton").show()
                       js.eval("$('#caseDescriptionModal').modal('hide');")
+
+                      // TODO: Update case in DB, if the case is part of a file, i.e., if it already is in the DB!!!!
                     })
                 )
               )
@@ -277,7 +280,7 @@ object Case {
       val analyseButton =
         button(cls:="btn btn-sm btn-primary", `type`:="button", data.toggle:="modal", data.target:="#caseAnalysisModal", style:="margin-left:5px; margin-bottom: 5px;", "Analyse")
       val editDescrButton =
-        button(cls:="btn btn-sm btn-dark", `type`:="button", data.toggle:="modal", data.target:="#caseDescriptionModal", style:="margin-left:5px; margin-bottom: 5px;",
+        button(cls:="btn btn-sm btn-dark", id:="editDescrButton", `type`:="button", data.toggle:="modal", data.target:="#caseDescriptionModal", style:="display: none; margin-left:5px; margin-bottom: 5px;",
           onclick := { (event: Event) => {
             descr match {
               case Some(descr) =>
@@ -287,25 +290,22 @@ object Case {
             }
           }
           }, "Edit case description")
+      val openNewCaseButton =
+        button(cls:="btn btn-sm btn-dark", id:="openNewCaseButton", `type`:="button", data.toggle:="modal", data.target:="#caseDescriptionModal", style:="margin-left:5px; margin-bottom: 5px;", "Open new case")
+      val closeCaseButton =
+        button(cls:="btn btn-sm btn-dark", id:="closeCaseButton", `type`:="button", data.toggle:="modal", data.target:="#TODO", style:="display: none; margin-left:5px; margin-bottom: 5px;",
+          onclick := { (event: Event) => {
+            println("TODO")
+          }
+          }, "Close case")
       val addToFileButton =
         button(cls:="btn btn-sm btn-dark", `type`:="button", data.toggle:="modal", data.target:="#addToFileModal", style:="margin-left:5px; margin-bottom: 5px;", "Add case to file")
-      val removeFromFileButton =
-        button(cls:="btn btn-sm btn-dark", `type`:="button", data.toggle:="modal", data.target:="#TODO", style:="margin-left:5px; margin-bottom: 5px;",
-          onclick := { (event: Event) => {
-            println("TODO")
-          }
-          }, "Remove from file")
-      val showFileButton =
-        button(cls:="btn btn-sm btn-dark", `type`:="button", data.toggle:="modal", data.target:="#TODO", style:="margin-left:5px; margin-bottom: 5px;",
-          onclick := { (event: Event) => {
-            println("TODO")
-          }
-          }, "Show file")
 
       if (appMode == AppMode.Secure && descr != None) {
         div(
           b(id:="caseHeader", "Case '" + descr.get.header + "':"),
           editDescrButton,
+          closeCaseButton,
           addToFileButton,
           analyseButton
         )
@@ -314,6 +314,8 @@ object Case {
         div(
           b(id:="caseHeader", "Case: "),
           editDescrButton,
+          openNewCaseButton,
+          closeCaseButton,
           addToFileButton,
           analyseButton
         )
@@ -321,7 +323,7 @@ object Case {
       else { // if (appMode == AppMode.Public)
         div(
           b(id:="caseHeader", "Case: "),
-          editDescrButton,
+          openNewCaseButton,
           addToFileButton,
           analyseButton
         )
