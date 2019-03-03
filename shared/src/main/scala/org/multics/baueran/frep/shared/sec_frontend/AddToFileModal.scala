@@ -41,14 +41,6 @@ object AddToFileModal {
                 onclick:={(event: Event) =>
 //                  event.stopPropagation()
 
-//                  val header = dom.document.getElementById("fileHeader").asInstanceOf[HTMLInputElement].value
-//                  val descr = dom.document.getElementById("fileDescr").asInstanceOf[HTMLInputElement].value
-//                  val memberId = getCookieData(dom.document.cookie, "oorep_member_id") match {
-//                    case Some(id) => id.toInt
-//                    case None => -1 // TODO: Force user to relogin; the identification cookie has disappeared!!!!!!!!!!
-//                  }
-//                  currFIle = Some(FIle(header, memberId, (new js.Date()).toISOString(), descr, List.empty))
-
                   Case.descr match {
                     case Some(caze) => {
                       HttpRequest(serverUrl() + "/savecase")

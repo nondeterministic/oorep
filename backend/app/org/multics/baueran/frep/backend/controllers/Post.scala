@@ -7,7 +7,7 @@ import play.api.libs.json
 import play.api.libs.json.Json
 import org.multics.baueran.frep._
 import shared.Defs._
-import backend.dao.{CazeDao, FileDao, MemberDao}
+import backend.dao.{CazeDao, FileDao}
 import backend.db.db.DBContext
 import shared.{Caze, FIle}
 
@@ -42,8 +42,7 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
       case (fileheader, cazeJson) => {
         Caze.decode(cazeJson.head.toString) match {
           case Some(caze) => {
-            println("fileheader: " + fileheader.head.toString)
-            println("Case: " + caze.toString)
+            fileDao.addCaseToFile(caze, fileheader.head)
             Ok
           }
           case None => BadRequest("Decoding of caze failed. Json wrong?")

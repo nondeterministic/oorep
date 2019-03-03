@@ -1,6 +1,6 @@
 package org.multics.baueran.frep.shared.frontend
 
-import org.querki.jquery.$
+// import org.querki.jquery.$
 import org.scalajs.dom
 import dom.Event
 import fr.hmil.roshttp.HttpRequest
@@ -20,18 +20,8 @@ import shared._
 import shared.Defs.{AppMode, serverUrl}
 import shared.frontend.RemedyFormat.RemedyFormat
 
-import scala.util.Success
-// import io.circe.syntax._
-
-//import fr.hmil.roshttp.HttpRequest
-//import fr.hmil.roshttp.response.SimpleHttpResponse
-import org.multics.baueran.frep.shared.Defs.serverUrl
 import org.querki.jquery.$
-// import org.scalajs.dom
-// import scalatags.JsDom.all.p
 import io.circe.parser.parse
-// import monix.execution.Scheduler.Implicits.global
-// import scalatags.JsDom.all.{id, input, _}
 import org.scalajs.dom
 
 import scala.util.{Failure, Success}

@@ -2,7 +2,7 @@ package org.multics.baueran.frep.backend.dao
 
 import org.multics.baueran.frep._
 import backend.db
-import shared.FIle
+import shared.{Caze, ChapterRemedy, FIle}
 // import io.circe.syntax._
 import play.api.Logger
 
@@ -73,6 +73,25 @@ class FileDao(dbContext: db.db.DBContext) {
       case Some(newDBFile) => run(quote { tableFile.insert(lift(newDBFile)).returning(_.id) })
       case _ => Logger.error("FileDao: insert() failed. Failed to convert FIle " + f.toString()); -1
     }
+  }
+
+  def addCaseToFile(caze: Caze, fileheader: String) = {
+    val cazeDao = new CazeDao(dbContext)
+    cazeDao.replace(caze)
+    val dbCaze = cazeDao.get(caze.header, caze.member_id).head
+
+    val tmp_case_ids = get(fileheader, caze.member_id) match {
+      case file::Nil => file.case_ids
+      case _ => List.empty
+    }
+
+    val update = quote {
+      tableFile
+        .filter(f => f.member_id == lift(caze.member_id) && f.header == lift(fileheader))
+        .update(f => f.case_ids -> lift((dbCaze.id :: tmp_case_ids).distinct))
+    }
+
+    run(update)
   }
 
 }

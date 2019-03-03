@@ -39,12 +39,25 @@ class CazeDao(dbContext: db.db.DBContext) {
 
   def replace(c: Caze) = {
     val existingCases = get(c.header, c.member_id)
+
     existingCases.foreach(caze => {
-      // TODO: Add check that if c == caze, we do nothing! For this, implement Caze.equals()!
-      delete(caze.header, caze.member_id)
-      Logger.debug("CazeDao: replace(): Replacing " + caze.toString())
+      if (caze != c) {
+        Logger.debug("CazeDao: replace(): Replacing " + caze.toString())
+        val update = quote{
+          tableCaze
+            .filter(cc => cc.member_id == lift(caze.member_id) && cc.header == lift(caze.header))
+            .update(_.description -> lift(c.description), _.results -> lift(c.results), _.date -> lift(c.date))
+        }
+        run(update)
+      }
+      else
+        Logger.debug("CazeDao: replace(): NOT replacing " + caze.toString())
     })
-    insert(c)
+
+    if (existingCases.length == 0) {
+      Logger.debug("CazeDao: replace(): Inserting " + c.toString())
+      insert(c)
+    }
   }
 
   def get(header: String, member_id: Int) = {
