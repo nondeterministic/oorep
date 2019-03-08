@@ -147,11 +147,13 @@ object Case {
             $("#openNewCaseButton").show()
             $("#editDescrButton").hide()
             $("#closeCaseButton").hide()
+            $("#addToFileButton").attr("disabled", true)
           // Case exists...
           case Some(_) =>
             $("#openNewCaseButton").hide()
             $("#editDescrButton").show()
             $("#closeCaseButton").show()
+            $("#addToFileButton").removeAttr("disabled")
         }
     }
   }
@@ -236,8 +238,9 @@ object Case {
                       $("#openNewCaseButton").hide()
                       $("#editDescrButton").show()
                       $("#closeCaseButton").show()
+                      $("#addToFileButton").removeAttr("disabled")
                       js.eval("$('#caseDescriptionModal').modal('hide');")
-
+                      
                       // TODO: Update case in DB, if the case is part of a file, i.e., if it already is in the DB!!!!
                     })
                 )
@@ -317,7 +320,7 @@ object Case {
       val openNewCaseButton =
         button(cls:="btn btn-sm btn-dark", id:="openNewCaseButton", `type`:="button", data.toggle:="modal", data.target:="#caseDescriptionModal", style:="margin-left:5px; margin-bottom: 5px;", "Open new case")
       val closeCaseButton =
-        button(cls:="btn btn-sm btn-dark", id:="closeCaseButton", `type`:="button", data.toggle:="modal", data.target:="#TODO", style:="display: none; margin-left:5px; margin-bottom: 5px;",
+        button(cls:="btn btn-sm btn-dark", id:="closeCaseButton", `type`:="button", style:="display: none; margin-left:5px; margin-bottom: 5px;",
           onclick := { (event: Event) => {
             for (crub <- cRubrics) {
               crub.rubricWeight = 1
@@ -330,7 +333,8 @@ object Case {
           }
           }, "Close case")
       val addToFileButton =
-        button(cls:="btn btn-sm btn-dark", `type`:="button", data.toggle:="modal", data.target:="#addToFileModal", style:="margin-left:5px; margin-bottom: 5px;", "Add case to file")
+        button(cls:="btn btn-sm btn-dark", id:="addToFileButton", `type`:="button", data.toggle:="modal", data.target:="#addToFileModal", disabled:=true, style:="margin-left:5px; margin-bottom: 5px;",
+          "Add case to file")
 
       getCookieData(dom.document.cookie, "oorep_member_id") match {
         case Some(_) =>
