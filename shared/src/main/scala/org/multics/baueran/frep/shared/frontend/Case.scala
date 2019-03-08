@@ -17,7 +17,7 @@ import org.multics.baueran.frep.shared
 import org.multics.baueran.frep.shared.sec_frontend.AddToFileModal
 import org.scalajs.dom.raw.HTMLInputElement
 import shared._
-import shared.Defs.{AppMode, serverUrl}
+import shared.Defs.serverUrl
 import shared.frontend.RemedyFormat.RemedyFormat
 
 import org.querki.jquery.$

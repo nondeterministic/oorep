@@ -14,7 +14,7 @@ import fr.hmil.roshttp.HttpRequest
 import fr.hmil.roshttp.response.SimpleHttpResponse
 import monix.execution.Scheduler.Implicits.global
 import org.multics.baueran.frep.shared._
-import org.multics.baueran.frep.shared.Defs.{AppMode, serverUrl}
+import org.multics.baueran.frep.shared.Defs.serverUrl
 import org.multics.baueran.frep.shared.sec_frontend.{NewFileModal, AddToFileModal}
 
 object Repertorise {
