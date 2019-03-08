@@ -36,7 +36,7 @@ object Main {
           $("#nav_bar").empty()
           $("#nav_bar").append(NavBar().render)
           $("#content").append(NewFileModal().render)
-          $("#content").append(Repertorise.applySecure().render)
+          $("#content").append(Repertorise.apply().render)
           $("#content_bottom").append(Disclaimer.toHTML().render)
         }
         case error: Failure[SimpleHttpResponse] => {

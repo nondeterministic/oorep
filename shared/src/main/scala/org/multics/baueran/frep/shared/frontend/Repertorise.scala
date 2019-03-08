@@ -19,7 +19,6 @@ import org.multics.baueran.frep.shared.sec_frontend.{NewFileModal, AddToFileModa
 
 object Repertorise {
 
-  var appMode = AppMode.Public
   var remedyFilter = ""
   var symptomQuery = ""
   var remedyFormat = RemedyFormat.NotFormatted
@@ -170,7 +169,7 @@ object Repertorise {
   // ------------------------------------------------------------------------------------------------------------------
   private def showCase() = {
     $("#caseDiv").empty()
-    $("#caseDiv").append(Case.toHTML(remedyFormat, appMode).render)
+    $("#caseDiv").append(Case.toHTML(remedyFormat).render)
     Case.updateAnalysisView()
     Case.updateCaseHeaderView()
   }
@@ -224,12 +223,6 @@ object Repertorise {
               "Either symptom not in repertory or server error.")).render)
       }
     })
-  }
-
-  // ------------------------------------------------------------------------------------------------------------------
-  def applySecure() = {
-    appMode = AppMode.Secure
-    apply()
   }
 
   // ------------------------------------------------------------------------------------------------------------------
@@ -315,7 +308,7 @@ object Repertorise {
           div(cls := "container-fluid", id := "resultDiv"),
           div(cls := "span12", id := "caseDiv", {
             if (Case.size() > 0)
-              Case.toHTML(remedyFormat, appMode)
+              Case.toHTML(remedyFormat)
             else ""
           })
         )
@@ -354,7 +347,7 @@ object Repertorise {
           div(cls := "container-fluid", id := "resultDiv"),
           div(cls := "span12", id := "caseDiv", {
             if (Case.size() > 0)
-              Case.toHTML(remedyFormat, appMode)
+              Case.toHTML(remedyFormat)
             else ""
           })
         )

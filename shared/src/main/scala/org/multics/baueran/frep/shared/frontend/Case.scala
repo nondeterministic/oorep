@@ -250,7 +250,7 @@ object Case {
   }
 
   // ------------------------------------------------------------------------------------------------------------------
-  def toHTML(remedyFormat: RemedyFormat, appMode: AppMode.AppMode) = {
+  def toHTML(remedyFormat: RemedyFormat) = {
     updateAnalysisView()
 
     def caseRow(crub: CaseRubric) = {
@@ -332,32 +332,34 @@ object Case {
       val addToFileButton =
         button(cls:="btn btn-sm btn-dark", `type`:="button", data.toggle:="modal", data.target:="#addToFileModal", style:="margin-left:5px; margin-bottom: 5px;", "Add case to file")
 
-      if (appMode == AppMode.Secure && descr != None) {
-        div(
-          b(id:="caseHeader", "Case '" + descr.get.header + "':"),
-          editDescrButton,
-          closeCaseButton,
-          addToFileButton,
-          analyseButton
-        )
-      }
-      else if (appMode == AppMode.Secure && descr == None) {
-        div(
-          b(id:="caseHeader", "Case: "),
-          editDescrButton,
-          openNewCaseButton,
-          closeCaseButton,
-          addToFileButton,
-          analyseButton
-        )
-      }
-      else { // if (appMode == AppMode.Public)
-        div(
-          b(id:="caseHeader", "Case: "),
-          openNewCaseButton,
-          addToFileButton,
-          analyseButton
-        )
+      getCookieData(dom.document.cookie, "oorep_member_id") match {
+        case Some(_) =>
+          if (descr != None) {
+            div(
+              b(id:="caseHeader", "Case '" + descr.get.header + "':"),
+              editDescrButton,
+              closeCaseButton,
+              addToFileButton,
+              analyseButton
+            )
+          }
+          else {
+            div(
+              b(id:="caseHeader", "Case: "),
+              editDescrButton,
+              openNewCaseButton,
+              closeCaseButton,
+              addToFileButton,
+              analyseButton
+            )
+          }
+        case None =>
+          div(
+            b(id:="caseHeader", "Case: "),
+            openNewCaseButton,
+            addToFileButton,
+            analyseButton
+          )
       }
     }
 
