@@ -172,6 +172,7 @@ object Repertorise {
     $("#caseDiv").empty()
     $("#caseDiv").append(Case.toHTML(remedyFormat, appMode).render)
     Case.updateAnalysisView()
+    Case.updateCaseHeaderView()
   }
 
   // ------------------------------------------------------------------------------------------------------------------

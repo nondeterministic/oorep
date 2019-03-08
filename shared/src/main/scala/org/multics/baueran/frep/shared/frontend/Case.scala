@@ -132,6 +132,30 @@ object Case {
     }
   }
 
+  def updateCaseHeaderView() = {
+    getCookieData(dom.document.cookie, "oorep_member_id") match {
+      // Not logged in...
+      case None =>
+        $("#openNewCaseButton").hide()
+        $("#editDescrButton").hide()
+        $("#closeCaseButton").hide()
+      // Logged in...
+      case Some(_) =>
+        descr match {
+          // Case doesn't exist...
+          case None =>
+            $("#openNewCaseButton").show()
+            $("#editDescrButton").hide()
+            $("#closeCaseButton").hide()
+          // Case exists...
+          case Some(_) =>
+            $("#openNewCaseButton").hide()
+            $("#editDescrButton").show()
+            $("#closeCaseButton").show()
+        }
+    }
+  }
+
   // ------------------------------------------------------------------------------------------------------------------
   // The modal-dialog HTML-code for showing the case analysis
   def analysisModalDialogHTML() = {
@@ -295,7 +319,14 @@ object Case {
       val closeCaseButton =
         button(cls:="btn btn-sm btn-dark", id:="closeCaseButton", `type`:="button", data.toggle:="modal", data.target:="#TODO", style:="display: none; margin-left:5px; margin-bottom: 5px;",
           onclick := { (event: Event) => {
-            println("TODO")
+            for (crub <- cRubrics) {
+              crub.rubricWeight = 1
+              $("#crub_" + crub.rubric.id + crub.repertoryAbbrev).remove()
+              // Enable add-button in results, if removed symptom was in the displayed results list...
+              $("#button_" + crub.repertoryAbbrev + "_" + crub.rubric.id).removeAttr("disabled")
+            }
+            cRubrics = new mutable.ArrayBuffer[CaseRubric]()
+            $("#caseDiv").empty()
           }
           }, "Close case")
       val addToFileButton =
