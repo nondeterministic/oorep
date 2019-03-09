@@ -77,21 +77,36 @@ class FileDao(dbContext: db.db.DBContext) {
 
   def addCaseToFile(caze: Caze, fileheader: String) = {
     val cazeDao = new CazeDao(dbContext)
+
     cazeDao.replace(caze)
+    // For every Caze we need to retrieve the actual dbCaze from the DB first...
     val dbCaze = cazeDao.get(caze.header, caze.member_id).head
 
+    // Now, we need the case IDs for the file with header, fileheader, and member ID, caze.member_id...
     val tmp_case_ids = get(fileheader, caze.member_id) match {
       case file::Nil => file.case_ids
       case _ => List.empty
     }
 
-    val update = quote {
+    // Delete case from all files, as a case can only have one parent...
+    val filesWithCase: List[dbFile] = run(quote {
+      tableFile
+        .filter(f => f.member_id == lift(dbCaze.member_id) && f.case_ids.contains(lift(dbCaze.id)))
+    })
+    for (file <- filesWithCase) {
+      run(quote {
+        tableFile
+          .filter(_.id == lift(file.id))
+          .update(f => f.case_ids -> lift(file.case_ids.filter(_ != dbCaze.id)))
+      })
+    }
+
+    // Insert case to new parent file...
+    run(quote {
       tableFile
         .filter(f => f.member_id == lift(caze.member_id) && f.header == lift(fileheader))
         .update(_.case_ids -> lift((dbCaze.id :: tmp_case_ids).distinct))
-    }
-
-    run(update)
+    })
   }
 
 }
