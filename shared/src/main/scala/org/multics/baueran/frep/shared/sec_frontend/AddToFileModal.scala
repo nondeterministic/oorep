@@ -39,7 +39,7 @@ object AddToFileModal {
               button(cls:="btn btn-primary mb-2", `type`:="button",
                 "Submit",
                 onclick:={(event: Event) =>
-//                  event.stopPropagation()
+                  // event.stopPropagation()
 
                   Case.descr match {
                     case Some(caze) => {
@@ -59,7 +59,7 @@ object AddToFileModal {
                     }
                   }
 
-
+                  js.eval("$('#addToFileModal').modal('hide');")
                 })
 
             )
