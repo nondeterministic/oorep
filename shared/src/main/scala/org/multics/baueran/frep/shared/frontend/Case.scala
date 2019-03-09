@@ -240,7 +240,7 @@ object Case {
                       $("#closeCaseButton").show()
                       $("#addToFileButton").removeAttr("disabled")
                       js.eval("$('#caseDescriptionModal').modal('hide');")
-                      
+
                       // TODO: Update case in DB, if the case is part of a file, i.e., if it already is in the DB!!!!
                     })
                 )
@@ -265,6 +265,7 @@ object Case {
         else
           crub.getFormattedRemedies()
 
+      // The weight label on the drop-down button, which needs to change automatically on new user choice
       val weight = Var(crub.rubricWeight.toString())
 
       tr(scalatags.JsDom.attrs.id := "crub_" + crub.rubric.id + crub.repertoryAbbrev,
@@ -305,7 +306,11 @@ object Case {
 
     def header() = {
       val analyseButton =
-        button(cls:="btn btn-sm btn-primary", `type`:="button", data.toggle:="modal", data.target:="#caseAnalysisModal", style:="margin-left:5px; margin-bottom: 5px;", "Analyse")
+        button(cls:="btn btn-sm btn-primary", `type`:="button", data.toggle:="modal", data.target:="#caseAnalysisModal", style:="margin-left:5px; margin-bottom: 5px;",
+          onclick := { (event: Event) => {
+            updateAnalysisView()
+          }},
+          "Analyse")
       val editDescrButton =
         button(cls:="btn btn-sm btn-dark", id:="editDescrButton", `type`:="button", data.toggle:="modal", data.target:="#caseDescriptionModal", style:="display: none; margin-left:5px; margin-bottom: 5px;",
           onclick := { (event: Event) => {
@@ -360,8 +365,6 @@ object Case {
         case None =>
           div(
             b(id:="caseHeader", "Case: "),
-            openNewCaseButton,
-            addToFileButton,
             analyseButton
           )
       }
