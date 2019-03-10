@@ -31,6 +31,7 @@ object Case {
   var descr: Option[shared.Caze] = None
   var cRubrics = mutable.ArrayBuffer[CaseRubric]()
   var remedyScores = mutable.HashMap[String,Integer]()
+  var membersFiles = mutable.HashSet[FIle]() // Only used for enabling/disabling submit button in addToFileModal; not nice, but OK for now...
 
   // ------------------------------------------------------------------------------------------------------------------
   def size() = cRubrics.size
@@ -56,6 +57,7 @@ object Case {
                 case Right(files) => {
                   if (files.length > 0) {
                     $("#availableFilesList").empty()
+                    files.foreach(membersFiles.add(_)) // See comment on top of file! This is only for the addToFileModal's submit button!
                     files.map(file => {
                       val listItem =
                         a(cls := "list-group-item list-group-item-action", data.toggle := "list", href := "#list-profile", role := "tab",
@@ -339,6 +341,13 @@ object Case {
           }, "Close case")
       val addToFileButton =
         button(cls:="btn btn-sm btn-dark", id:="addToFileButton", `type`:="button", data.toggle:="modal", data.target:="#addToFileModal", disabled:=true, style:="margin-left:5px; margin-bottom: 5px;",
+          onclick := { (event: Event) => {
+            if (membersFiles.size > 0) {
+              $("#submitAddToFileModal").removeAttr("disabled")
+            }
+            else if (membersFiles == 0 && !($("#submitAddToFileModal").hasOwnProperty("disabled")))
+              $("#submitAddToFileModal").attr("disabled", true)
+          }},
           "Add case to file")
 
       getCookieData(dom.document.cookie, "oorep_member_id") match {

@@ -36,7 +36,7 @@ object AddToFileModal {
             ),
             div(cls:="form-group",
               button(data.dismiss:="modal", cls:="btn mb-2", "Cancel"),
-              button(cls:="btn btn-primary mb-2", `type`:="button",
+              button(cls:="btn btn-primary mb-2", `type`:="button", id:="submitAddToFileModal", disabled:=true,
                 "Submit",
                 onclick:={(event: Event) =>
                   // event.stopPropagation()
