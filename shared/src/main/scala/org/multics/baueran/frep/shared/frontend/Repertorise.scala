@@ -15,7 +15,8 @@ import fr.hmil.roshttp.response.SimpleHttpResponse
 import monix.execution.Scheduler.Implicits.global
 import org.multics.baueran.frep.shared._
 import org.multics.baueran.frep.shared.Defs.serverUrl
-import org.multics.baueran.frep.shared.sec_frontend.{NewFileModal, AddToFileModal}
+import org.multics.baueran.frep.shared.sec_frontend.Callbacks.updateMemberFiles
+import org.multics.baueran.frep.shared.sec_frontend.{AddToFileModal, NewFileModal, OpenFileModal}
 
 object Repertorise {
 
@@ -35,8 +36,14 @@ object Repertorise {
     def resetContentView() = {
       $("#content").empty()
       $("#content").append(AddToFileModal().render)
+      $("#content").append(OpenFileModal().render)
       $("#content").append(NewFileModal().render)
       $("#content").append(Repertorise().render)
+
+      getCookieData(dom.document.cookie, "oorep_member_id") match {
+        case Some(id) => updateMemberFiles(id.toInt)
+        case None => ;
+      }
     }
 
     // This method is just to display the remedy-summary at the top of the results table.

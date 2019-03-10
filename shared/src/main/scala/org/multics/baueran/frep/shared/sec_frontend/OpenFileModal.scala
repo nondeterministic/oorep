@@ -1,44 +1,43 @@
 package org.multics.baueran.frep.shared.sec_frontend
 
-import org.querki.jquery.$
-import org.multics.baueran.frep.shared.Defs.serverUrl
-import org.multics.baueran.frep.shared.FIle
-import org.multics.baueran.frep.shared.frontend.{Case, getCookieData}
 import fr.hmil.roshttp.HttpRequest
-import fr.hmil.roshttp.body.{ MultiPartBody, PlainTextBody }
+import fr.hmil.roshttp.body.{MultiPartBody, PlainTextBody}
 import fr.hmil.roshttp.response.SimpleHttpResponse
-import scalatags.JsDom.all.{id, input, _}
-import org.scalajs.dom
-import org.scalajs.dom.Event
-import org.scalajs.dom.raw.HTMLInputElement
+import io.circe.syntax._
 import monix.execution.Scheduler.Implicits.global
+import org.multics.baueran.frep.shared.Defs.serverUrl
+import org.multics.baueran.frep.shared.frontend.Case
+import org.scalajs.dom.Event
+import scalatags.JsDom.all._
 
 import scala.scalajs.js
 import scala.util.{Failure, Success}
-import io.circe.syntax._
 
-object AddToFileModal {
+object OpenFileModal {
 
   var selected_file_id: String = ""
 
   def apply() = {
-    div(cls:="modal fade", tabindex:="-1", role:="dialog", id:="addToFileModal",
+    div(cls:="modal fade", tabindex:="-1", role:="dialog", id:="openFileModal",
       div(cls:="modal-dialog modal-dialog-centered", role:="document", style:="min-width: 80%;",
         div(cls:="modal-content",
           div(cls:="modal-header",
-            h5(cls:="modal-title", "Choose file to add current case to"),
+            h5(cls:="modal-title", "Select file"),
             button(`type`:="button", cls:="close", data.dismiss:="modal", "\u00d7")
           ),
           div(cls:="modal-body",
             div(cls:="form-group",
-              div(cls:="list-group", role:="tablist", id:="addToFileAvailableFilesList", style:="height: 250px; overflow-y: scroll;",
+              div(cls:="list-group", role:="tablist", id:="openFileAvailableFilesList", style:="height: 250px; overflow-y: scroll;",
                 a(cls := "list-group-item list-group-item-action", data.toggle:="list", id:="none", href:="#list-profile", role:="tab", "<no files created yet>"))
             ),
             div(cls:="form-group",
               button(data.dismiss:="modal", cls:="btn mb-2", "Cancel"),
-              button(cls:="btn btn-primary mb-2", `type`:="button", id:="submitAddToFileModal", disabled:=true,
-                "Submit",
+              button(data.dismiss:="modal", cls:="btn mb-2", "Delete"),
+              button(cls:="btn btn-primary mb-2", `type`:="button", id:="submitOpenFileModal", disabled:=true,
+                "Open",
                 onclick:={(event: Event) =>
+                  // event.stopPropagation()
+
                   Case.descr match {
                     case Some(caze) => {
                       HttpRequest(serverUrl() + "/savecase")
@@ -48,7 +47,7 @@ object AddToFileModal {
                         .onComplete({
                           case response: Success[SimpleHttpResponse] => {
                             println("Received: " + response.get.body)
-                            js.eval("$('#addToFileModal').modal('hide');")
+                            js.eval("$('#openFileModal').modal('hide');")
                           }
                           case response: Failure[SimpleHttpResponse] => {
                             println("Failure: " + response.get.body)
@@ -57,7 +56,7 @@ object AddToFileModal {
                     }
                   }
 
-                  js.eval("$('#addToFileModal').modal('hide');")
+                  js.eval("$('#openFileModal').modal('hide');")
                 })
 
             )
@@ -65,6 +64,6 @@ object AddToFileModal {
         )
       )
     )
-  }
 
+  }
 }

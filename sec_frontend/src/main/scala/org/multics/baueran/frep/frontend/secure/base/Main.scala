@@ -5,7 +5,6 @@ import fr.hmil.roshttp.response.SimpleHttpResponse
 import org.scalajs.dom.document
 import monix.execution.Scheduler.Implicits.global
 import org.multics.baueran.frep.shared.Defs.serverUrl
-import org.multics.baueran.frep.shared.FIle
 import org.scalajs.dom
 
 import scala.scalajs.js.annotation.JSExportTopLevel
@@ -13,9 +12,9 @@ import org.querki.jquery._
 import scalatags.JsDom.all._
 
 import scala.util.{Failure, Success}
-import org.multics.baueran.frep.shared.frontend.Repertorise
-import org.multics.baueran.frep.shared.frontend.Disclaimer
-import org.multics.baueran.frep.shared.sec_frontend.{NewFileModal}
+import org.multics.baueran.frep.shared._
+import frontend.{Repertorise, Disclaimer}
+import sec_frontend.{Callbacks, NewFileModal, OpenFileModal}
 
 @JSExportTopLevel("MainSecure")
 object Main {
@@ -31,13 +30,15 @@ object Main {
       .send()
       .onComplete({
         case response: Success[SimpleHttpResponse] => {
-          println(dom.document.cookie)
-
           $("#nav_bar").empty()
           $("#nav_bar").append(NavBar().render)
           $("#content").append(NewFileModal().render)
+          $("#content").append(OpenFileModal().render)
           $("#content").append(Repertorise.apply().render)
           $("#content_bottom").append(Disclaimer.toHTML().render)
+
+          val memberId = response.get.body.toInt
+          Callbacks.updateMemberFiles(memberId)
         }
         case error: Failure[SimpleHttpResponse] => {
           $("#content").append(p("Not authorized.").render)
@@ -62,6 +63,6 @@ object Main {
         }
       }
     })
-
   }
+
 }

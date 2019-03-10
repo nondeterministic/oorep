@@ -1,11 +1,7 @@
 package org.multics.baueran.frep.shared.frontend
 
-// import org.querki.jquery.$
 import org.scalajs.dom
 import dom.Event
-import fr.hmil.roshttp.HttpRequest
-import fr.hmil.roshttp.response.SimpleHttpResponse
-import monix.execution.Scheduler.Implicits.global
 import scalatags.JsDom.all._
 
 import scalajs.js
@@ -14,24 +10,19 @@ import rx.Var
 import rx.Ctx.Owner.Unsafe._
 import scalatags.rx.all._
 import org.multics.baueran.frep.shared
-import org.multics.baueran.frep.shared.sec_frontend.AddToFileModal
 import org.scalajs.dom.raw.HTMLInputElement
 import shared._
-import shared.Defs.serverUrl
 import shared.frontend.RemedyFormat.RemedyFormat
+import shared.sec_frontend.Callbacks._
 
 import org.querki.jquery.$
-import io.circe.parser.parse
 import org.scalajs.dom
-
-import scala.util.{Failure, Success}
 
 object Case {
 
   var descr: Option[shared.Caze] = None
   var cRubrics = mutable.ArrayBuffer[CaseRubric]()
   var remedyScores = mutable.HashMap[String,Integer]()
-  var membersFiles = mutable.HashSet[FIle]() // Only used for enabling/disabling submit button in addToFileModal; not nice, but OK for now...
 
   // ------------------------------------------------------------------------------------------------------------------
   def size() = cRubrics.size
@@ -43,44 +34,9 @@ object Case {
   }
 
   // ------------------------------------------------------------------------------------------------------------------
-  def updateAvailableFiles(memberId: Int) = {
-    HttpRequest(serverUrl() + "/availableFiles")
-      .withQueryParameter("memberId", memberId.toString)
-      .withCrossDomainCookies(true)
-      .send()
-      .onComplete({
-        case response: Success[SimpleHttpResponse] => {
-          parse(response.get.body) match {
-            case Right(json) => {
-              val cursor = json.hcursor
-              cursor.as[List[FIle]] match {
-                case Right(files) => {
-                  if (files.length > 0) {
-                    $("#availableFilesList").empty()
-                    files.foreach(membersFiles.add(_)) // See comment on top of file! This is only for the addToFileModal's submit button!
-                    files.map(file => {
-                      val listItem =
-                        a(cls := "list-group-item list-group-item-action", data.toggle := "list", href := "#list-profile", role := "tab",
-                          onclick:= { (event: Event) => AddToFileModal.selected_file_id = file.header },
-                          file.header)
-                      $("#availableFilesList").append(listItem.render)
-                    })
-                  }
-                }
-                case Left(t) => println("Decoding of available files failed: " + t)
-              }
-            }
-            case Left(_) => println("Parsing of available files failed (is it JSON?).")
-          }
-        }
-        case error: Failure[SimpleHttpResponse] => println("ERROR: " + error.get.body)
-      })
-  }
-
-  // ------------------------------------------------------------------------------------------------------------------
   def updateAllCaseDataStructures() = {
     getCookieData(dom.document.cookie, "oorep_member_id") match {
-      case Some(id) => updateAvailableFiles(id.toInt)
+      case Some(id) => updateMemberFiles(id.toInt)
       case None => println("WARNING: updateDataStructures() failed. Could not get memberID from cookie.")
     }
 
@@ -342,11 +298,7 @@ object Case {
       val addToFileButton =
         button(cls:="btn btn-sm btn-dark", id:="addToFileButton", `type`:="button", data.toggle:="modal", data.target:="#addToFileModal", disabled:=true, style:="margin-left:5px; margin-bottom: 5px;",
           onclick := { (event: Event) => {
-            if (membersFiles.size > 0) {
-              $("#submitAddToFileModal").removeAttr("disabled")
-            }
-            else if (membersFiles == 0 && !($("#submitAddToFileModal").hasOwnProperty("disabled")))
-              $("#submitAddToFileModal").attr("disabled", true)
+            updateAllCaseDataStructures()
           }},
           "Add case to file")
 
