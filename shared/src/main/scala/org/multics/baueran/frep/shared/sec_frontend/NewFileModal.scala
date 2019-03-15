@@ -73,7 +73,7 @@ object NewFileModal {
                         .post(PlainTextBody(currFIle.get.asJson.toString()))
                         .onComplete({
                           case response: Success[SimpleHttpResponse] => {
-                            Case.updateAllCaseDataStructures()
+                            Case.updateCaseViewAndDataStructures()
                             js.eval("$('#newFileModal').modal('hide');")
                           }
                           case response: Failure[SimpleHttpResponse] => {

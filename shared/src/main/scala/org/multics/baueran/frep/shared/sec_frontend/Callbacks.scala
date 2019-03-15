@@ -67,7 +67,7 @@ package object Callbacks {
 
       val listItemOpenFile =
         a(cls := "list-group-item list-group-item-action", data.toggle := "list", href := "#list-profile", role := "tab",
-          onclick := { (event: dom.Event) => OpenFileModal.selected_file_id = file.header },
+          onclick := { (event: dom.Event) => OpenFileModal.selected_file_id() = file.header },
           file.header)
       $("#openFileAvailableFilesList").append(listItemOpenFile.render)
     })

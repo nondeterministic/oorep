@@ -2,7 +2,7 @@ package org.multics.baueran.frep.backend.dao
 
 import org.multics.baueran.frep._
 import backend.db
-import shared.{CaseRubric, Caze}
+import shared.{BetterString, CaseRubric, Caze}
 import io.circe.syntax._
 import play.api.Logger
 
@@ -82,4 +82,20 @@ class CazeDao(dbContext: db.db.DBContext) {
     }
     run(delete)
   }
+
+  /*
+   * Like replace(), but does nothing if case does not ALREADY exist in DB.
+   */
+
+  def replaceIfExists(c: Caze) = {
+    implicit def stringToString(s: String) = new BetterString(s) // For 'shorten'.
+
+    if (get(c.id).length > 0) {
+      replace(c)
+      Logger.debug("CazeDao: caze: " + c.toString.shorten + " replaced in DB.")
+    } else {
+      Logger.debug("CazeDao: caze: " + c.toString.shorten + " not replaced as not in DB, yet.")
+    }
+  }
+
 }

@@ -2,6 +2,10 @@ package org.multics.baueran.frep.shared.frontend
 
 import org.scalajs.dom
 import dom.Event
+import fr.hmil.roshttp.HttpRequest
+import fr.hmil.roshttp.body.PlainTextBody
+import fr.hmil.roshttp.response.SimpleHttpResponse
+import monix.execution.Scheduler.Implicits.global
 import scalatags.JsDom.all._
 
 import scalajs.js
@@ -10,19 +14,23 @@ import rx.Var
 import rx.Ctx.Owner.Unsafe._
 import scalatags.rx.all._
 import org.multics.baueran.frep.shared
-import org.scalajs.dom.raw.HTMLInputElement
 import shared._
+import shared.Defs.serverUrl
+import shared.sec_frontend.NewFileModal.currFIle
 import shared.frontend.RemedyFormat.RemedyFormat
 import shared.sec_frontend.Callbacks._
-
+import org.scalajs.dom.raw.HTMLInputElement
 import org.querki.jquery.$
 import org.scalajs.dom
+
+import scala.util.{Failure, Success}
 
 object Case {
 
   var descr: Option[shared.Caze] = None
   var cRubrics = mutable.ArrayBuffer[CaseRubric]()
   var remedyScores = mutable.HashMap[String,Integer]()
+  private var prevCase: Option[shared.Caze] = None
 
   // ------------------------------------------------------------------------------------------------------------------
   def size() = cRubrics.size
@@ -34,32 +42,44 @@ object Case {
   }
 
   // ------------------------------------------------------------------------------------------------------------------
-  def updateAllCaseDataStructures() = {
-    getCookieData(dom.document.cookie, "oorep_member_id") match {
-      case Some(id) => updateMemberFiles(id.toInt)
-      case None => println("WARNING: updateDataStructures() failed. Could not get memberID from cookie.")
+  def updateCaseViewAndDataStructures() = {
+    def updateAllCaseDataStructures() = {
+      val memberId = getCookieData(dom.document.cookie, "oorep_member_id") match {
+        case Some(id) => updateMemberFiles(id.toInt); id.toInt
+        case None => println("WARNING: updateDataStructures() failed. Could not get memberID from cookie."); -1
+      }
+
+      remedyScores.clear()
+      cRubrics.foreach(caseRubric => {
+        caseRubric.weightedRemedies.foreach { case WeightedRemedy(r, w) => {
+          remedyScores.put(r.nameAbbrev, remedyScores.getOrElseUpdate(r.nameAbbrev, 0) + caseRubric.rubricWeight * w)
+        }}
+      })
+
+      if (descr != None) {
+        descr = Some(shared.Caze(descr.get.id, descr.get.header, descr.get.member_id, descr.get.date, descr.get.description, cRubrics.toList))
+
+        // If user is logged in, attempt to update case in DB (if it exists; see comment in Post.scala),
+        // and if previous case != current case...
+        if (memberId >= 0 && prevCase != descr) {
+          // Before we write the case to disk, we update the date to record the change.
+          // We do not do this above, as the prevCase != descr check would always fail then!
+          descr = Some(shared.Caze(descr.get.id, descr.get.header, descr.get.member_id, (new js.Date()).toISOString(), descr.get.description, cRubrics.toList))
+
+          HttpRequest(serverUrl() + "/updatecase")
+            .post(PlainTextBody(Caze.encoder(descr.get).toString()))
+        }
+      }
+
+      if (cRubrics.size == 0)
+        descr = None
     }
 
-    remedyScores.clear()
-    cRubrics.foreach(caseRubric => {
-      caseRubric.weightedRemedies.foreach { case WeightedRemedy(r, w) => {
-        remedyScores.put(r.nameAbbrev, remedyScores.getOrElseUpdate(r.nameAbbrev, 0) + caseRubric.rubricWeight * w)
-      }}
-    })
-
-    if (descr != None)
-      descr = Some(shared.Caze(descr.get.id, descr.get.header, descr.get.member_id, (new js.Date()).toISOString(), descr.get.description, cRubrics.toList))
-
-    if (cRubrics.size == 0)
-      descr = None
-  }
-
-  // ------------------------------------------------------------------------------------------------------------------
-  def updateAnalysisView() = {
-    implicit def stringToString(s: String) = new BetterString(s) // For 'shorten'.
-
-    // Update data structures
+    // Update data structures first
     updateAllCaseDataStructures()
+
+    // Now, put previous case to current case
+    prevCase = descr
 
     // Redraw table header
     $("#analysisTHead").empty()
@@ -68,6 +88,8 @@ object Case {
     $("#analysisTHead").append(th(attr("scope"):="col", "Symptom").render)
     remedyScores.toList.sortWith(_._2 > _._2).map(_._1).foreach(abbrev =>
       $("#analysisTHead").append(th(attr("scope") := "col", div(cls:="vertical-text", style:="width: 30px;", abbrev)).render))
+
+    implicit def stringToString(s: String) = new BetterString(s) // For 'shorten'.
 
     // Redraw table body
     $("#analysisTBody").empty()
@@ -199,7 +221,7 @@ object Case {
                       $("#addToFileButton").removeAttr("disabled")
                       js.eval("$('#caseDescriptionModal').modal('hide');")
 
-                      // TODO: Update case in DB, if the case is part of a file, i.e., if it already is in the DB!!!!
+                      updateCaseViewAndDataStructures()
                     })
                 )
               )
@@ -212,7 +234,7 @@ object Case {
 
   // ------------------------------------------------------------------------------------------------------------------
   def toHTML(remedyFormat: RemedyFormat) = {
-    updateAnalysisView()
+    updateCaseViewAndDataStructures()
 
     def caseRow(crub: CaseRubric) = {
       implicit def crToCR(cr: CaseRubric) = new BetterCaseRubric(cr)
@@ -256,6 +278,8 @@ object Case {
               // If this was last case-rubric, clear case div
               if (cRubrics.size == 0)
                 $("#caseDiv").empty()
+
+              updateCaseViewAndDataStructures()
             }
             }, "Remove")
         )
@@ -266,7 +290,7 @@ object Case {
       val analyseButton =
         button(cls:="btn btn-sm btn-primary", `type`:="button", data.toggle:="modal", data.target:="#caseAnalysisModal", style:="margin-left:5px; margin-bottom: 5px;",
           onclick := { (event: Event) => {
-            updateAnalysisView()
+            updateCaseViewAndDataStructures()
           }},
           "Analyse")
       val editDescrButton =
@@ -298,7 +322,7 @@ object Case {
       val addToFileButton =
         button(cls:="btn btn-sm btn-dark", id:="addToFileButton", `type`:="button", data.toggle:="modal", data.target:="#addToFileModal", disabled:=true, style:="margin-left:5px; margin-bottom: 5px;",
           onclick := { (event: Event) => {
-            updateAllCaseDataStructures()
+            updateCaseViewAndDataStructures()
           }},
           "Add case to file")
 

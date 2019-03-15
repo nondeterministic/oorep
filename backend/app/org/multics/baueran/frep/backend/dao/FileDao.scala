@@ -2,8 +2,7 @@ package org.multics.baueran.frep.backend.dao
 
 import org.multics.baueran.frep._
 import backend.db
-import shared.{Caze, ChapterRemedy, FIle}
-// import io.circe.syntax._
+import shared.{Caze, FIle}
 import play.api.Logger
 
 case class dbFile(id: Int,
@@ -75,6 +74,8 @@ class FileDao(dbContext: db.db.DBContext) {
     }
   }
 
+  // TODO: This method would be a typical usecase for transactions!
+
   def addCaseToFile(caze: Caze, fileheader: String) = {
     val cazeDao = new CazeDao(dbContext)
 
@@ -109,4 +110,7 @@ class FileDao(dbContext: db.db.DBContext) {
     })
   }
 
+  def delFile(fileheader: String, memberId: Int) = {
+    println("TODO: Implement delFile() in FileDao!" + fileheader + memberId.toString)
+  }
 }
