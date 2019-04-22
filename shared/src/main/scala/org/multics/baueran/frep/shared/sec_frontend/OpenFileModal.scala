@@ -46,14 +46,7 @@ object OpenFileModal {
           ),
           div(cls:="modal-footer",
             button(`type`:="button", cls:="btn btn-secondary", data.dismiss:="modal", "Cancel"),
-            button(`type`:="button", cls:="btn btn-primary",
-              onclick:= { (event: Event) =>
-                println(selected_file_id.now)
-                println(selected_file_id.now.length())
-                if (selected_file_id.now.length() > 0)
-                  requestFileDeletion()
-              },
-              "Delete")
+            button(`type`:="button", cls:="btn btn-primary", data.dismiss:="modal", onclick:= { (event: Event) => requestFileDeletion() }, "Delete")
           )
         )
       )
