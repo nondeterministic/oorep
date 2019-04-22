@@ -47,15 +47,14 @@ package object Callbacks {
 
   def updateModals(files: List[FIle]) = {
     if (files.size > 0) {
-      $("#submitAddToFileModal").removeAttr("disabled")
-      $("#submitOpenFileModal").removeAttr("disabled")
+      AddToFileModal.enableButtons()
 
-      $("#addToFileAvailableFilesList").empty()
-      $("#openFileAvailableFilesList").empty()
+      OpenFileModal.empty()
+      AddToFileModal.empty()
     }
     else if (files == 0 && !($("#submitAddToFileModal").hasOwnProperty("disabled"))) {
-      $("#submitAddToFileModal").attr("disabled", true)
-      $("#submitOpenFileModal").attr("disabled", true)
+      AddToFileModal.disableButtons()
+      OpenFileModal.disableButtons()
     }
 
     files.map(file => {
@@ -67,7 +66,10 @@ package object Callbacks {
 
       val listItemOpenFile =
         a(cls := "list-group-item list-group-item-action", data.toggle := "list", href := "#list-profile", role := "tab",
-          onclick := { (event: dom.Event) => OpenFileModal.selected_file_id() = file.header },
+          onclick := { (event: dom.Event) =>
+            OpenFileModal.selected_file_id() = file.header
+            OpenFileModal.enableButtons()
+          },
           file.header)
       $("#openFileAvailableFilesList").append(listItemOpenFile.render)
     })

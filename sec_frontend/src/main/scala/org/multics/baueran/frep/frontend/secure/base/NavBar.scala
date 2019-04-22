@@ -18,7 +18,7 @@ object NavBar {
             li(cls:="navbar-item", a(cls:="nav-link", href:="", onclick:={ () => println("pressed1") })("Materia Medica")),
             li(cls:="navbar-item dropdown", a(cls:="nav-link dropdown-toggle", href:="#", data.toggle:="dropdown")("File"),
               div(cls:="dropdown-menu",
-                a(cls:="dropdown-item", href:="#", data.toggle:="modal", data.target:="#newFileModal")("New.."),
+                a(cls:="dropdown-item", href:="#", data.toggle:="modal", data.target:="#newFileModal")("New..."),
                 a(cls:="dropdown-item", href:="#", data.toggle:="modal", data.target:="#openFileModal")("Open...")
               )
             )

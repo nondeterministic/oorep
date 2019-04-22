@@ -7,8 +7,6 @@ import io.circe.syntax._
 import monix.execution.Scheduler.Implicits.global
 import org.multics.baueran.frep.shared.Defs.serverUrl
 import org.multics.baueran.frep.shared.frontend.{Case, getCookieData}
-import org.multics.baueran.frep.shared.sec_frontend.AddToFileModal.selected_file_id
-import org.multics.baueran.frep.shared.sec_frontend.Callbacks.updateMemberFiles
 import org.scalajs.dom
 import org.scalajs.dom.Event
 import scalatags.JsDom.all._
@@ -16,13 +14,11 @@ import rx.Var
 import rx.Rx
 import rx.Ctx.Owner.Unsafe._
 import scalatags.rx.all._
-
-import scala.scalajs.js
-import scala.util.{Failure, Success, Try}
+import org.querki.jquery.$
 
 object OpenFileModal {
 
-  val selected_file_id = Var("")
+  val selected_file_id = Var("") // Set outside in Callbacks.scala!
 
   private def requestFileDeletion() = {
     getCookieData(dom.document.cookie, "oorep_member_id") match {
@@ -36,12 +32,13 @@ object OpenFileModal {
       case None => ; // TODO: Display error modal?!
     }
   }
+
   private def areYouSureModal() = {
     div(cls:="modal fade", tabindex:="-1", role:="dialog", id:="openFileModalAreYouSure",
       div(cls:="modal-dialog", role:="document",
         div(cls:="modal-content",
           div(cls:="modal-header",
-            h5(cls:="modal-title", s"Really delete file ${selected_file_id}?"),
+            h5(cls:="modal-title", Rx("Really delete file " + selected_file_id() + "?")), // reallyDeleteVarString),
             button(`type`:="button", cls:="close", data.dismiss:="modal", aria.label:="Close", span(aria.hidden:="true", "\u00d7"))
           ),
           div(cls:="modal-body",
@@ -50,7 +47,12 @@ object OpenFileModal {
           div(cls:="modal-footer",
             button(`type`:="button", cls:="btn btn-secondary", data.dismiss:="modal", "Cancel"),
             button(`type`:="button", cls:="btn btn-primary",
-              onclick:= { (event: Event) => requestFileDeletion() },
+              onclick:= { (event: Event) =>
+                println(selected_file_id.now)
+                println(selected_file_id.now.length())
+                if (selected_file_id.now.length() > 0)
+                  requestFileDeletion()
+              },
               "Delete")
           )
         )
@@ -69,14 +71,14 @@ object OpenFileModal {
           div(cls:="modal-body",
             div(cls:="form-group",
               div(cls:="list-group", role:="tablist", id:="openFileAvailableFilesList", style:="height: 250px; overflow-y: scroll;",
-                a(cls := "list-group-item list-group-item-action", data.toggle:="list", id:="none", href:="#list-profile", role:="tab", "<no files created yet>"))
+                a(cls:="list-group-item list-group-item-action", data.toggle:="list", id:="none", href:="#list-profile", role:="tab", "<no files created yet>"))
             ),
             div(cls:="form-group",
               button(data.dismiss:="modal", cls:="btn mb-2", "Cancel"),
-              button(cls:="btn mb-2", data.toggle:="modal", data.dismiss:="modal", data.target:="#openFileModalAreYouSure", "Delete"),
-              button(cls:="btn btn-primary mb-2", `type`:="button", id:="submitOpenFileModal", disabled:=true,
+              button(cls:="btn mb-2", id:="deleteFileOpenFileModal", data.toggle:="modal", data.dismiss:="modal", data.target:="#openFileModalAreYouSure", disabled:=true, "Delete"),
+              button(cls:="btn btn-primary mb-2", id:="submitOpenFileModal", `type`:="button", disabled:=true,
                 onclick:={(event: Event) =>
-                  println("TODO: Opening of " + selected_file_id)
+                  println("TODO: Opening of " + selected_file_id.now)
                   // js.eval("$('#openFileModal').modal('hide');")
                 },
                 "Open"
@@ -87,7 +89,22 @@ object OpenFileModal {
         )
       )
     )
+  }
 
+  def enableButtons() = {
+    println("Enabling")
+    $("#deleteFileOpenFileModal").removeAttr("disabled")
+    $("#submitOpenFileModal").removeAttr("disabled")
+  }
+
+  def disableButtons() = {
+    println("Disabling")
+    $("#submitOpenFileModal").attr("disabled", true)
+    $("#deleteFileOpenFileModal").attr("disabled", true)
+  }
+
+  def empty() = {
+    $("#openFileAvailableFilesList").empty()
   }
 
   def apply() = div(areYouSureModal(), mainModal())
