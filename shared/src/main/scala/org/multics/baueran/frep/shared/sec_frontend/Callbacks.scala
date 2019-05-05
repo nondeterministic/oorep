@@ -62,7 +62,7 @@ package object Callbacks {
         a(cls := "list-group-item list-group-item-action", data.toggle := "list", href := "#list-profile", role := "tab",
           onclick := { (event: dom.Event) => AddToFileModal.selected_file_id = file.header },
           file.header)
-      $("#addToFileAvailableFilesList").append(listItemAddToFile.render)
+      AddToFileModal.appendItem(listItemAddToFile.render)
 
       val listItemOpenFile =
         a(cls := "list-group-item list-group-item-action", data.toggle := "list", href := "#list-profile", role := "tab",
@@ -71,7 +71,7 @@ package object Callbacks {
             OpenFileModal.enableButtons()
           },
           file.header)
-      $("#openFileAvailableFilesList").append(listItemOpenFile.render)
+      OpenFileModal.appendItem(listItemOpenFile.render)
     })
 
   }

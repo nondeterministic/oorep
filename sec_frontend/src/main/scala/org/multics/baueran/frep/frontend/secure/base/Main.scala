@@ -14,7 +14,7 @@ import scalatags.JsDom.all._
 import scala.util.{Failure, Success}
 import org.multics.baueran.frep.shared._
 import frontend.{Repertorise, Disclaimer}
-import sec_frontend.{Callbacks, NewFileModal, OpenFileModal}
+import sec_frontend.{Callbacks, NewFileModal, OpenFileModal, EditFileModal}
 
 @JSExportTopLevel("MainSecure")
 object Main {
@@ -34,6 +34,7 @@ object Main {
           $("#nav_bar").append(NavBar().render)
           $("#content").append(NewFileModal().render)
           $("#content").append(OpenFileModal().render)
+          $("#content").append(EditFileModal().render)
           $("#content").append(Repertorise.apply().render)
           $("#content_bottom").append(Disclaimer.toHTML().render)
 

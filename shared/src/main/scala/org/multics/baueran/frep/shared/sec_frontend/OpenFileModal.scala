@@ -15,6 +15,8 @@ import rx.Rx
 import rx.Ctx.Owner.Unsafe._
 import scalatags.rx.all._
 import org.querki.jquery.$
+import org.scalajs.dom.html.Anchor
+import scalatags.Text.TypedTag
 
 object OpenFileModal {
 
@@ -68,11 +70,13 @@ object OpenFileModal {
             ),
             div(cls:="form-group",
               button(data.dismiss:="modal", cls:="btn mb-2", "Cancel"),
-              button(cls:="btn mb-2", id:="deleteFileOpenFileModal", data.toggle:="modal", data.dismiss:="modal", data.target:="#openFileModalAreYouSure", disabled:=true, "Delete"),
+              button(cls:="btn mb-2", id:="deleteFileOpenFileModal", data.toggle:="modal", data.dismiss:="modal", data.target:="#openFileModalAreYouSure", disabled:=true,
+                "Delete"
+              ),
               button(cls:="btn btn-primary mb-2", id:="submitOpenFileModal", `type`:="button", disabled:=true,
+                data.toggle:="modal", data.dismiss:="modal", data.target:="#editFileModal",
                 onclick:={(event: Event) =>
-                  println("TODO: Opening of " + selected_file_id.now)
-                  // js.eval("$('#openFileModal').modal('hide');")
+                  EditFileModal.fileName() = selected_file_id.now
                 },
                 "Open"
               )
@@ -98,6 +102,10 @@ object OpenFileModal {
 
   def empty() = {
     $("#openFileAvailableFilesList").empty()
+  }
+
+  def appendItem(listItem: Anchor) = {
+    $("#openFileAvailableFilesList").append(listItem)
   }
 
   def apply() = div(areYouSureModal(), mainModal())

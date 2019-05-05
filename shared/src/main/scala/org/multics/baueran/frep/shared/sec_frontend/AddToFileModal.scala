@@ -5,7 +5,7 @@ import org.multics.baueran.frep.shared.Defs.serverUrl
 import org.multics.baueran.frep.shared.FIle
 import org.multics.baueran.frep.shared.frontend.{Case, getCookieData}
 import fr.hmil.roshttp.HttpRequest
-import fr.hmil.roshttp.body.{ MultiPartBody, PlainTextBody }
+import fr.hmil.roshttp.body.{MultiPartBody, PlainTextBody}
 import fr.hmil.roshttp.response.SimpleHttpResponse
 import scalatags.JsDom.all.{id, input, _}
 import org.scalajs.dom
@@ -16,6 +16,7 @@ import monix.execution.Scheduler.Implicits.global
 import scala.scalajs.js
 import scala.util.{Failure, Success}
 import io.circe.syntax._
+import org.scalajs.dom.html.Anchor
 
 object AddToFileModal {
 
@@ -31,6 +32,10 @@ object AddToFileModal {
 
   def empty() = {
     $("#addToFileAvailableFilesList").empty()
+  }
+
+  def appendItem(listItem: Anchor) = {
+    $("#addToFileAvailableFilesList").append(listItem)
   }
 
   def apply() = {
