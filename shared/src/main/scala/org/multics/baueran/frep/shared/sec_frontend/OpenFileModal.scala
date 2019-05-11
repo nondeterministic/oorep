@@ -16,8 +16,6 @@ import org.querki.jquery.$
 
 object OpenFileModal extends FileModal {
 
-  val selected_file_id = Var("") // Set outside in Callbacks.scala!
-
   private def requestFileDeletion() = {
     getCookieData(dom.document.cookie, "oorep_member_id") match {
       case Some(memberId) =>

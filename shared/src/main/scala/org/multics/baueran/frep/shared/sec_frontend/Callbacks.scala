@@ -37,7 +37,7 @@ package object Callbacks {
       files.map(file => {
         val listItemAddToFile =
           a(cls := "list-group-item list-group-item-action", data.toggle := "list", href := "#list-profile", role := "tab",
-            onclick := { (event: dom.Event) => AddToFileModal.selected_file_id = file.header },
+            onclick := { (event: dom.Event) => AddToFileModal.selected_file_id() = file.header },
             file.header)
         AddToFileModal.appendItem(listItemAddToFile.render)
 

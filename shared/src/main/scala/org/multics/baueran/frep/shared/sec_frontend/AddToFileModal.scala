@@ -19,8 +19,6 @@ import io.circe.syntax._
 
 object AddToFileModal extends FileModal {
 
-  var selected_file_id: String = ""
-
   def enableButtons() = {
     $("#submitAddToFileModal").removeAttr("disabled")
   }
@@ -51,7 +49,7 @@ object AddToFileModal extends FileModal {
                       HttpRequest(serverUrl() + "/savecase")
                         .post(MultiPartBody(
                           "case" -> PlainTextBody(caze.asJson.toString()),
-                          "fileheader" -> PlainTextBody(selected_file_id)))
+                          "fileheader" -> PlainTextBody(selected_file_id.now)))
                         .onComplete({
                           case response: Success[SimpleHttpResponse] => {
                             println("Received: " + response.get.body)
