@@ -7,7 +7,6 @@ import org.multics.baueran.frep.shared.FIle
 import org.scalajs.dom
 import io.circe.parser.parse
 import org.multics.baueran.frep.shared.Defs.serverUrl
-import org.querki.jquery._
 import scalatags.JsDom.all._
 
 import scala.util.{Failure, Success}
@@ -29,7 +28,7 @@ package object FileModalCallbacks {
         OpenFileModal.empty()
         AddToFileModal.empty()
       }
-      else if (files == 0 && !($("#submitAddToFileModal").hasOwnProperty("disabled"))) {
+      else if (files == 0 && !AddToFileModal.submitIsDisabled())  {
         AddToFileModal.disableButtons()
         OpenFileModal.disableButtons()
       }

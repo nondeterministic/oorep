@@ -27,6 +27,8 @@ object AddToFileModal extends FileModal {
     $("#submitAddToFileModal").attr("disabled", true)
   }
 
+  def submitIsDisabled() = ($("#submitAddToFileModal").hasOwnProperty("disabled"))
+
   def apply() = {
     div(cls:="modal fade", tabindex:="-1", role:="dialog", id:="addToFileModal",
       div(cls:="modal-dialog modal-dialog-centered", role:="document", style:="min-width: 80%;",
