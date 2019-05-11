@@ -2,23 +2,22 @@ package org.multics.baueran.frep.shared.sec_frontend
 
 import org.querki.jquery.$
 import org.multics.baueran.frep.shared.Defs.serverUrl
-import org.multics.baueran.frep.shared.FIle
-import org.multics.baueran.frep.shared.frontend.{Case, getCookieData}
+import org.multics.baueran.frep.shared.frontend.Case
 import fr.hmil.roshttp.HttpRequest
 import fr.hmil.roshttp.body.{MultiPartBody, PlainTextBody}
 import fr.hmil.roshttp.response.SimpleHttpResponse
-import scalatags.JsDom.all.{id, input, _}
-import org.scalajs.dom
+import scalatags.JsDom.all.{id, _}
 import org.scalajs.dom.Event
-import org.scalajs.dom.raw.HTMLInputElement
 import monix.execution.Scheduler.Implicits.global
+import rx.Rx
+import rx.Ctx.Owner.Unsafe._
+import scalatags.rx.all._
 
 import scala.scalajs.js
 import scala.util.{Failure, Success}
 import io.circe.syntax._
-import org.scalajs.dom.html.Anchor
 
-object AddToFileModal {
+object AddToFileModal extends FileModal {
 
   var selected_file_id: String = ""
 
@@ -28,14 +27,6 @@ object AddToFileModal {
 
   def disableButtons() = {
     $("#submitAddToFileModal").attr("disabled", true)
-  }
-
-  def empty() = {
-    $("#addToFileAvailableFilesList").empty()
-  }
-
-  def appendItem(listItem: Anchor) = {
-    $("#addToFileAvailableFilesList").append(listItem)
   }
 
   def apply() = {
@@ -48,8 +39,7 @@ object AddToFileModal {
           ),
           div(cls:="modal-body",
             div(cls:="form-group",
-              div(cls:="list-group", role:="tablist", id:="addToFileAvailableFilesList", style:="height: 250px; overflow-y: scroll;",
-                a(cls := "list-group-item list-group-item-action", data.toggle:="list", id:="none", href:="#list-profile", role:="tab", "<no files created yet>"))
+              div(cls:="list-group", role:="tablist", id:="addToFileAvailableFilesList", style:="height: 250px; overflow-y: scroll;", Rx(files()))
             ),
             div(cls:="form-group",
               button(data.dismiss:="modal", cls:="btn mb-2", "Cancel"),

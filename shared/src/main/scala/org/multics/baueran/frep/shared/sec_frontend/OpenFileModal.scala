@@ -2,8 +2,6 @@ package org.multics.baueran.frep.shared.sec_frontend
 
 import fr.hmil.roshttp.HttpRequest
 import fr.hmil.roshttp.body.{MultiPartBody, PlainTextBody}
-import fr.hmil.roshttp.response.SimpleHttpResponse
-import io.circe.syntax._
 import monix.execution.Scheduler.Implicits.global
 import org.multics.baueran.frep.shared.Defs.serverUrl
 import org.multics.baueran.frep.shared.frontend.{Case, getCookieData}
@@ -15,10 +13,8 @@ import rx.Rx
 import rx.Ctx.Owner.Unsafe._
 import scalatags.rx.all._
 import org.querki.jquery.$
-import org.scalajs.dom.html.Anchor
-import scalatags.Text.TypedTag
 
-object OpenFileModal {
+object OpenFileModal extends FileModal {
 
   val selected_file_id = Var("") // Set outside in Callbacks.scala!
 
@@ -65,8 +61,7 @@ object OpenFileModal {
           ),
           div(cls:="modal-body",
             div(cls:="form-group",
-              div(cls:="list-group", role:="tablist", id:="openFileAvailableFilesList", style:="height: 250px; overflow-y: scroll;",
-                a(cls:="list-group-item list-group-item-action", data.toggle:="list", id:="none", href:="#list-profile", role:="tab", "<no files created yet>"))
+              div(cls:="list-group", role:="tablist", id:="openFileAvailableFilesList", style:="height: 250px; overflow-y: scroll;", Rx(files()))
             ),
             div(cls:="form-group",
               button(data.dismiss:="modal", cls:="btn mb-2", "Cancel"),
@@ -98,14 +93,6 @@ object OpenFileModal {
     println("Disabling")
     $("#submitOpenFileModal").attr("disabled", true)
     $("#deleteFileOpenFileModal").attr("disabled", true)
-  }
-
-  def empty() = {
-    $("#openFileAvailableFilesList").empty()
-  }
-
-  def appendItem(listItem: Anchor) = {
-    $("#openFileAvailableFilesList").append(listItem)
   }
 
   def apply() = div(areYouSureModal(), mainModal())
