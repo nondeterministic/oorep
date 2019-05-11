@@ -14,7 +14,7 @@ import scalatags.JsDom.all._
 import scala.util.{Failure, Success}
 import org.multics.baueran.frep.shared._
 import frontend.{Repertorise, Disclaimer}
-import sec_frontend.{Callbacks, NewFileModal, OpenFileModal, EditFileModal}
+import sec_frontend.{FileModalCallbacks, NewFileModal, OpenFileModal, EditFileModal}
 
 @JSExportTopLevel("MainSecure")
 object Main {
@@ -39,7 +39,7 @@ object Main {
           $("#content_bottom").append(Disclaimer.toHTML().render)
 
           val memberId = response.get.body.toInt
-          Callbacks.updateMemberFiles(memberId)
+          FileModalCallbacks.updateMemberFiles(memberId)
         }
         case error: Failure[SimpleHttpResponse] => {
           $("#content").append(p("Not authorized.").render)

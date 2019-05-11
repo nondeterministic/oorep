@@ -14,7 +14,7 @@ import scala.util.{Failure, Success}
 
 import scala.util.Try
 
-package object Callbacks {
+package object FileModalCallbacks {
 
   // ----------------------------------------------------------------------------------------------------------------------------------------
   // Sending requests to server to retrieve a member's files, then callback for updating the modals which contain a file selection.

@@ -18,7 +18,7 @@ import shared._
 import shared.Defs.serverUrl
 import shared.sec_frontend.NewFileModal.currFIle
 import shared.frontend.RemedyFormat.RemedyFormat
-import shared.sec_frontend.Callbacks._
+import shared.sec_frontend.FileModalCallbacks._
 import org.scalajs.dom.raw.HTMLInputElement
 import org.querki.jquery.$
 import org.scalajs.dom
