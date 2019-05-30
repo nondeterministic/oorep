@@ -42,4 +42,20 @@ package object controllers {
     else
       None
   }
+
+  def doesUserHaveCorrespondingCookie(request: Request[AnyContent], memberId: Int): Either[String, Boolean] = {
+    authorizedRequestCookies(request) match {
+      case Nil => Left("Not authorized: bad request")
+      case cookies =>
+        getFrom(cookies, "oorep_member_id") match {
+          case None => Left("Not authorized: user not in database")
+          case Some(mId) =>
+            if (mId.toInt == memberId)
+              Right(true)
+            else
+              Left("Not authorized: wrong member ID")
+        }
+    }
+  }
+
 }

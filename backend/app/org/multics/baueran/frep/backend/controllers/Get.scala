@@ -7,7 +7,7 @@ import scala.collection.mutable.ListBuffer
 import javax.inject._
 import play.api.mvc._
 import io.circe.syntax._
-import org.multics.baueran.frep.backend.dao.{FileDao, RepertoryDao}
+import org.multics.baueran.frep.backend.dao.{FileDao, RepertoryDao, CazeDao}
 import org.multics.baueran.frep.backend.repertory._
 // import org.multics.baueran.frep.backend.views.html._
 import org.multics.baueran.frep.shared._
@@ -67,10 +67,26 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
       Ok(dao.getAllAvailableRepertoryInfos().asJson.toString())
   }
 
-  def availableFiles(memberId: Int) = Action { req: Request[AnyContent] =>
-    val dao = new FileDao(dbContext)
+  def availableFiles(memberId: Int) = Action { request: Request[AnyContent] =>
+    doesUserHaveCorrespondingCookie(request, memberId) match {
+      case Left(err) => BadRequest(err)
+      case Right(true) =>
+        val dao = new FileDao(dbContext)
+        Ok(dao.getFilesForMember(memberId).asJson.toString())
+    }
+  }
 
-    Ok(dao.getFilesForMember(memberId).asJson.toString())
+  def availableCasesForFile(memberId: Int, fileId: String) = Action { request: Request[AnyContent] =>
+    doesUserHaveCorrespondingCookie(request, memberId) match {
+      case Left(err) => BadRequest(err)
+      case Right(true) => {
+        val dao = new FileDao(dbContext)
+        println("Getting " + memberId + ", " + fileId)
+        val r = dao.getCasesFromFile(fileId, memberId).asJson.toString()
+        println(r)
+        Ok(r)
+      }
+    }
   }
 
   def repertorise(repertoryAbbrev: String, symptom: String) = Action { request: Request[AnyContent] =>

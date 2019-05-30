@@ -31,7 +31,16 @@ class FileDao(dbContext: db.db.DBContext) {
     val select = quote {
       tableFile.filter(_.member_id == lift(member_id))
     }
-    run(select).map(dbFileToFIle(_)).filter { case Some(_) => true }
+    run(select).map(dbFileToFIle(_)).map { case Some(file) => file }
+  }
+
+  def getCasesFromFile(fileName: String, member_id: Int) = {
+    val file = getFilesForMember(member_id).find(_.header == fileName)
+    val cases = file match {
+      case Some(f) => f.cazes
+      case None => List()
+    }
+    cases
   }
 
   /**
