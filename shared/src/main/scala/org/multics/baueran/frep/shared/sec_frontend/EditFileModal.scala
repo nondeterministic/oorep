@@ -9,6 +9,7 @@ import monix.execution.Scheduler.Implicits.global
 import org.multics.baueran.frep.shared.Defs.serverUrl
 import org.multics.baueran.frep.shared.{Caze, FIle}
 import org.multics.baueran.frep.shared.frontend.{Case, getCookieData}
+import org.multics.baueran.frep.shared.sec_frontend.EditFileModal.caseAnchors
 import org.multics.baueran.frep.shared.sec_frontend.FileModalCallbacks.updateMemberFiles
 import org.scalajs.dom
 import org.scalajs.dom.Event
@@ -20,8 +21,8 @@ import scalatags.rx.all._
 import org.querki.jquery.$
 import org.scalajs.dom.html.Anchor
 import scalatags.Text.TypedTag
-import scala.math.{min, max}
 
+import scala.math.{max, min}
 import scala.util.{Failure, Success, Try}
 
 object EditFileModal {
@@ -30,12 +31,14 @@ object EditFileModal {
   private val cases: Var[List[Caze]] = Var(List())
   private val casesHeight = Rx(max(200, min(100, cases().length * 30)))
 
-  private def computeCaseAnchors() = Rx {
-    if (cases().length > 1)
-      cases().map(c =>
-        a(cls:="list-group-item list-group-item-action", data.toggle:="list", id:="none", href:="#list-profile", role:="tab", c.header).render)
-    else
-      List(a(cls:="list-group-item list-group-item-action", data.toggle:="list", id:="none", href:="#list-profile", role:="tab", "<no files created yet>").render)
+  private val caseAnchors = Rx {
+    cases() match {
+      case Nil =>
+        List(a(cls := "list-group-item list-group-item-action", data.toggle := "list", id := "none", href := "#list-profile", role := "tab", "<no cases created yet>").render)
+      case _ => cases().map { c =>
+        a(cls := "list-group-item list-group-item-action", data.toggle := "list", id := "none", href := "#list-profile", role := "tab", c.header).render
+      }
+    }
   }
 
   private def mainModal() = {
@@ -68,8 +71,11 @@ object EditFileModal {
             div(cls:="form-group",
               div(
                 label(`for`:="editFileAvailableFilesList", "Cases"),
-                div(cls:="list-group", role:="tablist", id:="editFileAvailableCasesList", style:=Rx("height: " + casesHeight().toString() + "px; overflow-y: scroll;"),
-                  computeCaseAnchors())
+                div(
+                  cls:="list-group", role:="tablist", id:="editFileAvailableCasesList", style:=Rx("height: " + casesHeight().toString() + "px; overflow-y: scroll;"),
+                  caseAnchors // An Rx that yields the file's cases
+                  // computeCaseAnchors // An Rx that yields the file's cases
+                )
               ),
               div(cls:="form-row",
                 div(cls:="col"),
@@ -95,7 +101,7 @@ object EditFileModal {
             case Right(json) => {
               val cursor = json.hcursor
               cursor.as[List[Caze]] match {
-                case Right(cs) => cases() = cs; println("Gotten " + cs.toString())
+                case Right(cs) => cases() = cs; println("Gotten " + cases.now.toString())
                 case Left(t) => println("Decoding of available cases failed: " + t)
               }
             }
