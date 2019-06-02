@@ -19,7 +19,10 @@ POST   	/updatecase                 org.multics.baueran.frep.backend.controllers
 POST   	/savefile                   org.multics.baueran.frep.backend.controllers.Post.saveFile
 
 +nocsrf
-POST   	/delfile                   org.multics.baueran.frep.backend.controllers.Post.delFile
+POST   	/delfile                    org.multics.baueran.frep.backend.controllers.Post.delFile
+
++nocsrf
+POST   	/updateFileDescription      org.multics.baueran.frep.backend.controllers.Post.updateFileDescription
 
 GET		/authenticate               org.multics.baueran.frep.backend.controllers.Get.authenticate
 GET		/lookup						org.multics.baueran.frep.backend.controllers.Get.repertorise(repertory: String, symptom: String)

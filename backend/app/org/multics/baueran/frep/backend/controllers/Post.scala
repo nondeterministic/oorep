@@ -11,6 +11,8 @@ import backend.dao.{CazeDao, FileDao}
 import backend.db.db.DBContext
 import shared.{Caze, FIle}
 
+// TODO: Like in Get.scala, check cookies for permission first!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends AbstractController(cc) {
   cazeDao = new CazeDao(dbContext)
   fileDao = new FileDao(dbContext)
@@ -85,6 +87,11 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
       }
       case _ => BadRequest("delFile() failed. Wrong data received.")
     }
+  }
+
+  def updateFileDescription() = Action { request: Request[AnyContent] =>
+    println("Received: " + request.body.asText.get)
+    Ok
   }
 
 }
