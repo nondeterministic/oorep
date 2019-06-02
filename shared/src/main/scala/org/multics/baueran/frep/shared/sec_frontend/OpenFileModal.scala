@@ -69,8 +69,7 @@ object OpenFileModal extends FileModal {
               button(cls:="btn btn-primary mb-2", id:="submitOpenFileModal", `type`:="button", disabled:=true,
                 data.toggle:="modal", data.dismiss:="modal", data.target:="#editFileModal",
                 onclick:={(event: Event) =>
-                  EditFileModal.fileName() = selected_file_id.now
-                  EditFileModal.getCasesForFile(selected_file_id.now)
+                  EditFileModal.requestAndUpdateInformationForFile(selected_file_id.now)
                 },
                 "Open"
               )

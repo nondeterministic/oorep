@@ -9,8 +9,6 @@ import monix.execution.Scheduler.Implicits.global
 import org.multics.baueran.frep.shared.Defs.serverUrl
 import org.multics.baueran.frep.shared.{Caze, FIle}
 import org.multics.baueran.frep.shared.frontend.{Case, getCookieData}
-import org.multics.baueran.frep.shared.sec_frontend.EditFileModal.caseAnchors
-import org.multics.baueran.frep.shared.sec_frontend.FileModalCallbacks.updateMemberFiles
 import org.scalajs.dom
 import org.scalajs.dom.Event
 import scalatags.JsDom.all._
@@ -19,18 +17,16 @@ import rx.Rx
 import rx.Ctx.Owner.Unsafe._
 import scalatags.rx.all._
 import org.querki.jquery.$
-import org.scalajs.dom.html.Anchor
-import scalatags.Text.TypedTag
 
 import scala.math.{max, min}
 import scala.util.{Failure, Success, Try}
 
 object EditFileModal {
 
-  val fileName = Var("")
+  private val fileName = Var("")
+//  private val fileDescr = Var("A more verbose description of the file")
   private val cases: Var[List[Caze]] = Var(List())
   private val casesHeight = Rx(max(200, min(100, cases().length * 30)))
-
   private val caseAnchors = Rx {
     cases() match {
       case Nil =>
@@ -54,7 +50,7 @@ object EditFileModal {
             div(cls:="form-group mb-2",
               div(cls:="mb-3",
                 label(`for`:="fileDescr", "Description"),
-                textarea(cls:="form-control", id:="fileDescr", rows:="8", placeholder:="A more verbose description of the file")
+                textarea(cls:="form-control", id:="fileDescrEditFileModal", rows:="8", placeholder:="A more verbose description of the file")
               ),
               div(cls:="form-row",
                 div(cls:="col"),
@@ -73,8 +69,7 @@ object EditFileModal {
                 label(`for`:="editFileAvailableFilesList", "Cases"),
                 div(
                   cls:="list-group", role:="tablist", id:="editFileAvailableCasesList", style:=Rx("height: " + casesHeight().toString() + "px; overflow-y: scroll;"),
-                  caseAnchors // An Rx that yields the file's cases
-                  // computeCaseAnchors // An Rx that yields the file's cases
+                  caseAnchors
                 )
               ),
               div(cls:="form-row",
@@ -93,7 +88,7 @@ object EditFileModal {
     )
   }
 
-  def getCasesForFile(fileHeader: String) = {
+  def requestAndUpdateInformationForFile(fileHeader: String) = {
     def updateCases(response: Try[SimpleHttpResponse]) = {
       response match {
         case response: Success[SimpleHttpResponse] => {
@@ -101,7 +96,7 @@ object EditFileModal {
             case Right(json) => {
               val cursor = json.hcursor
               cursor.as[List[Caze]] match {
-                case Right(cs) => cases() = cs; println("Gotten " + cases.now.toString())
+                case Right(cs) => cases() = cs
                 case Left(t) => println("Decoding of available cases failed: " + t)
               }
             }
@@ -112,6 +107,26 @@ object EditFileModal {
       }
     }
 
+    def updateDescription(response: Try[SimpleHttpResponse]) = {
+      response match {
+        case response: Success[SimpleHttpResponse] => {
+          parse(response.get.body) match {
+            case Right(json) => {
+              val cursor = json.hcursor
+              cursor.as[FIle] match {
+                case Right(f) => $("#fileDescrEditFileModal").`val`(f.description)
+                case Left(err) => println("Decoding of file failed: " + err)
+              }
+            }
+            case Left(err) => println("Parsing of file failed (is it JSON?): " + err)
+          }
+        }
+        case error: Failure[SimpleHttpResponse] => println("ERROR: " + error.get.body)
+      }
+    }
+
+    fileName() = fileHeader
+
     getCookieData(dom.document.cookie, "oorep_member_id") match {
       case Some(memberId) => {
         HttpRequest(serverUrl() + "/availableCasesForFile")
@@ -119,6 +134,12 @@ object EditFileModal {
           .withCrossDomainCookies(true)
           .send()
           .onComplete((r: Try[SimpleHttpResponse]) => updateCases(r))
+
+        HttpRequest(serverUrl() + "/file")
+          .withQueryParameters("memberId" -> memberId, "fileId" -> fileHeader)
+          .withCrossDomainCookies(true)
+          .send()
+          .onComplete((r: Try[SimpleHttpResponse]) => updateDescription(r))
       }
       case None => println("WARNING: getCasesForFile() failed. Could not get memberID from cookie."); -1
     }

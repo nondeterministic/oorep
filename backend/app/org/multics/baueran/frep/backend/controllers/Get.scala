@@ -76,6 +76,23 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     }
   }
 
+  def getFile(memberId: Int, fileId: String) = Action { request: Request[AnyContent] =>
+    doesUserHaveCorrespondingCookie(request, memberId) match {
+      case Left(err) => BadRequest(err)
+      case Right(true) => {
+        val dao = new FileDao(dbContext)
+        println("Getting " + memberId + ", " + fileId)
+        dao.getFilesForMember(memberId).find(_.header == fileId) match {
+          case Some(file) =>
+            println("Header: " + file.header)
+            Ok(file.asJson.toString())
+          case None =>
+            BadRequest("getFile() returned nothing.")
+        }
+      }
+    }
+  }
+
   def availableCasesForFile(memberId: Int, fileId: String) = Action { request: Request[AnyContent] =>
     doesUserHaveCorrespondingCookie(request, memberId) match {
       case Left(err) => BadRequest(err)
