@@ -1,14 +1,16 @@
 package org.multics.baueran.frep.shared.sec_frontend
 
 import fr.hmil.roshttp.HttpRequest
-import fr.hmil.roshttp.body.PlainTextBody
+import fr.hmil.roshttp.body.{MultiPartBody, PlainTextBody}
 import fr.hmil.roshttp.response.SimpleHttpResponse
 import io.circe.parser.parse
 import io.circe.syntax._
 import monix.execution.Scheduler.Implicits.global
 import org.multics.baueran.frep.shared.Defs.serverUrl
+import org.multics.baueran.frep.shared.frontend.Case.descr
 import org.multics.baueran.frep.shared.{Caze, FIle}
 import org.multics.baueran.frep.shared.frontend.{Case, getCookieData}
+import org.multics.baueran.frep.shared.sec_frontend.OpenFileModal.selected_file_id
 import org.scalajs.dom
 import org.scalajs.dom.Event
 import scalatags.JsDom.all.{onclick, _}
@@ -25,6 +27,7 @@ import scala.util.{Failure, Success, Try}
 object EditFileModal {
 
   private var currentlyOpenedFile: Option[FIle] = None
+  private var currentlyActiveMemberId = -1
   private val fileName = Var("")
   private val cases: Var[List[Caze]] = Var(List())
   private val casesHeight = Rx(max(200, min(100, cases().length * 30)))
@@ -68,7 +71,17 @@ object EditFileModal {
                 div(cls:="col-2",
                   button(cls:="btn mb-2 mr-2", id:="saveFileDescrEditFileModal", data.toggle:="modal", data.dismiss:="modal", disabled:=true,
                     onclick:= { (event: Event) =>
-                      HttpRequest(serverUrl() + "/updateFileDescription").post(PlainTextBody($("#fileDescrEditFileModal").`val`().toString().trim()))
+                      // .post(PlainTextBody(Caze.encoder(descr.get).toString()))
+                      currentlyOpenedFile match {
+                        case Some(f) =>
+                          HttpRequest(serverUrl() + "/updateFileDescription")
+                            .post(MultiPartBody(
+                              "filedescr"  -> PlainTextBody($("#fileDescrEditFileModal").`val`().toString().trim()),
+                              "fileheader" -> PlainTextBody(f.header),
+                              "memberId"   -> PlainTextBody(currentlyActiveMemberId.toString())))
+                        case None => ;
+                      }
+                      // HttpRequest(serverUrl() + "/updateFileDescription").post(PlainTextBody($("#fileDescrEditFileModal").`val`().toString().trim()))
                       $("#saveFileDescrEditFileModal").attr("disabled", true)
                       js.eval("$('#editFileModal').modal('hide');") // TODO: This is ugly! No idea for an alternative :-(
                     },
@@ -132,6 +145,7 @@ object EditFileModal {
     // Request data from backend...
     getCookieData(dom.document.cookie, "oorep_member_id") match {
       case Some(memberId) => {
+        currentlyActiveMemberId = memberId.toInt
         HttpRequest(serverUrl() + "/file")
           .withQueryParameters("memberId" -> memberId, "fileId" -> fileHeader)
           .withCrossDomainCookies(true)

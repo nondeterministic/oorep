@@ -98,9 +98,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
       case Left(err) => BadRequest(err)
       case Right(true) => {
         val dao = new FileDao(dbContext)
-        println("Getting " + memberId + ", " + fileId)
         val r = dao.getCasesFromFile(fileId, memberId).asJson.toString()
-        println(r)
         Ok(r)
       }
     }

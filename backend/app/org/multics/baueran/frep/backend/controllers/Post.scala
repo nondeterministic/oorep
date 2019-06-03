@@ -90,8 +90,23 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
   }
 
   def updateFileDescription() = Action { request: Request[AnyContent] =>
-    println("Received: " + request.body.asText.get)
-    Ok
+    val requestData = request.body.asMultipartFormData.get.dataParts
+
+    (requestData("filedescr"), requestData("fileheader"), requestData("memberId")) match {
+      case (Seq(filedescr), Seq(fileheader), Seq(memberIdStr)) =>
+        doesUserHaveCorrespondingCookie(request, memberIdStr.toInt) match {
+          case Right(true) => {
+            println("Received: " + request.body)
+            fileDao.changeDescription(fileheader, memberIdStr.toInt, filedescr)
+            Ok
+          }
+          case Left(err) =>
+            BadRequest(err)
+        }
+      case _ =>
+        println("ERROR!")
+        BadRequest
+    }
   }
 
 }
