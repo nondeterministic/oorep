@@ -7,10 +7,8 @@ import io.circe.parser.parse
 import io.circe.syntax._
 import monix.execution.Scheduler.Implicits.global
 import org.multics.baueran.frep.shared.Defs.serverUrl
-import org.multics.baueran.frep.shared.frontend.Case.descr
 import org.multics.baueran.frep.shared.{Caze, FIle}
-import org.multics.baueran.frep.shared.frontend.{Case, getCookieData}
-import org.multics.baueran.frep.shared.sec_frontend.OpenFileModal.selected_file_id
+import org.multics.baueran.frep.shared.frontend.getCookieData
 import org.scalajs.dom
 import org.scalajs.dom.Event
 import scalatags.JsDom.all.{onclick, _}
@@ -71,7 +69,6 @@ object EditFileModal {
                 div(cls:="col-2",
                   button(cls:="btn mb-2 mr-2", id:="saveFileDescrEditFileModal", data.toggle:="modal", data.dismiss:="modal", disabled:=true,
                     onclick:= { (event: Event) =>
-                      // .post(PlainTextBody(Caze.encoder(descr.get).toString()))
                       currentlyOpenedFile match {
                         case Some(f) =>
                           HttpRequest(serverUrl() + "/updateFileDescription")
@@ -81,7 +78,6 @@ object EditFileModal {
                               "memberId"   -> PlainTextBody(currentlyActiveMemberId.toString())))
                         case None => ;
                       }
-                      // HttpRequest(serverUrl() + "/updateFileDescription").post(PlainTextBody($("#fileDescrEditFileModal").`val`().toString().trim()))
                       $("#saveFileDescrEditFileModal").attr("disabled", true)
                       js.eval("$('#editFileModal').modal('hide');") // TODO: This is ugly! No idea for an alternative :-(
                     },

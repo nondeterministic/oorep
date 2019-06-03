@@ -12,6 +12,7 @@ import backend.db.db.DBContext
 import shared.{Caze, FIle}
 
 // TODO: Like in Get.scala, check cookies for permission first!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+// (and like in updateFileDescription() below)
 
 class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends AbstractController(cc) {
   cazeDao = new CazeDao(dbContext)
@@ -96,7 +97,6 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
       case (Seq(filedescr), Seq(fileheader), Seq(memberIdStr)) =>
         doesUserHaveCorrespondingCookie(request, memberIdStr.toInt) match {
           case Right(true) => {
-            println("Received: " + request.body)
             fileDao.changeDescription(fileheader, memberIdStr.toInt, filedescr)
             Ok
           }
@@ -104,7 +104,6 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
             BadRequest(err)
         }
       case _ =>
-        println("ERROR!")
         BadRequest
     }
   }
