@@ -119,8 +119,11 @@ class FileDao(dbContext: db.db.DBContext) {
     })
   }
 
-  def delFile(fileheader: String, memberId: Int) = {
-    println("TODO: Implement delFile() in FileDao!" + fileheader + memberId.toString)
+  def delFile(fileheader: String, memberId: Int) = run { quote {
+    tableFile
+      .filter(f => f.header == lift(fileheader) && f.member_id == lift(memberId))
+      .delete
+    }
   }
 
   def changeDescription(fileheader: String, memberId: Int, newDescription: String) = run { quote {

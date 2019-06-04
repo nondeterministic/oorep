@@ -19,12 +19,13 @@ object OpenFileModal extends FileModal {
   private def requestFileDeletion() = {
     getCookieData(dom.document.cookie, "oorep_member_id") match {
       case Some(memberId) =>
-        println("Sending: " + selected_file_id.now + memberId.toString)
         HttpRequest(serverUrl() + "/delfile")
           .post(MultiPartBody(
             "fileheader" -> PlainTextBody(selected_file_id.now),
-            "memberId" -> PlainTextBody(memberId.toString)))
-          .onComplete({ case _ => println("TODO: Update data structures in modals!")})
+            "memberId" -> PlainTextBody(memberId)))
+          .onComplete({ case _ =>
+            FileModalCallbacks.updateMemberFiles(memberId.toInt)
+          })
       case None => ; // TODO: Display error modal?!
     }
   }
