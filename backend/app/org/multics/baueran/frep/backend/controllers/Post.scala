@@ -71,6 +71,24 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
     }
   }
 
+  def delCaze() = Action { request: Request[AnyContent] =>
+    val requestData = request.body.asMultipartFormData.get.dataParts
+
+    (requestData("caseId"), requestData("caseHeader"), requestData("memberId")) match {
+      case (Seq(caseIdStr), Seq(caseHeader), Seq(memberIdStr)) =>
+        doesUserHaveCorrespondingCookie(request, memberIdStr.toInt) match {
+          case Right(true) => {
+            cazeDao.delete(caseHeader, memberIdStr.toInt)
+            Ok
+          }
+          case Left(err) =>
+            BadRequest(err)
+        }
+      case _ =>
+        BadRequest
+    }
+  }
+
   def saveFile() = Action { request: Request[AnyContent] =>
     FIle.decode(request.body.asText.get) match {
       case Some(file) => fileDao.insert(file); println(request.body.asText.get); Ok

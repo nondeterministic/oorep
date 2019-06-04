@@ -16,6 +16,9 @@ POST   	/savecase                   org.multics.baueran.frep.backend.controllers
 POST   	/updatecase                 org.multics.baueran.frep.backend.controllers.Post.updateCaze
 
 +nocsrf
+POST   	/delcase                    org.multics.baueran.frep.backend.controllers.Post.delCaze
+
++nocsrf
 POST   	/savefile                   org.multics.baueran.frep.backend.controllers.Post.saveFile
 
 +nocsrf
