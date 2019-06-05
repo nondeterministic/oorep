@@ -25,7 +25,6 @@ import scala.util.{Failure, Success, Try}
 object EditFileModal {
 
   private var currentlyActiveMemberId = -1
-  private val fileName = Var("")
   private var currentlyOpenedFile: Option[FIle] = None
   private val currentlySelectedCaseId = Var(-1)
   private val currentlySelectedCaseHeader = Var("")
@@ -46,6 +45,56 @@ object EditFileModal {
           .render
       }
     }
+  }
+  val fileName = Var("")
+
+  fileName.foreach{ fileHeader =>
+
+    // Update modal dialog with data obtained from backend...
+    def updateModal(response: Try[SimpleHttpResponse]) = {
+      println("TRIGGERED")
+
+      response match {
+        case response: Success[SimpleHttpResponse] => {
+          parse(response.get.body) match {
+            case Right(json) => {
+              val cursor = json.hcursor
+              cursor.as[FIle] match {
+                case Right(f) =>
+                  $("#fileDescrEditFileModal").`val`(f.description) // Update description
+                  cases() = f.cazes // Update cases
+                  currentlyOpenedFile = Some(f) // Update currently opened file
+                case Left(err) => println("Decoding of file failed: " + err)
+              }
+            }
+            case Left(err) => println("Parsing of file failed (is it JSON?): " + err)
+          }
+        }
+        case error: Failure[SimpleHttpResponse] => println("ERROR: " + error.get.body)
+      }
+    }
+
+    // Reset UI and some data
+    cases() = List.empty
+    currentlySelectedCaseId() = -1
+    currentlySelectedCaseHeader() = ""
+    currentlyActiveMemberId = -1
+    $("#openFileEditFileModal").attr("disabled", true)
+    $("#deleteFileEditFileModal").attr("disabled", true)
+
+    // Request data from backend...
+    getCookieData(dom.document.cookie, "oorep_member_id") match {
+      case Some(memberId) => {
+        currentlyActiveMemberId = memberId.toInt
+        HttpRequest(serverUrl() + "/file")
+          .withQueryParameters("memberId" -> memberId, "fileId" -> fileHeader)
+          .withCrossDomainCookies(true)
+          .send()
+          .onComplete((r: Try[SimpleHttpResponse]) => updateModal(r))
+      }
+      case None => println("WARNING: getCasesForFile() failed. Could not get memberID from cookie."); -1
+    }
+
   }
 
   private def areYouSureModalCase() = {
@@ -76,13 +125,14 @@ object EditFileModal {
     )
   }
 
-  private def getCaseFromCurrentSelection() = {
-    val anchorNode = dom.document.querySelector("#editFileAvailableCasesList .active")
-    currentlySelectedCaseId() = anchorNode.id.toInt
-    currentlySelectedCaseHeader() = anchorNode.textContent
-  }
-
   private def mainModal() = {
+
+    def getCaseFromCurrentSelection() = {
+      val anchorNode = dom.document.querySelector("#editFileAvailableCasesList .active")
+      currentlySelectedCaseId() = anchorNode.id.toInt
+      currentlySelectedCaseHeader() = anchorNode.textContent
+    }
+
     div(cls:="modal fade", tabindex:="-1", role:="dialog", id:="editFileModal",
       div(cls:="modal-dialog modal-dialog-centered", role:="document", style:="min-width: 80%;",
         div(cls:="modal-content",
@@ -161,13 +211,10 @@ object EditFileModal {
                                 cursor.as[Caze] match {
                                   case Right(caze) => {
 
-                                    Repertorise.results.clear()
-                                    Repertorise.results ++= caze.results
-
                                     Case.descr = Some(caze)
                                     Case.cRubrics ++= caze.results
 
-                                    Repertorise.apply(None)
+                                    // Repertorise.apply(None)
                                     Repertorise.showCase()
                                     println(caze)
                                   }
@@ -193,54 +240,6 @@ object EditFileModal {
         )
       )
     )
-  }
-
-  def requestAndUpdateInformationForFile(fileHeader: String) = {
-
-    // Update modal dialog with data obtained from backend...
-    def updateModal(response: Try[SimpleHttpResponse]) = {
-      response match {
-        case response: Success[SimpleHttpResponse] => {
-          parse(response.get.body) match {
-            case Right(json) => {
-              val cursor = json.hcursor
-              cursor.as[FIle] match {
-                case Right(f) =>
-                  $("#fileDescrEditFileModal").`val`(f.description) // Update description
-                  cases() = f.cazes // Update cases
-                  currentlyOpenedFile = Some(f) // Update currently opened file
-                case Left(err) => println("Decoding of file failed: " + err)
-              }
-            }
-            case Left(err) => println("Parsing of file failed (is it JSON?): " + err)
-          }
-        }
-        case error: Failure[SimpleHttpResponse] => println("ERROR: " + error.get.body)
-      }
-    }
-    fileName() = fileHeader
-
-    // Reset UI and some data
-    cases() = List.empty
-    currentlySelectedCaseId() = -1
-    currentlySelectedCaseHeader() = ""
-    currentlyActiveMemberId = -1
-    $("#openFileEditFileModal").attr("disabled", true)
-    $("#deleteFileEditFileModal").attr("disabled", true)
-
-    // Request data from backend...
-    getCookieData(dom.document.cookie, "oorep_member_id") match {
-      case Some(memberId) => {
-        currentlyActiveMemberId = memberId.toInt
-        HttpRequest(serverUrl() + "/file")
-          .withQueryParameters("memberId" -> memberId, "fileId" -> fileHeader)
-          .withCrossDomainCookies(true)
-          .send()
-          .onComplete((r: Try[SimpleHttpResponse]) => updateModal(r))
-      }
-      case None => println("WARNING: getCasesForFile() failed. Could not get memberID from cookie."); -1
-    }
-
   }
 
   def apply() = div(areYouSureModalCase(), mainModal())
