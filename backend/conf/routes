@@ -33,6 +33,7 @@ GET     /availableReps              org.multics.baueran.frep.backend.controllers
 GET     /availableFiles             org.multics.baueran.frep.backend.controllers.Get.availableFiles(memberId: Int)
 GET     /availableCasesForFile      org.multics.baueran.frep.backend.controllers.Get.availableCasesForFile(memberId: Int, fileId: String)
 GET     /file                       org.multics.baueran.frep.backend.controllers.Get.getFile(memberId: Int, fileId: String)
+GET     /case                       org.multics.baueran.frep.backend.controllers.Get.getCase(memberId: Int, caseId: String)
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)

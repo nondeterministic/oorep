@@ -38,7 +38,7 @@ object Repertorise {
       $("#content").append(AddToFileModal().render)
       $("#content").append(OpenFileModal().render)
       $("#content").append(NewFileModal().render)
-      $("#content").append(Repertorise().render)
+      $("#content").append(Repertorise(None).render)
 
       getCookieData(dom.document.cookie, "oorep_member_id") match {
         case Some(id) => updateMemberFiles(id.toInt)
@@ -233,7 +233,7 @@ object Repertorise {
   }
 
   // ------------------------------------------------------------------------------------------------------------------
-  def apply() = {
+  def apply(caze: Option[Caze]) = {
     val ulRepertorySelection =
       div(cls:="dropdown col-sm-2",
         button(`type`:="button",
@@ -368,6 +368,7 @@ object Repertorise {
     }
     // If there are already some search results, do without center and fix nav bar prior to rendering
     else {
+      println("RESULTS!!")
       if (dom.document.getElementById("nav_bar_logo").innerHTML.length() == 0) {
         $("#public_nav_bar").addClass("bg-dark navbar-dark shadow p-3 mb-5")
         $("#nav_bar_logo").append(a(cls := "navbar-brand py-0", href := serverUrl(), "OOREP").render)

@@ -4,11 +4,11 @@ import fr.hmil.roshttp.HttpRequest
 import fr.hmil.roshttp.body.{MultiPartBody, PlainTextBody}
 import fr.hmil.roshttp.response.SimpleHttpResponse
 import io.circe.parser.parse
-import io.circe.syntax._
 import monix.execution.Scheduler.Implicits.global
 import org.multics.baueran.frep.shared.Defs.serverUrl
-import org.multics.baueran.frep.shared.{Caze, FIle}
-import org.multics.baueran.frep.shared.frontend.getCookieData
+import org.multics.baueran.frep.shared.frontend.Repertorise
+import org.multics.baueran.frep.shared.{CaseRubric, Caze, FIle}
+import org.multics.baueran.frep.shared.frontend.{Case, Repertorise, getCookieData}
 import org.scalajs.dom
 import org.scalajs.dom.Event
 import scalatags.JsDom.all.{onclick, _}
@@ -147,7 +147,38 @@ object EditFileModal {
                   button(cls:="btn mb-2 mr-2", id:="openFileEditFileModal", data.toggle:="modal", data.dismiss:="modal", disabled:=true,
                     onclick:={ (event: Event) =>
                       getCaseFromCurrentSelection()
-                      // TODO...
+
+                      // TODO: Get Caze from backend, then set Repertorise.results accordingly. TRY OUT!!!!!!!!!!!!!!!!
+                      HttpRequest(serverUrl() + "/case")
+                        .withQueryParameters(("memberId", currentlyActiveMemberId.toString()), ("caseId", currentlySelectedCaseId.now.toString()))
+                        .withCrossDomainCookies(true)
+                        .send()
+                        .onComplete({
+                          case response: Success[SimpleHttpResponse] => {
+                            parse(response.get.body) match {
+                              case Right(json) => {
+                                val cursor = json.hcursor
+                                cursor.as[Caze] match {
+                                  case Right(caze) => {
+
+                                    Repertorise.results.clear()
+                                    Repertorise.results ++= caze.results
+
+                                    Case.descr = Some(caze)
+                                    Case.cRubrics ++= caze.results
+
+                                    Repertorise.apply(None)
+                                    Repertorise.showCase()
+                                    println(caze)
+                                  }
+                                  case Left(err) => println("Decoding of case failed: " + err)
+                                }
+                              }
+                              case Left(err) => println("Parsing of case (is it JSON?): " + err)
+                            }
+                          }
+                          case error: Failure[SimpleHttpResponse] => println("Lookup of case failed: " + error.toString())
+                        })
                     },
                     "Open"),
                   button(cls:="btn mb-2", id:="deleteFileEditFileModal", data.toggle:="modal", data.dismiss:="modal", data.target:="#editFileModalAreYouSureCase", disabled:=true,
