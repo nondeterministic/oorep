@@ -22,10 +22,10 @@ import org.multics.baueran.frep.shared.sec_frontend.{AddToFileModal, NewFileModa
 
 object Repertorise {
 
-  var remedyFilter = ""
-  var symptomQuery = ""
-  var remedyFormat = RemedyFormat.NotFormatted
-  var selectedRepertory = ""
+  private var remedyFilter = ""
+  private var symptomQuery = ""
+  private var remedyFormat = RemedyFormat.NotFormatted
+  private var selectedRepertory = ""
   val results: Var[List[CaseRubric]] = Var(List())
 
   // ------------------------------------------------------------------------------------------------------------------
