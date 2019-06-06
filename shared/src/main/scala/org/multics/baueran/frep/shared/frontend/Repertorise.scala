@@ -7,6 +7,8 @@ import org.scalajs.dom.Event
 import org.scalajs.dom.raw.HTMLInputElement
 import io.circe.parser.parse
 
+import rx.Var
+
 import scala.collection.mutable
 import scala.util.{Failure, Success}
 import org.querki.jquery._
@@ -24,7 +26,7 @@ object Repertorise {
   var symptomQuery = ""
   var remedyFormat = RemedyFormat.NotFormatted
   var selectedRepertory = ""
-  val results = mutable.ListBuffer[CaseRubric]()
+  val results: Var[List[CaseRubric]] = Var(List())
 
   // ------------------------------------------------------------------------------------------------------------------
   // Render HTML for the results of a repertory lookup directly to page.
@@ -51,7 +53,7 @@ object Repertorise {
     def resultingRemedies() = {
       var remedies = mutable.HashMap[Remedy, (Integer, Integer)]()
 
-      for (cr <- results) {
+      for (cr <- results.now) {
         for (WeightedRemedy(r,w) <- cr.weightedRemedies) {
           if (remedies.contains(r)) {
             val weight = remedies.get(r).get._1 + w
@@ -102,7 +104,7 @@ object Repertorise {
     $("#resultStatus").append(
       div(cls:="alert alert-secondary", role:="alert",
         b(a(href:="#", onclick:={ (event: Event) => remedyFilter = ""; showResults() },
-          results.size + " result(s) for '" + symptomQuery + "'. ")),
+          results.now.size + " result(s) for '" + symptomQuery + "'. ")),
         if (numberOfMultiOccurrences > 1) {
           val relevantMultiRemedies = resultingRemedies().toList
             .sortBy(-_._2._2)
@@ -168,14 +170,21 @@ object Repertorise {
     )
 
     if (remedyFilter.length == 0)
-      results.foreach(result => $("#resultsTBody").append(resultRow(result).render))
+      results.now.foreach(result => $("#resultsTBody").append(resultRow(result).render))
     else
-      results.filter(_.containsRemedyAbbrev(remedyFilter)).foreach(result => $("#resultsTBody").append(resultRow(result).render))
+      results.now.filter(_.containsRemedyAbbrev(remedyFilter)).foreach(result => $("#resultsTBody").append(resultRow(result).render))
   }
 
   // ------------------------------------------------------------------------------------------------------------------
-  private def showCase() = {
-    $("#caseDiv").empty()
+  def showCase() = {
+    // TODO: The following line is sufficient instead of the next two.
+    // But I'm not yet decided how to re-open stored cases without inserting the div
+    // dynamically here, if it doesn't pre-exist as is the case for the intro-page.
+    // $("#caseDiv").empty()
+
+    $("#caseDiv").remove()
+    $("#resultDiv").append(div(cls:="span12", id:="caseDiv").render)
+
     $("#caseDiv").append(Case.toHTML(remedyFormat).render)
     Case.updateCaseViewAndDataStructures()
     Case.updateCaseHeaderView()
@@ -207,9 +216,9 @@ object Repertorise {
             val cursor = json.hcursor
             cursor.as[List[CaseRubric]] match {
               case Right(newResults) => {
-                results.clear()
-                results ++= newResults
-                // results() = results.now ++ newResults
+                results() = newResults
+//                results.clear()
+//                results ++= newResults
                 symptomQuery = symptom
                 showResults()
                 if (Case.size() > 0)
@@ -282,7 +291,7 @@ object Repertorise {
 
     val myHTML =
       // Fresh page...
-      if (results.size == 0) {
+      if (results.now.size == 0) {
         div(cls := "container-fluid",
           div(cls := "container-fluid text-center",
             div(cls:="col-sm-12 text-center", img(src:="logo_small.png")),
@@ -363,12 +372,11 @@ object Repertorise {
     updateAvailableRepertories()
 
     // If initial page, then vertically center search form
-    if (results.size == 0) {
+    if (results.now.size == 0) {
       div(cls := "introduction", div(cls := "vertical-align", myHTML))
     }
     // If there are already some search results, do without center and fix nav bar prior to rendering
     else {
-      println("RESULTS!!")
       if (dom.document.getElementById("nav_bar_logo").innerHTML.length() == 0) {
         $("#public_nav_bar").addClass("bg-dark navbar-dark shadow p-3 mb-5")
         $("#nav_bar_logo").append(a(cls := "navbar-brand py-0", href := serverUrl(), "OOREP").render)
