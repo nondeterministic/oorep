@@ -35,7 +35,7 @@ object Main {
           $("#content").append(NewFileModal().render)
           $("#content").append(OpenFileModal().render)
           $("#content").append(EditFileModal().render)
-          $("#content").append(Repertorise.apply(None).render)
+          $("#content").append(Repertorise.apply().render)
           $("#content_bottom").append(Disclaimer.toHTML().render)
 
           val memberId = response.get.body.toInt

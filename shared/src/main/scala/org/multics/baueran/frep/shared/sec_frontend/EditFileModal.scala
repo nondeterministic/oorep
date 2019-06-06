@@ -215,7 +215,7 @@ object EditFileModal {
                                     Case.cRubrics ++= caze.results
 
                                     // Repertorise.apply(None)
-                                    Repertorise.showCase()
+                                    // Repertorise.showCase()
                                     println(caze)
                                   }
                                   case Left(err) => println("Decoding of case failed: " + err)

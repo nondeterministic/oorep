@@ -25,7 +25,7 @@ object Main {
 
     $("#nav_bar").empty()
     $("#nav_bar").append(NavBar.apply().render)
-    $("#content").append(Repertorise.apply(None).render)
+    $("#content").append(Repertorise.apply().render)
     $("#content").append(About.toHTML().render)
     $("#content").append(Features.toHTML().render)
     $("#content_bottom").append(Disclaimer.toHTML().render)

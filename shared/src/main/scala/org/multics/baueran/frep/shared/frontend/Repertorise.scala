@@ -38,7 +38,7 @@ object Repertorise {
       $("#content").append(AddToFileModal().render)
       $("#content").append(OpenFileModal().render)
       $("#content").append(NewFileModal().render)
-      $("#content").append(Repertorise(None).render)
+      $("#content").append(Repertorise().render)
 
       getCookieData(dom.document.cookie, "oorep_member_id") match {
         case Some(id) => updateMemberFiles(id.toInt)
@@ -233,7 +233,7 @@ object Repertorise {
   }
 
   // ------------------------------------------------------------------------------------------------------------------
-  def apply(caze: Option[Caze]) = {
+  def apply() = {
     val ulRepertorySelection =
       div(cls:="dropdown col-sm-2",
         button(`type`:="button",
