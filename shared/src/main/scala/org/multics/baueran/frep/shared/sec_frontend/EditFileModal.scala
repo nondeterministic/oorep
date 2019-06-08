@@ -48,7 +48,7 @@ object EditFileModal {
   }
   val fileName = Var("")
 
-  fileName.foreach{ fileHeader =>
+  fileName.foreach { fileHeader =>
 
     // Update modal dialog with data obtained from backend...
     def updateModal(response: Try[SimpleHttpResponse]) = {
@@ -91,7 +91,7 @@ object EditFileModal {
             .send()
             .onComplete((r: Try[SimpleHttpResponse]) => updateModal(r))
         }
-        case None => println("WARNING: getCasesForFile() failed. Could not get memberID from cookie."); -1
+      case None => println("WARNING: getCasesForFile() failed. Could not get memberID from cookie."); -1
     }
   }
 
@@ -210,9 +210,8 @@ object EditFileModal {
                                   case Right(caze) => {
                                     Case.descr = Some(caze)
                                     Case.cRubrics ++= caze.results
-                                    Repertorise.results() = caze.results // Important to set results(), because this triggers redraw of Repertorise()
-                                    println("Dialog triggered: " + caze.results.size)
-                                    println("caze: " + caze)
+                                    // Repertorise.results() = caze.results // Important to set results(), because this triggers redraw of Repertorise()
+                                    Repertorise.showResults()
                                   }
                                   case Left(err) => println("Decoding of case failed: " + err)
                                 }

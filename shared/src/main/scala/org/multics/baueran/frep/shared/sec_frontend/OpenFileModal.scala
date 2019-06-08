@@ -70,6 +70,7 @@ object OpenFileModal extends FileModal {
                 data.toggle:="modal", data.dismiss:="modal", data.target:="#editFileModal",
                 onclick:={(event: Event) =>
                   EditFileModal.fileName() = selected_file_id.now
+                  println("Opening editFileModal: " + EditFileModal.fileName.now)
                 },
                 "Open"
               )

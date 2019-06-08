@@ -6,11 +6,9 @@ import org.scalajs.dom
 import org.scalajs.dom.Event
 import org.scalajs.dom.raw.HTMLInputElement
 import io.circe.parser.parse
-
 import rx.Var
 
 import scalajs.js
-
 import scala.collection.mutable
 import scala.util.{Failure, Success}
 import org.querki.jquery._
@@ -20,36 +18,33 @@ import monix.execution.Scheduler.Implicits.global
 import org.multics.baueran.frep.shared._
 import org.multics.baueran.frep.shared.Defs.serverUrl
 import org.multics.baueran.frep.shared.sec_frontend.FileModalCallbacks.updateMemberFiles
-import org.multics.baueran.frep.shared.sec_frontend.{AddToFileModal, NewFileModal, OpenFileModal}
+import org.multics.baueran.frep.shared.sec_frontend.{AddToFileModal, EditFileModal, NewFileModal, OpenFileModal}
 
 object Repertorise {
 
-  private var remedyFilter = ""
   private var symptomQuery = ""
-  private var remedyFormat = RemedyFormat.NotFormatted
   private var selectedRepertory = ""
+  private val remedyFilter = Var("")
+  private val remedyFormat = Var(RemedyFormat.NotFormatted)
   val results: Var[List[CaseRubric]] = Var(List())
 
-  // private val resultsTrigger = results.trigger {
-  results.foreach { _ =>
-    if (results.now.size > 0)
-      showResults()
-    else
-      println("No results to show.")
-  }
+  remedyFilter.triggerLater(showResults())
+  results.triggerLater(showResults())
+  remedyFormat.triggerLater(showResults())
 
   // ------------------------------------------------------------------------------------------------------------------
   // Render HTML for the results of a repertory lookup directly to page.
   //
   // containingRemedyAbbrev, if not empty, will lead to only those rows drawn, that contain remedy
   // with abbrev. containingRemedyAbbrev.
-  private def showResults(): Unit = {
+  def showResults(): Unit = {
 
     def resetContentView() = {
       $("#content").empty()
       $("#content").append(AddToFileModal().render)
       $("#content").append(OpenFileModal().render)
       $("#content").append(NewFileModal().render)
+      $("#content").append(EditFileModal().render)
       $("#content").append(Repertorise().render)
 
       getCookieData(dom.document.cookie, "oorep_member_id") match {
@@ -85,7 +80,7 @@ object Repertorise {
       implicit def crToCR(cr: CaseRubric) = new BetterCaseRubric(cr)
 
       val remedies =
-        if (remedyFormat == RemedyFormat.NotFormatted)
+        if (remedyFormat.now == RemedyFormat.NotFormatted)
           result.getRawRemedies()
         else
           result.getFormattedRemedies()
@@ -113,7 +108,7 @@ object Repertorise {
     $("#resultStatus").empty()
     $("#resultStatus").append(
       div(cls:="alert alert-secondary", role:="alert",
-        b(a(href:="#", onclick:={ (event: Event) => remedyFilter = ""; showResults() },
+        b(a(href:="#", onclick:={ (event: Event) => remedyFilter() = "" },
           results.now.size + " result(s) for '" + symptomQuery + "'. ")),
         if (numberOfMultiOccurrences > 1) {
           val relevantMultiRemedies = resultingRemedies().toList
@@ -128,8 +123,7 @@ object Repertorise {
                   (rr._2._2 + "x"),
                   a(href := "#",
                     onclick := { (event: Event) =>
-                      remedyFilter = rr._1.nameAbbrev
-                      showResults()
+                      remedyFilter() = rr._1.nameAbbrev
                     },
                     rr._1.nameAbbrev),
                   ("(" + rr._2._1 + "), "),
@@ -138,8 +132,7 @@ object Repertorise {
             span(
               (relevantMultiRemedies.last._2._2 + "x"),
               a(href:="#", onclick := { (event: Event) =>
-                remedyFilter = relevantMultiRemedies.last._1.nameAbbrev
-                showResults()
+                remedyFilter() = relevantMultiRemedies.last._1.nameAbbrev
               }, relevantMultiRemedies.last._1.nameAbbrev),
               ("(" + relevantMultiRemedies.last._2._1 + ")")),
             ")")
@@ -161,12 +154,11 @@ object Repertorise {
               a(scalatags.JsDom.attrs.id:="remediesFormatButton",
                 cls:="underline", href:="#", style:="color:white;",
                 onclick:={ (event: Event) =>
-                  if (remedyFormat == RemedyFormat.NotFormatted)
-                    remedyFormat = RemedyFormat.Formatted
+                  if (remedyFormat.now == RemedyFormat.NotFormatted)
+                    remedyFormat() = RemedyFormat.Formatted
                   else
-                    remedyFormat = RemedyFormat.NotFormatted
+                    remedyFormat() = RemedyFormat.NotFormatted
 
-                  showResults()
                   if (Case.size() > 0)
                     showCase()
                 },
@@ -179,10 +171,10 @@ object Repertorise {
       ).render
     )
 
-    if (remedyFilter.length == 0)
+    if (remedyFilter.now.length == 0)
       results.now.foreach(result => $("#resultsTBody").append(resultRow(result).render))
     else
-      results.now.filter(_.containsRemedyAbbrev(remedyFilter)).foreach(result => $("#resultsTBody").append(resultRow(result).render))
+      results.now.filter(_.containsRemedyAbbrev(remedyFilter.now)).foreach(result => $("#resultsTBody").append(resultRow(result).render))
 
     // TODO: This is FREAKING weird: when I redraw from a modal, the modal-backdrop fade stays. So I need to manually remove it. :-(
     if (dom.document.querySelectorAll(".modal-backdrop").length > 0) {
@@ -196,7 +188,7 @@ object Repertorise {
   // ------------------------------------------------------------------------------------------------------------------
   def showCase() = {
     $("#caseDiv").empty()
-    $("#caseDiv").append(Case.toHTML(remedyFormat).render)
+    $("#caseDiv").append(Case.toHTML(remedyFormat.now).render)
     Case.updateCaseViewAndDataStructures()
     Case.updateCaseHeaderView()
   }
@@ -228,7 +220,7 @@ object Repertorise {
               case Right(newResults) => {
                 symptomQuery = symptom
                 results() = newResults
-                // showResults()
+
                 if (Case.size() > 0)
                   showCase()
               }
@@ -310,7 +302,7 @@ object Repertorise {
                   input(cls := "form-control", `id` := "inputField",
                     onkeydown := { (event: dom.KeyboardEvent) =>
                       if (event.keyCode == 13) {
-                        remedyFilter = ""
+                        remedyFilter() = ""
                         event.stopImmediatePropagation()
                         onSubmitSymptom(event)
                       }
@@ -322,7 +314,7 @@ object Repertorise {
             ),
             div(cls := "col-sm-12 text-center", style := "margin-top:20px;",
               button(cls := "btn btn-primary", style := "width: 120px; margin-right:5px;", `type` := "button",
-                onclick := { (event: Event) => remedyFilter = ""; onSubmitSymptom(event); event.stopPropagation() }, "Find"),
+                onclick := { (event: Event) => remedyFilter() = ""; onSubmitSymptom(event); event.stopPropagation() }, "Find"),
               button(cls := "btn", style := "width: 100px;", `type` := "button",
                 onclick := { (event: Event) => $("#inputField").value(""); event.stopPropagation() }, "Clear")
             )
@@ -331,7 +323,7 @@ object Repertorise {
           div(cls := "container-fluid", id := "resultDiv"),
           div(cls := "span12", id := "caseDiv", {
             if (Case.size() > 0)
-              Case.toHTML(remedyFormat)
+              Case.toHTML(remedyFormat.now)
             else ""
           })
         )
@@ -348,7 +340,7 @@ object Repertorise {
                   input(cls := "form-control", `id` := "inputField",
                     onkeydown := { (event: dom.KeyboardEvent) =>
                       if (event.keyCode == 13) {
-                        remedyFilter = ""
+                        remedyFilter() = ""
                         event.stopImmediatePropagation()
                         onSubmitSymptom(event)
                       }
@@ -356,7 +348,7 @@ object Repertorise {
                     `placeholder` := "Enter a symptom (for example: head, pain, left)")
                 ),
                 span(button(cls := "btn btn-primary", style := "width: 80px; margin-right:5px;", `type` := "button",
-                  onclick := { (event: Event) => remedyFilter = ""; onSubmitSymptom(event); event.stopPropagation() },
+                  onclick := { (event: Event) => remedyFilter() = ""; onSubmitSymptom(event); event.stopPropagation() },
                   span(cls := "oi oi-magnifying-glass", title := "Find", aria.hidden := "true")),
                   button(cls := "btn", style := "width: 80px;", `type` := "button",
                     onclick := { (event: Event) => $("#inputField").value(""); event.stopPropagation() },
@@ -370,7 +362,7 @@ object Repertorise {
           div(cls := "container-fluid", id := "resultDiv"),
           div(cls := "span12", id := "caseDiv", {
             if (Case.size() > 0)
-              Case.toHTML(remedyFormat)
+              Case.toHTML(remedyFormat.now)
             else ""
           })
         )
