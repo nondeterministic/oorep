@@ -38,14 +38,8 @@ object Main {
           dom.document.body.appendChild(Case.analysisModalDialogHTML().render)
           dom.document.body.appendChild(Case.editDescrModalDialogHTML().render)
 
-            //      analysisModalDialogHTML(),
-            //      editDescrModalDialogHTML(),
-
-            $("#nav_bar").empty()
+          $("#nav_bar").empty()
           $("#nav_bar").append(NavBar().render)
-//          $("#content").append(NewFileModal().render)
-//          $("#content").append(OpenFileModal().render)
-//          $("#content").append(EditFileModal().render)
           $("#content").append(Repertorise.apply().render)
           $("#content_bottom").append(Disclaimer.toHTML().render)
 

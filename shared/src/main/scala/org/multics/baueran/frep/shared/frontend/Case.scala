@@ -356,10 +356,6 @@ object Case {
     }
 
     div(cls:="container-fluid",
-//      analysisModalDialogHTML(),
-//      editDescrModalDialogHTML(),
-
-      // HTML which is visible right from the start...
       div(header),
       div(cls:="table-responsive",
         table(cls:="table table-striped table-sm table-bordered",
@@ -373,7 +369,6 @@ object Case {
                 onclick:={ (event: Event) => $("#remediesFormatButton").click() },
                 "Remedies")
             ),
-
             th(attr("scope"):="col", " ")
           ),
           tbody(scalatags.JsDom.attrs.id:="caseTBody", cRubrics.map(crub => caseRow(crub)))

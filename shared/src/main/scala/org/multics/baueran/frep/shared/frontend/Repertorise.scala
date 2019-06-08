@@ -8,7 +8,6 @@ import org.scalajs.dom.raw.HTMLInputElement
 import io.circe.parser.parse
 import rx.Var
 
-import scalajs.js
 import scala.collection.mutable
 import scala.util.{Failure, Success}
 import org.querki.jquery._
@@ -18,7 +17,6 @@ import monix.execution.Scheduler.Implicits.global
 import org.multics.baueran.frep.shared._
 import org.multics.baueran.frep.shared.Defs.serverUrl
 import org.multics.baueran.frep.shared.sec_frontend.FileModalCallbacks.updateMemberFiles
-import org.multics.baueran.frep.shared.sec_frontend.{AddToFileModal, EditFileModal, NewFileModal, OpenFileModal}
 
 object Repertorise {
 
@@ -40,16 +38,7 @@ object Repertorise {
   def showResults(): Unit = {
 
     def resetContentView() = {
-//      dom.document.body.appendChild(AddToFileModal().render)
-//      dom.document.body.appendChild(OpenFileModal().render)
-//      dom.document.body.appendChild(EditFileModal().render)
-//      dom.document.body.appendChild(NewFileModal().render)
-
       $("#content").empty()
-//      $("#content").append(AddToFileModal().render)
-//      $("#content").append(OpenFileModal().render)
-//      $("#content").append(NewFileModal().render)
-//      $("#content").append(EditFileModal().render)
       $("#content").append(Repertorise().render)
 
       getCookieData(dom.document.cookie, "oorep_member_id") match {
@@ -180,14 +169,6 @@ object Repertorise {
       results.now.foreach(result => $("#resultsTBody").append(resultRow(result).render))
     else
       results.now.filter(_.containsRemedyAbbrev(remedyFilter.now)).foreach(result => $("#resultsTBody").append(resultRow(result).render))
-
-    // TODO: This is FREAKING weird: when I redraw from a modal, the modal-backdrop fade stays. So I need to manually remove it. :-(
-    if (dom.document.querySelectorAll(".modal-backdrop").length > 0) {
-      println("Doing a very ugly workaround now...  TODO: Remove this later!")
-      js.eval("$('.modal-backdrop').remove();") // TODO: This is ugly! No idea for an alternative :-(
-    }
-    else
-      println("No backdrop to delete. Thanks goodness!")
   }
 
   // ------------------------------------------------------------------------------------------------------------------
