@@ -211,7 +211,7 @@ object EditFileModal {
                                     Case.descr = Some(caze)
                                     Case.cRubrics ++= caze.results
                                     // Repertorise.results() = caze.results // Important to set results(), because this triggers redraw of Repertorise()
-                                    Repertorise.showResults()
+                                    Repertorise.showCase()
                                   }
                                   case Left(err) => println("Decoding of case failed: " + err)
                                 }

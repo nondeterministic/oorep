@@ -13,8 +13,8 @@ import scalatags.JsDom.all._
 
 import scala.util.{Failure, Success}
 import org.multics.baueran.frep.shared._
-import frontend.{Repertorise, Disclaimer}
-import sec_frontend.{FileModalCallbacks, NewFileModal, OpenFileModal, EditFileModal}
+import frontend.{Case, Disclaimer, Repertorise}
+import sec_frontend.{AddToFileModal, EditFileModal, FileModalCallbacks, NewFileModal, OpenFileModal}
 
 @JSExportTopLevel("MainSecure")
 object Main {
@@ -30,11 +30,22 @@ object Main {
       .send()
       .onComplete({
         case response: Success[SimpleHttpResponse] => {
-          $("#nav_bar").empty()
+          dom.document.body.appendChild(AddToFileModal().render)
+          dom.document.body.appendChild(OpenFileModal().render)
+          dom.document.body.appendChild(EditFileModal().render)
+          dom.document.body.appendChild(NewFileModal().render)
+
+          dom.document.body.appendChild(Case.analysisModalDialogHTML().render)
+          dom.document.body.appendChild(Case.editDescrModalDialogHTML().render)
+
+            //      analysisModalDialogHTML(),
+            //      editDescrModalDialogHTML(),
+
+            $("#nav_bar").empty()
           $("#nav_bar").append(NavBar().render)
-          $("#content").append(NewFileModal().render)
-          $("#content").append(OpenFileModal().render)
-          $("#content").append(EditFileModal().render)
+//          $("#content").append(NewFileModal().render)
+//          $("#content").append(OpenFileModal().render)
+//          $("#content").append(EditFileModal().render)
           $("#content").append(Repertorise.apply().render)
           $("#content_bottom").append(Disclaimer.toHTML().render)
 

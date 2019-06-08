@@ -356,8 +356,8 @@ object Case {
     }
 
     div(cls:="container-fluid",
-      analysisModalDialogHTML(),
-      editDescrModalDialogHTML(),
+//      analysisModalDialogHTML(),
+//      editDescrModalDialogHTML(),
 
       // HTML which is visible right from the start...
       div(header),

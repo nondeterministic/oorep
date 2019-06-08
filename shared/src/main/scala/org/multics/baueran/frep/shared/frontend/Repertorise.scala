@@ -40,11 +40,16 @@ object Repertorise {
   def showResults(): Unit = {
 
     def resetContentView() = {
+//      dom.document.body.appendChild(AddToFileModal().render)
+//      dom.document.body.appendChild(OpenFileModal().render)
+//      dom.document.body.appendChild(EditFileModal().render)
+//      dom.document.body.appendChild(NewFileModal().render)
+
       $("#content").empty()
-      $("#content").append(AddToFileModal().render)
-      $("#content").append(OpenFileModal().render)
-      $("#content").append(NewFileModal().render)
-      $("#content").append(EditFileModal().render)
+//      $("#content").append(AddToFileModal().render)
+//      $("#content").append(OpenFileModal().render)
+//      $("#content").append(NewFileModal().render)
+//      $("#content").append(EditFileModal().render)
       $("#content").append(Repertorise().render)
 
       getCookieData(dom.document.cookie, "oorep_member_id") match {
