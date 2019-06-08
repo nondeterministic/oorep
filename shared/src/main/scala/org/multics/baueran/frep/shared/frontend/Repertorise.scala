@@ -9,6 +9,8 @@ import io.circe.parser.parse
 
 import rx.Var
 
+import scalajs.js
+
 import scala.collection.mutable
 import scala.util.{Failure, Success}
 import org.querki.jquery._
@@ -27,6 +29,14 @@ object Repertorise {
   private var remedyFormat = RemedyFormat.NotFormatted
   private var selectedRepertory = ""
   val results: Var[List[CaseRubric]] = Var(List())
+
+  // private val resultsTrigger = results.trigger {
+  results.foreach { _ =>
+    if (results.now.size > 0)
+      showResults()
+    else
+      println("No results to show.")
+  }
 
   // ------------------------------------------------------------------------------------------------------------------
   // Render HTML for the results of a repertory lookup directly to page.
@@ -173,18 +183,19 @@ object Repertorise {
       results.now.foreach(result => $("#resultsTBody").append(resultRow(result).render))
     else
       results.now.filter(_.containsRemedyAbbrev(remedyFilter)).foreach(result => $("#resultsTBody").append(resultRow(result).render))
+
+    // TODO: This is FREAKING weird: when I redraw from a modal, the modal-backdrop fade stays. So I need to manually remove it. :-(
+    if (dom.document.querySelectorAll(".modal-backdrop").length > 0) {
+      println("Doing a very ugly workaround now...  TODO: Remove this later!")
+      js.eval("$('.modal-backdrop').remove();") // TODO: This is ugly! No idea for an alternative :-(
+    }
+    else
+      println("No backdrop to delete. Thanks goodness!")
   }
 
   // ------------------------------------------------------------------------------------------------------------------
   def showCase() = {
-    // TODO: The following line is sufficient instead of the next two.
-    // But I'm not yet decided how to re-open stored cases without inserting the div
-    // dynamically here, if it doesn't pre-exist as is the case for the intro-page.
-    // $("#caseDiv").empty()
-
-    $("#caseDiv").remove()
-    $("#resultDiv").append(div(cls:="span12", id:="caseDiv").render)
-
+    $("#caseDiv").empty()
     $("#caseDiv").append(Case.toHTML(remedyFormat).render)
     Case.updateCaseViewAndDataStructures()
     Case.updateCaseHeaderView()
@@ -196,7 +207,6 @@ object Repertorise {
     val repertory = selectedRepertory
 
     if (repertory.length == 0 || symptom.trim.replaceAll("[^A-Za-z0-9]", "").length <= 3) {
-      println("No repertory selected, or symptom entered!")
       $("#resultStatus").empty()
       $("#resultStatus").append(
         div(cls:="alert alert-danger", role:="alert",
@@ -216,11 +226,9 @@ object Repertorise {
             val cursor = json.hcursor
             cursor.as[List[CaseRubric]] match {
               case Right(newResults) => {
-                results() = newResults
-//                results.clear()
-//                results ++= newResults
                 symptomQuery = symptom
-                showResults()
+                results() = newResults
+                // showResults()
                 if (Case.size() > 0)
                   showCase()
               }
@@ -231,7 +239,6 @@ object Repertorise {
         }
       }
       case error: Failure[SimpleHttpResponse] => {
-        println("Lookup failed: " + error.toString())
         $("#resultStatus").empty()
         $("#resultStatus").append(
           div(cls:="alert alert-danger", role:="alert",

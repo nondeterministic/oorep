@@ -4,11 +4,10 @@ import fr.hmil.roshttp.HttpRequest
 import fr.hmil.roshttp.body.{MultiPartBody, PlainTextBody}
 import monix.execution.Scheduler.Implicits.global
 import org.multics.baueran.frep.shared.Defs.serverUrl
-import org.multics.baueran.frep.shared.frontend.{Case, getCookieData}
+import org.multics.baueran.frep.shared.frontend.getCookieData
 import org.scalajs.dom
 import org.scalajs.dom.Event
 import scalatags.JsDom.all._
-import rx.Var
 import rx.Rx
 import rx.Ctx.Owner.Unsafe._
 import scalatags.rx.all._

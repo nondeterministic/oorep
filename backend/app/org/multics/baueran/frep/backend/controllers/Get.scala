@@ -42,13 +42,13 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     */
   def authenticate() = Action { request: Request[AnyContent] =>
     authorizedRequestCookies(request) match {
-      case Nil => BadRequest("Not authorized: bad request")
+      case Nil => println("ERR: 1"); BadRequest("Not authorized: bad request")
       case cookies => {
         getFrom(cookies, "oorep_member_email") match {
-          case None => BadRequest("Not authorized: user not in database.")
+          case None => println("ERR: 2"); BadRequest("Not authorized: user not in database.")
           case Some(memberEmail) => {
             memberDao.getFromEmail(memberEmail) match {
-              case Nil => BadRequest(s"Not authorized: user ${memberEmail} not in database.")
+              case Nil => println("ERR: 3"); BadRequest(s"Not authorized: user ${memberEmail} not in database.")
               case member :: _ => Ok(member.member_id.toString()).withCookies(cookies.map({ c => Cookie(name = c.name, value = c.value, httpOnly = false) }):_*)
                 // Ok(member.member_id.toString()).withCookies(cookies:_*)
             }
@@ -69,7 +69,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
 
   def availableFiles(memberId: Int) = Action { request: Request[AnyContent] =>
     doesUserHaveCorrespondingCookie(request, memberId) match {
-      case Left(err) => BadRequest(err)
+      case Left(err) => println("ERR: 4"); BadRequest(err)
       case Right(true) =>
         val dao = new FileDao(dbContext)
         Ok(dao.getFilesForMember(memberId).asJson.toString())
@@ -78,14 +78,14 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
 
   def getFile(memberId: Int, fileId: String) = Action { request: Request[AnyContent] =>
     doesUserHaveCorrespondingCookie(request, memberId) match {
-      case Left(err) => BadRequest(err)
+      case Left(err) => println("ERR 4a"); BadRequest(err)
       case Right(true) => {
         val dao = new FileDao(dbContext)
         dao.getFilesForMember(memberId).find(_.header == fileId) match {
           case Some(file) =>
             Ok(file.asJson.toString())
           case None =>
-            BadRequest("getFile() returned nothing.")
+            println("ERR 4b: " + memberId + ", " + fileId); BadRequest("getFile() returned nothing.")
         }
       }
     }
@@ -93,14 +93,14 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
 
   def getCase(memberId: Int, caseId: String) = Action { request: Request[AnyContent] =>
     doesUserHaveCorrespondingCookie(request, memberId) match {
-      case Left(err) => BadRequest(err)
+      case Left(err) => println("ERR: 5"); BadRequest(err)
       case Right(true) => {
         val dao = new CazeDao(dbContext)
         dao.get(caseId.toInt) match {
           case caze::Nil =>
             Ok(caze.asJson.toString())
           case _ =>
-            BadRequest("getCase() returned nothing.")
+            println("ERR 6"); BadRequest("getCase() returned nothing.")
         }
       }
     }
@@ -108,7 +108,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
 
   def availableCasesForFile(memberId: Int, fileId: String) = Action { request: Request[AnyContent] =>
     doesUserHaveCorrespondingCookie(request, memberId) match {
-      case Left(err) => BadRequest(err)
+      case Left(err) => println("ERR 7"); BadRequest(err)
       case Right(true) => {
         val dao = new FileDao(dbContext)
         val r = dao.getCasesFromFile(fileId, memberId).asJson.toString()
@@ -121,8 +121,10 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     val dao = new RepertoryDao(dbContext)
     val results = dao.lookupSymptom(repertoryAbbrev, symptom)
 
-    if (results.size == 0)
+    if (results.size == 0) {
+      println("ERR 8")
       BadRequest("No results found.")
+    }
     else {
       val resultSetTooLarge = results.size > 100
       var resultSet = ListBuffer[CaseRubric]()

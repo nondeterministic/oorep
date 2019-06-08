@@ -52,8 +52,6 @@ object EditFileModal {
 
     // Update modal dialog with data obtained from backend...
     def updateModal(response: Try[SimpleHttpResponse]) = {
-      println("TRIGGERED")
-
       response match {
         case response: Success[SimpleHttpResponse] => {
           parse(response.get.body) match {
@@ -84,17 +82,17 @@ object EditFileModal {
 
     // Request data from backend...
     getCookieData(dom.document.cookie, "oorep_member_id") match {
-      case Some(memberId) => {
-        currentlyActiveMemberId = memberId.toInt
-        HttpRequest(serverUrl() + "/file")
-          .withQueryParameters("memberId" -> memberId, "fileId" -> fileHeader)
-          .withCrossDomainCookies(true)
-          .send()
-          .onComplete((r: Try[SimpleHttpResponse]) => updateModal(r))
-      }
-      case None => println("WARNING: getCasesForFile() failed. Could not get memberID from cookie."); -1
+      case Some(memberId) =>
+        if (fileHeader.length() > 0 && memberId.toInt >= 0) {
+          currentlyActiveMemberId = memberId.toInt
+          HttpRequest(serverUrl() + "/file")
+            .withQueryParameters("memberId" -> memberId, "fileId" -> fileHeader)
+            .withCrossDomainCookies(true)
+            .send()
+            .onComplete((r: Try[SimpleHttpResponse]) => updateModal(r))
+        }
+        case None => println("WARNING: getCasesForFile() failed. Could not get memberID from cookie."); -1
     }
-
   }
 
   private def areYouSureModalCase() = {
@@ -210,13 +208,11 @@ object EditFileModal {
                                 val cursor = json.hcursor
                                 cursor.as[Caze] match {
                                   case Right(caze) => {
-
                                     Case.descr = Some(caze)
                                     Case.cRubrics ++= caze.results
-
-                                    // Repertorise.apply(None)
-                                    // Repertorise.showCase()
-                                    println(caze)
+                                    Repertorise.results() = caze.results // Important to set results(), because this triggers redraw of Repertorise()
+                                    println("Dialog triggered: " + caze.results.size)
+                                    println("caze: " + caze)
                                   }
                                   case Left(err) => println("Decoding of case failed: " + err)
                                 }
