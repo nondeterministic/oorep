@@ -2,21 +2,53 @@ package dao
 
 import org.multics.baueran.frep.backend.controllers.Get
 import org.multics.baueran.frep.backend.dao.CazeDao
-import org.multics.baueran.frep.shared.Caze
+import org.multics.baueran.frep.shared.{CaseRubric, Caze}
 import org.multics.baueran.frep.backend.db.db.DBContext
-
 import org.scalatestplus.play._
 import org.scalatestplus.play.guice._
 import play.api.test._
 import play.api.test.Helpers._
 
+// /////////////////////////////////////////////////////////////////////////////////////
 // see also: https://www.playframework.com/documentation/2.6.x/ScalaTestingWithScalaTest
+//
+// Individual test classes can be called, e.g.:
+// testOnly dao.Caze_and_CazeDao
+// /////////////////////////////////////////////////////////////////////////////////////
 
 class Caze_and_CazeDao extends PlaySpec with GuiceOneAppPerTest with Injecting {
 
   var caze: Caze = _
 
+  val testCaze11 = Caze(1, "header", 1, "date1", "descr", List())
+  val testCaze12 = Caze(1, "header", 1, "date1", "descr", List())
+
+  val testCaze2 = Caze(1, "header", 1, "date1", "descr", List())
+  val testCaze3 = Caze(1, "header", 1, "date2", "descr", List())
+
+  val testCaze4 = Caze(1, "header1", 1, "date1", "descr", List())
+  val testCaze5 = Caze(1, "header2", 1, "date2", "descr", List())
+
   "Caze " should {
+
+    //    case class Caze(id: Int,
+    //                    header: String,
+    //                    member_id: Int,
+    //                    date: String,
+    //                    description: String,
+    //                    results: List[CaseRubric]) {
+
+    "1 treat two cazes as equal if they are except for their date" in {
+      assert(testCaze11 == testCaze12)
+    }
+
+    "2 treat two cazes as equal if they are except for their date" in {
+      assert(testCaze2 == testCaze3)
+    }
+
+    "4 treat two cazes as equal if they are except for their date" in {
+      assert(testCaze4 != testCaze5)
+    }
 
     "decode JSON-representation of Caze" in {
       io.circe.parser.parse(Defs.jsonCaze) match {

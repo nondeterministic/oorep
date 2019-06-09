@@ -6,21 +6,24 @@ import io.circe._, io.circe.parser._
 import io.circe.syntax._
 
 case class WeightedRemedy(remedy: Remedy, weight: Int) {
+  def canEqual(a: Any) = a.isInstanceOf[WeightedRemedy]
 
   override def equals(that: Any) = {
     that match {
-      case w: WeightedRemedy => w.weight == weight && w.remedy == remedy
+      case w: WeightedRemedy => w.canEqual(this) && w.hashCode() == this.hashCode()
       case _ => false
     }
   }
 
   override def hashCode: Int = {
-    val prime = 31
+    val prime = 37
     var result = 1
-    result = prime * result + weight + remedy.hashCode()
     result = prime * result +
-      (if (remedy == null) weight.toString.hashCode
-      else (weight.toString + remedy.toString).hashCode)
+      (if (remedy == null) 0 else remedy.hashCode()) +
+      weight
+    result = prime * result +
+      (if (remedy == null) 0 else remedy.hashCode()) +
+      weight
     return result
   }
 
@@ -62,6 +65,8 @@ case class CaseRubric(rubric: Rubric,
                       var rubricWeight: Int,
                       weightedRemedies: List[WeightedRemedy])
 {
+  def canEqual(a: Any) = a.isInstanceOf[CaseRubric]
+
   def containsRemedyAbbrev(remedyAbbrev: String) = {
     weightedRemedies.filter(_.remedy.nameAbbrev == remedyAbbrev).size > 0
   }
@@ -76,9 +81,11 @@ case class CaseRubric(rubric: Rubric,
 
   override def equals(that: Any) = {
     that match {
-      case c: CaseRubric => c.rubric == rubric && c.repertoryAbbrev == repertoryAbbrev &&
+      case c: CaseRubric => c.canEqual(this) &&
+        c.rubric == rubric &&
+        c.repertoryAbbrev == repertoryAbbrev &&
         c.rubricWeight == rubricWeight &&
-        c.weightedRemedies == weightedRemedies
+        c.weightedRemedies.sortWith(_.remedy.abbrev > _.remedy.abbrev) == weightedRemedies.sortWith(_.remedy.abbrev > _.remedy.abbrev)
       case _ => false
     }
   }
@@ -86,8 +93,11 @@ case class CaseRubric(rubric: Rubric,
   override def hashCode: Int = {
     val prime = 31
     var result = 1
-    result = prime * result + rubric.toString().hashCode + repertoryAbbrev.hashCode + rubricWeight + weightedRemedies.toString().hashCode
-    result = prime * result + rubric.toString().hashCode + repertoryAbbrev.hashCode + rubricWeight + weightedRemedies.toString().hashCode
+    result = prime * result +
+      rubric.hashCode() +
+      (if (repertoryAbbrev == null) 0 else repertoryAbbrev.hashCode()) +
+      rubricWeight +
+      weightedRemedies.map(_.hashCode()).fold(0)(_ + _)
     return result
   }
 

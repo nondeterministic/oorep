@@ -61,13 +61,16 @@ object Case {
 
         // If user is logged in, attempt to update case in DB (if it exists; see comment in Post.scala),
         // and if previous case != current case...
-        if (memberId >= 0 && prevCase != descr) {
+        if (memberId >= 0 && prevCase != None && prevCase != descr) {
           // Before we write the case to disk, we update the date to record the change.
           // We do not do this above, as the prevCase != descr check would always fail then!
           descr = Some(shared.Caze(descr.get.id, descr.get.header, descr.get.member_id, (new js.Date()).toISOString(), descr.get.description, cRubrics.toList))
 
           HttpRequest(serverUrl() + "/updatecase")
             .post(PlainTextBody(Caze.encoder(descr.get).toString()))
+
+          println("DESCR: " + descr.get.toString())
+          println("PREV : " + prevCase.get.toString())
         }
       }
 

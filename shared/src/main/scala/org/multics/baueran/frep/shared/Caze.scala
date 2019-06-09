@@ -8,25 +8,31 @@ case class Caze(id: Int,
                 member_id: Int,
                 date: String,
                 description: String,
-                results: List[CaseRubric]) {
+                results: List[CaseRubric])
+{
+  def canEqual(a: Any) = a.isInstanceOf[Caze]
 
-  def canEqual(a: Any) = {
-    a.isInstanceOf[Caze]
-  }
-
-  // Ignore id on purpose. It is DB-generated and two same Cazes with different id should be treated as equal!
-  override def equals(that: Any): Boolean =
+  // Ignore id and date on purpose. Id is DB-generated and two same Cazes with different id should be treated as equal!
+  override def equals(that: Any): Boolean = {
     that match {
       case that: Caze => that.canEqual(this) &&
-        that.header == header && that.member_id == member_id && that.date == date && that.description == description && that.results == results
+        that.header == header &&
+        that.member_id == member_id &&
+        that.description == description &&
+        that.results.sortWith(_.repertoryAbbrev > _.repertoryAbbrev) == results.sortWith(_.repertoryAbbrev > _.repertoryAbbrev)
       case _ => false
     }
+  }
 
-  // Ignore id on purpose. It is DB-generated and two same Cazes with different id should be treated as equal!
+  // Ignore id and date on purpose. Id is DB-generated and two same Cazes with different id should be treated as equal!
   override def hashCode: Int = {
     val prime = 31
     var result = results.toString().hashCode
-    result = prime * result + header.hashCode + member_id + date.hashCode + description.hashCode + results.toString().hashCode
+    result = prime * result +
+      (if (header == null) 0 else header.hashCode()) +
+      member_id +
+      (if (description == null) 0 else description.hashCode()) +
+      results.map(_.hashCode()).fold(0)(_ + _)
     return result
   }
 

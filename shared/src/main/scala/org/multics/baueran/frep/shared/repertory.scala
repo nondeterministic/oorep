@@ -110,10 +110,11 @@ object RubricRemedy {
 
 // ------------------------------------------------------------------------------------------------------------------
 case class Remedy(abbrev: String, val id: Int, val nameAbbrev: String, val nameLong: String) {
+  def canEqual(a: Any) = a.isInstanceOf[Remedy]
 
   override def equals(that: Any) = {
     that match {
-      case r: Remedy => r.id == id && r.nameAbbrev == nameAbbrev && r.nameLong == nameLong
+      case r: Remedy => r.canEqual(this) && r.hashCode() == this.hashCode()
       case _ => false
     }
   }
@@ -121,10 +122,10 @@ case class Remedy(abbrev: String, val id: Int, val nameAbbrev: String, val nameL
   override def hashCode: Int = {
     val prime = 31
     var result = 1
-    result = prime * result + id + nameAbbrev.hashCode() + nameLong.hashCode
-    result = prime * result +
-      (if (nameAbbrev == null && nameLong == 0) id.toString.hashCode()
-      else (id.toString + nameAbbrev + nameLong).hashCode)
+    result = prime * result + id +
+      (if (nameAbbrev == null) 0 else nameAbbrev.hashCode()) +
+      (if (abbrev == null) 0 else abbrev.hashCode()) +
+      (if (nameLong == null) 0 else nameLong.hashCode())
     return result
   }
 
@@ -147,11 +148,11 @@ object ChapterRemedy {
 case class Rubric(abbrev: String, id: Int, mother: Option[Int], isMother: Option[Boolean],
                   chapterId: Int, fullPath: String, path: Option[String], textt: Option[String])
 {
+  def canEqual(a: Any) = a.isInstanceOf[Rubric]
 
   override def equals(that: Any) = {
     that match {
-      case r: Rubric => r.id == id && r.mother == mother && r.isMother == isMother && r.chapterId == chapterId &&
-        r.fullPath == fullPath && r.path == path && r.textt == textt
+      case r: Rubric => r.canEqual(this) && r.hashCode() == this.hashCode()
       case _ => false
     }
   }
@@ -159,8 +160,15 @@ case class Rubric(abbrev: String, id: Int, mother: Option[Int], isMother: Option
   override def hashCode: Int = {
     val prime = 31
     var result = 1
-    result = prime * result + id + mother.hashCode() + isMother.hashCode() + chapterId + fullPath.hashCode + path.hashCode() + textt.hashCode()
-    result = prime * result + (id + mother.hashCode() + isMother.hashCode() + chapterId + fullPath.hashCode + path.hashCode() + textt.hashCode())
+    result = prime * result +
+      abbrev.hashCode() +
+      id +
+      (if (mother == None) 0 else mother.get) +
+      (if (isMother == None) 0 else 1) +
+      chapterId +
+      fullPath.hashCode() +
+      (if (path == None) 0 else path.get.hashCode()) +
+      (if (textt == None) 0 else textt.get.hashCode())
     return result
   }
 
