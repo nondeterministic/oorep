@@ -210,7 +210,8 @@ object EditFileModal {
                                   case Right(caze) => {
                                     Case.descr = Some(caze)
                                     Case.cRubrics ++= caze.results
-                                    Repertorise.showCase()
+                                    // Repertorise.showCase()
+                                    Repertorise.showResults()
                                   }
                                   case Left(err) => println("Decoding of case failed: " + err)
                                 }

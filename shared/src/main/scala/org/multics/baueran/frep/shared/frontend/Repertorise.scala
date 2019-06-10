@@ -26,9 +26,9 @@ object Repertorise {
   private val remedyFormat = Var(RemedyFormat.NotFormatted)
   val results: Var[List[CaseRubric]] = Var(List())
 
-  remedyFilter.triggerLater(showResults())
-  results.triggerLater(showResults())
-  remedyFormat.triggerLater(showResults())
+  remedyFilter.triggerLater(if (results.now.size > 0) showResults())
+  results.triggerLater(if (results.now.size > 0) showResults())
+  remedyFormat.triggerLater(if (results.now.size > 0) showResults())
 
   // ------------------------------------------------------------------------------------------------------------------
   // Render HTML for the results of a repertory lookup directly to page.
@@ -39,7 +39,7 @@ object Repertorise {
 
     def resetContentView() = {
       $("#content").empty()
-      $("#content").append(Repertorise().render)
+      $("#content").append(apply().render)
 
       getCookieData(dom.document.cookie, "oorep_member_id") match {
         case Some(id) => updateMemberFiles(id.toInt)
@@ -147,15 +147,7 @@ object Repertorise {
             th(attr("scope"):="col",
               a(scalatags.JsDom.attrs.id:="remediesFormatButton",
                 cls:="underline", href:="#", style:="color:white;",
-                onclick:={ (event: Event) =>
-                  if (remedyFormat.now == RemedyFormat.NotFormatted)
-                    remedyFormat() = RemedyFormat.Formatted
-                  else
-                    remedyFormat() = RemedyFormat.NotFormatted
-
-                  if (Case.size() > 0)
-                    showCase()
-                },
+                onclick:=((event: Event) => toggleRemedyFormat()),
                 "Remedies")
             ),
             th(attr("scope"):="col", " ")
@@ -169,6 +161,17 @@ object Repertorise {
       results.now.foreach(result => $("#resultsTBody").append(resultRow(result).render))
     else
       results.now.filter(_.containsRemedyAbbrev(remedyFilter.now)).foreach(result => $("#resultsTBody").append(resultRow(result).render))
+  }
+
+  // ------------------------------------------------------------------------------------------------------------------
+  def toggleRemedyFormat() = {
+    if (remedyFormat.now == RemedyFormat.NotFormatted)
+      remedyFormat() = RemedyFormat.Formatted
+    else
+      remedyFormat() = RemedyFormat.NotFormatted
+
+    if (Case.size() > 0)
+      showCase()
   }
 
   // ------------------------------------------------------------------------------------------------------------------
@@ -276,7 +279,7 @@ object Repertorise {
 
     val myHTML =
       // Fresh page...
-      if (results.now.size == 0) {
+      if (results.now.size == 0 && Case.size() == 0) {
         div(cls := "container-fluid",
           div(cls := "container-fluid text-center",
             div(cls:="col-sm-12 text-center", img(src:="logo_small.png")),
@@ -357,7 +360,7 @@ object Repertorise {
     updateAvailableRepertories()
 
     // If initial page, then vertically center search form
-    if (results.now.size == 0) {
+    if (results.now.size == 0 && Case.size() == 0) {
       div(cls := "introduction", div(cls := "vertical-align", myHTML))
     }
     // If there are already some search results, do without center and fix nav bar prior to rendering

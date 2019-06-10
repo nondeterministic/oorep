@@ -40,7 +40,7 @@ object Main {
 
           $("#nav_bar").empty()
           $("#nav_bar").append(NavBar().render)
-          $("#content").append(Repertorise.apply().render)
+          $("#content").append(Repertorise().render)
           $("#content_bottom").append(Disclaimer.toHTML().render)
 
           val memberId = response.get.body.toInt
@@ -54,7 +54,7 @@ object Main {
     // Stuff to make the NavBar (dis)appear dynamically
     var navBarDark = false
     $(dom.window).scroll(() => {
-      if (Repertorise.results.now.size == 0) {
+      if (Repertorise.results.now.size == 0 && Case.size() == 0) {
         if ($(document).scrollTop() > 150) {
           if (!navBarDark) {
             $("#public_nav_bar").addClass("bg-dark navbar-dark shadow p-3 mb-5")

@@ -22,6 +22,7 @@ import shared.sec_frontend.FileModalCallbacks._
 import org.scalajs.dom.raw.HTMLInputElement
 import org.querki.jquery.$
 import org.scalajs.dom
+import scalatags.JsDom
 
 import scala.util.{Failure, Success}
 
@@ -68,9 +69,6 @@ object Case {
 
           HttpRequest(serverUrl() + "/updatecase")
             .post(PlainTextBody(Caze.encoder(descr.get).toString()))
-
-          println("DESCR: " + descr.get.toString())
-          println("PREV : " + prevCase.get.toString())
         }
       }
 
@@ -236,7 +234,7 @@ object Case {
   }
 
   // ------------------------------------------------------------------------------------------------------------------
-  def toHTML(remedyFormat: RemedyFormat) = {
+  def toHTML(remedyFormat: RemedyFormat): JsDom.TypedTag[dom.html.Div] = {
     updateCaseViewAndDataStructures()
 
     def caseRow(crub: CaseRubric) = {
@@ -369,7 +367,7 @@ object Case {
             th(attr("scope"):="col",
               a(scalatags.JsDom.attrs.id:="caseSectionOfPage",
                 cls:="underline", href:="#caseSectionOfPage", style:="color:white;",
-                onclick:={ (event: Event) => $("#remediesFormatButton").click() },
+                onclick:=((event: Event) => Repertorise.toggleRemedyFormat()),
                 "Remedies")
             ),
             th(attr("scope"):="col", " ")
