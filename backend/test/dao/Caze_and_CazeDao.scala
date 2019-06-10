@@ -31,22 +31,15 @@ class Caze_and_CazeDao extends PlaySpec with GuiceOneAppPerTest with Injecting {
 
   "Caze " should {
 
-    //    case class Caze(id: Int,
-    //                    header: String,
-    //                    member_id: Int,
-    //                    date: String,
-    //                    description: String,
-    //                    results: List[CaseRubric]) {
-
-    "1 treat two cazes as equal if they are except for their date" in {
+    "treat two cazes as equal if they are" in {
       assert(testCaze11 == testCaze12)
     }
 
-    "2 treat two cazes as equal if they are except for their date" in {
+    "treat two cazes as equal if they are EXCEPT for their date" in {
       assert(testCaze2 == testCaze3)
     }
 
-    "4 treat two cazes as equal if they are except for their date" in {
+    "treat two cazes as NOT equal if they aren't in fact equal" in {
       assert(testCaze4 != testCaze5)
     }
 
