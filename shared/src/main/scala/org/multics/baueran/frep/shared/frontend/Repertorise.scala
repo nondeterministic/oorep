@@ -175,7 +175,7 @@ object Repertorise {
   }
 
   // ------------------------------------------------------------------------------------------------------------------
-  def showCase() = {
+  private def showCase() = {
     $("#caseDiv").empty()
     $("#caseDiv").append(Case.toHTML(remedyFormat.now).render)
     Case.updateCaseViewAndDataStructures()
