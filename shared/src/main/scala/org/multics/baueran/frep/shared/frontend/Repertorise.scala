@@ -99,63 +99,66 @@ object Repertorise {
     }
 
     resetContentView()
-    $("#resultStatus").empty()
-    $("#resultStatus").append(
-      div(cls:="alert alert-secondary", role:="alert",
-        b(a(href:="#", onclick:={ (event: Event) => remedyFilter() = "" },
-          results.now.size + " result(s) for '" + symptomQuery + "'. ")),
-        if (numberOfMultiOccurrences > 1) {
-          val relevantMultiRemedies = resultingRemedies().toList
-            .sortBy(-_._2._2)
-            .filter(rr => rr._2._2 > 1)
 
-          span("(Multi-occurrences in search results: ",
-            relevantMultiRemedies
-              .take(relevantMultiRemedies.size - 1)
-              .map(rr => {
-                span(
-                  (rr._2._2 + "x"),
-                  a(href := "#",
-                    onclick := { (event: Event) =>
-                      remedyFilter() = rr._1.nameAbbrev
-                    },
-                    rr._1.nameAbbrev),
-                  ("(" + rr._2._1 + "), "),
-                )
-              }),
-            span(
-              (relevantMultiRemedies.last._2._2 + "x"),
-              a(href:="#", onclick := { (event: Event) =>
-                remedyFilter() = relevantMultiRemedies.last._1.nameAbbrev
-              }, relevantMultiRemedies.last._1.nameAbbrev),
-              ("(" + relevantMultiRemedies.last._2._1 + ")")),
-            ")")
-        }
-        else {
-          span(" ")
-        }
-      ).render
+    if (results.now.size > 0) {
+      $("#resultStatus").empty()
+      $("#resultStatus").append(
+        div(cls := "alert alert-secondary", role := "alert",
+          b(a(href := "#", onclick := { (event: Event) => remedyFilter() = "" },
+            results.now.size + " result(s) for '" + symptomQuery + "'. ")),
+          if (numberOfMultiOccurrences > 1) {
+            val relevantMultiRemedies = resultingRemedies().toList
+              .sortBy(-_._2._2)
+              .filter(rr => rr._2._2 > 1)
 
-    )
+            span("(Multi-occurrences in search results: ",
+              relevantMultiRemedies
+                .take(relevantMultiRemedies.size - 1)
+                .map(rr => {
+                  span(
+                    (rr._2._2 + "x"),
+                    a(href := "#",
+                      onclick := { (event: Event) =>
+                        remedyFilter() = rr._1.nameAbbrev
+                      },
+                      rr._1.nameAbbrev),
+                    ("(" + rr._2._1 + "), "),
+                  )
+                }),
+              span(
+                (relevantMultiRemedies.last._2._2 + "x"),
+                a(href := "#", onclick := { (event: Event) =>
+                  remedyFilter() = relevantMultiRemedies.last._1.nameAbbrev
+                }, relevantMultiRemedies.last._1.nameAbbrev),
+                ("(" + relevantMultiRemedies.last._2._1 + ")")),
+              ")")
+          }
+          else {
+            span(" ")
+          }
+        ).render
 
-    $("#resultDiv").empty()
-    $("#resultDiv").append(
-      div(cls:="table-responsive",
-        table(cls:="table table-striped table-sm table-bordered",
-          thead(cls:="thead-dark", scalatags.JsDom.attrs.id:="resultsTHead",
-            th(attr("scope"):="col", "Symptom"),
-            th(attr("scope"):="col",
-              a(scalatags.JsDom.attrs.id:="remediesFormatButton",
-                cls:="underline", href:="#", style:="color:white;",
-                onclick:=((event: Event) => toggleRemedyFormat()),
-                "Remedies")
+      )
+
+      $("#resultDiv").empty()
+      $("#resultDiv").append(
+        div(cls := "table-responsive",
+          table(cls := "table table-striped table-sm table-bordered",
+            thead(cls := "thead-dark", scalatags.JsDom.attrs.id := "resultsTHead",
+              th(attr("scope") := "col", "Symptom"),
+              th(attr("scope") := "col",
+                a(scalatags.JsDom.attrs.id := "remediesFormatButton",
+                  cls := "underline", href := "#", style := "color:white;",
+                  onclick := ((event: Event) => toggleRemedyFormat()),
+                  "Remedies")
+              ),
+              th(attr("scope") := "col", " ")
             ),
-            th(attr("scope"):="col", " ")
-          ),
-          tbody(scalatags.JsDom.attrs.id:="resultsTBody")
-        )
-      ).render
-    )
+            tbody(scalatags.JsDom.attrs.id := "resultsTBody")
+          )
+        ).render
+      )
+    }
 
     if (remedyFilter.now.length == 0)
       results.now.foreach(result => $("#resultsTBody").append(resultRow(result).render))
