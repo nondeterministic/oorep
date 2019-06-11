@@ -113,7 +113,6 @@ object EditFileModal {
                 HttpRequest(serverUrl() + "/delcase")
                   .post(MultiPartBody(
                     "caseId"     -> PlainTextBody(currentlySelectedCaseId.now.toString()),
-                    "caseHeader" -> PlainTextBody(currentlySelectedCaseHeader.now),
                     "memberId"   -> PlainTextBody(currentlyActiveMemberId.toString())))
               },
               "Delete")
