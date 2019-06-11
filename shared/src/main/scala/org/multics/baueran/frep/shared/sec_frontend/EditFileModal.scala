@@ -6,8 +6,7 @@ import fr.hmil.roshttp.response.SimpleHttpResponse
 import io.circe.parser.parse
 import monix.execution.Scheduler.Implicits.global
 import org.multics.baueran.frep.shared.Defs.serverUrl
-import org.multics.baueran.frep.shared.frontend.Repertorise
-import org.multics.baueran.frep.shared.{CaseRubric, Caze, FIle}
+import org.multics.baueran.frep.shared.{Caze, FIle}
 import org.multics.baueran.frep.shared.frontend.{Case, Repertorise, getCookieData}
 import org.scalajs.dom
 import org.scalajs.dom.Event
@@ -195,7 +194,6 @@ object EditFileModal {
                     onclick:={ (event: Event) =>
                       getCaseFromCurrentSelection()
 
-                      // TODO: Get Caze from backend, then set Repertorise.results accordingly. TRY OUT!!!!!!!!!!!!!!!!
                       HttpRequest(serverUrl() + "/case")
                         .withQueryParameters(("memberId", currentlyActiveMemberId.toString()), ("caseId", currentlySelectedCaseId.now.toString()))
                         .withCrossDomainCookies(true)
