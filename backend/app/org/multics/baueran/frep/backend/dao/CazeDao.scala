@@ -83,9 +83,33 @@ class CazeDao(dbContext: db.db.DBContext) {
     run(delete)
   }
 
-  /*
-   * Like replace(), but does nothing if case does not ALREADY exist in DB.
-   */
+  /**
+    * Deletes not only a case but also the reference to it in the corresponding file(s).
+    */
+
+  def delete(id: Int, member_id: Int) = {
+    val fileDao = new FileDao(dbContext)
+
+    val files = fileDao.getFilesForMember(member_id)
+    val correspondingFiles = files.filter(_.cazes.contains(id))
+
+    transaction {
+      // Delete cases from file(s)
+      correspondingFiles.foreach(file =>
+        fileDao.removeCaseFromFile(member_id, file.header, id))
+
+      // Delete case itself
+      run { quote {
+        tableCaze
+          .filter(caze => caze.id == lift(id) && caze.member_id == lift(member_id))
+          .delete
+      }}
+    }
+  }
+
+  /**
+    * Like replace(), but does nothing if case does not ALREADY exist in DB.
+    */
 
   def replaceIfExists(c: Caze) = {
     implicit def stringToString(s: String) = new BetterString(s) // For 'shorten'.

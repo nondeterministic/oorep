@@ -83,48 +83,80 @@ class FileDao(dbContext: db.db.DBContext) {
     }
   }
 
-  // TODO: This method would be a typical usecase for transactions!
-
   def addCaseToFile(caze: Caze, fileheader: String) = {
     val cazeDao = new CazeDao(dbContext)
 
-    cazeDao.replace(caze)
-    // For every Caze we need to retrieve the actual dbCaze from the DB first...
-    val dbCaze = cazeDao.get(caze.header, caze.member_id).head
+    transaction {
+      cazeDao.replace(caze)
+      // For every Caze we need to retrieve the actual dbCaze from the DB first...
+      val dbCaze = cazeDao.get(caze.header, caze.member_id).head
 
-    // Now, we need the case IDs for the file with header, fileheader, and member ID, caze.member_id...
-    val tmp_case_ids = get(fileheader, caze.member_id) match {
-      case file::Nil => file.case_ids
-      case _ => List.empty
-    }
+      // Now, we need the case IDs for the file with header, fileheader, and member ID, caze.member_id...
+      val tmp_case_ids = get(fileheader, caze.member_id) match {
+        case file :: Nil => file.case_ids
+        case _ => List.empty
+      }
 
-    // Delete case from all files, as a case can only have one parent...
-    val filesWithCase: List[dbFile] = run(quote {
-      tableFile
-        .filter(f => f.member_id == lift(dbCaze.member_id) && f.case_ids.contains(lift(dbCaze.id)))
-    })
-    for (file <- filesWithCase) {
+      // Delete case from all files, as a case can only have one parent...
+      val filesWithCase: List[dbFile] = run(quote {
+        tableFile
+          .filter(f => f.member_id == lift(dbCaze.member_id) && f.case_ids.contains(lift(dbCaze.id)))
+      })
+      for (file <- filesWithCase) {
+        run(quote {
+          tableFile
+            .filter(_.id == lift(file.id))
+            .update(f => f.case_ids -> lift(file.case_ids.filter(_ != dbCaze.id)))
+        })
+      }
+
+      // Insert case to new parent file...
       run(quote {
         tableFile
-          .filter(_.id == lift(file.id))
-          .update(f => f.case_ids -> lift(file.case_ids.filter(_ != dbCaze.id)))
+          .filter(f => f.member_id == lift(caze.member_id) && f.header == lift(fileheader))
+          .update(_.case_ids -> lift((dbCaze.id :: tmp_case_ids).distinct))
       })
     }
-
-    // Insert case to new parent file...
-    run(quote {
-      tableFile
-        .filter(f => f.member_id == lift(caze.member_id) && f.header == lift(fileheader))
-        .update(_.case_ids -> lift((dbCaze.id :: tmp_case_ids).distinct))
-    })
   }
 
-  def delFile(fileheader: String, memberId: Int) = run { quote {
-    tableFile
-      .filter(f => f.header == lift(fileheader) && f.member_id == lift(memberId))
-      .delete
+  def removeCaseFromFile(memberId: Int, fileName: String, caseId: Int) = run {
+    quote {
+      tableFile
+        .filter(file => file.member_id == lift(memberId) && file.header == lift(fileName))
+        .update(ff => {
+          val caseIds = lift(ff.case_ids.filter(_ != caseId))
+          ff.case_ids -> lift(caseIds)
+        })
     }
   }
+
+  /**
+    * Deletes a file AND its associated cases. (Don't say, I didn't warn you!)
+    */
+
+  def delFile(fileheader: String, memberId: Int) = {
+    val cazeIds = run {
+      quote {
+        tableFile
+          .filter(f => f.header == lift(fileheader) && f.member_id == lift(memberId))
+      }
+    }.flatMap(_.case_ids)
+
+    val cazeDao = new CazeDao(dbContext)
+
+    transaction {
+      cazeIds.foreach(cazeDao.delete(_, memberId))
+
+      run {
+        quote {
+          tableFile
+            .filter(f => f.header == lift(fileheader) && f.member_id == lift(memberId))
+            .delete
+        }
+      }
+    }
+  }
+
 
   def changeDescription(fileheader: String, memberId: Int, newDescription: String) = run { quote {
     tableFile
