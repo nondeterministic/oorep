@@ -52,7 +52,7 @@ class FileDao(dbContext: db.db.DBContext) {
     get(file.header, file.member_id) match {
       case singleDbFile :: Nil => {
         val cazeDao = new CazeDao(dbContext)
-        val cazes = singleDbFile.case_ids.map(cazeDao.get(_)).flatten
+        val cazes = singleDbFile.case_ids.map(cazeDao.get(_, singleDbFile.member_id)).flatten
         Some(FIle(singleDbFile.header, singleDbFile.member_id, singleDbFile.date, singleDbFile.description, cazes))
       }
       case _ => None
@@ -64,7 +64,7 @@ class FileDao(dbContext: db.db.DBContext) {
       val cazeDao = new CazeDao(dbContext)
       val cazeIds =
         file.cazes
-          .map(caze => cazeDao.get(caze.header, caze.member_id)).flatten
+          .map(caze => cazeDao.get(caze.id, caze.member_id)).flatten
           .map(_.id)
 
       if (cazeIds.length > 0)
@@ -76,10 +76,14 @@ class FileDao(dbContext: db.db.DBContext) {
       Some(dbFile(0, file.header, file.member_id, file.date, file.description, List.empty))
   }
 
-  def insert(f: FIle) = {
+  def insert(f: FIle): Either[String, Int] = {
     fileToDBFile(f) match {
-      case Some(newDBFile) => run(quote { tableFile.insert(lift(newDBFile)).returning(_.id) })
-      case _ => Logger.error("FileDao: insert() failed. Failed to convert FIle " + f.toString()); -1
+      case Some(newDBFile) =>
+        Right(run(quote { tableFile.insert(lift(newDBFile)).returning(_.id) }))
+      case _ =>
+        val err = "FileDao: insert() failed. Failed to convert FIle " + f.toString()
+        Logger.error(err)
+        Left(err)
     }
   }
 
@@ -87,35 +91,39 @@ class FileDao(dbContext: db.db.DBContext) {
     val cazeDao = new CazeDao(dbContext)
 
     transaction {
-      cazeDao.replace(caze)
-      // For every Caze we need to retrieve the actual dbCaze from the DB first...
-      val dbCaze = cazeDao.get(caze.header, caze.member_id).head
+      cazeDao.replace(caze) match {
+        case Right(newId) =>
+          // For every Caze we need to retrieve the actual dbCaze from the DB first...
+          val dbCaze = cazeDao.get(newId, caze.member_id).head
 
-      // Now, we need the case IDs for the file with header, fileheader, and member ID, caze.member_id...
-      val tmp_case_ids = get(fileheader, caze.member_id) match {
-        case file :: Nil => file.case_ids
-        case _ => List.empty
+          // Now, we need the case IDs for the file with header, fileheader, and member ID, caze.member_id...
+          val tmp_case_ids = get(fileheader, caze.member_id) match {
+            case file :: Nil => file.case_ids
+            case _ => List.empty
+          }
+
+          // Delete case from all files, as a case can only have one parent file...
+          val filesWithCase: List[dbFile] = run(quote {
+            tableFile
+              .filter(f => f.member_id == lift(dbCaze.member_id) && f.case_ids.contains(lift(dbCaze.id)))
+          })
+          for (file <- filesWithCase) {
+            run(quote {
+              tableFile
+                .filter(_.id == lift(file.id))
+                .update(f => f.case_ids -> lift(file.case_ids.filter(_ != dbCaze.id)))
+            })
+          }
+
+          // Insert case to new parent file...
+          run(quote {
+            tableFile
+              .filter(f => f.member_id == lift(caze.member_id) && f.header == lift(fileheader))
+              .update(_.case_ids -> lift((dbCaze.id :: tmp_case_ids).distinct))
+          })
+        case Left(err) =>
+          Logger.error("FileDao: addCaseToFile() failed: " + err)
       }
-
-      // Delete case from all files, as a case can only have one parent...
-      val filesWithCase: List[dbFile] = run(quote {
-        tableFile
-          .filter(f => f.member_id == lift(dbCaze.member_id) && f.case_ids.contains(lift(dbCaze.id)))
-      })
-      for (file <- filesWithCase) {
-        run(quote {
-          tableFile
-            .filter(_.id == lift(file.id))
-            .update(f => f.case_ids -> lift(file.case_ids.filter(_ != dbCaze.id)))
-        })
-      }
-
-      // Insert case to new parent file...
-      run(quote {
-        tableFile
-          .filter(f => f.member_id == lift(caze.member_id) && f.header == lift(fileheader))
-          .update(_.case_ids -> lift((dbCaze.id :: tmp_case_ids).distinct))
-      })
     }
   }
 

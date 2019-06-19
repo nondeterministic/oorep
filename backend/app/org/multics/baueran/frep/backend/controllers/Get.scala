@@ -96,7 +96,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
       case Left(err) => println("ERR: 5"); BadRequest(err)
       case Right(true) => {
         val dao = new CazeDao(dbContext)
-        dao.get(caseId.toInt) match {
+        dao.get(caseId.toInt, memberId) match {
           case caze::Nil =>
             Ok(caze.asJson.toString())
           case _ =>

@@ -34,44 +34,44 @@ class CazeDao(dbContext: db.db.DBContext) {
   }
 
   /**
-    * Like insert, but will delete old case(s) first if one or more with same header and member_id already exist.
+    * Like insert, but will delete the old case first if one with same ID and memberID already exists.
     */
 
   def replace(c: Caze) = {
-    val existingCases = get(c.header, c.member_id)
+    val existingCases = get(c.id, c.member_id)
 
-    existingCases.foreach(caze => {
-      if (caze != c) {
-        Logger.debug("CazeDao: replace(): Replacing " + caze.toString())
-        val update = quote{
+    if (existingCases.length == 1) {
+      if (existingCases.head != c) {
+        Logger.debug("CazeDao: replace(): Replacing " + existingCases.head.toString())
+        val update = quote {
           tableCaze
-            .filter(cc => cc.member_id == lift(caze.member_id) && cc.header == lift(caze.header))
+            .filter(cc => cc.member_id == lift(existingCases.head.member_id) && cc.id == lift(existingCases.head.id))
             .update(_.description -> lift(c.description), _.results -> lift(c.results), _.date -> lift(c.date))
         }
-        run(update)
+        Right(run(update).toInt)
       }
-      else
-        Logger.debug("CazeDao: replace(): NOT replacing " + caze.toString())
-    })
-
-    if (existingCases.length == 0) {
+      else {
+        Logger.debug("CazeDao: replace(): NOT replacing " + c.toString())
+        Right(c.id.toInt)
+      }
+    }
+    else if (existingCases.length == 0) {
       Logger.debug("CazeDao: replace(): Inserting " + c.toString())
-      insert(c)
+      Right(insert(c).toInt)
     }
-  }
+    else {
+      val errorMsg = "CazeDao: replace(): ERROR: NOT replacing " + c.toString() + " as there are more than 1 cases in the DB. This should not have happened!"
+      Logger.debug(errorMsg)
+      Left(errorMsg)
+    }
 
-  def get(header: String, member_id: Int) = {
-    val select = quote {
-      tableCaze.filter(caze => caze.header == lift(header) && caze.member_id == lift(member_id))
-    }
-    run(select)
   }
 
   /**
     * Get caze from DB with ID id.
     */
 
-  def get(id: Int) = {
+  def get(id: Int, member_id: Int) = {
     val select = quote { tableCaze.filter(_.id == lift(id)) }
     run(select)
   }
@@ -88,8 +88,7 @@ class CazeDao(dbContext: db.db.DBContext) {
 
     transaction {
       // Delete cases from file(s)
-      correspondingFiles.foreach(file =>
-        fileDao.removeCaseFromFile(member_id, file.header, id))
+      correspondingFiles.foreach(file => fileDao.removeCaseFromFile(member_id, file.header, id))
 
       // Delete case itself
       run { quote {
@@ -104,10 +103,10 @@ class CazeDao(dbContext: db.db.DBContext) {
     * Like replace(), but does nothing if case does not ALREADY exist in DB.
     */
 
-  def replaceIfExists(c: Caze) = {
+  def replaceIfExists(c: Caze, memberId: Int) = {
     implicit def stringToString(s: String) = new BetterString(s) // For 'shorten'.
 
-    if (get(c.id).length > 0) {
+    if (get(c.id, memberId).length > 0) {
       replace(c)
       Logger.debug("CazeDao: caze: " + c.toString.shorten + " replaced in DB.")
     } else {

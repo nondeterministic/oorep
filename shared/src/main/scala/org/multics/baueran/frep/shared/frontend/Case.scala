@@ -3,7 +3,7 @@ package org.multics.baueran.frep.shared.frontend
 import org.scalajs.dom
 import dom.Event
 import fr.hmil.roshttp.HttpRequest
-import fr.hmil.roshttp.body.PlainTextBody
+import fr.hmil.roshttp.body.{MultiPartBody, PlainTextBody}
 import fr.hmil.roshttp.response.SimpleHttpResponse
 import monix.execution.Scheduler.Implicits.global
 import scalatags.JsDom.all._
@@ -14,6 +14,7 @@ import rx.Var
 import rx.Ctx.Owner.Unsafe._
 import scalatags.rx.all._
 import org.multics.baueran.frep.shared
+import org.multics.baueran.frep.shared.sec_frontend.OpenFileModal.selected_file_id
 import shared._
 import shared.Defs.serverUrl
 import shared.sec_frontend.NewFileModal.currFIle
@@ -68,7 +69,9 @@ object Case {
           descr = Some(shared.Caze(descr.get.id, descr.get.header, descr.get.member_id, (new js.Date()).toISOString(), descr.get.description, cRubrics.toList))
 
           HttpRequest(serverUrl() + "/updatecase")
-            .post(PlainTextBody(Caze.encoder(descr.get).toString()))
+            .post(MultiPartBody(
+              "case" -> PlainTextBody(Caze.encoder(descr.get).toString()),
+              "memberId" -> PlainTextBody(memberId.toString())))
         }
       }
 

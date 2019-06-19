@@ -55,19 +55,22 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
     }
   }
 
-  /*
+ /**
    * Updates case on disk, if it already exists, otherwise, does nothing.
    */
 
   def updateCaze() = Action { request: Request[AnyContent] =>
-    io.circe.parser.parse(request.body.asText.get) match {
-      case Right(json) =>
-        val cursor = json.hcursor
-        cursor.as[Caze] match {
-          case Right(c) => cazeDao.replaceIfExists(c); Ok
-          case _ => BadRequest("Decoding of caze failed. Json wrong?")
+    val requestData = request.body.asMultipartFormData.get.dataParts
+
+    (requestData("case"), requestData("memberId")) match {
+      case (Seq(cazeJson), Seq(memberIdStr)) =>
+        Caze.decode(cazeJson.toString) match {
+          case Some(c) =>
+            cazeDao.replaceIfExists(c, memberIdStr.toInt)
+            Ok
+          case None => BadRequest("Decoding of caze failed. Json wrong?")
         }
-      case Left(err) => BadRequest("updateCaze() failed. No data received.")
+      case _ => BadRequest("updateCaze() failed. No data received")
     }
   }
 
@@ -91,8 +94,14 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
 
   def saveFile() = Action { request: Request[AnyContent] =>
     FIle.decode(request.body.asText.get) match {
-      case Some(file) => fileDao.insert(file); println(request.body.asText.get); Ok
-      case None => BadRequest("Saving of file failed. Json wrong? " + request.body.asText.get)
+      case Some(file) => {
+        fileDao.insert(file) match {
+          case Right(_) => Ok
+          case Left(err) => BadRequest(err)
+        }
+      }
+      case None =>
+        BadRequest("Saving of file failed. Json wrong? " + request.body.asText.get)
     }
   }
 
