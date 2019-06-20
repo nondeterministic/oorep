@@ -71,8 +71,10 @@ object Case {
         descr = Some(shared.Caze(descr.get.id, descr.get.header, descr.get.member_id, descr.get.date, descr.get.description, cRubrics.toList))
 
         // If user is logged in, attempt to update case in DB (if it exists; see comment in Post.scala),
-        // and if previous case != current case...
-        if (memberId >= 0 && prevCase != None && prevCase.get != descr.get) {
+        // and if previous case != current case.
+        // And, it only makes sense to update, if there are any rubrics left, e.g., which may not be the
+        // case after pressing "Remove" a few times...
+        if (memberId >= 0 && prevCase != None && prevCase.get != descr.get && cRubrics.size > 0) {
           // Before we write the case to disk, we update the date to record the change.
           // We do not do this above, as the prevCase != descr check would always fail then!
           descr = Some(shared.Caze(descr.get.id, descr.get.header, descr.get.member_id, (new js.Date()).toISOString(), descr.get.description, cRubrics.toList))
@@ -84,8 +86,16 @@ object Case {
         }
       }
 
-      if (cRubrics.size == 0)
+      // Delete not only view but entire case from DB, when user removed all of its rubrics...
+      if (cRubrics.size == 0) {
+        if (descr != None && descr.get.id != 0)
+          HttpRequest(serverUrl() + "/delcase")
+            .post(MultiPartBody(
+              "caseId" -> PlainTextBody(descr.get.id.toString()),
+              "memberId" -> PlainTextBody(memberId.toString())))
+
         descr = None
+      }
     }
 
     // Update data structures first
