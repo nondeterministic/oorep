@@ -36,7 +36,6 @@ package object controllers {
   def getFrom(cookies: List[Cookie], attribute: String) = {
     val resultCookies = cookies.filter(_.name == attribute)
     if (resultCookies.length > 0) {
-      println("INFO: getFrom(Cookies): " + resultCookies.head.value)
       Some(resultCookies.head.value)
     }
     else
