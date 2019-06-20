@@ -55,6 +55,8 @@ object AddToFileModal extends FileModal {
                         .onComplete({
                           case response: Success[SimpleHttpResponse] => {
                             println("Received: " + response.get.body)
+                            Case.updateCaseId(response.get.body.toInt)
+                            Case.updateCaseViewAndDataStructures()
                             js.eval("$('#addToFileModal').modal('hide');")
                           }
                           case response: Failure[SimpleHttpResponse] => {

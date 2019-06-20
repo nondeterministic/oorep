@@ -44,6 +44,15 @@ object Case {
   }
 
   // ------------------------------------------------------------------------------------------------------------------
+  // Called from the outside.  Typically, an updateCaseViewAndDatastructures() follows such a call.
+  def updateCaseId(caseId: Int) = {
+    if (descr != None)
+      descr = Some(shared.Caze(caseId, descr.get.header, descr.get.member_id, descr.get.date, descr.get.description, cRubrics.toList))
+    else
+      println(s"Case: updateCaseId with ID ${caseId} failed.")
+  }
+
+  // ------------------------------------------------------------------------------------------------------------------
   def updateCaseViewAndDataStructures() = {
     def updateAllCaseDataStructures() = {
       val memberId = getCookieData(dom.document.cookie, "oorep_member_id") match {
@@ -133,11 +142,14 @@ object Case {
             $("#closeCaseButton").hide()
             $("#addToFileButton").attr("disabled", true)
           // Case exists...
-          case Some(_) =>
+          case Some(currCase) =>
             $("#openNewCaseButton").hide()
             $("#editDescrButton").show()
             $("#closeCaseButton").show()
-            $("#addToFileButton").removeAttr("disabled")
+
+            // Id is != 0, if the case has been already added to DB.  We disallow readding.
+            if (currCase.id == 0)
+              $("#addToFileButton").removeAttr("disabled")
         }
     }
   }
