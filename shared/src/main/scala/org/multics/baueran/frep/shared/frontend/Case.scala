@@ -150,6 +150,8 @@ object Case {
             // Id is != 0, if the case has been already added to DB.  We disallow readding.
             if (currCase.id == 0)
               $("#addToFileButton").removeAttr("disabled")
+            else
+              $("#addToFileButton").attr("disabled", true)
         }
     }
   }
