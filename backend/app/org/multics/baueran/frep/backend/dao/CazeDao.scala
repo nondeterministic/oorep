@@ -52,7 +52,7 @@ class CazeDao(dbContext: db.db.DBContext) {
       }
       else {
         Logger.debug("CazeDao: replace(): NOT replacing " + c.toString())
-        Right(c.id.toInt)
+        Right(existingCases.head.id)
       }
     }
     else if (existingCases.length == 0) {

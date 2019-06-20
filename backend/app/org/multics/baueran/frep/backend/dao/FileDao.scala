@@ -87,6 +87,10 @@ class FileDao(dbContext: db.db.DBContext) {
     }
   }
 
+  /**
+    * @return Case-ID as stored in the database for the (new) caze.
+    */
+
   def addCaseToFile(caze: Caze, fileheader: String) = {
     val cazeDao = new CazeDao(dbContext)
 
@@ -121,8 +125,12 @@ class FileDao(dbContext: db.db.DBContext) {
               .filter(f => f.member_id == lift(caze.member_id) && f.header == lift(fileheader))
               .update(_.case_ids -> lift((dbCaze.id :: tmp_case_ids).distinct))
           })
+
+          Right(newId)
         case Left(err) =>
-          Logger.error("FileDao: addCaseToFile() failed: " + err)
+          val errorMsg = "FileDao: addCaseToFile() failed: " + err
+          Logger.error(errorMsg)
+          Left(errorMsg)
       }
     }
   }

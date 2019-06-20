@@ -38,6 +38,11 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
       }
   }
 
+  /**
+    * @return Ok(case ID) of stored case as it is in the DB (and not that 0 stuff, a newly created case gets!),
+    *         or BadRequest(error string) if something went wrong.
+    */
+
   def saveCaze() = Action { request: Request[AnyContent] =>
     val requestData = request.body.asMultipartFormData.get.dataParts
     (requestData("fileheader"), requestData("case").toList) match {
@@ -45,8 +50,10 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
       case (Seq(fileheader), cazeJson::Nil) => {
         Caze.decode(cazeJson.toString) match {
           case Some(caze) => {
-            fileDao.addCaseToFile(caze, fileheader)
-            Ok
+            fileDao.addCaseToFile(caze, fileheader) match {
+              case Right(newId) => Ok(s"${newId}")
+              case Left(err) => BadRequest("saveCaze(): ERROR: " + err)
+            }
           }
           case None => BadRequest("Decoding of caze failed. Json wrong?")
         }
