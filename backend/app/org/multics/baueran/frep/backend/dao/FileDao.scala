@@ -127,14 +127,40 @@ class FileDao(dbContext: db.db.DBContext) {
     }
   }
 
-  def removeCaseFromFile(memberId: Int, fileName: String, caseId: Int) = run {
-    quote {
-      tableFile
-        .filter(file => file.member_id == lift(memberId) && file.header == lift(fileName))
-        .update(ff => {
-          val caseIds = lift(ff.case_ids.filter(_ != caseId))
-          ff.case_ids -> lift(caseIds)
-        })
+  // removeCaseFromFile() is somewhat odd.  The intended code was like this:
+  //
+  //  def removeCaseFromFile(memberId: Int, fileName: String, caseId: Int) = run {
+  //    quote {
+  //      tableFile
+  //        .filter(file => file.member_id == lift(memberId) && file.header == lift(fileName))
+  //        .update(ff => {
+  //          val caseIds = lift(ff.case_ids.filter(_ != caseId))
+  //          ff.case_ids -> lift(caseIds)
+  //        })
+  //    }
+  //  }
+  //
+  // but I couldn't get it either through the parser or had runtime errors, cf.:
+  //
+  // https://stackoverflow.com/questions/56672799/cant-parse-scala-quill-expression-to-ast
+
+  /**
+    * According to Java docs, the returning result set here is a Long, n, that indicates
+    * which row the cursor is at in the DB after the operation.  (Pretty useless, if you ask me.)
+    */
+
+  def removeCaseFromFile(memberId: Int, fileName: String, caseId: Int) = {
+    run {
+      quote {
+        tableFile
+          .filter(file => file.member_id == lift(memberId) && file.header == lift(fileName))
+      }
+    } match {
+      case f::Nil => {
+        val newCaseIds = f.case_ids.filter(_ != caseId)
+        Right(run(quote(tableFile.update(_.case_ids -> lift(newCaseIds)))).toInt)
+      }
+      case _ => Left(s"FileDao: removeCaseFromFile failed for memberId ${memberId}, fileName ${fileName}, caseId ${caseId}")
     }
   }
 

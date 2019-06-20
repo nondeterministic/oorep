@@ -84,7 +84,7 @@ class CazeDao(dbContext: db.db.DBContext) {
     val fileDao = new FileDao(dbContext)
 
     val files = fileDao.getFilesForMember(member_id)
-    val correspondingFiles = files.filter(_.cazes.contains(id))
+    val correspondingFiles = files.filter(_.cazes.filter(_.id == id).size > 0)
 
     transaction {
       // Delete cases from file(s)
