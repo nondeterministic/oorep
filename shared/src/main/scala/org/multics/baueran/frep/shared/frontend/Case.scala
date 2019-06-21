@@ -4,7 +4,6 @@ import org.scalajs.dom
 import dom.Event
 import fr.hmil.roshttp.HttpRequest
 import fr.hmil.roshttp.body.{MultiPartBody, PlainTextBody}
-import fr.hmil.roshttp.response.SimpleHttpResponse
 import monix.execution.Scheduler.Implicits.global
 import scalatags.JsDom.all._
 
@@ -14,18 +13,14 @@ import rx.Var
 import rx.Ctx.Owner.Unsafe._
 import scalatags.rx.all._
 import org.multics.baueran.frep.shared
-import org.multics.baueran.frep.shared.sec_frontend.OpenFileModal.selected_file_id
 import shared._
 import shared.Defs.serverUrl
-import shared.sec_frontend.NewFileModal.currFIle
 import shared.frontend.RemedyFormat.RemedyFormat
 import shared.sec_frontend.FileModalCallbacks._
 import org.scalajs.dom.raw.HTMLInputElement
 import org.querki.jquery.$
 import org.scalajs.dom
 import scalatags.JsDom
-
-import scala.util.{Failure, Success}
 
 object Case {
 
@@ -46,8 +41,10 @@ object Case {
   // ------------------------------------------------------------------------------------------------------------------
   // Called from the outside.  Typically, an updateCaseViewAndDatastructures() follows such a call.
   def updateCaseId(caseId: Int) = {
-    if (descr != None)
+    if (descr != None) {
       descr = Some(shared.Caze(caseId, descr.get.header, descr.get.member_id, descr.get.date, descr.get.description, cRubrics.toList))
+      dom.document.getElementById("caseDescrId").asInstanceOf[HTMLInputElement].setAttribute("readonly", "readonly")
+    }
     else
       println(s"Case: updateCaseId with ID ${caseId} failed.")
   }
@@ -94,6 +91,7 @@ object Case {
               "caseId" -> PlainTextBody(descr.get.id.toString()),
               "memberId" -> PlainTextBody(memberId.toString())))
 
+        dom.document.getElementById("caseDescrId").asInstanceOf[HTMLInputElement].removeAttribute("readonly")
         descr = None
       }
     }
