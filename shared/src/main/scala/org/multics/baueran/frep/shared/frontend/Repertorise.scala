@@ -82,7 +82,7 @@ object Repertorise {
       tr(
         td(result.rubric.fullPath, style:="min-width:400px;"),
         td(remedies.take(remedies.size - 1).map(l => span(l, ", ")) ::: List(remedies.last)),
-        td(
+        td(cls := "text-right", 
           button(cls:="btn btn-sm", `type`:="button", id:=("button_" + result.repertoryAbbrev + "_" + result.rubric.id),
             style:="vertical-align: middle; display: inline-block",
             (if (Case.cRubrics.contains(result)) attr("disabled"):="disabled" else ""),
