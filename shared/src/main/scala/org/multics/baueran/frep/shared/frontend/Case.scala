@@ -252,7 +252,14 @@ object Case {
                         case None => -1 // TODO: Force user to relogin; the identification cookie has disappeared!!!!!!!!!!
                       }
 
-                      descr = Some(shared.Caze(0, caseIdTxt, memberId, (new js.Date()).toISOString(), caseDescrTxt, cRubrics))
+                      descr = Some(shared.Caze(
+                        (if (descr.isDefined) descr.get.id else  0),
+                        caseIdTxt,
+                        memberId,
+                        (new js.Date()).toISOString(),
+                        caseDescrTxt,
+                        cRubrics))
+
                       dom.document.getElementById("caseHeader").textContent = s"Case '${descr.get.header}':"
                       $("#openNewCaseButton").hide()
                       $("#editDescrButton").show()
