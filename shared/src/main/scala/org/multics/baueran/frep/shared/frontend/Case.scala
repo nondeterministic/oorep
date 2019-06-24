@@ -9,7 +9,7 @@ import scalatags.JsDom.all._
 
 import scalajs.js
 import scala.collection.mutable
-import rx.Var
+import rx.{ Var, Rx }
 import rx.Ctx.Owner.Unsafe._
 import scalatags.rx.all._
 import org.multics.baueran.frep.shared
@@ -25,7 +25,7 @@ import scalatags.JsDom
 object Case {
 
   var descr: Option[shared.Caze] = None
-  var cRubrics = mutable.ArrayBuffer[CaseRubric]()
+  var cRubrics: List[CaseRubric] = List()
   var remedyScores = mutable.HashMap[String,Integer]()
   private var prevCase: Option[shared.Caze] = None
 
@@ -35,14 +35,14 @@ object Case {
   // ------------------------------------------------------------------------------------------------------------------
   def addRepertoryLookup(r: CaseRubric) = {
     if (cRubrics.filter(cr => cr.rubric.id == r.rubric.id && cr.repertoryAbbrev == r.repertoryAbbrev).length == 0)
-      cRubrics += r
+      cRubrics = r :: cRubrics
   }
 
   // ------------------------------------------------------------------------------------------------------------------
   // Called from the outside.  Typically, an updateCaseViewAndDatastructures() follows such a call.
   def updateCaseId(caseId: Int) = {
     if (descr != None) {
-      descr = Some(shared.Caze(caseId, descr.get.header, descr.get.member_id, descr.get.date, descr.get.description, cRubrics.toList))
+      descr = Some(shared.Caze(caseId, descr.get.header, descr.get.member_id, descr.get.date, descr.get.description, cRubrics))
       dom.document.getElementById("caseDescrId").asInstanceOf[HTMLInputElement].setAttribute("readonly", "readonly")
     }
     else
@@ -64,23 +64,27 @@ object Case {
         }}
       })
 
-      if (descr != None) {
-        descr = Some(shared.Caze(descr.get.id, descr.get.header, descr.get.member_id, descr.get.date, descr.get.description, cRubrics.toList))
+      if (descr.isDefined) {
+        descr = Some(shared.Caze(descr.get.id, descr.get.header, descr.get.member_id, descr.get.date, descr.get.description, cRubrics))
 
         // If user is logged in, attempt to update case in DB (if it exists; see comment in Post.scala),
         // and if previous case != current case.
         // And, it only makes sense to update, if there are any rubrics left, e.g., which may not be the
         // case after pressing "Remove" a few times...
-        if (memberId >= 0 && prevCase != None && prevCase.get != descr.get && cRubrics.size > 0) {
+        if ((memberId >= 0) && prevCase.isDefined && (prevCase.get != descr.get) && (cRubrics.size > 0)) {
           // Before we write the case to disk, we update the date to record the change.
           // We do not do this above, as the prevCase != descr check would always fail then!
-          descr = Some(shared.Caze(descr.get.id, descr.get.header, descr.get.member_id, (new js.Date()).toISOString(), descr.get.description, cRubrics.toList))
+          descr = Some(shared.Caze(descr.get.id, descr.get.header, descr.get.member_id, (new js.Date()).toISOString(), descr.get.description, cRubrics))
 
           HttpRequest(serverUrl() + "/updatecase")
             .post(MultiPartBody(
               "case" -> PlainTextBody(Caze.encoder(descr.get).toString()),
               "memberId" -> PlainTextBody(memberId.toString())))
+
+          println("Case: updateCaseViewAndDataStructures: Updated case in DB.")
         }
+        else
+          println("Case: updateCaseViewAndDataStructures: NOT updating case in DB as unchanged.")
       }
 
       // Delete not only view but entire case from DB, when user removed all of its rubrics...
@@ -99,8 +103,13 @@ object Case {
     // Update data structures first
     updateAllCaseDataStructures()
 
-    // Now, put previous case to current case
-    prevCase = descr
+    // Now, put previous case to current case; a bit more verbose in order to avoid that prevCase.eq(descr) holds
+    // as would be the case with prevCase = descr from what I've tried...
+    // Update: this is due to the var in CaseRubric data structure. F*CK!
+    if (descr.isDefined)
+      prevCase = Some(descr.get.copy(results = cRubrics.map(_.copy())))
+    else
+      prevCase = None
 
     // Redraw table header
     $("#analysisTHead").empty()
@@ -156,10 +165,14 @@ object Case {
             $("#closeCaseButton").show()
 
             // Id is != 0, if the case has been already added to DB.  We disallow readding.
-            if (currCase.id == 0)
+            if (currCase.id == 0) {
               $("#addToFileButton").removeAttr("disabled")
-            else
+              dom.document.getElementById("caseDescrId").asInstanceOf[HTMLInputElement].removeAttribute("readonly")
+            }
+            else {
               $("#addToFileButton").attr("disabled", true)
+              dom.document.getElementById("caseDescrId").asInstanceOf[HTMLInputElement].setAttribute("readonly", "readonly")
+            }
         }
     }
   }
@@ -239,7 +252,7 @@ object Case {
                         case None => -1 // TODO: Force user to relogin; the identification cookie has disappeared!!!!!!!!!!
                       }
 
-                      descr = Some(shared.Caze(0, caseIdTxt, memberId, (new js.Date()).toISOString(), caseDescrTxt, cRubrics.toList))
+                      descr = Some(shared.Caze(0, caseIdTxt, memberId, (new js.Date()).toISOString(), caseDescrTxt, cRubrics))
                       dom.document.getElementById("caseHeader").textContent = s"Case '${descr.get.header}':"
                       $("#openNewCaseButton").hide()
                       $("#editDescrButton").show()
@@ -272,17 +285,19 @@ object Case {
           crub.getFormattedRemedies()
 
       // The weight label on the drop-down button, which needs to change automatically on new user choice
-      val weight = Var(crub.rubricWeight.toString())
+      // val weight = Var(crub.rubricWeight.toString())
+      val weight = Var(crub.rubricWeight)
+      val printWeight = Rx { weight().toString() }
 
       tr(scalatags.JsDom.attrs.id := "crub_" + crub.rubric.id + crub.repertoryAbbrev,
         td(
-          button(`type` := "button", cls := "btn dropdown-toggle btn-sm", style := "width: 45px;", data.toggle := "dropdown", weight),
+          button(`type` := "button", cls := "btn dropdown-toggle btn-sm", style := "width: 45px;", data.toggle := "dropdown", printWeight),
           div(cls := "dropdown-menu",
-            a(cls := "dropdown-item", href := "#caseSectionOfPage", onclick := { (event: Event) => crub.rubricWeight = 0; weight() = "0" }, "0 (ignore)"),
-            a(cls := "dropdown-item", href := "#caseSectionOfPage", onclick := { (event: Event) => crub.rubricWeight = 1; weight() = "1" }, "1 (normal)"),
-            a(cls := "dropdown-item", href := "#caseSectionOfPage", onclick := { (event: Event) => crub.rubricWeight = 2; weight() = "2" }, "2 (important)"),
-            a(cls := "dropdown-item", href := "#caseSectionOfPage", onclick := { (event: Event) => crub.rubricWeight = 3; weight() = "3" }, "3 (very important)"),
-            a(cls := "dropdown-item", href := "#caseSectionOfPage", onclick := { (event: Event) => crub.rubricWeight = 4; weight() = "4" }, "4 (essential)")
+            a(cls := "dropdown-item", href := "#caseSectionOfPage", onclick := { (event: Event) => crub.rubricWeight = 0; weight() = 0; updateCaseViewAndDataStructures() }, "0 (ignore)"),
+            a(cls := "dropdown-item", href := "#caseSectionOfPage", onclick := { (event: Event) => crub.rubricWeight = 1; weight() = 1; updateCaseViewAndDataStructures() }, "1 (normal)"),
+            a(cls := "dropdown-item", href := "#caseSectionOfPage", onclick := { (event: Event) => crub.rubricWeight = 2; weight() = 2; updateCaseViewAndDataStructures() }, "2 (important)"),
+            a(cls := "dropdown-item", href := "#caseSectionOfPage", onclick := { (event: Event) => crub.rubricWeight = 3; weight() = 3; updateCaseViewAndDataStructures() }, "3 (very important)"),
+            a(cls := "dropdown-item", href := "#caseSectionOfPage", onclick := { (event: Event) => crub.rubricWeight = 4; weight() = 4; updateCaseViewAndDataStructures() }, "4 (essential)")
           )
         ),
         td(crub.repertoryAbbrev),
@@ -295,7 +310,7 @@ object Case {
             onclick := { (event: Event) => {
               event.stopPropagation()
               crub.rubricWeight = 1
-              cRubrics.remove(cRubrics.indexOf(crub))
+              cRubrics = cRubrics.filter(_ != crub) // cRubrics.remove(cRubrics.indexOf(crub))
               $("#crub_" + crub.rubric.id + crub.repertoryAbbrev).remove()
 
               // Enable add-button in results, if removed symptom was in the displayed results list...
@@ -341,7 +356,7 @@ object Case {
               // Enable add-button in results, if removed symptom was in the displayed results list...
               $("#button_" + crub.repertoryAbbrev + "_" + crub.rubric.id).removeAttr("disabled")
             }
-            cRubrics = new mutable.ArrayBuffer[CaseRubric]()
+            cRubrics = List()
             $("#caseDiv").empty()
           }
           }, "Close case")
