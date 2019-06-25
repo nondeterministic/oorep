@@ -29,6 +29,11 @@ object Case {
   var remedyScores = mutable.HashMap[String,Integer]()
   private var prevCase: Option[shared.Caze] = None
 
+  // This is not really necessary for proper functioning, but when deleting a case/file which is currently shown,
+  // the user could, by pressing add or remove again, mess up the database as we're trying to write to a file/case,
+  // or try to delete it, that no longer exists.
+  private var currOpenFileHeader: Option[String] = None
+
   // ------------------------------------------------------------------------------------------------------------------
   def size() = cRubrics.size
 
@@ -39,14 +44,28 @@ object Case {
   }
 
   // ------------------------------------------------------------------------------------------------------------------
+  def updateCurrOpenFile(fileHeader: Option[String]) = {
+    currOpenFileHeader = fileHeader
+  }
+
+  // ------------------------------------------------------------------------------------------------------------------
+  def getCurrOpenFileHeader() = {
+    currOpenFileHeader
+  }
+
+  // ------------------------------------------------------------------------------------------------------------------
   // Called from the outside.  Typically, an updateCaseViewAndDatastructures() follows such a call.
-  def updateCaseId(caseId: Int) = {
+  def updateCurrOpenCaseId(caseId: Int) = {
     if (descr != None) {
       descr = Some(shared.Caze(caseId, descr.get.header, descr.get.member_id, descr.get.date, descr.get.description, cRubrics))
       dom.document.getElementById("caseDescrId").asInstanceOf[HTMLInputElement].setAttribute("readonly", "readonly")
     }
     else
       println(s"Case: updateCaseId with ID ${caseId} failed.")
+  }
+
+  def rmCaseDiv() = {
+    $("#caseDiv").empty()
   }
 
   // ------------------------------------------------------------------------------------------------------------------
@@ -325,7 +344,7 @@ object Case {
 
               // If this was last case-rubric, clear case div
               if (cRubrics.size == 0)
-                $("#caseDiv").empty()
+                rmCaseDiv()
 
               updateCaseViewAndDataStructures()
             }
@@ -371,7 +390,7 @@ object Case {
             }
             cRubrics = List()
             descr = None
-            $("#caseDiv").empty()
+            rmCaseDiv()
           }
           }, "Close case")
       val addToFileButton =

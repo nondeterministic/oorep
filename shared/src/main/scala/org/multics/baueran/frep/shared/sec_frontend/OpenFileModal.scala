@@ -4,7 +4,7 @@ import fr.hmil.roshttp.HttpRequest
 import fr.hmil.roshttp.body.{MultiPartBody, PlainTextBody}
 import monix.execution.Scheduler.Implicits.global
 import org.multics.baueran.frep.shared.Defs.serverUrl
-import org.multics.baueran.frep.shared.frontend.getCookieData
+import org.multics.baueran.frep.shared.frontend.{ getCookieData, Case }
 import org.scalajs.dom
 import org.scalajs.dom.Event
 import scalatags.JsDom.all._
@@ -17,7 +17,7 @@ object OpenFileModal extends FileModal {
 
   private def requestFileDeletion() = {
     getCookieData(dom.document.cookie, "oorep_member_id") match {
-      case Some(memberId) =>
+      case Some(memberId) => {
         HttpRequest(serverUrl() + "/delfile")
           .post(MultiPartBody(
             "fileheader" -> PlainTextBody(selected_file_id.now),
@@ -25,6 +25,19 @@ object OpenFileModal extends FileModal {
           .onComplete({ case _ =>
             FileModalCallbacks.updateMemberFiles(memberId.toInt)
           })
+
+        // If the file had currently a cose opened in the case view,
+        // remove it from screen to avoid weird database behaviour,
+        // in case the user then modifies the case...
+        Case.getCurrOpenFileHeader() match {
+          case Some(fh) =>
+            if (fh == selected_file_id.now) {
+              Case.updateCurrOpenFile(None)
+              Case.rmCaseDiv()
+            }
+          case _ => ;
+        }
+      }
       case None => ; // TODO: Display error modal?!
     }
   }
@@ -70,6 +83,7 @@ object OpenFileModal extends FileModal {
                 data.toggle:="modal", data.dismiss:="modal", data.target:="#editFileModal",
                 onclick:={(event: Event) =>
                   EditFileModal.fileName() = selected_file_id.now
+                  Case.updateCurrOpenFile(Some(selected_file_id.now))
                   EditFileModal.fileName.recalc()
                 },
                 "Open"

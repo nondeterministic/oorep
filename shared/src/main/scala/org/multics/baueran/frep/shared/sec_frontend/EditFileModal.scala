@@ -113,6 +113,15 @@ object EditFileModal {
                   .post(MultiPartBody(
                     "caseId"     -> PlainTextBody(currentlySelectedCaseId.now.toString()),
                     "memberId"   -> PlainTextBody(currentlyActiveMemberId.toString())))
+
+                // If the deleted case is currently opened, update current view by basically removing that case.
+                if (Case.descr.isDefined && (Case.descr.get.id == currentlySelectedCaseId.now) && (Case.descr.get.member_id == currentlyActiveMemberId)) {
+                  Case.descr = None
+                  Case.updateCaseViewAndDataStructures()
+                  Case.rmCaseDiv()
+                }
+                else
+                  println("EditFileModal: deleted case was not currently opened. Nothing to be done.")
               },
               "Delete")
           )
