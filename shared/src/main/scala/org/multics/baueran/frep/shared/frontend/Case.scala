@@ -353,7 +353,13 @@ object Case {
           }
           }, "Edit case description")
       val openNewCaseButton =
-        button(cls:="btn btn-sm btn-dark", id:="openNewCaseButton", `type`:="button", data.toggle:="modal", data.target:="#caseDescriptionModal", style:="margin-left:5px; margin-bottom: 5px;", "Open new case")
+        button(cls:="btn btn-sm btn-dark", id:="openNewCaseButton", `type`:="button", data.toggle:="modal", data.target:="#caseDescriptionModal", style:="margin-left:5px; margin-bottom: 5px;",
+          onclick := { (event: Event) => {
+            dom.document.getElementById("caseDescrId").asInstanceOf[HTMLInputElement].removeAttribute("readonly")
+            $("#caseDescrId").`val`("")
+            $("#caseDescrDescr").`val`("")
+          }},
+          "Open new case")
       val closeCaseButton =
         button(cls:="btn btn-sm btn-dark", id:="closeCaseButton", `type`:="button", style:="display: none; margin-left:5px; margin-bottom: 5px;",
           onclick := { (event: Event) => {
@@ -364,6 +370,7 @@ object Case {
               $("#button_" + crub.repertoryAbbrev + "_" + crub.rubric.id).removeAttr("disabled")
             }
             cRubrics = List()
+            descr = None
             $("#caseDiv").empty()
           }
           }, "Close case")

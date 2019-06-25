@@ -88,8 +88,8 @@ object Repertorise {
             (if (Case.cRubrics.contains(result)) attr("disabled"):="disabled" else ""),
             onclick:={ (event: Event) => {
               event.stopPropagation()
-              Case.updateCaseViewAndDataStructures()
               Case.addRepertoryLookup(result)
+              Case.updateCaseViewAndDataStructures()
               $("#button_" + result.repertoryAbbrev + "_" + result.rubric.id).attr("disabled", 1)
               showCase()
             }

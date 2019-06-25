@@ -166,7 +166,12 @@ class FileDao(dbContext: db.db.DBContext) {
     } match {
       case f::Nil => {
         val newCaseIds = f.case_ids.filter(_ != caseId)
-        Right(run(quote(tableFile.update(_.case_ids -> lift(newCaseIds)))).toInt)
+        Right(
+          run(quote(
+            tableFile
+              .filter(file => file.id == lift(f.id) && file.member_id == lift(f.member_id))
+              .update(_.case_ids -> lift(newCaseIds)))).toInt
+        )
       }
       case _ => Left(s"FileDao: removeCaseFromFile failed for memberId ${memberId}, fileName ${fileName}, caseId ${caseId}")
     }
