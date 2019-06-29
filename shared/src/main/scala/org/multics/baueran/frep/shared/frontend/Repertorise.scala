@@ -249,37 +249,38 @@ object Repertorise {
 
     def updateAvailableRepertories() = {
       HttpRequest(serverUrl() + "/availableReps")
-        .send().onComplete({
-        case response: Success[SimpleHttpResponse] => {
-          parse(response.get.body) match {
-            case Right(json) => {
-              val cursor = json.hcursor
-              cursor.as[List[Info]] match {
-                case Right(infos) => {
-                  infos.foreach(info => {
-                    $("#repSelectionDropDown")
-                      .append(a(cls:="dropdown-item", href:="#", data.value:=info.abbrev,
-                        onclick := { (event: Event) =>
-                          selectedRepertory = info.abbrev
-                          $("#repSelectionDropDownButton").text("Repertory: " + selectedRepertory)
-                        }, info.abbrev).render)
+        .send()
+        .onComplete({
+          case response: Success[SimpleHttpResponse] => {
+            parse(response.get.body) match {
+              case Right(json) => {
+                val cursor = json.hcursor
+                cursor.as[List[Info]] match {
+                  case Right(infos) => {
+                    infos.foreach(info => {
+                      $("#repSelectionDropDown")
+                        .append(a(cls:="dropdown-item", href:="#", data.value:=info.abbrev,
+                          onclick := { (event: Event) =>
+                            selectedRepertory = info.abbrev
+                            $("#repSelectionDropDownButton").text("Repertory: " + selectedRepertory)
+                          }, info.abbrev).render)
 
-                    if (selectedRepertory.length > 0)
-                      $("#repSelectionDropDownButton").text("Repertory: " + selectedRepertory)
-                    else if (info.access == RepAccess.Default) {
-                      selectedRepertory = info.abbrev
-                      $("#repSelectionDropDownButton").text("Repertory: " + selectedRepertory)
-                    }
-                  })
+                      if (selectedRepertory.length > 0)
+                        $("#repSelectionDropDownButton").text("Repertory: " + selectedRepertory)
+                      else if (info.access == RepAccess.Default) {
+                        selectedRepertory = info.abbrev
+                        $("#repSelectionDropDownButton").text("Repertory: " + selectedRepertory)
+                      }
+                    })
+                  }
+                  case Left(t) => println("Parsing of available repertories failed: " + t)
                 }
-                case Left(t) => println("Parsing of available repertories failed: " + t)
               }
+              case Left(_) => println("Parsing of available repertories failed (is it JSON?).")
             }
-            case Left(_) => println("Parsing of available repertories failed (is it JSON?).")
           }
-        }
-        case error: Failure[SimpleHttpResponse] => println("Available repertories failed: " + error.toString)
-      })
+          case error: Failure[SimpleHttpResponse] => println("Available repertories failed: " + error.toString)
+        })
     }
 
     val myHTML =

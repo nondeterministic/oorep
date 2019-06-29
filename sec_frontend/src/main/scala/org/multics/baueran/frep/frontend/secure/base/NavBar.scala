@@ -69,7 +69,8 @@ object NavBar {
         ),
         div(cls:="ml-auto",
           ul(cls:="navbar-nav",
-            li(cls:="navbar-item", a(cls:="nav-link", href:="", onclick:={ () => println("pressed1") })("Settings"))
+            li(cls:="navbar-item", a(cls:="nav-link", href:="", onclick:={ () => println("pressed1") })("Settings")),
+            li(cls:="navbar-item", a(cls:="nav-link", href:="", onclick:={ () => println("pressed2") })("Log-out"))
           )
         )
       )
