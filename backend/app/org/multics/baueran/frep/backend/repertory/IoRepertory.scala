@@ -160,7 +160,7 @@ object Repertory {
 
     val info = loadInfo() match {
       case Some(i) => i
-      case None => println("No Info loaded!"); Info(abbrev, abbrev, "en", None, None, None, None, None, RepAccess.Private)
+      case None => println("No Info loaded!"); Info(abbrev, abbrev, "en", None, None, None, None, None, None, RepAccess.Private)
     }
 
     new Repertory(info, loadChapters(), loadRemedies(), loadChapterRemedies(), loadRubrics(), loadRubricRemedies())

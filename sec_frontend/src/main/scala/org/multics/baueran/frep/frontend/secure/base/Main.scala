@@ -14,7 +14,7 @@ import scalatags.JsDom.all._
 import scala.util.{Failure, Success}
 import org.multics.baueran.frep.shared._
 import frontend.{Case, Disclaimer, Repertorise}
-import sec_frontend.{AddToFileModal, EditFileModal, FileModalCallbacks, NewFileModal, OpenFileModal}
+import sec_frontend.{AddToFileModal, EditFileModal, FileModalCallbacks, NewFileModal, OpenFileModal, RepertoryModal}
 
 @JSExportTopLevel("MainSecure")
 object Main {
@@ -34,6 +34,7 @@ object Main {
           dom.document.body.appendChild(OpenFileModal().render)
           dom.document.body.appendChild(EditFileModal().render)
           dom.document.body.appendChild(NewFileModal().render)
+          dom.document.body.appendChild(RepertoryModal().render)
 
           dom.document.body.appendChild(Case.analysisModalDialogHTML().render)
           dom.document.body.appendChild(Case.editDescrModalDialogHTML().render)

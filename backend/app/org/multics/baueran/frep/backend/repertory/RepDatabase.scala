@@ -23,7 +23,7 @@ object RepDatabase {
     *
     * @param dbContext
     */
-  def setup(dbContext: DBContext) = {
+  def setup(dbContext: DBContext): Unit = {
     dao = new RepertoryDao(dbContext)
 
     def availableRepertoriesOnDisk(): List[Info] = {
@@ -34,10 +34,10 @@ object RepDatabase {
             val cursor = json.hcursor
             cursor.as[Info] match {
               case Right(content) => Some(content)
-              case Left(error) => Logger.error("ERROR: Info parsing of JSON failed: wrong data?" + error); None
+              case Left(error) => Logger.error("ERROR: RepDatabase: Info parsing of JSON failed: wrong data?" + error + ", " + json); None
             }
           }
-          case Left(error) => Logger.error("ERROR: Info parsing failed: no JSON-input? " + error); None
+          case Left(error) => Logger.error("ERROR: RepDatabase: Info parsing failed: no JSON-input? " + error + ", " + lines); None
         }
       }
 
@@ -46,7 +46,7 @@ object RepDatabase {
       var repInfos = mutable.Set[Info]()
 
       if (arrayOfFiles == null || arrayOfFiles.size == 0) {
-        Logger.error(s"ERROR: Loading of repertories failed. No files in ${localRepPath()}?")
+        Logger.error(s"ERROR: RepDatabase: Loading of repertories failed. No files in ${localRepPath()}?")
         return List.empty
       }
 
@@ -107,10 +107,10 @@ object RepDatabase {
     def loadAndPutRepertory(abbrev: String) = {
       if (availableRepertoriesAbbrevs.contains(abbrev)) {
         repertories.put(abbrev, Repertory.loadFrom(localRepPath(), abbrev))
-        Logger.debug(s"INFO: Server: repertory $abbrev loaded.")
+        Logger.debug(s"INFO: RepDatabase: Server: repertory $abbrev loaded.")
       }
       else
-        Logger.debug(s"ERROR: Failed to load repertory ${abbrev} as it is not available.")
+        Logger.debug(s"ERROR: RepDatabase: Failed to load repertory ${abbrev} as it is not available.")
     }
 
     if (availableRepertoriesAbbrevs.contains(abbrev) && !repertories.contains(abbrev))

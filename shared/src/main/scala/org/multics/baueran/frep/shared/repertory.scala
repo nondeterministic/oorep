@@ -17,8 +17,8 @@ import RepAccess._
 // ------------------------------------------------------------------------------------------------------------------
 case class Info(abbrev: String, title: String, languag: String,
                 authorLastName: Option[String], authorFirstName: Option[String],
-                yearr: Option[Int], publisher: Option[String], edition: Option[Int],
-                access: RepAccess)
+                yearr: Option[Int], publisher: Option[String], license: Option[String],
+                edition: Option[String], access: RepAccess)
 
 object Info {
   implicit val infoDecoder: Decoder[Info] = new Decoder[Info] {
@@ -42,7 +42,11 @@ object Info {
         case Right(publisher) => Some(publisher)
         case Left(_) => None
       }
-      val edition = c.downField("edition").as[Int] match {
+      val license = c.downField("license").as[String] match {
+        case Right(license) => Some(license)
+        case Left(_) => None
+      }
+      val edition = c.downField("edition").as[String] match {
         case Right(edition) => Some(edition)
         case Left(_) => None
       }
@@ -56,6 +60,7 @@ object Info {
         authorFirstName,
         yearr,
         publisher,
+        license,
         edition,
         access)
       Right(result)
@@ -83,8 +88,12 @@ object Info {
         case Some(publisher) => Json.fromString(publisher)
         case None => Json.Null
       }),
+      ("license", i.license match {
+        case Some(license) => Json.fromString(license)
+        case None => Json.Null
+      }),
       ("edition", i.edition match {
-        case Some(edition) => Json.fromInt(edition)
+        case Some(edition) => Json.fromString(edition)
         case None => Json.Null
       }),
       ("access", Json.fromString(i.access.toString))
