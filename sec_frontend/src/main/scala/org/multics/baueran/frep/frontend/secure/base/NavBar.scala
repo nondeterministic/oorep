@@ -33,7 +33,6 @@ object NavBar {
                       .appendChild(a(cls:="dropdown-item", href:="#", data.toggle:="modal",
                         onclick := { (e: Event) =>
                           RepertoryModal.info() = Some(info)
-                          println(RepertoryModal.info.now)
                         },
                         data.target:="#repertoryInfoModal")(info.abbrev).render)
                   })

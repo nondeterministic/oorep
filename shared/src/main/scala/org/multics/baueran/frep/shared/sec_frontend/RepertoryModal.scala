@@ -58,7 +58,7 @@ object RepertoryModal {
       div(cls:="modal-dialog modal-dialog-centered", role:="document", style:="min-width: 80%;",
         div(cls:="modal-content",
           div(cls:="modal-header",
-            h5(cls:="modal-title", s"Info for repertory ${abbrev}"),
+            h5(cls:="modal-title", s"Info for repertory ${abbrev.now}"), // TODO: No idea, why this doesn't work, but the below does! :-(
             button(`type`:="button", cls:="close", data.dismiss:="modal", "\u00d7")
           ),
           div(cls:="modal-body",
@@ -88,9 +88,6 @@ object RepertoryModal {
                 div(cls:="form-group",
                   label(`for`:="repLicenseInfoModal", "License"),
                   input(cls:="form-control", id:="repLicenseInfoModal", readonly:=true, placeholder:=license)
-                ),
-                div(
-                  button(data.dismiss:="modal", data.toggle:="modal", cls:="btn mb-2", "OK")
                 )
               )
             )

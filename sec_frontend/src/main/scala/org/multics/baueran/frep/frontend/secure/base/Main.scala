@@ -34,7 +34,6 @@ object Main {
           dom.document.body.appendChild(OpenFileModal().render)
           dom.document.body.appendChild(EditFileModal().render)
           dom.document.body.appendChild(NewFileModal().render)
-          dom.document.body.appendChild(RepertoryModal().render)
 
           dom.document.body.appendChild(Case.analysisModalDialogHTML().render)
           dom.document.body.appendChild(Case.editDescrModalDialogHTML().render)
@@ -43,6 +42,8 @@ object Main {
           $("#nav_bar").append(NavBar().render)
           $("#content").append(Repertorise().render)
           $("#content_bottom").append(Disclaimer.toHTML().render)
+
+          dom.document.body.appendChild(RepertoryModal().render)
 
           val memberId = response.get.body.toInt
           FileModalCallbacks.updateMemberFiles(memberId)
