@@ -20,9 +20,9 @@ import sec_frontend.{AddToFileModal, EditFileModal, FileModalCallbacks, NewFileM
 object Main {
 
   def main(args: Array[String]): Unit = {
-    $(dom.document.body).append(div(style:="width:100%;", id:="nav_bar").render)
-    $(dom.document.body).append(div(style:="width:100%;", id:="content").render)
-    $(dom.document.body).append(div(style:="width:100%;", id:="content_bottom").render)
+    dom.document.body.appendChild(div(style:="width:100%;", id:="nav_bar").render)
+    dom.document.body.appendChild(div(style:="width:100%;", id:="content").render)
+    dom.document.body.appendChild(div(style:="width:100%;", id:="content_bottom").render)
 
     // No access without valid cookies!
     HttpRequest(s"${serverUrl()}/authenticate")
