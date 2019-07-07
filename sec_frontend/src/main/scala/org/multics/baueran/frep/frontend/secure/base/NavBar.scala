@@ -72,17 +72,15 @@ object NavBar {
         ),
         div(cls:="ml-auto",
           ul(cls:="navbar-nav",
-            li(cls:="navbar-item", a(cls:="nav-link", href:="", onclick:={ () => println("pressed1") })("Settings")),
-            li(cls:="navbar-item", a(cls:="nav-link", href:="",
+            li(cls:="navbar-item", a(cls:="nav-link", href:="#", onclick:={ () => println("pressed1") })("Settings")),
+            li(cls:="navbar-item", a(cls:="nav-link", href:="#", target:="_self",
               onclick:={ (e: Event) =>
+                e.stopPropagation()
                 val cookieNames = List("oorep_member_email", "oorep_member_password", "oorep_member_id")
-                // e.stopImmediatePropagation()
-                println("Cookie 1: " + dom.document.cookie)
                 dom.document.cookie = "PLAY_SESSION=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT"
                 cookieNames.foreach(cookieName =>
                   dom.document.cookie = s"${cookieName}=; path=/; expires='Thu, 01 Jan 1970 00:00:01 GMT"
                 )
-                println("Cookie 2: " + dom.document.cookie)
                 dom.window.location.replace(serverUrl())
               })("Log-out"))
           )

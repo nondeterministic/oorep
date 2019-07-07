@@ -1,9 +1,9 @@
 package org.multics.baueran.frep.frontend.public.base
 
 import org.scalajs.dom
-import org.scalajs.dom.html
-import org.scalajs.dom.raw._
-import org.scalajs.dom.document
+import dom.html
+import dom.raw._
+import dom.document
 import scalatags.JsDom.all._
 
 import scala.scalajs.js.annotation.JSExportTopLevel

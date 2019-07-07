@@ -25,7 +25,7 @@ object Main {
     $(dom.document.body).append(div(style:="width:100%;", id:="content_bottom").render)
 
     // No access without valid cookies!
-    HttpRequest("http://localhost:9000/authenticate")
+    HttpRequest(s"${serverUrl()}/authenticate")
       .withCrossDomainCookies(true)
       .send()
       .onComplete({
@@ -48,7 +48,7 @@ object Main {
           FileModalCallbacks.updateMemberFiles(memberId)
         }
         case error: Failure[SimpleHttpResponse] => {
-          $("#content").append(p("Not authorized.").render)
+          $("#content").append(p(s"Not authorized. Go to ", a(href:=serverUrl(), "main page"), " instead!").render)
         }
       })
 
