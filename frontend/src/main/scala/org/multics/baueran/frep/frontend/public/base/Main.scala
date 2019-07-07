@@ -10,18 +10,20 @@ import scala.scalajs.js.annotation.JSExportTopLevel
 import scala.scalajs.js.annotation._
 import org.querki.jquery._
 import scalatags.JsDom.all._
-
 import org.multics.baueran.frep.shared.Defs._
-import org.multics.baueran.frep.shared.frontend.Repertorise
-import org.multics.baueran.frep.shared.frontend.Disclaimer
+import org.multics.baueran.frep.shared.frontend.{Case, Disclaimer, Repertorise}
+import org.multics.baueran.frep.shared.sec_frontend.RepertoryModal
 
 @JSExportTopLevel("Main")
 object Main {
 
   def main(args: Array[String]): Unit = {
-    $(dom.document.body).append(div(style:="width:100%;", id:="nav_bar").render)
-    $(dom.document.body).append(div(style:="width:100%;", id:="content").render)
-    $(dom.document.body).append(div(style:="width:100%;", id:="content_bottom").render)
+    dom.document.body.appendChild(div(style:="width:100%;", id:="nav_bar").render)
+    dom.document.body.appendChild(div(style:="width:100%;", id:="content").render)
+    dom.document.body.appendChild(div(style:="width:100%;", id:="content_bottom").render)
+
+    dom.document.body.appendChild(RepertoryModal().render)
+    dom.document.body.appendChild(Case.analysisModalDialogHTML().render)
 
     $("#nav_bar").empty()
     $("#nav_bar").append(NavBar.apply().render)
