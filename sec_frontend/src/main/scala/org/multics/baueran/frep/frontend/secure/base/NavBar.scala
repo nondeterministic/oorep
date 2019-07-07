@@ -6,13 +6,12 @@ import io.circe.parser.parse
 import org.multics.baueran.frep.shared.Defs.serverUrl
 import org.multics.baueran.frep.shared.Info
 import scalatags.JsDom.TypedTag
-import scalatags.JsDom.all.{id, input, li, _}
+import scalatags.JsDom.all.{id, li, _}
 import scalatags.JsDom.tags2.nav
 import monix.execution.Scheduler.Implicits.global
 import org.scalajs.dom
 import dom.Event
 import org.multics.baueran.frep.shared.sec_frontend.RepertoryModal
-import org.querki.jquery._
 
 import scala.scalajs
 import scala.scalajs.js
