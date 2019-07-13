@@ -288,7 +288,7 @@ object Repertorise {
       if (results.now.size == 0 && Case.size() == 0) {
         div(cls := "container-fluid",
           div(cls := "container-fluid text-center",
-            div(cls:="col-sm-12 text-center", img(src:="logo_small.png")),
+            div(cls:="col-sm-12 text-center", img(src:="img/logo_small.png")),
             div(cls := "row", style := "margin-top:20px;",
               div(cls := "col-sm-1"),
               div(cls := "row col-sm-10",

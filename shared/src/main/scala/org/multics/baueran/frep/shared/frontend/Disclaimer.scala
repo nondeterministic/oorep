@@ -16,13 +16,13 @@ object Disclaimer {
           span("Hinweis/Disclaimer")
         ),
         p("""
-            Diese Website richtet sich speziell an Studenten der Homöopathie bzw. professionelle Homöopathen und ist ausschließlich für Übungszwecke gedacht.
+            Diese Website richtet sich speziell an Studenten der Homöopathie bzw. professionelle Homöopathen, sowie Hobby-Homöopathen und ist ausschließlich für Übungszwecke gedacht.
             Sie ist nicht geeignet zur Selbstmedikation oder ersetzt den Besuch eines Arztes oder Apothekers.
             Die Wirksamkeit von Homöopathie ist wissenschaftlich nicht bewiesen.
             Der Autor dieser Website übernimmt keine Verantwortung für die Richtigkeit der Ergebnisse oder die Folgen, die aus einem unsachgemäßen Gebrauch resultieren.
           """),
         p("""
-            This web site is intended for students of homeopathy or professional homeopaths as a training tool only.
+            This web site is intended for students of homeopathy, professional and hobby homeopaths as a training tool only.
             It is not suitable for self-medication or can replace the visit of a medical doctor/GP.
             Scientifically, homeopathy was never reliably proven to work.
             The author of this web site does not take responsibility for the correctness of this sites' results or the consequences of misusing them.
