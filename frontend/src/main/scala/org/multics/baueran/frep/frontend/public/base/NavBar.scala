@@ -36,7 +36,7 @@ object NavBar {
             li(cls:="navbar-item",
               a(cls:="nav-link py-0", href:="faq.html", onclick:={ () => println("pressed4") })("FAQ")),
             li(cls:="navbar-item",
-              a(cls:="nav-link py-0", href:="contact.html", onclick:={ () => println("pressed5") })("Contact")),
+              a(cls:="nav-link py-0", href:="#content_bottom", onclick:={ () => goToAnchor("content_bottom") })("Contact")),
             li(cls:="navbar-item", style:="margin-right:5px; margin-left:10px;",
               a(cls:="py-0", href:="login.html", p(cls:="btn btn-sm btn-success my-auto", "Login"))),
             li(cls:="navbar-item",
