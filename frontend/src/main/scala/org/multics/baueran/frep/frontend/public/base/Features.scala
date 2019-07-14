@@ -17,7 +17,7 @@ object Features {
               ul(
                 li("Free and open: you can use this server for free or download the source code and run your own"),
                 li("Platform-independent: all you need is a web-browser"),
-                li("Access to common homeopathic repertories (Kent, Hering, etc.)"),
+                li("Access to common and well-known homeopathic repertories"),
                 li("Very easy to use: only the essential features - no distractions"),
                 li("Combination of different repertories possible"),
                 li("From a homeopathy enthusiast for homeopathy enthusiasts ;-)")

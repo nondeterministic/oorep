@@ -1,10 +1,13 @@
 package org.multics.baueran.frep.shared.frontend
 
+import org.querki.jquery.$
 import scalatags.JsDom.TypedTag
 import scalatags.JsDom.all.{li, _}
 import scalatags.JsDom.tags2.nav
+import org.multics.baueran.frep.shared.Defs._
 
 object Disclaimer {
+
   def toHTML() = {
     div(cls:="jumbotron jumbo-dark horizontal-center", id:="content_bottom", style:="position: relative;",
       a(href:="https://github.com/you",
@@ -30,13 +33,28 @@ object Disclaimer {
       ),
       br,
       div(
-        a(style:="color:white;", href:="#", "Impressum"),
+        a(style:="color:white;", href:=serverUrl(), "Home"),
+
         " | ",
-        a(style:="color:white;", href:="#", "Contact"),
+
+        a(style:="color:white;", href:="#", onclick:= { () =>
+          // TODO: Using JQuery here, because the below doesn't work. Not nice, I know!
+          $("#content").load(relHtmlPath() + "impressum.html")
+        }, "Impressum"),
+
         " | ",
-        a(style:="color:white;", href:="#", "Terms and conditions"),
+
+        a(style:="color:white;", href:="#", onclick:= { () =>
+          // TODO: See above!
+          $("#content").load(relHtmlPath() + "contact.html")
+        }, "Contact"),
+
         " | ",
-        a(style:="color:white;", href:="#", "Cookie policy"),
+
+        a(style:="color:white;", href:="#", onclick:= { () =>
+          // TODO: See above!
+          $("#content").load(relHtmlPath() + "cookies.html")
+        }, "Cookie policy"),
       )
     )
   }
