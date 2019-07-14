@@ -12,7 +12,7 @@ object Disclaimer {
       ),
       br,
       div(style:="font-size:12px; max-width:700px;",
-        h3(style:="text-align:center; margin-bottom: 10px",
+        h4(style:="text-align:center; margin-bottom: 10px",
           span("Hinweis/Disclaimer")
         ),
         p("""

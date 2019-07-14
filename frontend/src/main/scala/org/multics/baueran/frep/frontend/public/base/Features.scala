@@ -13,7 +13,7 @@ object Features {
             h3(style:="text-align:center; margin-bottom: 10px",
               span("Features")
             ),
-            div(style:="font-size:12px; max-width:700px;",
+            div(style:="max-width:700px;",
               ul(
                 li("Free and open: you can use this server for free or download the source code and run your own"),
                 li("Platform-independent: all you need is a web-browser"),

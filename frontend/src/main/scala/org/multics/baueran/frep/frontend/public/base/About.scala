@@ -16,7 +16,7 @@ object About {
             h3(style:="text-align:center; margin-bottom: 10px",
               span("About")
             ),
-            div(style:="font-size:12px; max-width:700px;",
+            div(style:="max-width:700px;",
               p("""
              OOREP is an open online repertory for homeopathy.  It is open, because its source code is freely available,
              it is online, because a running instance of it is served right here on this very server for your convenience.
