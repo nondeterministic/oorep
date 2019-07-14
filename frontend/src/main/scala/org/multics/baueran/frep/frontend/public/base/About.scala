@@ -10,13 +10,13 @@ object About {
       div(cls:="container",
         div(cls:="row",
           div(cls:="col",
-            img(style:="height:500px;float:left", src:="img/hahnemann_statue.png")
+            img(style:="height:500px", src:="img/hahnemann_statue.png")
           ),
           div(cls:="col align-self-center",
-            div(style:="font-size:11px; max-width:700px;",
-              h3(style:="text-align:center; margin-bottom: 10px",
-                span("About")
-              ),
+            h3(style:="text-align:center; margin-bottom: 10px",
+              span("About")
+            ),
+            div(style:="font-size:12px; max-width:700px;",
               p("""
              OOREP is an open online repertory for homeopathy.  It is open, because its source code is freely available,
              it is online, because a running instance of it is served right here on this very server for your convenience.

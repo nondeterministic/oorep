@@ -1,3 +1,7 @@
+html {
+  scroll-behavior: smooth;
+}
+
 .vertical-text {
   transform: rotate(-90deg);
   transform-origin: left top 0;

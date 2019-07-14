@@ -11,7 +11,7 @@ object Disclaimer {
         img(style:="position: absolute; top: 0; right: 0; border: 0;", src:="https://s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png", alt:="Fork me on GitHub")
       ),
       br,
-      div(style:="font-size:11px; max-width:700px;",
+      div(style:="font-size:12px; max-width:700px;",
         h3(style:="text-align:center; margin-bottom: 10px",
           span("Hinweis/Disclaimer")
         ),

@@ -9,10 +9,10 @@ object Features {
     div(cls:="container",
       div(cls:="row",
         div(cls:="col align-self-center",
-          div(style:="font-size:11px; max-width:700px;",
-            h3(style:="text-align:center; margin-bottom: 10px",
-              span("Features")
-            ),
+          h3(style:="text-align:center; margin-bottom: 10px",
+            span("Features")
+          ),
+          div(style:="font-size:12px; max-width:700px;",
             ul(
               li("Free and open: you can use this server for free or download the source code and run your own"),
               li("Platform-independent: all you need is a web-browser"),
@@ -24,7 +24,7 @@ object Features {
           )
         ),
         div(cls:="col",
-          img(style:="height:400px;float:left", src:="img/drops-of-water-578897_960_720.jpg")
+          img(style:="height:400px", src:="img/drops-of-water-578897_960_720.jpg")
         )
       )
     )
