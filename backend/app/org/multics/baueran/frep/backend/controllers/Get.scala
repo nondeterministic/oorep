@@ -3,6 +3,7 @@ package org.multics.baueran.frep.backend.controllers
 import scala.collection.mutable.ListBuffer
 import javax.inject._
 import play.api.mvc._
+import play.api.Logger
 import io.circe.syntax._
 import org.multics.baueran.frep.backend.dao.{FileDao, RepertoryDao, CazeDao}
 import org.multics.baueran.frep.backend.repertory._
@@ -11,7 +12,6 @@ import org.multics.baueran.frep.backend.dao.MemberDao
 import org.multics.baueran.frep.backend.db.db.DBContext
 import org.multics.baueran.frep.shared.Defs._
 import org.multics.baueran.frep.shared.WeightedRemedy
-import play.api.Logger
 
 /**
  * This controller creates an `Action` to handle HTTP requests to the
@@ -138,6 +138,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
   def repertorise(repertoryAbbrev: String, symptom: String) = Action { request: Request[AnyContent] =>
     val dao = new RepertoryDao(dbContext)
     val results = dao.lookupSymptom(repertoryAbbrev, symptom)
+    Logger.info(s"dao.lookupSymptom(${repertoryAbbrev}, ${symptom})")
 
     if (results.size == 0) {
       val errStr = "No results found"
@@ -159,7 +160,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
         resultSet += CaseRubric(rubric, repertoryAbbrev, 1, remedyWeightTuples.map(rwt => WeightedRemedy(rwt._1, rwt._2)).toList)
       }
 
-      Ok(resultSet.asJson.toString()) // .withCookies(request.cookies.toList:_*).bakeCookies()
+      Ok(resultSet.asJson.toString())
     }
   }
 
