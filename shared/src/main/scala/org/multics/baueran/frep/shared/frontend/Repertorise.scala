@@ -201,37 +201,41 @@ object Repertorise {
       return
     }
 
+    $("body").css("cursor", "wait")
+
     HttpRequest(serverUrl() + "/lookup")
       .withQueryParameters(("symptom", symptom), ("repertory", repertory))
       .withCrossDomainCookies(true)
       .send()
       .onComplete({
-      case response: Success[SimpleHttpResponse] => {
-        parse(response.get.body) match {
-          case Right(json) => {
-            val cursor = json.hcursor
-            cursor.as[List[CaseRubric]] match {
-              case Right(newResults) => {
-                symptomQuery = symptom
-                results() = newResults
+        case response: Success[SimpleHttpResponse] => {
+          $("body").css("cursor", "default")
+          parse(response.get.body) match {
+            case Right(json) => {
+              val cursor = json.hcursor
+              cursor.as[List[CaseRubric]] match {
+                case Right(newResults) => {
+                  symptomQuery = symptom
+                  results() = newResults
 
-                if (Case.size() > 0)
-                  showCase()
+                  if (Case.size() > 0)
+                    showCase()
+                }
+                case Left(t) => println("Parsing of lookup as RepertoryLookup failed: " + t)
               }
-              case Left(t) => println("Parsing of lookup as RepertoryLookup failed: " + t)
             }
+            case Left(_) => println("Parsing of lookup failed (is it JSON?).")
           }
-          case Left(_) => println("Parsing of lookup failed (is it JSON?).")
         }
-      }
-      case error: Failure[SimpleHttpResponse] => {
-        $("#resultStatus").empty()
-        $("#resultStatus").append(
-          div(cls:="alert alert-danger", role:="alert",
-            b("No results returned for '" + symptom + "'. " +
-              "Either symptom not in repertory or server error.")).render)
-      }
-    })
+        case error: Failure[SimpleHttpResponse] => {
+          $("body").css("cursor", "default")
+          $("#resultStatus").empty()
+          $("#resultStatus").append(
+            div(cls:="alert alert-danger", role:="alert",
+              b("No results returned for '" + symptom + "'. " +
+                "Either symptom not in repertory or server error.")).render)
+        }
+      })
   }
 
   // ------------------------------------------------------------------------------------------------------------------
