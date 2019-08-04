@@ -21,7 +21,7 @@ lazy val backend = (project in file("backend")).settings(commonSettings).setting
     jdbc,
     evolutions,
     "org.postgresql" % "postgresql" % "42.2.5",
-    "io.getquill" %% "quill-jdbc" % "3.2.2",
+    "io.getquill" %% "quill-jdbc" % "3.3.0",
     "io.circe" %% "circe-core" % circeVersion,
     "io.circe" %% "circe-generic" % circeVersion,
     "io.circe" %% "circe-parser" % circeVersion,
