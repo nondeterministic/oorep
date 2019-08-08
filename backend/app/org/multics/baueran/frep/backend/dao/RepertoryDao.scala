@@ -104,6 +104,19 @@ class RepertoryDao(dbContext: db.db.DBContext) {
     val posSearchTerms = searchStrings.filter(!_.startsWith("-")).toList
     val negSearchTerms = searchStrings.filter(_.startsWith("-")).map(_.substring(1)).toList
 
+    // TODO: We really want to use a join, e.g.,
+    //   select * from rubric, rubricremedy, remedy where
+    //     rubric.abbrev='kent' and rubricremedy.abbrev=rubric.abbrev and remedy.abbrev=rubric.abbrev and fullpath like '%splint%' and rubricremedy.rubricid=rubric.id and remedy.id=rubricremedy.remedyid;
+    // to translate into something like this, but how to construct it based on posSearchTerms?
+    //    val qu = quote {
+    //      for {
+    //        rubric <- query[Rubric].filter(rubric => rubric.abbrev == lift(abbrev) && rubric.chapterId >= 0 && rubric.fullPath.like("%splinter%"))
+    //        rubricRemedy <- query[RubricRemedy].join(rubricRemedy => rubricRemedy.abbrev == rubric.abbrev && rubricRemedy.rubricId == rubric.id)
+    //        remedy <- query[Remedy].join(remedy => remedy.id == rubricRemedy.remedyId && remedy.abbrev == rubric.abbrev)
+    //      } yield (rubric, rubricRemedy, remedy)
+    //    }
+    //    println(run(qu))
+
     val get = quote(query[Rubric].filter(rubric =>
       rubric.abbrev == lift(abbrev) && rubric.chapterId >= 0
     ))
