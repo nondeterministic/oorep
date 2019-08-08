@@ -178,15 +178,23 @@ class RepertoryDao(dbContext: db.db.DBContext) {
         "remedy.abbrev=rubric.abbrev AND " +
         "rubricremedy.rubricid=rubric.id AND " +
         "remedy.id=rubricremedy.remedyid"
-
     println("Query: " + rawQueryStr)
 
-    val rawQuery = quote { (q: String) =>
-      infix"""$q""".as[Query[Rubric]]
+    val rawQuery = quote {
+      for {
+        rubrics <- query[Rubric].filter(rubric => rubric.abbrev == "kent" && liftQuery(tmpResults.map(_.id)).contains(rubric.id))
+        remedies <- query[Remedy].join(remedy => remedy.abbrev == rubrics.abbrev)
+        rr <- query[RubricRemedy].join(r => r.remedyId == remedies.id && r.rubricId == rubrics.id && r.abbrev == rubrics.abbrev)
+      } yield (rubrics, remedies, rr)
     }
-    val t = run(rawQuery(lift(rawQueryStr)))
-    println(t)
 
+//    val rawQuery = quote { (q: String) =>
+//      infix"""$q""".as[Query[Rubric]]
+//    }
+//    val t = run(rawQuery(lift(rawQueryStr)))
+    val t = run(rawQuery)
+    println(t.map(e => (e._1.fullPath, e._2.nameAbbrev, e._3.weight)).mkString("\n"))
+    
 //    val preparer: (Connection) => (PreparedStatement) = prepare(rawQuery(lift(rawQueryStr)))
 //    var resultSet: ResultSet = null
 //    try {
