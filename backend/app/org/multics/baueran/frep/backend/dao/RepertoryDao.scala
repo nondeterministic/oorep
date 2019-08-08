@@ -1,5 +1,7 @@
 package org.multics.baueran.frep.backend.dao
 
+import java.sql.{Connection, PreparedStatement, ResultSet}
+
 import io.getquill
 import org.multics.baueran.frep.shared._
 import org.multics.baueran.frep.backend.db
@@ -94,7 +96,23 @@ class RepertoryDao(dbContext: db.db.DBContext) {
     run(get)
   }
 
-  def lookupSymptom(abbrev: String, symptom: String): List[Rubric] = {
+//val preparer: (Connection) => (PreparedStatement)  = ctx.prepare(q)
+//// SELECT x1.id, x1.description, x1.sku FROM Product x1 WHERE x1.id = 1
+//
+//// Use ugly stateful code, bracketed effects, or try-with-resources here:
+//var preparedStatement: PreparedStatement = _
+//var resultSet: ResultSet = _
+//
+//try {
+//  preparedStatement = preparer(myCustomDataSource.getConnection)
+//  resultSet = preparedStatement.executeQuery()
+//} catch {
+//  case e: Exception =>
+//    // Close the preparedStatement and catch possible exceptions
+//    // Close the resultSet and catch possible exceptions
+//}
+
+  def lookupSymptom(abbrev: String, symptom: String) = {
     val searchStrings = symptom.
                           trim.                                                    // Remove trailing spaces
                           replaceAll(" +", " ").              // Remove double spaces
@@ -104,11 +122,70 @@ class RepertoryDao(dbContext: db.db.DBContext) {
     val posSearchTerms = searchStrings.filter(!_.startsWith("-")).toList
     val negSearchTerms = searchStrings.filter(_.startsWith("-")).map(_.substring(1)).toList
 
-    val get = quote(query[Rubric].filter(rubric =>
-      rubric.abbrev == lift(abbrev) && rubric.chapterId >= 0
-    ))
-    run(get).filter(_.isMatchFor(posSearchTerms, negSearchTerms))
+
+    val rawQuery = quote { (abbre: String, sympto: String) =>
+      // infix"""SELECT * FROM rubric WHERE abbrev='kent' AND fullpath LIKE '%splinter%'""".as[Query[Rubric]]
+      infix"""SELECT * FROM rubric WHERE abbrev='$abbre' AND fullpath LIKE '%$sympto%'""".as[Query[Rubric]]
+    }
+    val preparer: (Connection) => (PreparedStatement) = prepare(rawQuery(lift(abbrev), lift(symptom)))
+    // var preparedStatement: PreparedStatement = null
+    var resultSet: ResultSet = null
+    try {
+      val preparedStatement = preparer(dbContext.dataSource.getConnection())
+      resultSet = preparedStatement.e  .executeQuery()
+    } catch {
+      case e: Exception =>
+        println("SHIT HAPPENED!!!!!!!!!!!!!!!!!!!!" + e.getStackTrace.toString)
+      // Close the preparedStatement and catch possible exceptions
+      // Close the resultSet and catch possible exceptions
+    }
+
+    println("*********************************")
+    while (resultSet.next()) {
+      println(resultSet.getString("abbrev"))
+    }
+    println("---------------------------------")
+    List() : List[Rubric]
+
+//    val result = run(rawQuery(lift(abbrev), lift(symptom)))
+//    println("Result: " + result.toString())
+//    result
+
+//    val get = quote(query[Rubric].filter(rubric =>
+//      rubric.abbrev == lift(abbrev)
+//        && rubric.chapterId >= 0
+//        && lift(stream).foldLeft(true) { (a, b) => a && rubric.fullPath.like(lift(b)) }
+//
+//      //        && (
+//      //        rubric.fullPath.like(s"%${lift(symptom)}%")
+//      //
+//      //          || rubric.path.getOrElse("").like(s"%${lift(symptom)}%")
+//    ))
+//    run(get).filter(_.isMatchFor(posSearchTerms, negSearchTerms))
+
+    //    val get = quote(query[Rubric].filter(rubric =>
+//      rubric.abbrev == lift(abbrev)
+//        && rubric.chapterId >= 0
+//        && rubric.fullPath.contains()
+//    ))
+//    run(get).filter(_.isMatchFor(posSearchTerms, negSearchTerms))
   }
+
+//  def lookupSymptom(abbrev: String, symptom: String): List[Rubric] = {
+//    val searchStrings = symptom.
+//      trim.                                                    // Remove trailing spaces
+//      replaceAll(" +", " ").              // Remove double spaces
+//      replaceAll("[^A-Za-z0-9 \\-*]", "").// Remove all but alphanum-, wildcard-, minus-symbols
+//      split(" ")                                       // Get list of search strings
+//
+//    val posSearchTerms = searchStrings.filter(!_.startsWith("-")).toList
+//    val negSearchTerms = searchStrings.filter(_.startsWith("-")).map(_.substring(1)).toList
+//
+//    val get = quote(query[Rubric].filter(rubric =>
+//      rubric.abbrev == lift(abbrev) && rubric.chapterId >= 0
+//    ))
+//    run(get).filter(_.isMatchFor(posSearchTerms, negSearchTerms))
+//  }
 
   def getRemediesForRubric(rubric: Rubric): Seq[(Remedy, Int)] = {
     var result: ArrayBuffer[(Remedy, Int)] = new ArrayBuffer[(Remedy,Int)]
