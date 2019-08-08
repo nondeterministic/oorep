@@ -125,23 +125,23 @@ class RepertoryDao(dbContext: db.db.DBContext) {
 
     val rawQuery = quote { (abbre: String, sympto: String) =>
       // infix"""SELECT * FROM rubric WHERE abbrev='kent' AND fullpath LIKE '%splinter%'""".as[Query[Rubric]]
-      infix"""SELECT * FROM rubric WHERE abbrev='$abbre' AND fullpath LIKE '%$sympto%'""".as[Query[Rubric]]
+      infix"""SELECT * FROM rubric WHERE abbrev=? AND fullpath LIKE ?""".as[Query[Rubric]]
     }
     val preparer: (Connection) => (PreparedStatement) = prepare(rawQuery(lift(abbrev), lift(symptom)))
-    // var preparedStatement: PreparedStatement = null
     var resultSet: ResultSet = null
     try {
-      val preparedStatement = preparer(dbContext.dataSource.getConnection())
-      resultSet = preparedStatement.e  .executeQuery()
+      val preparedStatement = preparer(dataSource.getConnection())
+      println(preparedStatement.isPoolable)
+      preparedStatement.setString(1, "kent")
+      preparedStatement.setString(2, "%splinter%")
+      println(preparedStatement.isPoolable)
+      resultSet = preparedStatement.executeQuery()
     } catch {
-      case e: Exception =>
-        println("SHIT HAPPENED!!!!!!!!!!!!!!!!!!!!" + e.getStackTrace.toString)
-      // Close the preparedStatement and catch possible exceptions
-      // Close the resultSet and catch possible exceptions
+      case e: Exception => println("SHIT HAPPENED: " + e.getMessage)
     }
 
     println("*********************************")
-    while (resultSet.next()) {
+    while (resultSet != null && resultSet.next()) {
       println(resultSet.getString("abbrev"))
     }
     println("---------------------------------")
