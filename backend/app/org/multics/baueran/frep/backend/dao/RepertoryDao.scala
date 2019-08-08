@@ -107,7 +107,9 @@ class RepertoryDao(dbContext: db.db.DBContext) {
     val get = quote(query[Rubric].filter(rubric =>
       rubric.abbrev == lift(abbrev) && rubric.chapterId >= 0
     ))
-    run(get).filter(_.isMatchFor(posSearchTerms, negSearchTerms))
+    val rubrics = run(get)
+    rubrics
+      .filter(_.isMatchFor(posSearchTerms, negSearchTerms))
   }
 
   def getRemediesForRubric(rubric: Rubric): Seq[(Remedy, Int)] = {
