@@ -146,17 +146,6 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
       BadRequest(errStr)
     }
     else {
-//      var resultSet = ListBuffer[CaseRubric]()
-//
-//      for (i <- 0 to math.min(100, results.size) - 1) {
-//        val rubric = results(i)
-//        val remedyWeightTuples = dao.getRemediesForRubric(rubric)
-//
-//        // case class CaseRubric(rubric: Rubric, repertoryAbbrev: String, rubricWeight: Int, weightedRemedies: Map[Remedy, Integer])
-//        // contains sth. like this: (68955) Bladder, afternoon: None, None: Chel.(2), Sulph.(2), Lil-t.(1), Sabad.(1), Petr.(1), Nux-v.(2), Merc.(1), Hyper.(1), Ferr.(1), Equis.(1), Cic.(1), Chin-s.(1), Bell.(1), Indg.(1), Aloe(1), Lyc.(3), Spig.(1), Lith-c.(1), Sep.(1), Coc-c.(1), Chlol.(1), Alumn.(1), Bov.(1)
-//        resultSet += CaseRubric(rubric, repertoryAbbrev, 1, remedyWeightTuples.map(rwt => WeightedRemedy(rwt._1, rwt._2)).toList)
-//      }
-
       Ok(results.asJson.toString())
     }
   }
