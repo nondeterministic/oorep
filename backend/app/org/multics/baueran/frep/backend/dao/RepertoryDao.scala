@@ -5,6 +5,7 @@ import java.sql.{Connection, PreparedStatement, ResultSet}
 import io.getquill
 import org.multics.baueran.frep.shared._
 import org.multics.baueran.frep.backend.db
+import Defs.maxNumberOfResults
 import play.api.Logger
 
 import scala.collection.mutable.ArrayBuffer
@@ -109,10 +110,11 @@ class RepertoryDao(dbContext: db.db.DBContext) {
     val tmpResults =
       run(
         quote {
-          query[Rubric].filter(rubric =>
-          rubric.abbrev == lift(abbrev) && rubric.chapterId >= 0)
+          query[Rubric]
+            .filter(rubric => rubric.abbrev == lift(abbrev) && rubric.chapterId >= 0)
         }
       ).filter(_.isMatchFor(posSearchTerms, negSearchTerms))
+       .take(maxNumberOfResults)
 
     val results =
       run(

@@ -1,6 +1,5 @@
 package org.multics.baueran.frep.backend.controllers
 
-import scala.collection.mutable.ListBuffer
 import javax.inject._
 import play.api.mvc._
 import play.api.Logger
@@ -11,8 +10,7 @@ import org.multics.baueran.frep.shared._
 import org.multics.baueran.frep.backend.dao.MemberDao
 import org.multics.baueran.frep.backend.db.db.DBContext
 import org.multics.baueran.frep.shared.Defs._
-import org.multics.baueran.frep.shared.WeightedRemedy
-import io.getquill
+
 /**
  * This controller creates an `Action` to handle HTTP requests to the
  * application's home page.
