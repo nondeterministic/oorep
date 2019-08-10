@@ -153,7 +153,7 @@ class RepertoryDao(dbContext: db.db.DBContext) {
     run(get).filter(_.isMatchFor(posSearchTerms, negSearchTerms))
   }
 
-  def lookupSymptom(abbrev: String, symptom: String): List[Rubric] = {
+  def lookupSymptom(abbrev: String, symptom: String): List[CaseRubric] = {
     val searchStrings = symptom.
       trim.                                                    // Remove trailing spaces
       replaceAll(" +", " ").              // Remove double spaces
@@ -163,53 +163,36 @@ class RepertoryDao(dbContext: db.db.DBContext) {
     val posSearchTerms = searchStrings.filter(!_.startsWith("-")).toList
     val negSearchTerms = searchStrings.filter(_.startsWith("-")).map(_.substring(1)).toList
 
-    println("Query 1...")
-    val get = quote(query[Rubric].filter(rubric =>
-      rubric.abbrev == lift(abbrev) && rubric.chapterId >= 0
-    ))
-    val tmpResults = run(get).filter(_.isMatchFor(posSearchTerms, negSearchTerms))
+    val tmpResults =
+      run(
+        quote {
+          query[Rubric].filter(rubric =>
+          rubric.abbrev == lift(abbrev) && rubric.chapterId >= 0)
+        }
+      ).filter(_.isMatchFor(posSearchTerms, negSearchTerms))
 
-    println("Query 2...")
-    val rawQueryStr =
-      "SELECT rubric, remedy, rubricremedy.weight FROM rubric, rubricremedy, remedy WHERE " +
-        "rubric.abbrev='kent' AND " +
-        s"rubric.id IN (${tmpResults.map(_.id).mkString(", ")}) AND " +
-        "rubricremedy.abbrev=rubric.abbrev AND " +
-        "remedy.abbrev=rubric.abbrev AND " +
-        "rubricremedy.rubricid=rubric.id AND " +
-        "remedy.id=rubricremedy.remedyid"
-    println("Query: " + rawQueryStr)
+    val results =
+      run(
+        quote {
+          for {
+            rubrics <- query[Rubric].filter(rubric => rubric.abbrev == lift(abbrev) && liftQuery(tmpResults.map(_.id)).contains(rubric.id))
+            remedies <- query[Remedy].join(remedy => remedy.abbrev == rubrics.abbrev)
+            rr <- query[RubricRemedy].join(r => r.remedyId == remedies.id && r.rubricId == rubrics.id && r.abbrev == rubrics.abbrev)
+          } yield (rubrics, remedies, rr)
+        }
+      )
 
-    val rawQuery = quote {
-      for {
-        rubrics <- query[Rubric].filter(rubric => rubric.abbrev == "kent" && liftQuery(tmpResults.map(_.id)).contains(rubric.id))
-        remedies <- query[Remedy].join(remedy => remedy.abbrev == rubrics.abbrev)
-        rr <- query[RubricRemedy].join(r => r.remedyId == remedies.id && r.rubricId == rubrics.id && r.abbrev == rubrics.abbrev)
-      } yield (rubrics, remedies, rr)
+    def getWeightedRemedies(rubric: Rubric) = {
+      results
+        .filter(_._1 == rubric)
+        .map { case (_, rem, rr) => WeightedRemedy(rem, rr.weight) }
     }
 
-//    val rawQuery = quote { (q: String) =>
-//      infix"""$q""".as[Query[Rubric]]
-//    }
-//    val t = run(rawQuery(lift(rawQueryStr)))
-    val t = run(rawQuery)
-    println(t.map(e => (e._1.fullPath, e._2.nameAbbrev, e._3.weight)).mkString("\n"))
-    
-//    val preparer: (Connection) => (PreparedStatement) = prepare(rawQuery(lift(rawQueryStr)))
-//    var resultSet: ResultSet = null
-//    try {
-//      val preparedStatement = preparer(dataSource.getConnection())
-//      // preparedStatement.setString(1, "kent")
-//      println("Executing raw query: " + preparedStatement.toString)
-//      resultSet = preparedStatement.executeQuery()
-//      println("Executed.")
-//    } catch {
-//      case e: Exception =>
-//        println("SHIT HAPPENED: " + e.getMessage)
-//        println("STACKTRACE: " + e.getStackTrace.mkString("\n"))
-//    }
-
-    tmpResults
+    results
+      .map { case (rubric, _, _) => rubric }
+      .distinct
+      .map { rubric => CaseRubric(rubric, abbrev, 1, getWeightedRemedies(rubric)) }
+      .sortBy { _.rubric.fullPath }
   }
 
   def getRemediesForRubric(rubric: Rubric): Seq[(Remedy, Int)] = {

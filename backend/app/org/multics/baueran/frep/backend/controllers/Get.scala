@@ -135,24 +135,9 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     }
   }
 
-  // select * from rubric, rubricremedy, remedy where
-  // rubric.abbrev='kent' and
-  // rubricremedy.abbrev=rubric.abbrev and
-  // remedy.abbrev=rubric.abbrev and
-  // fullpath like '%splint%' and
-  // rubricremedy.rubricid=rubric.id and
-  // remedy.id=rubricremedy.remedyid;
-
   def repertorise(repertoryAbbrev: String, symptom: String) = Action { request: Request[AnyContent] =>
-
-    def getRemediesForRubric(rubric: Rubric, results: List[(Rubric, RubricRemedy, Remedy)]): Unit = {
-
-    }
-
-    import dbContext._
-
     val dao = new RepertoryDao(dbContext)
-    val results: List[Rubric] = dao.lookupSymptom(repertoryAbbrev, symptom)
+    val results: List[CaseRubric] = dao.lookupSymptom(repertoryAbbrev, symptom)
     Logger.info(s"dao.lookupSymptom(${repertoryAbbrev}, ${symptom})")
 
     if (results.size == 0) {
@@ -161,41 +146,18 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
       BadRequest(errStr)
     }
     else {
-
-//      val rawQueryStr =
-//        "SELECT * FROM rubric, rubricremedy, remedy WHERE " +
-//          s"rubric.abbrev='$repertoryAbbrev' AND " +
-//          s"rubric.id IN (${results.map(_.id).mkString(", ")}) AND " +
-//          "rubricremedy.abbrev=rubric.abbrev AND " +
-//          "remedy.abbrev=rubric.abbrev AND " +
-//          "rubricremedy.rubricid=rubric.id " +
-//          "AND remedy.id=rubricremedy.remedyid"
-
-//      val queryy = quote {
-//        for {
-//          rubric <- query[Rubric].filter(rubric => rubric.abbrev == lift(repertoryAbbrev) && liftQuery(results.map(_.id)).contains(rubric.id))
-//          rubricremedy <- query[RubricRemedy].join(rr => rr.rubricId == rubric.id && rr.abbrev == rubric.abbrev)
-//          remedy <- query[Remedy].join(remedy => remedy.abbrev == rubric.abbrev && rubricremedy.remedyId == remedy.id)
-//        } yield (rubric, rubricremedy, remedy)
-//      }
+//      var resultSet = ListBuffer[CaseRubric]()
 //
-//      val erg = run(queryy)
-//      // println("ERGEBNIS: " + erg.map(r => (r._1.fullPath, r._3.nameAbbrev)).mkString("\n"))
-//      println("ERGEBNIS: " + erg.map(r => (r._1.fullPath, (r._2)._3.nameAbbrev)).mkString("\n"))
+//      for (i <- 0 to math.min(100, results.size) - 1) {
+//        val rubric = results(i)
+//        val remedyWeightTuples = dao.getRemediesForRubric(rubric)
+//
+//        // case class CaseRubric(rubric: Rubric, repertoryAbbrev: String, rubricWeight: Int, weightedRemedies: Map[Remedy, Integer])
+//        // contains sth. like this: (68955) Bladder, afternoon: None, None: Chel.(2), Sulph.(2), Lil-t.(1), Sabad.(1), Petr.(1), Nux-v.(2), Merc.(1), Hyper.(1), Ferr.(1), Equis.(1), Cic.(1), Chin-s.(1), Bell.(1), Indg.(1), Aloe(1), Lyc.(3), Spig.(1), Lith-c.(1), Sep.(1), Coc-c.(1), Chlol.(1), Alumn.(1), Bov.(1)
+//        resultSet += CaseRubric(rubric, repertoryAbbrev, 1, remedyWeightTuples.map(rwt => WeightedRemedy(rwt._1, rwt._2)).toList)
+//      }
 
-
-      var resultSet = ListBuffer[CaseRubric]()
-
-      for (i <- 0 to math.min(100, results.size) - 1) {
-        val rubric = results(i)
-        val remedyWeightTuples = dao.getRemediesForRubric(rubric)
-
-        // case class CaseRubric(rubric: Rubric, repertoryAbbrev: String, rubricWeight: Int, weightedRemedies: Map[Remedy, Integer])
-        // contains sth. like this: (68955) Bladder, afternoon: None, None: Chel.(2), Sulph.(2), Lil-t.(1), Sabad.(1), Petr.(1), Nux-v.(2), Merc.(1), Hyper.(1), Ferr.(1), Equis.(1), Cic.(1), Chin-s.(1), Bell.(1), Indg.(1), Aloe(1), Lyc.(3), Spig.(1), Lith-c.(1), Sep.(1), Coc-c.(1), Chlol.(1), Alumn.(1), Bov.(1)
-        resultSet += CaseRubric(rubric, repertoryAbbrev, 1, remedyWeightTuples.map(rwt => WeightedRemedy(rwt._1, rwt._2)).toList)
-      }
-
-      Ok(resultSet.asJson.toString())
+      Ok(results.asJson.toString())
     }
   }
 
