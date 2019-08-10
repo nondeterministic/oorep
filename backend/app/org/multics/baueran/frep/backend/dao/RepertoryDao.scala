@@ -96,63 +96,6 @@ class RepertoryDao(dbContext: db.db.DBContext) {
     run(get)
   }
 
-//val preparer: (Connection) => (PreparedStatement)  = ctx.prepare(q)
-//// SELECT x1.id, x1.description, x1.sku FROM Product x1 WHERE x1.id = 1
-//
-//// Use ugly stateful code, bracketed effects, or try-with-resources here:
-//var preparedStatement: PreparedStatement = _
-//var resultSet: ResultSet = _
-//
-//try {
-//  preparedStatement = preparer(myCustomDataSource.getConnection)
-//  resultSet = preparedStatement.executeQuery()
-//} catch {
-//  case e: Exception =>
-//    // Close the preparedStatement and catch possible exceptions
-//    // Close the resultSet and catch possible exceptions
-//}
-
-  def lookupSymptom2(abbrev: String, symptom: String) = {
-    val searchStrings = symptom.
-                          trim.                                                    // Remove trailing spaces
-                          replaceAll(" +", " ").              // Remove double spaces
-                          replaceAll("[^A-Za-z0-9 \\-*]", "").// Remove all but alphanum-, wildcard-, minus-symbols
-                          split(" ")                                       // Get list of search strings
-
-    val posSearchTerms = searchStrings.filter(!_.startsWith("-")).toList
-    val negSearchTerms = searchStrings.filter(_.startsWith("-")).map(_.substring(1)).toList
-
-
-//    val rawQuery = quote { (abbre: String, sympto: String) =>
-//      // infix"""SELECT * FROM rubric WHERE abbrev='kent' AND fullpath LIKE '%splinter%'""".as[Query[Rubric]]
-//      infix"""SELECT * FROM rubric WHERE abbrev=? AND fullpath LIKE ?""".as[Query[Rubric]]
-//    }
-//    val preparer: (Connection) => (PreparedStatement) = prepare(rawQuery(lift(abbrev), lift(symptom)))
-//    var resultSet: ResultSet = null
-//    try {
-//      val preparedStatement = preparer(dataSource.getConnection())
-//      println(preparedStatement.isPoolable)
-//      preparedStatement.setString(1, "kent")
-//      preparedStatement.setString(2, "%splinter%")
-//      println(preparedStatement.isPoolable)
-//      resultSet = preparedStatement.executeQuery()
-//    } catch {
-//      case e: Exception => println("SHIT HAPPENED: " + e.getMessage)
-//    }
-//
-//    println("*********************************")
-//    while (resultSet != null && resultSet.next()) {
-//      println(resultSet.getString("abbrev"))
-//    }
-//    println("---------------------------------")
-//    List() : List[Rubric]
-
-    val get = quote(query[Rubric].filter(rubric =>
-      rubric.abbrev == lift(abbrev) && rubric.chapterId >= 0
-    ))
-    run(get).filter(_.isMatchFor(posSearchTerms, negSearchTerms))
-  }
-
   def lookupSymptom(abbrev: String, symptom: String): List[CaseRubric] = {
     val searchStrings = symptom.
       trim.                                                    // Remove trailing spaces
