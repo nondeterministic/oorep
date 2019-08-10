@@ -107,11 +107,26 @@ class RepertoryDao(dbContext: db.db.DBContext) {
     val posSearchTerms = searchStrings.filter(!_.startsWith("-")).toList
     val negSearchTerms = searchStrings.filter(_.startsWith("-")).map(_.substring(1)).toList
 
+    if (posSearchTerms.length == 0) {
+      Logger.warn(s"INFO: Search for `$symptom' aborted: no positive search terms.")
+      return List()
+    }
+
+    // TODO: use of approximateSearchTerm is an oversimplification to narrow down the first
+    // DB-lookup, which otherwise would return ALWAYS the entire repertory.
+    val approximateSearchTerm = "%" + posSearchTerms.head.toLowerCase.replaceAll("[^A-Za-z0-9 \\-]", "") + "%"
+
     val tmpResults =
       run(
         quote {
           query[Rubric]
-            .filter(rubric => rubric.abbrev == lift(abbrev) && rubric.chapterId >= 0)
+            .filter(rubric =>
+              rubric.abbrev == lift(abbrev) &&
+                rubric.chapterId >= 0 &&
+                (rubric.fullPath.like(lift(approximateSearchTerm)) ||
+                  rubric.textt.getOrElse("").like(lift(approximateSearchTerm)) ||
+                  rubric.path.getOrElse("").like(lift(approximateSearchTerm)))
+            )
         }
       ).filter(_.isMatchFor(posSearchTerms, negSearchTerms))
        .take(maxNumberOfResults)
