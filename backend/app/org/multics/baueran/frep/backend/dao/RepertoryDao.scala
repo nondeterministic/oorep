@@ -129,7 +129,8 @@ class RepertoryDao(dbContext: db.db.DBContext) {
             )
         }
       ).filter(_.isMatchFor(posSearchTerms, negSearchTerms))
-       .take(maxNumberOfResults)
+        .sortBy(_.fullPath)
+        .take(maxNumberOfResults)
 
     val results =
       run(
