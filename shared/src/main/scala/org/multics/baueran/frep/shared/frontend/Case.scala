@@ -14,7 +14,7 @@ import rx.Ctx.Owner.Unsafe._
 import scalatags.rx.all._
 import org.multics.baueran.frep.shared
 import shared._
-import shared.Defs.serverUrl
+import shared.Defs.{ serverUrl, CookieFields }
 import shared.frontend.RemedyFormat.RemedyFormat
 import shared.sec_frontend.FileModalCallbacks._
 import org.scalajs.dom.raw.HTMLInputElement
@@ -71,7 +71,7 @@ object Case {
   // ------------------------------------------------------------------------------------------------------------------
   def updateCaseViewAndDataStructures() = {
     def updateAllCaseDataStructures() = {
-      val memberId = getCookieData(dom.document.cookie, "oorep_member_id") match {
+      val memberId = getCookieData(dom.document.cookie, CookieFields.oorep_member_id.toString) match {
         case Some(id) => updateMemberFiles(id.toInt); id.toInt
         case None => println("WARNING: updateDataStructures() failed. Could not get memberID from cookie."); -1
       }
@@ -162,7 +162,7 @@ object Case {
   }
 
   def updateCaseHeaderView() = {
-    getCookieData(dom.document.cookie, "oorep_member_id") match {
+    getCookieData(dom.document.cookie, CookieFields.oorep_member_id.toString) match {
       // Not logged in...
       case None =>
         $("#openNewCaseButton").hide()
@@ -266,7 +266,7 @@ object Case {
                       val caseIdTxt = dom.document.getElementById("caseDescrId").asInstanceOf[HTMLInputElement].value
                       dom.document.getElementById("caseDescrId").asInstanceOf[HTMLInputElement].setAttribute("readonly", "readonly")
                       val caseDescrTxt = dom.document.getElementById("caseDescrDescr").asInstanceOf[HTMLInputElement].value
-                      val memberId = getCookieData(dom.document.cookie, "oorep_member_id") match {
+                      val memberId = getCookieData(dom.document.cookie, CookieFields.oorep_member_id.toString) match {
                         case Some(id) => id.toInt
                         case None => -1 // TODO: Force user to relogin; the identification cookie has disappeared!!!!!!!!!!
                       }
@@ -400,7 +400,7 @@ object Case {
           }},
           "Add case to file")
 
-      getCookieData(dom.document.cookie, "oorep_member_id") match {
+      getCookieData(dom.document.cookie, CookieFields.oorep_member_id.toString) match {
         case Some(_) =>
           if (descr != None) {
             div(

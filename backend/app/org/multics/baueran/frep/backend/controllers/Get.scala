@@ -37,7 +37,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
   def authenticate() = Action { request: Request[AnyContent] =>
     val cookies = authorizedRequestCookies(request)
 
-    getFrom(cookies, "oorep_member_id") match {
+    getFrom(cookies, CookieFields.oorep_member_id.toString) match {
       case Some(memberIdStr) => {
         doesUserHaveCorrespondingCookie(request, memberIdStr.toInt) match {
           case Right(_) =>

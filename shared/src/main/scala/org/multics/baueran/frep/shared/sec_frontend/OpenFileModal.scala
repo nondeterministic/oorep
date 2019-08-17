@@ -3,7 +3,7 @@ package org.multics.baueran.frep.shared.sec_frontend
 import fr.hmil.roshttp.HttpRequest
 import fr.hmil.roshttp.body.{MultiPartBody, PlainTextBody}
 import monix.execution.Scheduler.Implicits.global
-import org.multics.baueran.frep.shared.Defs.serverUrl
+import org.multics.baueran.frep.shared.Defs.{ serverUrl, CookieFields }
 import org.multics.baueran.frep.shared.frontend.{ getCookieData, Case }
 import org.scalajs.dom
 import org.scalajs.dom.Event
@@ -16,7 +16,7 @@ import org.querki.jquery.$
 object OpenFileModal extends FileModal {
 
   private def requestFileDeletion() = {
-    getCookieData(dom.document.cookie, "oorep_member_id") match {
+    getCookieData(dom.document.cookie, CookieFields.oorep_member_id.toString) match {
       case Some(memberId) => {
         HttpRequest(serverUrl() + "/delfile")
           .post(MultiPartBody(

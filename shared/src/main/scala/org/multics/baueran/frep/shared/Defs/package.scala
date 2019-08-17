@@ -10,7 +10,8 @@ package object Defs {
 
   def maxNumberOfResults = 150
 
-  // Work laptop:
-  // def localRepPath() = "/home/bauera/Development/oorep/backend/public/repertories/"
-  // def localHTMLPath() = "/home/bauera/Development/oorep/backend/public/html/"
+  object CookieFields extends Enumeration {
+    type CookieFields = Value
+    val oorep_member_email, oorep_member_hash, oorep_member_id = Value
+  }
 }

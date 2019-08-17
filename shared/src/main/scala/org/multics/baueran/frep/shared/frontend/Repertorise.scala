@@ -15,7 +15,7 @@ import fr.hmil.roshttp.HttpRequest
 import fr.hmil.roshttp.response.SimpleHttpResponse
 import monix.execution.Scheduler.Implicits.global
 import org.multics.baueran.frep.shared._
-import org.multics.baueran.frep.shared.Defs.serverUrl
+import org.multics.baueran.frep.shared.Defs.{ serverUrl, CookieFields }
 import org.multics.baueran.frep.shared.sec_frontend.FileModalCallbacks.updateMemberFiles
 
 object Repertorise {
@@ -41,7 +41,7 @@ object Repertorise {
       $("#content").empty()
       $("#content").append(apply().render)
 
-      getCookieData(dom.document.cookie, "oorep_member_id") match {
+      getCookieData(dom.document.cookie, CookieFields.oorep_member_id.toString) match {
         case Some(id) => updateMemberFiles(id.toInt)
         case None => ;
       }

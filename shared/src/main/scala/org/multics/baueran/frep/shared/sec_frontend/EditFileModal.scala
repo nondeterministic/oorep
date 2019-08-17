@@ -5,7 +5,7 @@ import fr.hmil.roshttp.body.{MultiPartBody, PlainTextBody}
 import fr.hmil.roshttp.response.SimpleHttpResponse
 import io.circe.parser.parse
 import monix.execution.Scheduler.Implicits.global
-import org.multics.baueran.frep.shared.Defs.serverUrl
+import org.multics.baueran.frep.shared.Defs.{ serverUrl, CookieFields }
 import org.multics.baueran.frep.shared.{Caze, FIle}
 import org.multics.baueran.frep.shared.frontend.{Case, Repertorise, getCookieData}
 import org.scalajs.dom
@@ -80,7 +80,7 @@ object EditFileModal {
     $("#deleteFileEditFileModal").attr("disabled", true)
 
     // Request data from backend...
-    getCookieData(dom.document.cookie, "oorep_member_id") match {
+    getCookieData(dom.document.cookie, CookieFields.oorep_member_id.toString) match {
       case Some(memberId) =>
         if (fileHeader.length() > 0 && memberId.toInt >= 0) {
           currentlyActiveMemberId = memberId.toInt

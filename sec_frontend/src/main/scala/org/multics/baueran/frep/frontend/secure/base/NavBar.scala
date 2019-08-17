@@ -3,7 +3,7 @@ package org.multics.baueran.frep.frontend.secure.base
 import fr.hmil.roshttp.HttpRequest
 import fr.hmil.roshttp.response.SimpleHttpResponse
 import io.circe.parser.parse
-import org.multics.baueran.frep.shared.Defs.serverUrl
+import org.multics.baueran.frep.shared.Defs.{ serverUrl, CookieFields }
 import org.multics.baueran.frep.shared.Info
 import scalatags.JsDom.TypedTag
 import scalatags.JsDom.all.{id, li, _}
@@ -75,7 +75,7 @@ object NavBar {
             li(cls:="navbar-item", a(cls:="nav-link", href:="#", target:="_self",
               onclick:={ (e: Event) =>
                 e.stopPropagation()
-                val cookieNames = List("oorep_member_email", "oorep_member_hash", "oorep_member_id")
+                val cookieNames = List(CookieFields.oorep_member_email.toString, CookieFields.oorep_member_hash.toString, CookieFields.oorep_member_id.toString)
                 dom.document.cookie = "PLAY_SESSION=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT"
                 cookieNames.foreach(cookieName =>
                   dom.document.cookie = s"${cookieName}=; path=/; expires='Thu, 01 Jan 1970 00:00:01 GMT"

@@ -2,6 +2,7 @@ package org.multics.baueran.frep.backend
 
 import play.api.mvc._
 import org.multics.baueran.frep.backend.dao.{CazeDao, FileDao, MemberDao}
+import org.multics.baueran.frep.shared.Defs.CookieFields
 
 package object controllers {
 
@@ -15,7 +16,9 @@ package object controllers {
     */
   // TODO: Add database lookup for cookie-data validation!
   def authorizedRequestCookies(request: Request[AnyContent]): List[Cookie] = {
-    (request.cookies.get("oorep_member_email"), request.cookies.get("oorep_member_hash"), request.cookies.get("oorep_member_id")) match {
+    (request.cookies.get(CookieFields.oorep_member_email.toString),
+      request.cookies.get(CookieFields.oorep_member_hash.toString),
+      request.cookies.get(CookieFields.oorep_member_id.toString)) match {
       case (Some(cookie_email), Some(cookie_hash), Some(cookie_id)) =>
         List(cookie_email, cookie_hash, cookie_id)
       case _ =>
@@ -54,7 +57,7 @@ package object controllers {
     authorizedRequestCookies(request) match {
       case Nil => Left(errorMsg)
       case cookies =>
-        getFrom(cookies, "oorep_member_hash") match {
+        getFrom(cookies, CookieFields.oorep_member_hash.toString) match {
           case None => Left(errorMsg)
           case Some(hash) =>
             memberDao.get(memberId) match {
