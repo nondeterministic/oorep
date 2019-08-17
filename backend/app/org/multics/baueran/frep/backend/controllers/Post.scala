@@ -23,18 +23,21 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
       val inputEmail: String = request.body.asFormUrlEncoded.get("inputEmail").head
       val inputPassword: String = request.body.asFormUrlEncoded.get("inputPassword").head
 
-      // TODO: Password is still ignored!!
+      val hashedPass = getHash(inputPassword)
+      println(hashedPass)
+
       memberDao.getFromEmail(inputEmail) match {
-        case Nil => BadRequest("Not authorized: user not in DB")
-        case member :: _ =>
+        case member :: _ if (hashedPass == member.hash) =>
           Redirect(serverUrl() + "/assets/html/private/index.html")
-            .withCookies(Cookie("oorep_member_email", inputEmail, httpOnly = false),
-              Cookie("oorep_member_password", inputPassword, httpOnly = false),
+            .withCookies(
+              Cookie("oorep_member_email", inputEmail, httpOnly = false),
+              Cookie("oorep_member_hash", member.hash, httpOnly = false),
               Cookie("oorep_member_id", member.member_id.toString, httpOnly = false)
 
               // Does not work because JSON contains (or rather is a) invalid Cookie values. :-(
               // Cookie("oorep_member_id", Member.memberEncoder(member).toString(), httpOnly=false)
             )
+        case _ => BadRequest("User not authorized to login.")
       }
   }
 

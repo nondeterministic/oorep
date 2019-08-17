@@ -1,9 +1,6 @@
 package org.multics.baueran.frep.backend
 
-import scala.collection.mutable.ListBuffer
-import javax.inject._
 import play.api.mvc._
-import io.circe.syntax._
 import org.multics.baueran.frep.backend.dao.{CazeDao, FileDao, MemberDao}
 
 package object controllers {
@@ -18,12 +15,23 @@ package object controllers {
     */
   // TODO: Add database lookup for cookie-data validation!
   def authorizedRequestCookies(request: Request[AnyContent]): List[Cookie] = {
-    (request.cookies.get("oorep_member_email"), request.cookies.get("oorep_member_password"), request.cookies.get("oorep_member_id")) match {
-      case (Some(cookie_email), Some(cookie_password), Some(cookie_id)) =>
-        List(cookie_email, cookie_password, cookie_id)
+    (request.cookies.get("oorep_member_email"), request.cookies.get("oorep_member_hash"), request.cookies.get("oorep_member_id")) match {
+      case (Some(cookie_email), Some(cookie_hash), Some(cookie_id)) =>
+        List(cookie_email, cookie_hash, cookie_id)
       case _ =>
         List.empty
     }
+  }
+
+  // TODO: Obviously insecure (taken from https://alvinalexander.com/source-code/scala-method-create-md5-hash-of-string)
+  def getHash(s: String) = {
+    import java.security.MessageDigest
+    import java.math.BigInteger
+    val md = MessageDigest.getInstance("MD5")
+    val digest = md.digest(s.getBytes)
+    val bigInt = new BigInteger(1,digest)
+    val hashedString = bigInt.toString(16)
+    hashedString
   }
 
   /**
@@ -43,16 +51,23 @@ package object controllers {
   }
 
   def doesUserHaveCorrespondingCookie(request: Request[AnyContent], memberId: Int): Either[String, Boolean] = {
+    val errorMsg = "Not authorized: bad request"
     authorizedRequestCookies(request) match {
-      case Nil => Left("Not authorized: bad request")
+      case Nil => Left(errorMsg)
       case cookies =>
-        getFrom(cookies, "oorep_member_id") match {
-          case None => Left("Not authorized: user not in database")
-          case Some(mId) =>
-            if (mId.toInt == memberId)
-              Right(true)
-            else
-              Left("Not authorized: wrong member ID")
+        getFrom(cookies, "oorep_member_hash") match {
+          case None => Left(errorMsg)
+          case Some(hash) =>
+            memberDao.get(memberId) match {
+              case member :: Nil => {
+                if (member.hash == hash)
+                  Right(true)
+                else
+                  Left(errorMsg)
+              }
+              case _ =>
+                Left(errorMsg)
+            }
         }
     }
   }
