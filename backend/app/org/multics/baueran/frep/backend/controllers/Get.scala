@@ -35,29 +35,23 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     * of further application functionality.
     */
   def authenticate() = Action { request: Request[AnyContent] =>
-    authorizedRequestCookies(request) match {
-      case Nil =>
-        val errStr = "Not authorized: bad request"
-        Logger.error(errStr)
-        BadRequest("Not authorized: bad request")
-      case cookies => {
-        getFrom(cookies, "oorep_member_email") match {
-          case None =>
-            val errStr = "Not authorized: user not in database."
+    val cookies = authorizedRequestCookies(request)
+
+    getFrom(cookies, "oorep_member_id") match {
+      case Some(memberIdStr) => {
+        doesUserHaveCorrespondingCookie(request, memberIdStr.toInt) match {
+          case Right(_) =>
+            Ok.withCookies(cookies.map({ c => Cookie(name = c.name, value = c.value, httpOnly = false) }):_*)
+          case _ =>
+            val errStr = s"Not authorized: user not authorized to login."
             Logger.error(errStr)
-            BadRequest("Not authorized: user not in database.")
-          case Some(memberEmail) => {
-            memberDao.getFromEmail(memberEmail) match {
-              case Nil =>
-                val errStr = s"Not authorized: user ${memberEmail} not in database."
-                Logger.error(errStr)
-                BadRequest(errStr)
-              case member :: _ =>
-                Ok(member.member_id.toString()).withCookies(cookies.map({ c => Cookie(name = c.name, value = c.value, httpOnly = false) }):_*)
-            }
-          }
+            BadRequest(errStr)
         }
       }
+      case _ =>
+        val errStr = s"Not authorized: user not in database."
+        Logger.error(errStr)
+        BadRequest(errStr)
     }
   }
 

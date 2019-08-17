@@ -11,9 +11,6 @@ import backend.dao.{CazeDao, FileDao}
 import backend.db.db.DBContext
 import shared.{Caze, FIle}
 
-// TODO: Like in Get.scala, check cookies for permission first!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-// (and like in updateFileDescription() below)
-
 class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends AbstractController(cc) {
   cazeDao = new CazeDao(dbContext)
   fileDao = new FileDao(dbContext)
@@ -24,7 +21,7 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
       val inputPassword: String = request.body.asFormUrlEncoded.get("inputPassword").head
 
       val hashedPass = getHash(inputPassword)
-      println(hashedPass)
+      println("TODO: Remove me: " + hashedPass)
 
       memberDao.getFromEmail(inputEmail) match {
         case member :: _ if (hashedPass == member.hash) =>
