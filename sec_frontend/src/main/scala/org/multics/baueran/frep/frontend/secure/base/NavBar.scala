@@ -75,11 +75,7 @@ object NavBar {
             li(cls:="navbar-item", a(cls:="nav-link", href:="#", target:="_self",
               onclick:={ (e: Event) =>
                 e.stopPropagation()
-                val cookieNames = List(CookieFields.oorep_member_email.toString, CookieFields.oorep_member_hash.toString, CookieFields.oorep_member_id.toString)
-                dom.document.cookie = "PLAY_SESSION=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT"
-                cookieNames.foreach(cookieName =>
-                  dom.document.cookie = s"${cookieName}=; path=/; expires='Thu, 01 Jan 1970 00:00:01 GMT"
-                )
+                deleteCookies()
                 dom.window.location.replace(serverUrl())
               })("Log-out"))
           )

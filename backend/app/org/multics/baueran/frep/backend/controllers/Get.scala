@@ -37,11 +37,11 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
   def authenticate() = Action { request: Request[AnyContent] =>
     val cookies = authorizedRequestCookies(request)
 
-    getFrom(cookies, CookieFields.oorep_member_id.toString) match {
+    getFrom(cookies, CookieFields.id.toString) match {
       case Some(memberIdStr) => {
         doesUserHaveCorrespondingCookie(request, memberIdStr.toInt) match {
           case Right(_) =>
-            Ok.withCookies(cookies.map({ c => Cookie(name = c.name, value = c.value, httpOnly = false) }):_*)
+            Ok(memberIdStr).withCookies(cookies.map({ c => Cookie(name = c.name, value = c.value, httpOnly = false) }):_*)
           case _ =>
             val errStr = s"Not authorized: user not authorized to login."
             Logger.error(errStr)

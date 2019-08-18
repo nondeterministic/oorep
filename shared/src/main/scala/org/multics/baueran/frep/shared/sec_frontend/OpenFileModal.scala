@@ -16,7 +16,7 @@ import org.querki.jquery.$
 object OpenFileModal extends FileModal {
 
   private def requestFileDeletion() = {
-    getCookieData(dom.document.cookie, CookieFields.oorep_member_id.toString) match {
+    getCookieData(dom.document.cookie, CookieFields.id.toString) match {
       case Some(memberId) => {
         HttpRequest(serverUrl() + "/delfile")
           .post(MultiPartBody(

@@ -63,7 +63,7 @@ object NewFileModal {
 
                       val header = dom.document.getElementById("fileHeader").asInstanceOf[HTMLInputElement].value
                       val descr = dom.document.getElementById("fileDescr").asInstanceOf[HTMLInputElement].value
-                      val memberId = getCookieData(dom.document.cookie, CookieFields.oorep_member_id.toString) match {
+                      val memberId = getCookieData(dom.document.cookie, CookieFields.id.toString) match {
                         case Some(id) => id.toInt
                         case None => -1 // TODO: Force user to relogin; the identification cookie has disappeared!!!!!!!!!!
                       }

@@ -27,9 +27,9 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
         case member :: _ if (hashedPass == member.hash) =>
           Redirect(serverUrl() + "/assets/html/private/index.html")
             .withCookies(
-              Cookie(CookieFields.oorep_member_email.toString, inputEmail, httpOnly = false),
-              Cookie(CookieFields.oorep_member_hash.toString, member.hash, httpOnly = false),
-              Cookie(CookieFields.oorep_member_id.toString, member.member_id.toString, httpOnly = false)
+              Cookie(CookieFields.email.toString, inputEmail, httpOnly = false),
+              Cookie(CookieFields.hash.toString, member.hash, httpOnly = false),
+              Cookie(CookieFields.id.toString, member.member_id.toString, httpOnly = false)
 
               // Does not work because JSON contains (or rather is a) invalid Cookie values. :-(
               // Cookie("oorep_member_id", Member.memberEncoder(member).toString(), httpOnly=false)

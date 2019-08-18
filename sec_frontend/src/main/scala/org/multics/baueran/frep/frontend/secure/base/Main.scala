@@ -44,8 +44,18 @@ object Main {
           $("#content").append(Repertorise().render)
           $("#content_bottom").append(Disclaimer.toHTML().render)
 
-          val memberId = response.get.body.toInt
-          FileModalCallbacks.updateMemberFiles(memberId)
+          try {
+            val memberId = response.get.body.toInt
+            FileModalCallbacks.updateMemberFiles(memberId)
+          } catch {
+            case exception: Throwable =>
+              println("Exception: could not convert member-id '" + exception + "'. Deleting the cookies now!")
+              deleteCookies()
+              $("#nav_bar").empty()
+              $("#content").empty()
+              $("#content_bottom").empty()
+              $("#content").append(p(s"Not authorized. Go to ", a(href:=serverUrl(), "main page"), " instead!").render)
+          }
         }
         case error: Failure[SimpleHttpResponse] => {
           $("#content").append(p(s"Not authorized. Go to ", a(href:=serverUrl(), "main page"), " instead!").render)

@@ -80,7 +80,7 @@ object EditFileModal {
     $("#deleteFileEditFileModal").attr("disabled", true)
 
     // Request data from backend...
-    getCookieData(dom.document.cookie, CookieFields.oorep_member_id.toString) match {
+    getCookieData(dom.document.cookie, CookieFields.id.toString) match {
       case Some(memberId) =>
         if (fileHeader.length() > 0 && memberId.toInt >= 0) {
           currentlyActiveMemberId = memberId.toInt

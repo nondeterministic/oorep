@@ -41,7 +41,7 @@ object Repertorise {
       $("#content").empty()
       $("#content").append(apply().render)
 
-      getCookieData(dom.document.cookie, CookieFields.oorep_member_id.toString) match {
+      getCookieData(dom.document.cookie, CookieFields.id.toString) match {
         case Some(id) => updateMemberFiles(id.toInt)
         case None => ;
       }
