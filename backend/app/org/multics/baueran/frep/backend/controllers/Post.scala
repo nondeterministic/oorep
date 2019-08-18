@@ -21,7 +21,7 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
       val inputPassword: String = request.body.asFormUrlEncoded.get("inputPassword").head
 
       val hashedPass = getHash(inputPassword)
-      println("TODO: Remove me: " + hashedPass)
+      println("TODO: Remove me: " + hashedPass) // TODO
 
       memberDao.getFromEmail(inputEmail) match {
         case member :: _ if (hashedPass == member.hash) =>
@@ -30,9 +30,6 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
               Cookie(CookieFields.email.toString, inputEmail, httpOnly = false),
               Cookie(CookieFields.hash.toString, member.hash, httpOnly = false),
               Cookie(CookieFields.id.toString, member.member_id.toString, httpOnly = false)
-
-              // Does not work because JSON contains (or rather is a) invalid Cookie values. :-(
-              // Cookie("oorep_member_id", Member.memberEncoder(member).toString(), httpOnly=false)
             )
         case _ => BadRequest("User not authorized to login.")
       }
@@ -86,7 +83,7 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
 
     (requestData("caseId"), requestData("memberId")) match {
       case (Seq(caseIdStr), Seq(memberIdStr)) =>
-        doesUserHaveCorrespondingCookie(request, memberIdStr.toInt) match {
+        doesUserHaveAuthorizedCookie(request, memberIdStr.toInt) match {
           case Right(true) => {
             cazeDao.delete(caseIdStr.toInt, memberIdStr.toInt)
             Ok
@@ -129,7 +126,7 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
 
     (requestData("filedescr"), requestData("fileheader"), requestData("memberId")) match {
       case (Seq(filedescr), Seq(fileheader), Seq(memberIdStr)) =>
-        doesUserHaveCorrespondingCookie(request, memberIdStr.toInt) match {
+        doesUserHaveAuthorizedCookie(request, memberIdStr.toInt) match {
           case Right(true) => {
             fileDao.changeDescription(fileheader, memberIdStr.toInt, filedescr)
             Ok

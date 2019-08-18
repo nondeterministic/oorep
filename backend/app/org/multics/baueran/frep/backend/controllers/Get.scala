@@ -39,7 +39,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
 
     getFrom(cookies, CookieFields.id.toString) match {
       case Some(memberIdStr) => {
-        doesUserHaveCorrespondingCookie(request, memberIdStr.toInt) match {
+        doesUserHaveAuthorizedCookie(request, memberIdStr.toInt) match {
           case Right(_) =>
             Ok(memberIdStr).withCookies(cookies.map({ c => Cookie(name = c.name, value = c.value, httpOnly = false) }):_*)
           case _ =>
@@ -65,7 +65,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
   }
 
   def availableFiles(memberId: Int) = Action { request: Request[AnyContent] =>
-    doesUserHaveCorrespondingCookie(request, memberId) match {
+    doesUserHaveAuthorizedCookie(request, memberId) match {
       case Left(err) =>
         val errStr = "availableFiles() failed: " + err
         Logger.error(errStr)
@@ -77,7 +77,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
   }
 
   def getFile(memberId: Int, fileId: String) = Action { request: Request[AnyContent] =>
-    doesUserHaveCorrespondingCookie(request, memberId) match {
+    doesUserHaveAuthorizedCookie(request, memberId) match {
       case Left(err) =>
         Logger.error(err)
         BadRequest(err)
@@ -96,7 +96,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
   }
 
   def getCase(memberId: Int, caseId: String) = Action { request: Request[AnyContent] =>
-    doesUserHaveCorrespondingCookie(request, memberId) match {
+    doesUserHaveAuthorizedCookie(request, memberId) match {
       case Left(err) =>
         Logger.error(err)
         BadRequest(err)
@@ -115,7 +115,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
   }
 
   def availableCasesForFile(memberId: Int, fileId: String) = Action { request: Request[AnyContent] =>
-    doesUserHaveCorrespondingCookie(request, memberId) match {
+    doesUserHaveAuthorizedCookie(request, memberId) match {
       case Left(err) =>
         Logger.error(err)
         BadRequest(err)

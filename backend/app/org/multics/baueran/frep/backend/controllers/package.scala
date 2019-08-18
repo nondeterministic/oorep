@@ -52,7 +52,14 @@ package object controllers {
       None
   }
 
-  def doesUserHaveCorrespondingCookie(request: Request[AnyContent], memberId: Int): Either[String, Boolean] = {
+  /**
+    * Check user authorisation.
+    *
+    * @param request
+    * @param memberId
+    * @return true, if the user who triggered the call of this function has a cookie with the correct hash value as in the DB.
+    */
+  def doesUserHaveAuthorizedCookie(request: Request[AnyContent], memberId: Int): Either[String, Boolean] = {
     val errorMsg = "Not authorized: bad request"
     authorizedRequestCookies(request) match {
       case Nil => Left(errorMsg)
