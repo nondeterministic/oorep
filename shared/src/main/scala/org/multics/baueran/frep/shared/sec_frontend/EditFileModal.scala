@@ -45,9 +45,9 @@ object EditFileModal {
       }
     }
   }
-  val fileName = Var("")
+  val fileName_fileId = Var(("", ""))
 
-  fileName.foreach { fileHeader =>
+  fileName_fileId.foreach { case (fileName,fileId) =>
 
     // Update modal dialog with data obtained from backend...
     def updateModal(response: Try[SimpleHttpResponse]) = {
@@ -82,14 +82,17 @@ object EditFileModal {
     // Request data from backend...
     getCookieData(dom.document.cookie, CookieFields.id.toString) match {
       case Some(memberId) =>
-        if (fileHeader.length() > 0 && memberId.toInt >= 0) {
+        // TODO: This is a clumsy if-condition and else-feedback. OK for now, but fix!
+        if (fileName.length() > 0 && fileId.forall(_.isDigit) && memberId.forall(_.isDigit) && memberId.toInt >= 0) {
           currentlyActiveMemberId = memberId.toInt
           HttpRequest(serverUrl() + "/file")
-            .withQueryParameters("memberId" -> memberId, "fileId" -> fileHeader)
+            .withQueryParameters("fileId" -> fileId)
             .withCrossDomainCookies(true)
             .send()
             .onComplete((r: Try[SimpleHttpResponse]) => updateModal(r))
         }
+        else
+          println("fileName_fileId rx-activation failed.")
       case None => println("WARNING: getCasesForFile() failed. Could not get memberID from cookie."); -1
     }
   }
@@ -142,7 +145,7 @@ object EditFileModal {
       div(cls:="modal-dialog modal-dialog-centered", role:="document", style:="min-width: 80%;",
         div(cls:="modal-content",
           div(cls:="modal-header",
-            h5(cls:="modal-title", Rx(fileName())),
+            h5(cls:="modal-title", Rx(fileName_fileId()._1)),
             button(`type`:="button", cls:="close", data.dismiss:="modal", "\u00d7")
           ),
           div(cls:="modal-body",
@@ -171,9 +174,8 @@ object EditFileModal {
                         case Some(f) =>
                           HttpRequest(serverUrl() + "/updateFileDescription")
                             .post(MultiPartBody(
-                              "filedescr"  -> PlainTextBody($("#fileDescrEditFileModal").`val`().toString().trim()),
-                              "fileheader" -> PlainTextBody(f.header),
-                              "memberId"   -> PlainTextBody(currentlyActiveMemberId.toString())))
+                              "filedescr" -> PlainTextBody($("#fileDescrEditFileModal").`val`().toString().trim()),
+                              "fileId"    -> PlainTextBody(fileName_fileId.now._2)))
                         case None => ;
                       }
                       $("#saveFileDescrEditFileModal").attr("disabled", true)

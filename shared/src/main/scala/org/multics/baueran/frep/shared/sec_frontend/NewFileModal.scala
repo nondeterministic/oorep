@@ -67,7 +67,7 @@ object NewFileModal {
                         case Some(id) => id.toInt
                         case None => -1 // TODO: Force user to relogin; the identification cookie has disappeared!!!!!!!!!!
                       }
-                      currFIle = Some(FIle(header, memberId, (new js.Date()).toISOString(), descr, List.empty))
+                      currFIle = Some(FIle(None, header, memberId, (new js.Date()).toISOString(), descr, List.empty))
 
                       HttpRequest(serverUrl() + "/savefile")
                         .post(PlainTextBody(currFIle.get.asJson.toString()))

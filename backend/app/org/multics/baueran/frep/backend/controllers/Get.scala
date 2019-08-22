@@ -39,17 +39,17 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
 
     getFrom(cookies, CookieFields.id.toString) match {
       case Some(memberIdStr) => {
-        doesUserHaveAuthorizedCookie(request, memberIdStr.toInt) match {
+        doesUserHaveAuthorizedCookie(request) match {
           case Right(_) =>
             Ok(memberIdStr).withCookies(cookies.map({ c => Cookie(name = c.name, value = c.value, httpOnly = false) }):_*)
           case _ =>
-            val errStr = s"Not authorized: user not authorized to login."
+            val errStr = s"Get: authenticate(): Not authorized: user not authorized to login."
             Logger.error(errStr)
             BadRequest(errStr)
         }
       }
       case _ =>
-        val errStr = s"Not authorized: user not in database."
+        val errStr = s"Get: authenticate(): Not authorized: user not in database."
         Logger.error(errStr)
         BadRequest(errStr)
     }
@@ -65,9 +65,9 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
   }
 
   def availableFiles(memberId: Int) = Action { request: Request[AnyContent] =>
-    doesUserHaveAuthorizedCookie(request, memberId) match {
+    doesUserHaveAuthorizedCookie(request) match {
       case Left(err) =>
-        val errStr = "availableFiles() failed: " + err
+        val errStr = "Get: availableFiles(): availableFiles() failed: " + err
         Logger.error(errStr)
         BadRequest(errStr)
       case Right(true) =>
@@ -76,18 +76,18 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     }
   }
 
-  def getFile(memberId: Int, fileId: String) = Action { request: Request[AnyContent] =>
-    doesUserHaveAuthorizedCookie(request, memberId) match {
+  def getFile(fileId: String) = Action { request: Request[AnyContent] =>
+    doesUserHaveAuthorizedCookie(request) match {
       case Left(err) =>
         Logger.error(err)
         BadRequest(err)
       case Right(true) => {
         val dao = new FileDao(dbContext)
-        dao.getFilesForMember(memberId).find(_.header == fileId) match {
-          case Some(file) =>
+        dao.get(fileId.toInt) match {
+          case file :: Nil =>
             Ok(file.asJson.toString())
-          case None =>
-            val errStr = "getFile() returned nothing"
+          case _ =>
+            val errStr = "Get: getFile() returned nothing"
             Logger.error(errStr)
             BadRequest(errStr)
         }
@@ -96,32 +96,31 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
   }
 
   def getCase(memberId: Int, caseId: String) = Action { request: Request[AnyContent] =>
-    doesUserHaveAuthorizedCookie(request, memberId) match {
-      case Left(err) =>
-        Logger.error(err)
-        BadRequest(err)
-      case Right(true) => {
+    doesUserHaveAuthorizedCookie(request) match {
+      case Right(_) if (caseId.forall(_.isDigit)) => {
         val dao = new CazeDao(dbContext)
-        dao.get(caseId.toInt, memberId) match {
-          case caze::Nil =>
+        dao.get(caseId.toInt) match {
+          case caze::Nil if (caze.member_id == memberId) =>
             Ok(caze.asJson.toString())
           case _ =>
-            val errStr = "getCase() returned nothing"
+            val errStr = "Get: getCase() failed: DB returned nothing."
             Logger.error(errStr)
             BadRequest(errStr)
         }
       }
+      case _ =>
+        BadRequest("Get: getCase() failed.")
     }
   }
 
-  def availableCasesForFile(memberId: Int, fileId: String) = Action { request: Request[AnyContent] =>
-    doesUserHaveAuthorizedCookie(request, memberId) match {
+  def availableCasesForFile(fileId: String) = Action { request: Request[AnyContent] =>
+    doesUserHaveAuthorizedCookie(request) match {
       case Left(err) =>
         Logger.error(err)
         BadRequest(err)
       case Right(true) => {
         val dao = new FileDao(dbContext)
-        val r = dao.getCasesFromFile(fileId, memberId).asJson.toString()
+        val r = dao.getCasesFromFile(fileId).asJson.toString()
         Ok(r)
       }
     }
@@ -133,7 +132,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     Logger.info(s"dao.lookupSymptom(${repertoryAbbrev}, ${symptom})")
 
     if (results.size == 0) {
-      val errStr = "No results found"
+      val errStr = "Get: repertorise(): No results found"
       Logger.error(errStr)
       BadRequest(errStr)
     }

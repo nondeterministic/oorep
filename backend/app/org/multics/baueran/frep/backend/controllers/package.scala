@@ -56,20 +56,19 @@ package object controllers {
     * Check user authorisation.
     *
     * @param request
-    * @param memberId
     * @return true, if the user who triggered the call of this function has a cookie with the correct hash value as in the DB.
     */
-  def doesUserHaveAuthorizedCookie(request: Request[AnyContent], memberId: Int): Either[String, Boolean] = {
+  def doesUserHaveAuthorizedCookie(request: Request[AnyContent]): Either[String, Boolean] = {
     val errorMsg = "Not authorized: bad request"
     authorizedRequestCookies(request) match {
       case Nil => Left(errorMsg)
       case cookies =>
-        getFrom(cookies, CookieFields.hash.toString) match {
-          case None => Left(errorMsg)
-          case Some(hash) =>
+        (getFrom(cookies, CookieFields.id.toString), getFrom(cookies, CookieFields.hash.toString)) match {
+          case (Some(memberIdStr), Some(hash)) if (memberIdStr.forall(_.isDigit)) =>
+            val memberId = memberIdStr.toInt
             memberDao.get(memberId) match {
               case member :: Nil => {
-                if (member.hash == hash)
+                if (member.hash == hash && member.member_id == memberId)
                   Right(true)
                 else
                   Left(errorMsg)
@@ -77,6 +76,7 @@ package object controllers {
               case _ =>
                 Left(errorMsg)
             }
+          case _ => Left(errorMsg)
         }
     }
   }

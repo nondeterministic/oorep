@@ -22,7 +22,7 @@ POST   	/delcase                    org.multics.baueran.frep.backend.controllers
 POST   	/savefile                   org.multics.baueran.frep.backend.controllers.Post.saveFile
 
 +nocsrf
-POST   	/delfile                    org.multics.baueran.frep.backend.controllers.Post.delFile
+POST   	/delfileandcases            org.multics.baueran.frep.backend.controllers.Post.delFileAndCases
 
 +nocsrf
 POST   	/updateFileDescription      org.multics.baueran.frep.backend.controllers.Post.updateFileDescription
@@ -31,8 +31,8 @@ GET		/authenticate               org.multics.baueran.frep.backend.controllers.Ge
 GET		/lookup						org.multics.baueran.frep.backend.controllers.Get.repertorise(repertory: String, symptom: String)
 GET     /availableReps              org.multics.baueran.frep.backend.controllers.Get.availableReps
 GET     /availableFiles             org.multics.baueran.frep.backend.controllers.Get.availableFiles(memberId: Int)
-GET     /availableCasesForFile      org.multics.baueran.frep.backend.controllers.Get.availableCasesForFile(memberId: Int, fileId: String)
-GET     /file                       org.multics.baueran.frep.backend.controllers.Get.getFile(memberId: Int, fileId: String)
+GET     /availableCasesForFile      org.multics.baueran.frep.backend.controllers.Get.availableCasesForFile(fileId: String)
+GET     /file                       org.multics.baueran.frep.backend.controllers.Get.getFile(fileId: String)
 GET     /case                       org.multics.baueran.frep.backend.controllers.Get.getCase(memberId: Int, caseId: String)
 
 # Map static resources from the /public folder to the /assets URL path

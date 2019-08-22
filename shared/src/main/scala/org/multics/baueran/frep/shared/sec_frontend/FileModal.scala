@@ -12,7 +12,8 @@ import org.scalajs.dom.html.Anchor
 
 abstract class FileModal {
 
-  var selected_file_id = Var("")
+  var selected_file_header: Var[Option[String]] = Var(None)
+  var selected_file_id: Var[Option[Int]] = Var(None)
 
   val files: Var[List[Anchor]] =
     Var(List(a(cls:="list-group-item list-group-item-action", data.toggle:="list", id:="none", href:="#list-profile", role:="tab", "<no files created yet>").render))

@@ -50,13 +50,12 @@ object AddToFileModal extends FileModal {
                     case Some(caze) => {
                       HttpRequest(serverUrl() + "/savecase")
                         .post(MultiPartBody(
-                          "case" -> PlainTextBody(caze.asJson.toString()),
-                          "fileheader" -> PlainTextBody(selected_file_id.now)))
+                          "fileId" -> PlainTextBody(selected_file_id.now.getOrElse(-1).toString()),
+                          "case" -> PlainTextBody(caze.asJson.toString())))
                         .onComplete({
                           case response: Success[SimpleHttpResponse] => {
-                            println("Received: " + response.get.body)
                             Case.updateCurrOpenCaseId(response.get.body.toInt)
-                            Case.updateCurrOpenFile(Some(selected_file_id.now))
+                            Case.updateCurrOpenFile(selected_file_id.now)
                             Case.updateCaseViewAndDataStructures()
                             Case.updateCaseHeaderView()
                             js.eval("$('#addToFileModal').modal('hide');")

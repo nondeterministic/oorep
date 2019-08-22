@@ -1,10 +1,7 @@
 package org.multics.baueran.frep.backend.controllers
 
 import javax.inject._
-import play.api._
 import play.api.mvc._
-import play.api.libs.json
-import play.api.libs.json.Json
 import org.multics.baueran.frep._
 import shared.Defs._
 import backend.dao.{CazeDao, FileDao}
@@ -31,7 +28,7 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
               Cookie(CookieFields.hash.toString, member.hash, httpOnly = false),
               Cookie(CookieFields.id.toString, member.member_id.toString, httpOnly = false)
             )
-        case _ => BadRequest("User not authorized to login.")
+        case _ => BadRequest("login() failed: user not authorized to login.")
       }
   }
 
@@ -41,21 +38,26 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
     */
 
   def saveCaze() = Action { request: Request[AnyContent] =>
-    val requestData = request.body.asMultipartFormData.get.dataParts
-    (requestData("fileheader"), requestData("case").toList) match {
-      case (_, Nil) | (Nil, _) => BadRequest("saveCaze() failed. No data received.")
-      case (Seq(fileheader), cazeJson::Nil) => {
-        Caze.decode(cazeJson.toString) match {
-          case Some(caze) => {
-            fileDao.addCaseToFile(caze, fileheader) match {
-              case Right(newId) => Ok(s"${newId}")
-              case Left(err) => BadRequest("saveCaze(): ERROR: " + err)
+    doesUserHaveAuthorizedCookie(request) match {
+      case Right(_) => {
+        val requestData = request.body.asMultipartFormData.get.dataParts
+        (requestData("fileId"), requestData("case").toList) match {
+          case (_, Nil) | (Nil, _) => BadRequest("Post: saveCaze() failed. No data received.")
+          case (Seq(fileId), cazeJson :: Nil) => {
+            Caze.decode(cazeJson.toString) match {
+              case Some(caze) => {
+                fileDao.addCaseToFile(caze, fileId.toInt) match {
+                  case Right(newId) => Ok(s"${newId}")
+                  case Left(err) => BadRequest("Post: saveCaze() failed: " + err)
+                }
+              }
+              case None => BadRequest("Post: saveCaze() failed: decoding of caze failed. Json wrong?")
             }
           }
-          case None => BadRequest("Decoding of caze failed. Json wrong?")
+          case _ => BadRequest("Post: saveCaze() failed: no data received.")
         }
       }
-      case _ => BadRequest("saveCaze() failed. No data received.")
+      case Left(err) => BadRequest("Post: saveCaze() failed: " + err)
     }
   }
 
@@ -64,78 +66,94 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
    */
 
   def updateCaze() = Action { request: Request[AnyContent] =>
-    val requestData = request.body.asMultipartFormData.get.dataParts
+    doesUserHaveAuthorizedCookie(request) match {
+      case Right(_) => {
+        val requestData = request.body.asMultipartFormData.get.dataParts
 
-    (requestData("case"), requestData("memberId")) match {
-      case (Seq(cazeJson), Seq(memberIdStr)) =>
-        Caze.decode(cazeJson.toString) match {
-          case Some(c) =>
-            cazeDao.replaceIfExists(c, memberIdStr.toInt)
-            Ok
-          case None => BadRequest("Decoding of caze failed. Json wrong?")
+        (requestData("case"), requestData("memberId")) match {
+          case (Seq(cazeJson), Seq(memberIdStr)) =>
+            Caze.decode(cazeJson.toString) match {
+              case Some(c) =>
+                cazeDao.replaceIfExists(c)
+                Ok
+              case None => BadRequest("updateCaze() failed: decoding of caze failed. Json wrong?")
+            }
+          case _ => BadRequest("updateCaze() failed: no data received")
         }
-      case _ => BadRequest("updateCaze() failed. No data received")
+      }
+      case Left(err) => BadRequest("updateCaze() failed: " + err)
     }
   }
 
   def delCaze() = Action { request: Request[AnyContent] =>
-    val requestData = request.body.asMultipartFormData.get.dataParts
+    doesUserHaveAuthorizedCookie(request) match {
+      case Right(_) => {
+        val requestData = request.body.asMultipartFormData.get.dataParts
 
-    (requestData("caseId"), requestData("memberId")) match {
-      case (Seq(caseIdStr), Seq(memberIdStr)) =>
-        doesUserHaveAuthorizedCookie(request, memberIdStr.toInt) match {
-          case Right(true) => {
-            cazeDao.delete(caseIdStr.toInt, memberIdStr.toInt)
-            Ok
-          }
-          case Left(err) =>
-            BadRequest(err)
+        (requestData("caseId"), requestData("memberId")) match {
+          case (Seq(caseIdStr), Seq(memberIdStr)) =>
+            doesUserHaveAuthorizedCookie(request) match {
+              case Right(true) => {
+                cazeDao.delete(caseIdStr.toInt)
+                Ok
+              }
+              case Left(err) =>
+                BadRequest("delCaze() failed: " + err)
+            }
+          case _ =>
+            BadRequest("delCaze() failed")
         }
-      case _ =>
-        BadRequest
+      }
+      case Left(err) => BadRequest("delCaze() failed: " + err)
     }
   }
 
   def saveFile() = Action { request: Request[AnyContent] =>
-    FIle.decode(request.body.asText.get) match {
-      case Some(file) => {
-        fileDao.insert(file) match {
-          case Right(_) => Ok
-          case Left(err) => BadRequest(err)
+    doesUserHaveAuthorizedCookie(request) match {
+      case Right(_) => {
+        FIle.decode(request.body.asText.get) match {
+          case Some(file) => {
+            fileDao.insert(file) match {
+              case Right(_) => Ok
+              case Left(err) => BadRequest(err)
+            }
+          }
+          case None =>
+            BadRequest("saveFile() failed: saving of file failed. Json wrong? " + request.body.asText.get)
         }
       }
-      case None =>
-        BadRequest("Saving of file failed. Json wrong? " + request.body.asText.get)
+      case Left(err) => BadRequest("saveFile() failed: " + err)
     }
   }
 
-  def delFile() = Action { request: Request[AnyContent] =>
-    val requestData = request.body.asMultipartFormData.get.dataParts
-    (requestData("fileheader"), requestData("memberId").toList) match {
-      case (_, Nil) | (Nil, _) => BadRequest("delFile() failed. No data received.")
-      case (Seq(fileheader), memberId::Nil) => {
-        fileDao.delFile(fileheader, memberId.toInt)
-        Ok
+  def delFileAndCases() = Action { request: Request[AnyContent] =>
+    doesUserHaveAuthorizedCookie(request) match {
+      case Right(_) => {
+        request.body.asMultipartFormData.get.dataParts("fileId") match {
+          case Seq(fileId) => {
+            fileDao.delFileAndAllCases(fileId.toInt)
+            Ok
+          }
+          case _ => BadRequest("delFile() failed: wrong data received.")
+        }
       }
-      case _ => BadRequest("delFile() failed. Wrong data received.")
+      case Left(err) => BadRequest("delFile() failed: " + err)
     }
   }
 
   def updateFileDescription() = Action { request: Request[AnyContent] =>
-    val requestData = request.body.asMultipartFormData.get.dataParts
-
-    (requestData("filedescr"), requestData("fileheader"), requestData("memberId")) match {
-      case (Seq(filedescr), Seq(fileheader), Seq(memberIdStr)) =>
-        doesUserHaveAuthorizedCookie(request, memberIdStr.toInt) match {
-          case Right(true) => {
-            fileDao.changeDescription(fileheader, memberIdStr.toInt, filedescr)
+    doesUserHaveAuthorizedCookie(request) match {
+      case Right(_) => {
+        val requestData = request.body.asMultipartFormData.get.dataParts
+        (requestData("filedescr"), requestData("fileId")) match {
+          case (Seq(filedescr), Seq(fileId)) if (fileId.forall(_.isDigit)) =>
+            fileDao.changeDescription(fileId.toInt, filedescr)
             Ok
-          }
-          case Left(err) =>
-            BadRequest(err)
+          case _ =>
+            BadRequest("updateFileDescription() failed")
         }
-      case _ =>
-        BadRequest
+      }
+      case Left(err) => BadRequest("updateFileDescription() failed: " + err)
     }
   }
 

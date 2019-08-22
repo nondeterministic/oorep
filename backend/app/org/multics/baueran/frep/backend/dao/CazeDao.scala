@@ -29,7 +29,12 @@ class CazeDao(dbContext: db.db.DBContext) {
   )
 
   def insert(c: Caze) = {
-    val insert = quote { tableCaze.insert(lift(c)).returning(_.id) }
+    val insert = quote {
+      tableCaze.insert(
+        _.member_id -> lift(c.member_id), _.date -> lift(c.date), _.description -> lift(c.description), _.header -> lift(c.header), _.results -> lift(c.results))
+        .returning(_.id)
+    }
+    Logger.debug("CazeDao: insert(): inserting case " + c.toString())
     run(insert)
   }
 
@@ -38,41 +43,40 @@ class CazeDao(dbContext: db.db.DBContext) {
     */
 
   def replace(c: Caze) = {
-    val existingCases = get(c.id, c.member_id)
+    val existingCases = get(c.id)
 
-    if (existingCases.length == 1) {
-      if (existingCases.head != c) {
-        Logger.debug("CazeDao: replace(): Replacing " + existingCases.head.toString())
-        val update = quote {
-          tableCaze
-            .filter(cc => cc.member_id == lift(existingCases.head.member_id) && cc.id == lift(existingCases.head.id))
-            .update(_.description -> lift(c.description), _.results -> lift(c.results), _.date -> lift(c.date))
+    existingCases match {
+      case foundCase :: Nil =>
+        if (foundCase != c) {
+          Logger.debug("CazeDao: replace(): Replacing " + foundCase.toString())
+          val update = quote {
+            tableCaze
+              .filter(currDBCase => currDBCase.id == lift(foundCase.id))
+              .update(_.description -> lift(c.description), _.results -> lift(c.results), _.date -> lift(c.date))
+          }
+          run(update)
+          Right(foundCase.id)
         }
-        Right(run(update).toInt)
-      }
-      else {
-        Logger.debug("CazeDao: replace(): NOT replacing " + c.toString())
-        Right(existingCases.head.id)
-      }
+        else {
+          Logger.debug("CazeDao: replace(): INFO: NOT replacing " + c.toString() + " since it's equal to a stored case.")
+          Right(foundCase.id)
+        }
+      case Nil =>
+        Logger.debug("CazeDao: replace(): Inserting " + c.toString())
+        Right(insert(c))
+      case _ =>
+        val errorMsg = "CazeDao: replace(): ERROR: NOT replacing " + c.toString() + " as there are more than 1 cases in the DB. This should not have happened!"
+        Logger.debug(errorMsg)
+        Left(errorMsg)
     }
-    else if (existingCases.length == 0) {
-      Logger.debug("CazeDao: replace(): Inserting " + c.toString())
-      Right(insert(c).toInt)
-    }
-    else {
-      val errorMsg = "CazeDao: replace(): ERROR: NOT replacing " + c.toString() + " as there are more than 1 cases in the DB. This should not have happened!"
-      Logger.debug(errorMsg)
-      Left(errorMsg)
-    }
-
   }
 
   /**
     * Get caze from DB with ID id.
     */
 
-  def get(id: Int, member_id: Int) = {
-    val select = quote { tableCaze.filter(_.id == lift(id)) }
+  def get(id: Int) = {
+    val select = quote { tableCaze.filter(c => c.id == lift(id)) }
     run(select)
   }
 
@@ -80,20 +84,18 @@ class CazeDao(dbContext: db.db.DBContext) {
     * Deletes not only a case but also the reference to it in the corresponding file(s).
     */
 
-  def delete(id: Int, member_id: Int) = {
+  def delete(id: Int) = {
     val fileDao = new FileDao(dbContext)
-
-    val files = fileDao.getFilesForMember(member_id)
-    val correspondingFiles = files.filter(_.cazes.filter(_.id == id).size > 0)
+    val correspondingFiles = fileDao.getFilesWithCase(id)
 
     transaction {
       // Delete cases from file(s)
-      correspondingFiles.foreach(file => fileDao.removeCaseFromFile(member_id, file.header, id))
+      correspondingFiles.foreach(file => fileDao.removeCaseFromFile(id, file.id))
 
       // Delete case itself
       run { quote {
         tableCaze
-          .filter(caze => caze.id == lift(id) && caze.member_id == lift(member_id))
+          .filter(_.id == lift(id))
           .delete
       }}
     }
@@ -103,14 +105,14 @@ class CazeDao(dbContext: db.db.DBContext) {
     * Like replace(), but does nothing if case does not ALREADY exist in DB.
     */
 
-  def replaceIfExists(c: Caze, memberId: Int) = {
+  def replaceIfExists(c: Caze) = {
     implicit def stringToString(s: String) = new BetterString(s) // For 'shorten'.
 
-    if (get(c.id, memberId).length > 0) {
+    if (get(c.id).length > 0) {
       replace(c)
-      Logger.debug("CazeDao: caze: " + c.toString.shorten + " replaced in DB.")
+      Logger.debug("CazeDao: replaceIfExists(): " + c.toString.shorten + " replaced an old case in DB.")
     } else {
-      Logger.debug("CazeDao: caze: " + c.toString.shorten + " not replaced as not in DB, yet.")
+      Logger.debug("CazeDao: replaceIfExists(): " + c.toString.shorten + " not replaced for something as case not found in DB.")
     }
   }
 

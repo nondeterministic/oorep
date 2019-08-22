@@ -18,10 +18,9 @@ object OpenFileModal extends FileModal {
   private def requestFileDeletion() = {
     getCookieData(dom.document.cookie, CookieFields.id.toString) match {
       case Some(memberId) => {
-        HttpRequest(serverUrl() + "/delfile")
+        HttpRequest(serverUrl() + "/delfileandcases")
           .post(MultiPartBody(
-            "fileheader" -> PlainTextBody(selected_file_id.now),
-            "memberId" -> PlainTextBody(memberId)))
+            "fileId" -> PlainTextBody(selected_file_id.now.getOrElse(-1).toString)))
           .onComplete({ case _ =>
             FileModalCallbacks.updateMemberFiles(memberId.toInt)
           })
@@ -29,13 +28,9 @@ object OpenFileModal extends FileModal {
         // If the file had currently a cose opened in the case view,
         // remove it from screen to avoid weird database behaviour,
         // in case the user then modifies the case...
-        Case.getCurrOpenFileHeader() match {
-          case Some(fh) =>
-            if (fh == selected_file_id.now) {
-              Case.updateCurrOpenFile(None)
-              Case.rmCaseDiv()
-            }
-          case _ => ;
+        if (Case.getCurrOpenFileId() == selected_file_id.now) {
+          Case.updateCurrOpenFile(None)
+          Case.rmCaseDiv()
         }
       }
       case None => ; // TODO: Display error modal?!
@@ -47,7 +42,7 @@ object OpenFileModal extends FileModal {
       div(cls:="modal-dialog", role:="document",
         div(cls:="modal-content",
           div(cls:="modal-header",
-            h5(cls:="modal-title", Rx("Really delete file " + selected_file_id() + "?")), // reallyDeleteVarString),
+            h5(cls:="modal-title", Rx("Really delete file " + selected_file_header().getOrElse("") + "?")),
             button(`type`:="button", cls:="close", data.dismiss:="modal", aria.label:="Close", span(aria.hidden:="true", "\u00d7"))
           ),
           div(cls:="modal-body",
@@ -82,9 +77,9 @@ object OpenFileModal extends FileModal {
               button(cls:="btn btn-primary mb-2", id:="submitOpenFileModal", `type`:="button", disabled:=true,
                 data.toggle:="modal", data.dismiss:="modal", data.target:="#editFileModal",
                 onclick:={(event: Event) =>
-                  EditFileModal.fileName() = selected_file_id.now
-                  Case.updateCurrOpenFile(Some(selected_file_id.now))
-                  EditFileModal.fileName.recalc()
+                  EditFileModal.fileName_fileId() = (selected_file_header.now.getOrElse("SOMETHING WENT WRONG"), selected_file_id.now.getOrElse(-1).toString)
+                  Case.updateCurrOpenFile(selected_file_id.now)
+                  EditFileModal.fileName_fileId.recalc()
                 },
                 "Open"
               )

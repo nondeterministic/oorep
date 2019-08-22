@@ -32,7 +32,8 @@ object Case {
   // This is not really necessary for proper functioning, but when deleting a case/file which is currently shown,
   // the user could, by pressing add or remove again, mess up the database as we're trying to write to a file/case,
   // or try to delete it, that no longer exists.
-  private var currOpenFileHeader: Option[String] = None
+  // private var currOpenFileHeader: Option[String] = None
+  private var currOpenFileId: Option[Int] = None
 
   // ------------------------------------------------------------------------------------------------------------------
   def size() = cRubrics.size
@@ -44,13 +45,13 @@ object Case {
   }
 
   // ------------------------------------------------------------------------------------------------------------------
-  def updateCurrOpenFile(fileHeader: Option[String]) = {
-    currOpenFileHeader = fileHeader
+  def updateCurrOpenFile(fileId: Option[Int]) = {
+    currOpenFileId = fileId
   }
 
   // ------------------------------------------------------------------------------------------------------------------
-  def getCurrOpenFileHeader() = {
-    currOpenFileHeader
+  def getCurrOpenFileId() = {
+    currOpenFileId
   }
 
   // ------------------------------------------------------------------------------------------------------------------
@@ -272,7 +273,7 @@ object Case {
                       }
 
                       descr = Some(shared.Caze(
-                        (if (descr.isDefined) descr.get.id else  0),
+                        (if (descr.isDefined) descr.get.id else -1),  // TODO: Was 0 before!
                         caseIdTxt,
                         memberId,
                         (new js.Date()).toISOString(),

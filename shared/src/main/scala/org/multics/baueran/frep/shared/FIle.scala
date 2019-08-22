@@ -3,7 +3,8 @@ package org.multics.baueran.frep.shared
 import io.circe._
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 
-case class FIle(header: String,
+case class FIle(dbId: Option[Int],
+                header: String,
                 member_id: Int,
                 date: String,
                 description: String,

@@ -36,14 +36,19 @@ package object FileModalCallbacks {
       files.map(file => {
         val listItemAddToFile =
           a(cls := "list-group-item list-group-item-action", data.toggle := "list", href := "#list-profile", role := "tab",
-            onclick := { (event: dom.Event) => AddToFileModal.selected_file_id() = file.header },
+            onclick := { (event: dom.Event) =>
+              AddToFileModal.selected_file_id() = file.dbId
+              AddToFileModal.selected_file_header() = Some(file.header)
+            },
+            data.`fileId` := s"${file.dbId.getOrElse(-1)}",
             file.header)
         AddToFileModal.appendItem(listItemAddToFile.render)
 
         val listItemOpenFile =
           a(cls := "list-group-item list-group-item-action", data.toggle := "list", href := "#list-profile", role := "tab",
             onclick := { (event: dom.Event) =>
-              OpenFileModal.selected_file_id() = file.header
+              OpenFileModal.selected_file_id() = file.dbId
+              OpenFileModal.selected_file_header() = Some(file.header)
               OpenFileModal.enableButtons()
             },
             file.header)

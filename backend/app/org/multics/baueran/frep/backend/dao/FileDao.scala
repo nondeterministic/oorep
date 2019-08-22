@@ -20,27 +20,61 @@ class FileDao(dbContext: db.db.DBContext) {
     querySchema[dbFile]("File", _.date -> "date_")
   }
 
-  def get(header: String, member_id: Int) = {
+  private def getRaw(id: Int) = {
     val select = quote {
-      tableFile.filter(file => file.header == lift(header) && file.member_id == lift(member_id))
+      tableFile.filter(_.id == lift(id))
     }
     run(select)
   }
 
-  def getFilesForMember(member_id: Int) = {
-    val select = quote {
-      tableFile.filter(_.member_id == lift(member_id))
+  def get(id: Int) = {
+    try {
+      Logger.info(s"FileDao: get(): getting file with id ${id}")
+      run ( quote {
+        tableFile.filter(_.id == lift(id))
+      }).map(dbFileToFIle(_)).map { case Some(file) => file }
+    } catch {
+      case exception: Throwable =>
+        Logger.warn(s"FileDao: get(): get(${id}) == {}: ${exception}")
+        List()
     }
-    run(select).map(dbFileToFIle(_)).map { case Some(file) => file }
   }
 
-  def getCasesFromFile(fileName: String, member_id: Int) = {
-    val file = getFilesForMember(member_id).find(_.header == fileName)
-    val cases = file match {
-      case Some(f) => f.cazes
-      case None => List()
+  def getFilesForMember(member_id: Int) = {
+    try {
+      Logger.info(s"FileDao: getFilesForMember(): getting files for member with id ${member_id}")
+      run ( quote {
+        tableFile.filter(_.member_id == lift(member_id))
+      }).map(dbFileToFIle(_)).map { case Some(file) => file }
+    } catch {
+      case exception: Throwable =>
+        Logger.warn(s"FileDao: getFilesForMember(): getFilesForMember(${member_id}) == {}: ${exception}")
+        List()
     }
-    cases
+  }
+
+  def getCasesFromFile(fileId: String): List[Caze] = {
+    if (fileId.forall(_.isDigit)) {
+      get(fileId.toInt) match {
+        case file :: Nil => file.cazes
+        case _ => List()
+      }
+    }
+    else {
+      Logger.warn(s"FileDao: getCasesFromFile() failed: fileId == ${fileId}")
+      List()
+    }
+  }
+
+  /**
+    * Return files which contain a case with case-ID caseId.
+    * (Should only ever be only really, i.e., list of length 1.)
+    */
+
+  def getFilesWithCase(caseId: Int): List[dbFile] = {
+    run ( quote {
+      tableFile.filter(_.case_ids.contains(lift(caseId)))
+    }) // UNCOMMENT, if FIles should be returned instead of dbFiles: .map(dbFileToFIle(_)).map { case Some(file) => file }
   }
 
   /**
@@ -49,13 +83,16 @@ class FileDao(dbContext: db.db.DBContext) {
     */
 
   private def dbFileToFIle(file: dbFile): Option[FIle] = {
-    get(file.header, file.member_id) match {
+    getRaw(file.id) match {
       case singleDbFile :: Nil => {
         val cazeDao = new CazeDao(dbContext)
-        val cazes = singleDbFile.case_ids.map(cazeDao.get(_, singleDbFile.member_id)).flatten
-        Some(FIle(singleDbFile.header, singleDbFile.member_id, singleDbFile.date, singleDbFile.description, cazes))
+        val cazes = singleDbFile.case_ids.map(cazeDao.get(_)).flatten
+        Some(FIle(Some(file.id), singleDbFile.header, singleDbFile.member_id, singleDbFile.date, singleDbFile.description, cazes))
       }
-      case _ => None
+      case _ => {
+        Logger.warn(s"FileDao: dbFileToFile(${file.toString()}) failed: returned None; file not in DB?")
+        None
+      }
     }
   }
 
@@ -64,22 +101,31 @@ class FileDao(dbContext: db.db.DBContext) {
       val cazeDao = new CazeDao(dbContext)
       val cazeIds =
         file.cazes
-          .map(caze => cazeDao.get(caze.id, caze.member_id)).flatten
+          .map(caze => cazeDao.get(caze.id)).flatten
           .map(_.id)
 
       if (cazeIds.length > 0)
-        Some(dbFile(0, file.header, file.member_id, file.date, file.description, cazeIds))
+        Some(dbFile(file.dbId.getOrElse(0), file.header, file.member_id, file.date, file.description, cazeIds))
       else
         None
     }
     else
-      Some(dbFile(0, file.header, file.member_id, file.date, file.description, List.empty))
+      Some(dbFile(file.dbId.getOrElse(0), file.header, file.member_id, file.date, file.description, List.empty))
   }
 
   def insert(f: FIle): Either[String, Int] = {
     fileToDBFile(f) match {
       case Some(newDBFile) =>
-        Right(run(quote { tableFile.insert(lift(newDBFile)).returning(_.id) }))
+        Right(run { quote {
+          // Do not add id values, as id auto-increments:
+          tableFile.insert(
+            _.header -> lift(newDBFile.header),
+            _.member_id -> lift(newDBFile.member_id),
+            _.date -> lift(newDBFile.date),
+            _.description -> lift(newDBFile.description),
+            _.case_ids -> lift(newDBFile.case_ids))
+            .returning(_.id)
+        }})
       case _ =>
         val err = "FileDao: insert() failed. Failed to convert FIle " + f.toString()
         Logger.error(err)
@@ -91,27 +137,26 @@ class FileDao(dbContext: db.db.DBContext) {
     * @return Case-ID as stored in the database for the (new) caze.
     */
 
-  def addCaseToFile(caze: Caze, fileheader: String) = {
+  def addCaseToFile(caze: Caze, fileId: Int) = {
     val cazeDao = new CazeDao(dbContext)
+    Logger.debug(s"FileDao: addCaseToFile(): about to add case ${caze} to file with ID ${fileId}")
 
     transaction {
       cazeDao.replace(caze) match {
         case Right(newId) =>
+          Logger.debug(s"FileDao: addCaseToFile(): replace(caze) returned ${newId}")
+
           // For every Caze we need to retrieve the actual dbCaze from the DB first...
-          val dbCaze = cazeDao.get(newId, caze.member_id).head
+          val dbCaze = cazeDao.get(newId).head
 
           // Now, we need the case IDs for the file with header, fileheader, and member ID, caze.member_id...
-          val tmp_case_ids = get(fileheader, caze.member_id) match {
+          val tmp_case_ids = getRaw(fileId) match {
             case file :: Nil => file.case_ids
             case _ => List.empty
           }
 
           // Delete case from all files, as a case can only have one parent file...
-          val filesWithCase: List[dbFile] = run(quote {
-            tableFile
-              .filter(f => f.member_id == lift(dbCaze.member_id) && f.case_ids.contains(lift(dbCaze.id)))
-          })
-          for (file <- filesWithCase) {
+          for (file <- getFilesWithCase(dbCaze.id)) {
             run(quote {
               tableFile
                 .filter(_.id == lift(file.id))
@@ -122,7 +167,7 @@ class FileDao(dbContext: db.db.DBContext) {
           // Insert case to new parent file...
           run(quote {
             tableFile
-              .filter(f => f.member_id == lift(caze.member_id) && f.header == lift(fileheader))
+              .filter(f => f.member_id == lift(caze.member_id) && f.id == lift(fileId)) // TODO: Think, we can ommit member_id in filter! CHECK & KILL!
               .update(_.case_ids -> lift((dbCaze.id :: tmp_case_ids).distinct))
           })
 
@@ -135,33 +180,17 @@ class FileDao(dbContext: db.db.DBContext) {
     }
   }
 
-  // removeCaseFromFile() is somewhat odd.  The intended code was like this:
-  //
-  //  def removeCaseFromFile(memberId: Int, fileName: String, caseId: Int) = run {
-  //    quote {
-  //      tableFile
-  //        .filter(file => file.member_id == lift(memberId) && file.header == lift(fileName))
-  //        .update(ff => {
-  //          val caseIds = lift(ff.case_ids.filter(_ != caseId))
-  //          ff.case_ids -> lift(caseIds)
-  //        })
-  //    }
-  //  }
-  //
-  // but I couldn't get it either through the parser or had runtime errors, cf.:
-  //
-  // https://stackoverflow.com/questions/56672799/cant-parse-scala-quill-expression-to-ast
-
   /**
     * According to Java docs, the returning result set here is a Long, n, that indicates
-    * which row the cursor is at in the DB after the operation.  (Pretty useless, if you ask me.)
+    * which row the cursor is at in the DB after the operation.  (Pretty useless, if you
+    * ask me.)
     */
 
-  def removeCaseFromFile(memberId: Int, fileName: String, caseId: Int) = {
+  def removeCaseFromFile(caseId: Int, fileId: Int) = {
     run {
       quote {
         tableFile
-          .filter(file => file.member_id == lift(memberId) && file.header == lift(fileName))
+          .filter(_.id == lift(fileId))
       }
     } match {
       case f::Nil => {
@@ -173,31 +202,28 @@ class FileDao(dbContext: db.db.DBContext) {
               .update(_.case_ids -> lift(newCaseIds)))).toInt
         )
       }
-      case _ => Left(s"FileDao: removeCaseFromFile failed for memberId ${memberId}, fileName ${fileName}, caseId ${caseId}")
+      case _ => Left(s"FileDao: removeCaseFromFile failed for fileId ${fileId}, caseId ${caseId}")
     }
   }
 
-  /**
-    * Deletes a file AND its associated cases. (Don't say, I didn't warn you!)
-    */
-
-  def delFile(fileheader: String, memberId: Int) = {
+  def delFileAndAllCases(fileId: Int) = {
     val cazeIds = run {
       quote {
         tableFile
-          .filter(f => f.header == lift(fileheader) && f.member_id == lift(memberId))
+          .filter(_.id == lift(fileId))
       }
     }.flatMap(_.case_ids)
 
     val cazeDao = new CazeDao(dbContext)
 
     transaction {
-      cazeIds.foreach(cazeDao.delete(_, memberId))
+      cazeIds.foreach(cazeDao.delete(_))
+      Logger.debug(s"FileDao: delFile(): deleting file with ID '${fileId}'.")
 
       run {
         quote {
           tableFile
-            .filter(f => f.header == lift(fileheader) && f.member_id == lift(memberId))
+            .filter(_.id == lift(fileId))
             .delete
         }
       }
@@ -205,9 +231,9 @@ class FileDao(dbContext: db.db.DBContext) {
   }
 
 
-  def changeDescription(fileheader: String, memberId: Int, newDescription: String) = run { quote {
+  def changeDescription(fileId: Int, newDescription: String) = run { quote {
     tableFile
-      .filter(f => f.member_id == lift(memberId) && f.header == lift(fileheader))
+      .filter(_.id == lift(fileId))
       .update(_.description -> lift(newDescription))
     }
   }
