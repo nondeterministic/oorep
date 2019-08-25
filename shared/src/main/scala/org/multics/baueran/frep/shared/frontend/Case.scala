@@ -7,7 +7,7 @@ import fr.hmil.roshttp.body.{MultiPartBody, PlainTextBody}
 import monix.execution.Scheduler.Implicits.global
 import scalatags.JsDom.all._
 
-import scalajs.js
+import scala.scalajs.js
 import scala.collection.mutable
 import rx.{ Var, Rx }
 import rx.Ctx.Owner.Unsafe._
