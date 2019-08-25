@@ -11,6 +11,13 @@ object RepertoryModal {
   val info: Var[Option[Info]] = Var(None)
   private val err = "ERROR: Repertory name not received!"
 
+  private val dialogHeader = Rx {
+    info() match {
+      case Some(i) => s"Info for repertory ${i.abbrev}"
+      case None => err
+    }
+  }
+
   private val title = Rx {
     info() match {
       case Some(i) => i.title
@@ -58,7 +65,7 @@ object RepertoryModal {
       div(cls:="modal-dialog modal-dialog-centered", role:="document", style:="min-width: 80%;",
         div(cls:="modal-content",
           div(cls:="modal-header",
-            h5(cls:="modal-title", s"Info for repertory ${abbrev.now}"), // TODO: No idea, why this doesn't work, but the below does! :-(
+            h5(cls:="modal-title", dialogHeader),
             button(`type`:="button", cls:="close", data.dismiss:="modal", "\u00d7")
           ),
           div(cls:="modal-body",
