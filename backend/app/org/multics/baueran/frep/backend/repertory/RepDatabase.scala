@@ -92,7 +92,7 @@ object RepDatabase {
         repertory.chapterRemedies.foreach(dao.insert(_))
       }
 
-      if (repertory.rubrics.size > 0 && dao.getRubric(repertory.rubrics.last).size == 0) {
+      if (repertory.rubrics.size > 0 && dao.getRubric(repertory.rubrics.last.abbrev, repertory.rubrics.last.id).size == 0) {
         Logger.debug("Inserting rubrics into DB for " + repertory.info.abbrev + ".")
         repertory.rubrics.foreach(dao.insert(_))
       }

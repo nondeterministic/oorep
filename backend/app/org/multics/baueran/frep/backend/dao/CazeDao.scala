@@ -3,7 +3,6 @@ package org.multics.baueran.frep.backend.dao
 import org.multics.baueran.frep._
 import backend.db
 import shared.{BetterString, CaseRubric, Caze}
-import io.circe.syntax._
 import play.api.Logger
 
 class CazeDao(dbContext: db.db.DBContext) {
@@ -12,62 +11,35 @@ class CazeDao(dbContext: db.db.DBContext) {
 
   private val tableCaze = quote { querySchema[Caze]("Caze", _.date -> "date_") }
 
-  implicit val decodeRepAccess = MappedEncoding[String, List[CaseRubric]](caseRubricList =>
-    io.circe.parser.parse(caseRubricList) match {
-      case Right(json) =>
-        val cursor = json.hcursor
-        cursor.as[List[CaseRubric]] match {
-          case Right(l) => l
-          case Left(err) => throw new IllegalArgumentException("Error decoding List[CaseRubric]: " + caseRubricList.toString() + "; " + err)
-        }
-      case Left(err) => throw new IllegalArgumentException("Error parsing List[CaseRubric]: " + caseRubricList.toString() + "; " + err)
-    }
-  )
+  def insert(c: Caze): Int = {
+    val cResultDao = new CazeResultDao(dbContext)
 
-  implicit val encodeListCaseRubrics = MappedEncoding[List[CaseRubric], String](
-    l => l.map(CaseRubric.caseRubricEncoder(_)).asJson.toString()
-  )
+    Logger.debug("CazeDao: INSERT(): inserting case " + c.toString() + "...")
 
-  def insert(c: Caze) = {
-    val insert = quote {
-      tableCaze.insert(
-        _.member_id -> lift(c.member_id), _.date -> lift(c.date), _.description -> lift(c.description), _.header -> lift(c.header), _.results -> lift(c.results))
-        .returning(_.id)
-    }
-    Logger.debug("CazeDao: insert(): inserting case " + c.toString())
-    run(insert)
-  }
+    transaction {
+      // Insert the case rubrics in terms of case results and store their IDs (ultimately, as a string)
+      val caseResultIds = cResultDao.insert(c)
 
-  /**
-    * Like insert, but will delete the old case first if one with same ID and memberID already exists.
-    */
+      // Insert actual case without case result IDs
+      val insert: Quoted[ActionReturning[Caze, Int]] = quote {
+        tableCaze.insert(
+          _.member_id -> lift(c.member_id), _.date -> lift(c.date), _.description -> lift(c.description), _.header -> lift(c.header))
+          .returningGenerated(_.id)
+      }
+      val newId = run(insert)
 
-  def replace(c: Caze) = {
-    val existingCases = get(c.id)
+      // Insert case result IDs
+      val rawQuery = quote {
+        (id: Int, crs: List[Int]) =>
+          infix"""UPDATE caze SET results=$crs WHERE id=$id"""
+            .as[Update[Caze]]
+      }
+      run(rawQuery(lift(newId), lift(caseResultIds)))
 
-    existingCases match {
-      case foundCase :: Nil =>
-        if (foundCase != c) {
-          Logger.debug("CazeDao: replace(): Replacing " + foundCase.toString())
-          val update = quote {
-            tableCaze
-              .filter(currDBCase => currDBCase.id == lift(foundCase.id))
-              .update(_.description -> lift(c.description), _.results -> lift(c.results), _.date -> lift(c.date))
-          }
-          run(update)
-          Right(foundCase.id)
-        }
-        else {
-          Logger.debug("CazeDao: replace(): INFO: NOT replacing " + c.toString() + " since it's equal to a stored case.")
-          Right(foundCase.id)
-        }
-      case Nil =>
-        Logger.debug("CazeDao: replace(): Inserting " + c.toString())
-        Right(insert(c))
-      case _ =>
-        val errorMsg = "CazeDao: replace(): ERROR: NOT replacing " + c.toString() + " as there are more than 1 cases in the DB. This should not have happened!"
-        Logger.debug(errorMsg)
-        Left(errorMsg)
+      Logger.debug("CazeDao: INSERT(): finished inserting case " + c.toString() + ": case Id: " + newId)
+
+      // Return id of newly inserted case
+      newId
     }
   }
 
@@ -75,45 +47,266 @@ class CazeDao(dbContext: db.db.DBContext) {
     * Get caze from DB with ID id.
     */
 
-  def get(id: Int) = {
-    val select = quote { tableCaze.filter(c => c.id == lift(id)) }
-    run(select)
+  //  private def getRaw(id: Int): Either[String, (Int, String, Int, String, String, List[Int])] = {
+  //    Logger.debug("1")
+  //    transaction {
+  //      val rawQuery = quote {
+  //        (tmpId: Int) =>
+  //          infix"""(SELECT header, member_id, date_, description, results FROM caze WHERE id=$tmpId)"""
+  //            .as[Query[(String, Int, String, String, List[Int])]]
+  //      }
+  //      Logger.debug("2: " + id)
+  //      run(rawQuery(lift(id))) match {
+  //        case tmpResult :: Nil =>
+  //          Logger.debug("3")
+  //          Right((id, tmpResult._1, tmpResult._2, tmpResult._3, tmpResult._4, tmpResult._5))
+  //        case other =>
+  //          val errorMsg = s"CazeDao: get($id) failed: $other"
+  //          Logger.error(errorMsg)
+  //          Left(errorMsg)
+  //      }
+  //    }
+  //  }
+
+  /**
+    * @param ids List of case IDs
+    * @return A list of raw (as in: as stored in the DB) cases, one for each ID.
+    */
+
+  private def getRaw(ids: List[Int]): List[(Int, String, Int, String, String, List[Int])] = {
+    var returnValue: List[(Int, String, Int, String, String, List[Int])] = List()
+
+    if (ids.length == 0)
+      return returnValue
+
+    // TODO: This is super ugly!  But the above doesn't work.  I guess, because quill somehow KNOWS that results is not an array of case-rubrics...
+    val conn = dbContext.dataSource.getConnection
+
+    try {
+      val statement = conn.createStatement()
+      val sqlString = s"SELECT id, header, member_id, date_, description, results FROM caze WHERE id IN (${ids.mkString(", ")});"
+      val resultSet = statement.executeQuery(sqlString)
+
+      while (resultSet.next()) {
+        val results = resultSet.getArray("results").getArray.asInstanceOf[Array[Integer]].toList.map(_.toInt)
+
+        returnValue =
+          ((resultSet.getInt("id"), resultSet.getString("header"), resultSet.getInt("member_id"), resultSet.getString("date_"), resultSet.getString("description"), results)
+            :: returnValue)
+
+        Logger.debug(s"CazeDao: getRaw($ids) sets $returnValue as return value.")
+      }
+
+      statement.close()
+    } catch {
+      case e =>
+        val errorMsg = s"CazeDao: getRaw($ids) failed: ${e.getStackTrace.map(_.toString).mkString("\n")}"
+        Logger.error(errorMsg)
+        returnValue = List()
+    } finally {
+      if (conn != null)
+        conn.close()
+    }
+
+    returnValue
+  }
+
+  def getResultIds(id: Int) = getRaw(List(id)).map(_._6).flatten
+
+  def get(ids: List[Int]): List[Caze] = {
+    val cResultDao = new CazeResultDao(dbContext)
+
+    getRaw(ids) match {
+      case Nil => List()
+      case rawCases => rawCases.map { case (id, header, memberId, date, descr, resultIds) =>
+        Caze(id, header, memberId, date, descr, cResultDao.get(resultIds)) }
+    }
+  }
+
+  def get(id: Int): Either[String, Caze] = {
+    val cResultDao = new CazeResultDao(dbContext)
+
+    getRaw(List(id)) match {
+      case (cId, header, memberId, date, descr, resultIds) :: Nil =>
+        Right(Caze(cId, header, memberId, date, descr, cResultDao.get(resultIds)))
+      case _ =>
+        val errorMsg = s"CazeDao: get($id) failed."
+        Logger.error(errorMsg)
+        Left(errorMsg)
+    }
+  }
+
+  def getMemberId(Id: Int): Either[String, Int] = {
+    run(quote {
+      tableCaze.filter(_.id == lift(Id)).map(_.member_id)
+    }) match {
+      case memberId :: Nil =>
+        Right(memberId)
+      case _ =>
+        Left(s"getMemberId($Id) failed. No such case in DB?")
+    }
   }
 
   /**
-    * Deletes not only a case but also the reference to it in the corresponding file(s).
+    * Deletes not only a case but also the reference to it in the corresponding file(s), and the case results.
+    *
+    * Returns the list of files to which case was associated before deletion.
     */
 
   def delete(id: Int) = {
     val fileDao = new FileDao(dbContext)
+    val crDao = new CazeResultDao(dbContext)
     val correspondingFiles = fileDao.getFilesWithCase(id)
+    var result: List[Int] = List()
 
-    transaction {
-      // Delete cases from file(s)
-      correspondingFiles.foreach(file => fileDao.removeCaseFromFile(id, file.id))
+    // Delete cases from file(s)
+    Logger.debug(s"CazeDao: DELETE($id): removing case from file first.")
+    correspondingFiles.foreach(file => fileDao.removeCaseFromFile(id, file.id))
 
-      // Delete case itself
-      run { quote {
-        tableCaze
-          .filter(_.id == lift(id))
-          .delete
-      }}
+    // Delete associated case results
+    Logger.debug(s"CazeDao: DELETE($id): deleting associated case results.")
+    getRaw(List(id)) match {
+      case c :: Nil =>
+        c._6.map(crDao.delete(_))
+
+        // Delete case itself
+        Logger.debug(s"CazeDao: DELETE($id): deleting case itself.")
+        run { quote {
+          tableCaze
+            .filter(_.id == lift(id))
+            .delete
+        }}
+
+        result = correspondingFiles.map(_.id)
+      case _ =>
+        Logger.error(s"CazeDao: DELETE($id) failed.")
     }
+
+    result
   }
 
   /**
     * Like replace(), but does nothing if case does not ALREADY exist in DB.
+    *
+    * @return New case ID if case was replaced, old case ID if case was not replaced, -1 if an error occurred.
     */
 
-  def replaceIfExists(c: Caze) = {
+  def replaceIfExists(caze: Caze) = {
     implicit def stringToString(s: String) = new BetterString(s) // For 'shorten'.
+    val fileDao = new FileDao(dbContext)
 
-    if (get(c.id).length > 0) {
-      replace(c)
-      Logger.debug("CazeDao: replaceIfExists(): " + c.toString.shorten + " replaced an old case in DB.")
-    } else {
-      Logger.debug("CazeDao: replaceIfExists(): " + c.toString.shorten + " not replaced for something as case not found in DB.")
+    get(caze.id) match {
+      case Right(foundCase) =>
+        fileDao.getFilesWithCase(foundCase.id) match {
+          case file :: Nil =>
+            if (foundCase != caze) {
+              // TODO: If we put the below into a transaction, opening of a case, and then opening of a new case works; user will have lost first case in his file!
+              delete(foundCase.id)
+              val insertedId = insert(caze)
+              fileDao.addCaseIdToFile(insertedId, file.id)
+              Logger.debug(s"CazeDao: REPLACEIFEXISTS($caze): replaced: new case ID $insertedId.")
+              insertedId
+            }
+            else {
+              Logger.debug(s"CazeDao: REPLACEIFEXISTS($caze): not replaced as case hasn't changed.")
+              caze.id
+            }
+          case other =>
+            Logger.debug(s"CazeDao: REPLACEIFEXISTS($caze): failed as no unique file found to which case belongs. List of files: $other")
+            -1
+        }
+      case Left(_) =>
+        Logger.debug(s"CazeDao: REPLACEIFEXISTS($caze): not replaced.")
+        caze.id
     }
+  }
+
+  /**
+    * Returns list of case result IDs that were added to the case with ID case Id,
+    * or empty List on error.
+    */
+
+  def addCaseRubrics(caseId: Int, caseRubrics: List[CaseRubric]) = {
+    val cResultDao = new CazeResultDao(dbContext)
+
+    getMemberId(caseId) match {
+      case Right(memberId) =>
+        // Insert the case rubrics in terms of case results and store their IDs (ultimately, as a string)
+        val caseResultIds = cResultDao.insert(memberId, caseRubrics)
+
+        // Add case result ids to case
+        val rawQuery = quote {
+          (id: Int, crs: List[Int]) =>
+            infix"""UPDATE caze SET results=results || $crs WHERE id=$id"""
+              .as[Update[Caze]]
+        }
+        val numberOfUpdates = run(rawQuery(lift(caseId), lift(caseResultIds)))
+
+        if (numberOfUpdates > 0)
+          caseResultIds
+        else {
+          Logger.error(s"CazeDao: ADDCASERUBRICS($caseId, #${caseRubrics.length}) failed: DB update not done.")
+          List()
+        }
+      case Left(err) =>
+        Logger.error(s"CazeDao: ADDCASERUBRICS($caseId, #${caseRubrics.length}) failed: failed to retrieve case from DB.")
+        List()
+    }
+  }
+
+  /**
+    * Returns number of deleted case results.
+    */
+
+  def delCaseRubrics(caseId: Int, caseRubrics: List[CaseRubric]): Int = {
+    val cResultDao = new CazeResultDao(dbContext)
+
+    getRaw(List(caseId)) match {
+      case caze :: Nil =>
+        val deletedCaseResultIds = cResultDao.delCaseRubrics(caseId, caseRubrics)
+        val leftOverCaseResultIds: List[Int] = caze._6.toSet.filterNot(deletedCaseResultIds.toSet).asInstanceOf[Set[Int]].toList
+        val rawQuery = quote {
+          (id: Int, crs: List[Int]) =>
+            infix"""UPDATE caze SET results=$crs WHERE id=$id"""
+              .as[Update[Caze]]
+        }
+
+        if (run(rawQuery(lift(caseId), lift(leftOverCaseResultIds))) > 0)
+          return deletedCaseResultIds.length
+    }
+
+    0
+  }
+
+  /**
+    * @return Number of updated case results
+    */
+
+  def updateCaseRubricsWeights(caseId: Int, caseRubrics: List[CaseRubric]): Int = {
+    val cResultDao = new CazeResultDao(dbContext)
+    val caseResults = cResultDao.getCaseResults(caseId, caseRubrics)
+
+    caseResults.map { case caseResult =>
+        caseRubrics.filter(cr => cr.rubric.id == caseResult.rubricId && cr.rubric.abbrev == caseResult.abbrev) match {
+          case caseRubric :: Nil =>
+            if (caseRubric.rubricWeight != caseResult.weight)
+              cResultDao.setWeight(caseResult.id, caseRubric.rubricWeight).toInt
+            else {
+              Logger.warn(s"CazeDao: UPDATECASERUBRICSWEIGHTS($caseId, #${caseRubrics.length}): skipping a case as weights are equal: ${caseRubric.rubricWeight}")
+              0
+            }
+          case _ =>
+            Logger.warn(s"CazeDao: UPDATECASERUBRICSWEIGHTS($caseId, #${caseRubrics.length}) failed.")
+            0
+        }
+    }.foldLeft(0)(_ + _)
+  }
+
+  def updateCaseDescription(caseId: Int, caseDescription: String): Long = {
+    run(quote(tableCaze
+      .filter(_.id == lift(caseId))
+      .update(_.description -> lift(caseDescription))
+    ))
   }
 
 }

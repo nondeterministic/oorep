@@ -10,6 +10,7 @@ import org.multics.baueran.frep.shared._
 import org.multics.baueran.frep.backend.dao.MemberDao
 import org.multics.baueran.frep.backend.db.db.DBContext
 import org.multics.baueran.frep.shared.Defs._
+import Defs.maxNumberOfResults
 
 /**
  * This controller creates an `Action` to handle HTTP requests to the
@@ -100,7 +101,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
       case Right(_) if (caseId.forall(_.isDigit)) => {
         val dao = new CazeDao(dbContext)
         dao.get(caseId.toInt) match {
-          case caze::Nil if (caze.member_id == memberId) =>
+          case Right(caze) if (caze.member_id == memberId) =>
             Ok(caze.asJson.toString())
           case _ =>
             val errStr = "Get: getCase() failed: DB returned nothing."
@@ -129,15 +130,15 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
   def repertorise(repertoryAbbrev: String, symptom: String) = Action { request: Request[AnyContent] =>
     val dao = new RepertoryDao(dbContext)
     val results: List[CaseRubric] = dao.lookupSymptom(repertoryAbbrev, symptom)
-    Logger.info(s"dao.lookupSymptom(${repertoryAbbrev}, ${symptom})")
 
     if (results.size == 0) {
-      val errStr = "Get: repertorise(): No results found"
-      Logger.error(errStr)
+      val errStr = s"Get: repertorise(${repertoryAbbrev}, ${symptom}): no results found"
+      Logger.warn(errStr)
       BadRequest(errStr)
     }
     else {
-      Ok(results.asJson.toString())
+      Logger.debug(s"Get: repertorise(${repertoryAbbrev}, ${symptom}): #results: ${results.size}.")
+      Ok(results.take(maxNumberOfResults).asJson.toString())
     }
   }
 

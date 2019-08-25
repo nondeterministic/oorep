@@ -1,11 +1,10 @@
 import sbt.Keys.libraryDependencies
 import sbtcrossproject.{CrossType, crossProject}
 
-val scalaJSReactVersion = "1.2.3"
-val scalaCssVersion = "0.5.5"
-val reactJSVersion = "16.3.2"
-// val circeVersion = "0.9.3"
-val circeVersion = "0.10.0"
+//val scalaJSReactVersion = "1.2.3"
+//val scalaCssVersion = "0.5.5"
+//val reactJSVersion = "16.3.2"
+val circeVersion = "0.11.1"
 val scalaTestVersion = "3.1.0"
 
 resolvers += Resolver.bintrayRepo("hmil", "maven")
@@ -21,7 +20,7 @@ lazy val backend = (project in file("backend")).settings(commonSettings).setting
     jdbc,
     evolutions,
     "org.postgresql" % "postgresql" % "42.2.5",
-    "io.getquill" %% "quill-jdbc" % "3.3.0",
+    "io.getquill" %% "quill-jdbc" % "3.4.3",
     "io.circe" %% "circe-core" % circeVersion,
     "io.circe" %% "circe-generic" % circeVersion,
     "io.circe" %% "circe-parser" % circeVersion,
@@ -46,14 +45,14 @@ lazy val frontend = (project in file("frontend")).settings(commonSettings).setti
     baseDirectory.value / ".." / "backend" / "public" / "javascripts" / "frontend-pub-fastOpt.js",
  
   libraryDependencies ++= Seq(
-    "org.scala-js" %%% "scalajs-dom" % "0.9.5",
-    "com.lihaoyi" %%% "scalatags" % "0.6.7",
+    "org.scala-js" %%% "scalajs-dom" % "0.9.7",
+    "com.lihaoyi" %%% "scalatags" % "0.7.0",
     "org.querki" %%% "jquery-facade" % "1.2",
     "io.circe" %%% "circe-core" % circeVersion,
     "io.circe" %%% "circe-generic" % circeVersion,
     "io.circe" %%% "circe-parser" % circeVersion,
     "fr.hmil" %%% "roshttp" % "2.2.3", 
-   "com.timushev" %%% "scalatags-rx" % "0.3.0"
+    "com.timushev" %%% "scalatags-rx" % "0.4.0"
   ),
 ).enablePlugins(ScalaJSPlugin, ScalaJSWeb)
  .dependsOn(sharedJs)
@@ -69,14 +68,14 @@ lazy val sec_frontend = (project in file("sec_frontend")).settings(commonSetting
     baseDirectory.value / ".." / "backend" / "public" / "javascripts" / "frontend-priv-fastOpt.js",
 
   libraryDependencies ++= Seq(
-    "org.scala-js" %%% "scalajs-dom" % "0.9.5",
-    "com.lihaoyi" %%% "scalatags" % "0.6.7",
+    "org.scala-js" %%% "scalajs-dom" % "0.9.7",
+    "com.lihaoyi" %%% "scalatags" % "0.7.0",
     "org.querki" %%% "jquery-facade" % "1.2",
     "io.circe" %%% "circe-core" % circeVersion,
     "io.circe" %%% "circe-generic" % circeVersion,
     "io.circe" %%% "circe-parser" % circeVersion,
     "fr.hmil" %%% "roshttp" % "2.2.3", 
-   "com.timushev" %%% "scalatags-rx" % "0.3.0"
+    "com.timushev" %%% "scalatags-rx" % "0.4.0"
   ),
 ).enablePlugins(ScalaJSPlugin, ScalaJSWeb)
  .dependsOn(sharedJs)
@@ -90,11 +89,11 @@ lazy val shared = crossProject(JSPlatform, JVMPlatform)
       "io.circe" %% "circe-core" % circeVersion,
       "io.circe" %% "circe-generic" % circeVersion,
       "io.circe" %% "circe-parser" % circeVersion,
-      "org.scala-js" %%% "scalajs-dom" % "0.9.5",
-      "com.lihaoyi" %%% "scalatags" % "0.6.7",
+      "org.scala-js" %%% "scalajs-dom" % "0.9.7",
+      "com.lihaoyi" %%% "scalatags" % "0.7.0",
       "org.querki" %%% "jquery-facade" % "1.2",
       "fr.hmil" %%% "roshttp" % "2.2.3",
-      "com.timushev" %%% "scalatags-rx" % "0.3.0"
+      "com.timushev" %%% "scalatags-rx" % "0.4.0"
     )
   )
 //  .jsSettings(
@@ -122,7 +121,7 @@ lazy val sharedJvm = shared.jvm
 lazy val sharedJs = shared.js
 
 lazy val commonSettings = Seq(
-  scalaVersion := "2.12.5",
+  scalaVersion := "2.12.8",
   organization := "org.multics.baueran.frep"
 )
 

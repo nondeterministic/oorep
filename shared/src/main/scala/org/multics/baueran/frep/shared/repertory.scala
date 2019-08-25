@@ -118,12 +118,17 @@ object RubricRemedy {
 }
 
 // ------------------------------------------------------------------------------------------------------------------
-case class Remedy(abbrev: String, val id: Int, val nameAbbrev: String, val nameLong: String) {
+case class Remedy(abbrev: String, id: Int, nameAbbrev: String, nameLong: String) {
   def canEqual(a: Any) = a.isInstanceOf[Remedy]
 
   override def equals(that: Any) = {
     that match {
-      case r: Remedy => r.canEqual(this) && r.hashCode() == this.hashCode()
+      case that: Remedy =>
+        this.canEqual(that) &&
+          that.abbrev == this.abbrev &&
+          that.id == this.id &&
+          that.nameAbbrev == this.nameAbbrev &&
+          that.nameLong == this.nameLong
       case _ => false
     }
   }
@@ -157,15 +162,6 @@ object ChapterRemedy {
 case class Rubric(abbrev: String, id: Int, mother: Option[Int], isMother: Option[Boolean],
                   chapterId: Int, fullPath: String, path: Option[String], textt: Option[String])
 {
-  def canEqual(a: Any) = a.isInstanceOf[Rubric]
-
-  override def equals(that: Any) = {
-    that match {
-      case r: Rubric => r.canEqual(this) && r.hashCode() == this.hashCode()
-      case _ => false
-    }
-  }
-
   override def hashCode: Int = {
     val prime = 31
     var result = 1
@@ -178,7 +174,25 @@ case class Rubric(abbrev: String, id: Int, mother: Option[Int], isMother: Option
       fullPath.hashCode() +
       (if (path == None) 0 else path.get.hashCode()) +
       (if (textt == None) 0 else textt.get.hashCode())
-    return result
+    result * prime
+  }
+
+  def canEqual(a: Any) = a.isInstanceOf[Rubric]
+
+  override def equals(that: Any) = {
+    that match {
+      case that: Rubric =>
+        this.canEqual(that) &&
+          that.abbrev == this.abbrev &&
+          that.id == this.id &&
+          that.mother == this.mother &&
+          that.isMother == this.isMother &&
+          that.chapterId == this.chapterId &&
+          that.fullPath == this.fullPath &&
+          that.path == this.path &&
+          that.textt == this.textt
+      case _ => false
+    }
   }
 
   /**
@@ -197,7 +211,7 @@ case class Rubric(abbrev: String, id: Int, mother: Option[Int], isMother: Option
           xMod = x.toLowerCase
         }
 
-        val searchSpace = xMod.replaceAll("[^A-Za-z0-9 \\-]", "").split(" ")
+        val searchSpace = xMod.replaceAll("[^A-Za-z0-9 äüößÄÖÜ\\-]", "").split(" ")
 
         if (wordMod.contains("*")) {
           // If there's no * at beginning of search term, add ^, so that "urin*" doesn't
@@ -258,7 +272,7 @@ case class Repertory(val info: Info, val chapters: Seq[Chapter], val remedies: S
     val searchStrings = enteredSearchString.
                           trim.                               // Remove trailing spaces
                           replaceAll(" +", " ").              // Remove double spaces
-                          replaceAll("[^A-Za-z0-9 \\-*]", "").// Remove all but alphanum-, wildcard-, minus-symbols
+                          replaceAll("[^A-Za-z0-9 äüößÄÖÜ\\-*]", "").// Remove all but alphanum-, wildcard-, minus-symbols
                           split(" ")                          // Get list of search strings
 
     val posSearchTerms = searchStrings.filter(!_.startsWith("-")).toList

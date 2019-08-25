@@ -13,7 +13,7 @@ POST   	/login                      org.multics.baueran.frep.backend.controllers
 POST   	/savecase                   org.multics.baueran.frep.backend.controllers.Post.saveCaze
 
 +nocsrf
-POST   	/updatecase                 org.multics.baueran.frep.backend.controllers.Post.updateCaze
+POST   	/updatecasedescription      org.multics.baueran.frep.backend.controllers.Post.updateCaseDescription
 
 +nocsrf
 POST   	/delcase                    org.multics.baueran.frep.backend.controllers.Post.delCaze
@@ -26,6 +26,15 @@ POST   	/delfileandcases            org.multics.baueran.frep.backend.controllers
 
 +nocsrf
 POST   	/updateFileDescription      org.multics.baueran.frep.backend.controllers.Post.updateFileDescription
+
++nocsrf
+POST    /addcaserubricstocase       org.multics.baueran.frep.backend.controllers.Post.addCaseRubricsToCaze
+
++nocsrf
+POST    /delcaserubricsfromcase     org.multics.baueran.frep.backend.controllers.Post.delCaseRubricsFromCaze
+
++nocsrf
+POST    /updatecaserubricsweights   org.multics.baueran.frep.backend.controllers.Post.updateCaseRubricsWeights
 
 GET		/authenticate               org.multics.baueran.frep.backend.controllers.Get.authenticate
 GET		/lookup						org.multics.baueran.frep.backend.controllers.Get.repertorise(repertory: String, symptom: String)

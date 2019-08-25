@@ -77,6 +77,7 @@ object OpenFileModal extends FileModal {
               button(cls:="btn btn-primary mb-2", id:="submitOpenFileModal", `type`:="button", disabled:=true,
                 data.toggle:="modal", data.dismiss:="modal", data.target:="#editFileModal",
                 onclick:={(event: Event) =>
+                  $("body").css("cursor", "wait")
                   EditFileModal.fileName_fileId() = (selected_file_header.now.getOrElse("SOMETHING WENT WRONG"), selected_file_id.now.getOrElse(-1).toString)
                   Case.updateCurrOpenFile(selected_file_id.now)
                   EditFileModal.fileName_fileId.recalc()

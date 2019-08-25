@@ -4,29 +4,33 @@ import org.scalajs.dom
 import dom.Event
 import fr.hmil.roshttp.HttpRequest
 import fr.hmil.roshttp.body.{MultiPartBody, PlainTextBody}
+import fr.hmil.roshttp.response.SimpleHttpResponse
 import monix.execution.Scheduler.Implicits.global
 import scalatags.JsDom.all._
 
 import scala.scalajs.js
 import scala.collection.mutable
-import rx.{ Var, Rx }
+import rx.{Rx, Var}
 import rx.Ctx.Owner.Unsafe._
 import scalatags.rx.all._
 import org.multics.baueran.frep.shared
 import shared._
-import shared.Defs.{ serverUrl, CookieFields }
+import shared.Defs.{CookieFields, serverUrl}
 import shared.frontend.RemedyFormat.RemedyFormat
 import shared.sec_frontend.FileModalCallbacks._
 import org.scalajs.dom.raw.HTMLInputElement
 import org.querki.jquery.$
 import org.scalajs.dom
 import scalatags.JsDom
+import io.circe.syntax._
+
+import scala.util.Success
 
 object Case {
 
   var descr: Option[shared.Caze] = None
   var cRubrics: List[CaseRubric] = List()
-  var remedyScores = mutable.HashMap[String,Integer]()
+  private val remedyScores = mutable.HashMap[String,Integer]()
   private var prevCase: Option[shared.Caze] = None
 
   // This is not really necessary for proper functioning, but when deleting a case/file which is currently shown,
@@ -91,20 +95,48 @@ object Case {
         // and if previous case != current case.
         // And, it only makes sense to update, if there are any rubrics left, e.g., which may not be the
         // case after pressing "Remove" a few times...
-        if ((memberId >= 0) && prevCase.isDefined && (prevCase.get != descr.get) && (cRubrics.size > 0)) {
+        if ((memberId >= 0) && prevCase.isDefined && (prevCase.get.id == descr.get.id) && (cRubrics.size > 0) && (prevCase.get != descr.get)) {
           // Before we write the case to disk, we update the date to record the change.
           // We do not do this above, as the prevCase != descr check would always fail then!
           descr = Some(shared.Caze(descr.get.id, descr.get.header, descr.get.member_id, (new js.Date()).toISOString(), descr.get.description, cRubrics))
 
-          HttpRequest(serverUrl() + "/updatecase")
-            .post(MultiPartBody(
-              "case" -> PlainTextBody(Caze.encoder(descr.get).toString()),
-              "memberId" -> PlainTextBody(memberId.toString())))
+          if (descr.get.isSupersetOf(prevCase.get).length > 0) { // Add additional case rubrics to DB
+            val diff = descr.get.isSupersetOf(prevCase.get)
 
-          println("Case: updateCaseViewAndDataStructures: Updated case in DB.")
+            HttpRequest(serverUrl() + "/addcaserubricstocase")
+              .post(MultiPartBody(
+                "caseID" -> PlainTextBody(descr.get.id.toString),
+                "caserubrics" -> PlainTextBody(diff.asJson.toString)))
+          }
+          else if (prevCase.get.isSupersetOf(descr.get).length > 0) { // Delete the removed case rubrics in DB
+            val diff = prevCase.get.isSupersetOf(descr.get)
+
+            HttpRequest(serverUrl() + "/delcaserubricsfromcase")
+              .post(MultiPartBody(
+                "caseID" -> PlainTextBody(descr.get.id.toString),
+                "caserubrics" -> PlainTextBody(diff.asJson.toString)))
+          }
+          else if (descr.get.isEqualExceptWeights(prevCase.get).length > 0) { // Update weights only in DB
+            val diff = prevCase.get.isEqualExceptWeights(descr.get) // These are the user-changed ones, which we'll need to update in the DB, too.
+
+            HttpRequest(serverUrl() + "/updatecaserubricsweights")
+              .post(MultiPartBody(
+                "caseID" -> PlainTextBody(descr.get.id.toString),
+                "caserubrics" -> PlainTextBody(diff.asJson.toString)))
+          }
+          else if (descr.get.description != prevCase.get.description) {
+            HttpRequest(serverUrl() + "/updatecasedescription")
+              .post(MultiPartBody(
+                "caseID" -> PlainTextBody(descr.get.id.toString),
+                "casedescription" -> PlainTextBody(descr.get.description)))
+          }
+          else {
+            println("Case: updateAllCaseDataStructures(): NOT saving case, although something indicates it may have changed. " +
+              "This shouldn't have happened, but previous saves should have taken care that no data-loss occurred.")
+          }
         }
         else
-          println("Case: updateCaseViewAndDataStructures: NOT updating case in DB as unchanged.")
+          println("Case: updateAllCaseDataStructures(): NOT updating case in DB as case is currently unchanged.")
       }
 
       // Delete not only view but entire case from DB, when user removed all of its rubrics...
@@ -143,7 +175,7 @@ object Case {
 
     // Redraw table body
     $("#analysisTBody").empty()
-    for (cr <- cRubrics) {
+    for (cr <- cRubrics.sortBy(cr => cr.repertoryAbbrev + cr.rubric.fullPath)) {
       val trId = cr.rubric.fullPath.replaceAll("[^A-Za-z0-9]", "") + "_" + cr.repertoryAbbrev
 
       $("#analysisTBody").append(
@@ -166,6 +198,7 @@ object Case {
     getCookieData(dom.document.cookie, CookieFields.id.toString) match {
       // Not logged in...
       case None =>
+        println("NOT LOGGED IN!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
         $("#openNewCaseButton").hide()
         $("#editDescrButton").hide()
         $("#closeCaseButton").hide()
@@ -272,8 +305,8 @@ object Case {
                         case None => -1 // TODO: Force user to relogin; the identification cookie has disappeared!!!!!!!!!!
                       }
 
-                      descr = Some(shared.Caze(
-                        (if (descr.isDefined) descr.get.id else -1),  // TODO: Was 0 before!
+                      descr = Some(shared.Caze( // WHERE CAZE IS INITIALLY CREATED: WITH ID -1!
+                        (if (descr.isDefined) descr.get.id else -1),
                         caseIdTxt,
                         memberId,
                         (new js.Date()).toISOString(),
@@ -446,7 +479,10 @@ object Case {
             ),
             th(attr("scope"):="col", " ")
           ),
-          tbody(scalatags.JsDom.attrs.id:="caseTBody", cRubrics.map(crub => caseRow(crub)))
+          tbody(scalatags.JsDom.attrs.id:="caseTBody",
+            cRubrics
+              .sortBy(cr => (cr.repertoryAbbrev + cr.rubric.fullPath))
+              .map(crub => caseRow(crub)))
         )
       )
     )

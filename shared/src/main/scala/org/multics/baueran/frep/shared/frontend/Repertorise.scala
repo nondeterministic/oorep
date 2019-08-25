@@ -85,7 +85,7 @@ object Repertorise {
         td(cls := "text-right",
           button(cls:="btn btn-sm", `type`:="button", id:=("button_" + result.repertoryAbbrev + "_" + result.rubric.id),
             style:="vertical-align: middle; display: inline-block",
-            (if (Case.cRubrics.contains(result)) attr("disabled"):="disabled" else ""),
+            (if (Case.cRubrics.filter(_.equalsIgnoreWeight(result)).size > 0) attr("disabled") := "disabled" else ""),
             onclick:={ (event: Event) => {
               event.stopPropagation()
               Case.addRepertoryLookup(result)
@@ -192,7 +192,7 @@ object Repertorise {
     val symptom = dom.document.getElementById("inputField").asInstanceOf[HTMLInputElement].value
     val repertory = selectedRepertory
 
-    if (repertory.length == 0 || symptom.trim.replaceAll("[^A-Za-z0-9]", "").length <= 3) {
+    if (repertory.length == 0 || symptom.trim.replaceAll("[^A-Za-z0-9äüöÄÜÖß]", "").length <= 3) {
       $("#resultStatus").empty()
       $("#resultStatus").append(
         div(cls:="alert alert-danger", role:="alert",

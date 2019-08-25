@@ -6,7 +6,8 @@ import org.multics.baueran.frep._
 import shared.Defs._
 import backend.dao.{CazeDao, FileDao}
 import backend.db.db.DBContext
-import shared.{Caze, FIle}
+import play.api.Logger
+import shared.{CaseRubric, Caze, FIle}
 
 class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends AbstractController(cc) {
   cazeDao = new CazeDao(dbContext)
@@ -33,7 +34,7 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
   }
 
   /**
-    * @return Ok(case ID) of stored case as it is in the DB (and not that 0 stuff, a newly created case gets!),
+    * @return Ok(case ID) of stored case as it is in the DB,
     *         or BadRequest(error string) if something went wrong.
     */
 
@@ -42,46 +43,119 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
       case Right(_) => {
         val requestData = request.body.asMultipartFormData.get.dataParts
         (requestData("fileId"), requestData("case").toList) match {
-          case (_, Nil) | (Nil, _) => BadRequest("Post: saveCaze() failed. No data received.")
           case (Seq(fileId), cazeJson :: Nil) => {
             Caze.decode(cazeJson.toString) match {
-              case Some(caze) => {
-                fileDao.addCaseToFile(caze, fileId.toInt) match {
-                  case Right(newId) => Ok(s"${newId}")
-                  case Left(err) => BadRequest("Post: saveCaze() failed: " + err)
-                }
-              }
-              case None => BadRequest("Post: saveCaze() failed: decoding of caze failed. Json wrong?")
+              case Some(caze) =>
+                var newCaseId = caze.id
+                if (newCaseId < 0)
+                  newCaseId = cazeDao.insert(caze)
+
+                if (fileDao.addCaseIdToFile(newCaseId, fileId.toInt))
+                  Ok(newCaseId.toString)
+                else
+                  BadRequest(s"Post: saveCaze() failed: failed to add case with new ID ${newCaseId} (old case id: ${caze.id}) to file with ID ${fileId}.")
+
+              case None =>
+                BadRequest("Post: saveCaze() failed: decoding of caze failed. Json wrong? " + cazeJson)
             }
           }
-          case _ => BadRequest("Post: saveCaze() failed: no data received.")
+          case _ => BadRequest("Post: saveCaze() failed: no data received in request: " + requestData)
         }
       }
-      case Left(err) => BadRequest("Post: saveCaze() failed: " + err)
+      case Left(err) => BadRequest("Post: saveCaze() failed: not authorised: " + err)
     }
   }
 
- /**
-   * Updates case on disk, if it already exists, otherwise, does nothing.
-   */
-
-  def updateCaze() = Action { request: Request[AnyContent] =>
+  def addCaseRubricsToCaze() = Action { request: Request[AnyContent] =>
     doesUserHaveAuthorizedCookie(request) match {
       case Right(_) => {
         val requestData = request.body.asMultipartFormData.get.dataParts
 
-        (requestData("case"), requestData("memberId")) match {
-          case (Seq(cazeJson), Seq(memberIdStr)) =>
-            Caze.decode(cazeJson.toString) match {
-              case Some(c) =>
-                cazeDao.replaceIfExists(c)
-                Ok
-              case None => BadRequest("updateCaze() failed: decoding of caze failed. Json wrong?")
+        (requestData("caseID"), requestData("caserubrics")) match {
+          case (Seq(cazeIDStr), Seq(caserubricsJson)) if (cazeIDStr.forall(_.isDigit)) =>
+            (cazeIDStr.toInt, CaseRubric.decodeList(caserubricsJson)) match {
+              case (caseID, Some(caseRubrics)) =>
+                if (cazeDao.addCaseRubrics(caseID, caseRubrics).length > 0) {
+                  Logger.debug(s"Post: addCaseRubrics(): success")
+                  Ok
+                }
+                else {
+                  Logger.error(s"Post: addCaseRubrics(): failed")
+                  BadRequest("addCaseRubrics() failed")
+                }
             }
-          case _ => BadRequest("updateCaze() failed: no data received")
         }
       }
-      case Left(err) => BadRequest("updateCaze() failed: " + err)
+      case Left(err) => BadRequest("addCaseRubrics() failed: " + err)
+    }
+  }
+
+  def delCaseRubricsFromCaze() = Action { request: Request[AnyContent] =>
+    doesUserHaveAuthorizedCookie(request) match {
+      case Right(_) => {
+        val requestData = request.body.asMultipartFormData.get.dataParts
+
+        (requestData("caseID"), requestData("caserubrics")) match {
+          case (Seq(cazeIDStr), Seq(caserubricsJson)) if (cazeIDStr.forall(_.isDigit)) =>
+            (cazeIDStr.toInt, CaseRubric.decodeList(caserubricsJson)) match {
+              case (caseID, Some(caseRubrics)) =>
+                if (cazeDao.delCaseRubrics(caseID, caseRubrics) > 0) {
+                  Logger.debug(s"Post: delCaseRubrics(): success")
+                  Ok
+                }
+                else {
+                  Logger.error(s"Post: delCaseRubrics(): failed")
+                  BadRequest("delCaseRubrics() failed")
+                }
+            }
+        }
+      }
+      case Left(err) => BadRequest("delCaseRubrics() failed: " + err)
+    }
+  }
+
+  def updateCaseRubricsWeights() = Action { request: Request[AnyContent] =>
+    doesUserHaveAuthorizedCookie(request) match {
+      case Right(_) => {
+        val requestData = request.body.asMultipartFormData.get.dataParts
+
+        (requestData("caseID"), requestData("caserubrics")) match {
+          case (Seq(cazeIDStr), Seq(caserubricsJson)) if (cazeIDStr.forall(_.isDigit)) =>
+            (cazeIDStr.toInt, CaseRubric.decodeList(caserubricsJson)) match {
+              case (caseID, Some(caseRubrics)) =>
+                if (cazeDao.updateCaseRubricsWeights(caseID, caseRubrics) > 0) {
+                  Logger.debug(s"Post: updateCaseRubricsWeights(): success")
+                  Ok
+                }
+                else {
+                  Logger.error(s"Post: updateCaseRubricsWeights(): failed")
+                  BadRequest("updateCaseRubricsWeights() failed")
+                }
+            }
+        }
+      }
+      case Left(err) => BadRequest("updateCaseRubricsWeights() failed: " + err)
+    }
+  }
+
+  def updateCaseDescription() = Action { request: Request[AnyContent] =>
+    doesUserHaveAuthorizedCookie(request) match {
+      case Right(_) => {
+        val requestData = request.body.asMultipartFormData.get.dataParts
+
+        (requestData("caseID"), requestData("casedescription")) match {
+          case (Seq(cazeIDStr), Seq(casedescription)) if (cazeIDStr.forall(_.isDigit)) =>
+            if (cazeDao.updateCaseDescription(cazeIDStr.toInt, casedescription) > 0) {
+              Logger.debug(s"Post: updateCaseDescription(): success")
+              Ok
+            }
+            else {
+              Logger.error(s"Post: updateCaseDescription(): failed")
+              BadRequest("updateCaseDescription() failed")
+            }
+        }
+      }
+      case Left(err) => BadRequest("updateCaseDescription() failed: " + err)
     }
   }
 
@@ -92,14 +166,8 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
 
         (requestData("caseId"), requestData("memberId")) match {
           case (Seq(caseIdStr), Seq(memberIdStr)) =>
-            doesUserHaveAuthorizedCookie(request) match {
-              case Right(true) => {
-                cazeDao.delete(caseIdStr.toInt)
-                Ok
-              }
-              case Left(err) =>
-                BadRequest("delCaze() failed: " + err)
-            }
+            cazeDao.delete(caseIdStr.toInt)
+            Ok
           case _ =>
             BadRequest("delCaze() failed")
         }
@@ -112,12 +180,8 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
     doesUserHaveAuthorizedCookie(request) match {
       case Right(_) => {
         FIle.decode(request.body.asText.get) match {
-          case Some(file) => {
-            fileDao.insert(file) match {
-              case Right(_) => Ok
-              case Left(err) => BadRequest(err)
-            }
-          }
+          case Some(file) =>
+            Ok(fileDao.insert(file).toString())
           case None =>
             BadRequest("saveFile() failed: saving of file failed. Json wrong? " + request.body.asText.get)
         }

@@ -90,9 +90,16 @@ class RepertoryDao(dbContext: db.db.DBContext) {
     run(insert)
   }
 
-  def getRubric(r: Rubric) = {
+//  def getRubric(r: Rubric) = {
+//    val get = quote(query[Rubric].filter(rubric =>
+//      rubric.abbrev == lift(r.abbrev) && rubric.id == lift(r.id)
+//    ))
+//    run(get)
+//  }
+
+  def getRubric(abbrev: String, id: Int) = {
     val get = quote(query[Rubric].filter(rubric =>
-      rubric.abbrev == lift(r.abbrev) && rubric.id == lift(r.id)
+      rubric.abbrev == lift(abbrev) && rubric.id == lift(id)
     ))
     run(get)
   }
@@ -101,7 +108,7 @@ class RepertoryDao(dbContext: db.db.DBContext) {
     val searchStrings = symptom.
       trim.                                                    // Remove trailing spaces
       replaceAll(" +", " ").              // Remove double spaces
-      replaceAll("[^A-Za-z0-9 \\-*]", "").// Remove all but alphanum-, wildcard-, minus-symbols
+      replaceAll("[^A-Za-z0-9 äÄÜüÖöß\\-*]", "").// Remove all but alphanum-, wildcard-, minus-symbols
       split(" ")                                       // Get list of search strings
 
     val posSearchTerms = searchStrings.filter(!_.startsWith("-")).toList
@@ -114,7 +121,8 @@ class RepertoryDao(dbContext: db.db.DBContext) {
 
     // TODO: use of approximateSearchTerm is an oversimplification to narrow down the first
     // DB-lookup, which otherwise would return ALWAYS the entire repertory.
-    val approximateSearchTerm = "%" + posSearchTerms.head.toLowerCase.replaceAll("[^A-Za-z0-9 \\-]", "") + "%"
+    // It is also very brittle with the Umlauts...
+    val approximateSearchTerm = "%" + posSearchTerms.head.replaceAll("[^A-Za-z0-9 äÄÜüÖöß\\-]", "").toLowerCase + "%"
 
     val tmpResults =
       run(
@@ -123,9 +131,9 @@ class RepertoryDao(dbContext: db.db.DBContext) {
             .filter(rubric =>
               rubric.abbrev == lift(abbrev) &&
                 rubric.chapterId >= 0 &&
-                (rubric.fullPath.like(lift(approximateSearchTerm)) ||
-                  rubric.textt.getOrElse("").like(lift(approximateSearchTerm)) ||
-                  rubric.path.getOrElse("").like(lift(approximateSearchTerm)))
+                (rubric.fullPath.toLowerCase.like(lift(approximateSearchTerm)) ||
+                  rubric.textt.getOrElse("").toLowerCase.like(lift(approximateSearchTerm)) ||
+                  rubric.path.getOrElse("").toLowerCase.like(lift(approximateSearchTerm)))
             )
         }
       ).filter(_.isMatchFor(posSearchTerms, negSearchTerms))
@@ -156,7 +164,23 @@ class RepertoryDao(dbContext: db.db.DBContext) {
       .sortBy { _.rubric.fullPath }
   }
 
-  def getRemediesForRubric(rubric: Rubric): Seq[(Remedy, Int)] = {
+//  def getRemediesForRubric(rubric: Rubric): Seq[(Remedy, Int)] = {
+//    var result: ArrayBuffer[(Remedy, Int)] = new ArrayBuffer[(Remedy,Int)]
+//    val filter = quote { query[RubricRemedy].filter(rr => rr.rubricId == lift(rubric.id) && rr.abbrev == lift(rubric.abbrev)) }
+//    val remedyIdWeightTuples: Seq[(Int, Int)] = run(filter).map(rr => (rr.remedyId, rr.weight))
+//
+//    remedyIdWeightTuples.foreach { case (rid, rweight) =>
+//      val allRemedies = quote { query[Remedy].filter(r => r.abbrev == lift(rubric.abbrev)) }
+//      run(allRemedies).find(_.id == rid) match {
+//        case Some(remedy) => result += ((remedy, rweight))
+//        case None => Logger.warn("WARNING: RepertoryDao.getRemediesForRubric: No remedy found.")
+//      }
+//    }
+//
+//    result
+//  }
+
+  def getRemediesForRubric(rubric: Rubric): List[WeightedRemedy] = { // Seq[(Remedy, Int)] = {
     var result: ArrayBuffer[(Remedy, Int)] = new ArrayBuffer[(Remedy,Int)]
     val filter = quote { query[RubricRemedy].filter(rr => rr.rubricId == lift(rubric.id) && rr.abbrev == lift(rubric.abbrev)) }
     val remedyIdWeightTuples: Seq[(Int, Int)] = run(filter).map(rr => (rr.remedyId, rr.weight))
@@ -169,7 +193,7 @@ class RepertoryDao(dbContext: db.db.DBContext) {
       }
     }
 
-    result
+    result.map { case (r,w) => WeightedRemedy(r, w) }.toList
   }
 
   def insert(cr: CaseRubric) = {

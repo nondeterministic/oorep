@@ -17,7 +17,7 @@ import rx.Ctx.Owner.Unsafe._
 import scalatags.rx.all._
 import org.querki.jquery.$
 
-import scalajs.js
+import scala.scalajs.js
 import scala.math.{max, min}
 import scala.util.{Failure, Success, Try}
 
@@ -33,22 +33,24 @@ object EditFileModal {
     cases() match {
       case Nil =>
         List(a(cls:="list-group-item list-group-item-action", data.toggle:="list", id:="-1", href:="#list-profile", role:="tab", "<no cases created yet>").render)
-      case _ => cases().map { c =>
-        a(cls:="list-group-item list-group-item-action", id:=c.id.toString(), data.toggle:="list", href:="#list-profile", role:="tab",
-          onclick:={ (event: Event) =>
-            $("#openFileEditFileModal").removeAttr("disabled")
-            $("#deleteFileEditFileModal").removeAttr("disabled")
-            currentlySelectedCaseId() = c.id
-          },
-          c.header)
-          .render
+      case _ => cases()
+        .sortBy(_.date)
+        .reverse
+        .map { c =>
+          a(cls:="list-group-item list-group-item-action", id:=c.id.toString(), data.toggle:="list", href:="#list-profile", role:="tab",
+            onclick:={ (event: Event) =>
+              $("#openFileEditFileModal").removeAttr("disabled")
+              $("#deleteFileEditFileModal").removeAttr("disabled")
+              currentlySelectedCaseId() = c.id
+            },
+            s"[${c.date.take(10)}]   '${c.header}'")
+            .render
       }
     }
   }
   val fileName_fileId = Var(("", ""))
 
   fileName_fileId.foreach { case (fileName,fileId) =>
-
     // Update modal dialog with data obtained from backend...
     def updateModal(response: Try[SimpleHttpResponse]) = {
       response match {
@@ -89,10 +91,13 @@ object EditFileModal {
             .withQueryParameters("fileId" -> fileId)
             .withCrossDomainCookies(true)
             .send()
-            .onComplete((r: Try[SimpleHttpResponse]) => updateModal(r))
+            .onComplete((r: Try[SimpleHttpResponse]) => {
+              updateModal(r)
+              $("body").css("cursor", "default")
+            })
         }
         else
-          println("fileName_fileId rx-activation failed.")
+          println("fileName_fileId rx-activation failed: " + fileName_fileId.toString())
       case None => println("WARNING: getCasesForFile() failed. Could not get memberID from cookie."); -1
     }
   }
