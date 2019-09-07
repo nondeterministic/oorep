@@ -169,7 +169,8 @@ object Case {
     $("#analysisTHead").append(th(attr("scope"):="col", "Rep.").render)
     $("#analysisTHead").append(th(attr("scope"):="col", "Symptom").render)
     remedyScores.toList.sortWith(_._2 > _._2).map(_._1).foreach(abbrev =>
-      $("#analysisTHead").append(th(attr("scope") := "col", div(cls:="vertical-text", style:="width: 30px;", abbrev)).render))
+      $("#analysisTHead").append(th(attr("scope") := "col", div(cls:="vertical-text", style:="width: 30px;",
+        s"${abbrev} (${remedyScores.get(abbrev).get})")).render))
 
     implicit def stringToString(s: String) = new BetterString(s) // For 'shorten'.
 
