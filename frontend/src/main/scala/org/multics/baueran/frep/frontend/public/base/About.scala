@@ -9,14 +9,11 @@ object About {
     div(cls:="jumbotron jumbo-dark horizontal-center", id:="about", style:="position: relative;",
       div(cls:="container",
         div(cls:="row",
-          div(cls:="col",
-            img(style:="height:500px", src:="img/hahnemann_statue.png")
-          ),
           div(cls:="col align-self-center",
             h3(style:="text-align:center; margin-bottom: 10px",
               span("About")
             ),
-            div(style:="max-width:700px;",
+            div(style:="text-align:justify;max-width:700px;",
               p("""
              OOREP is an open online repertory for homeopathy.  It is open, because its source code is freely available,
              it is online, because a running instance of it is served right here on this very server for your convenience.
@@ -34,6 +31,9 @@ object About {
              With OOREP I intend to improve this sitation somewhat.  So I hope it is useful to others, too.
                 """)
             )
+          ),
+          div(cls:="col",
+            img(style:="height:500px", src:="img/hahnemann_statue.png")
           )
         )
       )

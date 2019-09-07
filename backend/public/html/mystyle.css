@@ -78,3 +78,12 @@ a.underline:hover {
     -ms-transform: translateY(-50%);
     transform: translateY(-50%);
 }
+
+.image {
+    box-shadow: 10px 10px 15px silver;
+}
+
+.first-letter {
+  font-size: 35px;
+  line-height: 70px;
+}
