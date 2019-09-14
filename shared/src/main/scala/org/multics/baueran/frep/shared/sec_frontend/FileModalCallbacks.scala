@@ -21,37 +21,40 @@ package object FileModalCallbacks {
 
   def updateMemberFiles(memberId: Int): Unit = {
 
-    def updateModals(files: List[FIle]) = {
-      if (files.size > 0) {
+    /**
+      * The function's argument is a list of file IDs and headers as stored in the DB.
+      */
+    def updateModals(filesIdHeaderTuples: List[(Int,String)]) = {
+      if (filesIdHeaderTuples.size > 0) {
         AddToFileModal.enableButtons()
 
         OpenFileModal.empty()
         AddToFileModal.empty()
       }
-      else if (files == 0 && !AddToFileModal.submitIsDisabled())  {
+      else if (filesIdHeaderTuples == 0 && !AddToFileModal.submitIsDisabled())  {
         AddToFileModal.disableButtons()
         OpenFileModal.disableButtons()
       }
 
-      files.map(file => {
+      filesIdHeaderTuples.map(fileIdHeaderTuple => {
         val listItemAddToFile =
           a(cls := "list-group-item list-group-item-action", data.toggle := "list", href := "#list-profile", role := "tab",
             onclick := { (event: dom.Event) =>
-              AddToFileModal.selected_file_id() = file.dbId
-              AddToFileModal.selected_file_header() = Some(file.header)
+              AddToFileModal.selected_file_id() = Some(fileIdHeaderTuple._1)
+              AddToFileModal.selected_file_header() = Some(fileIdHeaderTuple._2)
             },
-            data.`fileId` := s"${file.dbId.getOrElse(-1)}",
-            file.header)
+            data.`fileId` := s"${fileIdHeaderTuple._1}",
+            fileIdHeaderTuple._2)
         AddToFileModal.appendItem(listItemAddToFile.render)
 
         val listItemOpenFile =
           a(cls := "list-group-item list-group-item-action", data.toggle := "list", href := "#list-profile", role := "tab",
             onclick := { (event: dom.Event) =>
-              OpenFileModal.selected_file_id() = file.dbId
-              OpenFileModal.selected_file_header() = Some(file.header)
+              OpenFileModal.selected_file_id() = Some(fileIdHeaderTuple._1)
+              OpenFileModal.selected_file_header() = Some(fileIdHeaderTuple._2)
               OpenFileModal.enableButtons()
             },
-            file.header)
+            fileIdHeaderTuple._2)
         OpenFileModal.appendItem(listItemOpenFile.render)
       })
     }
@@ -62,8 +65,9 @@ package object FileModalCallbacks {
           parse(response.get.body) match {
             case Right(json) => {
               val cursor = json.hcursor
-              cursor.as[List[FIle]] match {
-                case Right(files) => updateModals(files)
+              // List[(FileID, FileHeader)]
+              cursor.as[List[(Int,String)]] match {
+                case Right(fileIdHeaderTuples) => updateModals(fileIdHeaderTuples)
                 case Left(t) => println("Decoding of available files failed: " + t)
               }
             }

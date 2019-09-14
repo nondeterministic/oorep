@@ -65,6 +65,9 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
       Ok(dao.getAllAvailableRepertoryInfos().asJson.toString())
   }
 
+  /**
+    * Won't actually return files with associated cases, but a list of tuples, (file ID, file header).
+    */
   def availableFiles(memberId: Int) = Action { request: Request[AnyContent] =>
     doesUserHaveAuthorizedCookie(request) match {
       case Left(err) =>
@@ -73,7 +76,8 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
         BadRequest(errStr)
       case Right(true) =>
         val dao = new FileDao(dbContext)
-        Ok(dao.getFilesForMember(memberId).asJson.toString())
+        val dbFiles = dao.getDbFilesForMember(memberId)
+        Ok(dbFiles.map(dbFile => (dbFile.id, dbFile.header)).asJson.toString)
     }
   }
 
