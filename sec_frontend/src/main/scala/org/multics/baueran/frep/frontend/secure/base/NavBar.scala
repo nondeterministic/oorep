@@ -3,7 +3,8 @@ package org.multics.baueran.frep.frontend.secure.base
 import fr.hmil.roshttp.HttpRequest
 import fr.hmil.roshttp.response.SimpleHttpResponse
 import io.circe.parser.parse
-import org.multics.baueran.frep.shared.Defs.{ serverUrl, CookieFields }
+import org.multics.baueran.frep.shared.Defs.CookieFields
+import org.multics.baueran.frep.shared.frontend.serverUrl
 import org.multics.baueran.frep.shared.Info
 import scalatags.JsDom.TypedTag
 import scalatags.JsDom.all.{id, li, _}

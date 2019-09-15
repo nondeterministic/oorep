@@ -9,7 +9,7 @@ import backend.db.db.DBContext
 import play.api.Logger
 import shared.{CaseRubric, Caze, FIle}
 
-class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends AbstractController(cc) {
+class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends AbstractController(cc) with ServerUrl {
   cazeDao = new CazeDao(dbContext)
   fileDao = new FileDao(dbContext)
 
@@ -23,7 +23,7 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
 
       memberDao.getFromEmail(inputEmail) match {
         case member :: _ if (hashedPass == member.hash) =>
-          Redirect(serverUrl() + "/assets/html/private/index.html")
+          Redirect(serverUrl(request) + "/assets/html/private/index.html")
             .withCookies(
               Cookie(CookieFields.email.toString, inputEmail, httpOnly = false),
               Cookie(CookieFields.hash.toString, member.hash, httpOnly = false),

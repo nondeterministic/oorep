@@ -10,9 +10,9 @@ import scala.scalajs.js.annotation.JSExportTopLevel
 import scala.scalajs.js.annotation._
 import org.querki.jquery._
 import scalatags.JsDom.all._
-import org.multics.baueran.frep.shared.Defs._
 import org.multics.baueran.frep.shared.frontend.{Case, Disclaimer, Repertorise}
 import org.multics.baueran.frep.shared.sec_frontend.RepertoryModal
+import org.multics.baueran.frep.shared.frontend.serverUrl
 
 @JSExportTopLevel("Main")
 object Main {

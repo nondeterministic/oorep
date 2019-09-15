@@ -1,9 +1,9 @@
 package org.multics.baueran.frep.shared.sec_frontend
 
 import org.querki.jquery.$
-import org.multics.baueran.frep.shared.Defs.{ serverUrl, CookieFields }
+import org.multics.baueran.frep.shared.Defs.CookieFields
 import org.multics.baueran.frep.shared.FIle
-import org.multics.baueran.frep.shared.frontend.{Case, getCookieData}
+import org.multics.baueran.frep.shared.frontend.{Case, getCookieData, serverUrl}
 import fr.hmil.roshttp.HttpRequest
 import fr.hmil.roshttp.body.PlainTextBody
 import fr.hmil.roshttp.response.SimpleHttpResponse

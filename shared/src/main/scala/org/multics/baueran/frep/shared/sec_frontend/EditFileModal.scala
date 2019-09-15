@@ -5,9 +5,9 @@ import fr.hmil.roshttp.body.{MultiPartBody, PlainTextBody}
 import fr.hmil.roshttp.response.SimpleHttpResponse
 import io.circe.parser.parse
 import monix.execution.Scheduler.Implicits.global
-import org.multics.baueran.frep.shared.Defs.{ serverUrl, CookieFields }
+import org.multics.baueran.frep.shared.Defs.CookieFields
 import org.multics.baueran.frep.shared.{Caze, FIle}
-import org.multics.baueran.frep.shared.frontend.{Case, Repertorise, getCookieData}
+import org.multics.baueran.frep.shared.frontend.{Case, Repertorise, getCookieData, serverUrl}
 import org.scalajs.dom
 import org.scalajs.dom.Event
 import scalatags.JsDom.all.{onclick, _}

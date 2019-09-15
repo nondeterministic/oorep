@@ -1,8 +1,7 @@
 package org.multics.baueran.frep.frontend.secure
 
-import org.multics.baueran.frep.shared.Defs.{CookieFields, serverUrl}
+import org.multics.baueran.frep.shared.Defs.CookieFields
 import org.scalajs.dom
-import scalatags.JsDom.all.s
 
 package object base {
 

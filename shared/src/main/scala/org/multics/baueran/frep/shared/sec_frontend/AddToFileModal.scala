@@ -1,8 +1,7 @@
 package org.multics.baueran.frep.shared.sec_frontend
 
 import org.querki.jquery.$
-import org.multics.baueran.frep.shared.Defs.serverUrl
-import org.multics.baueran.frep.shared.frontend.Case
+import org.multics.baueran.frep.shared.frontend.{Case, serverUrl}
 import fr.hmil.roshttp.HttpRequest
 import fr.hmil.roshttp.body.{MultiPartBody, PlainTextBody}
 import fr.hmil.roshttp.response.SimpleHttpResponse

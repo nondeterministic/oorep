@@ -6,7 +6,7 @@ import fr.hmil.roshttp.response.SimpleHttpResponse
 import org.multics.baueran.frep.shared.FIle
 import org.scalajs.dom
 import io.circe.parser.parse
-import org.multics.baueran.frep.shared.Defs.serverUrl
+import org.multics.baueran.frep.shared.frontend.serverUrl
 import scalatags.JsDom.all._
 
 import scala.util.{Failure, Success}

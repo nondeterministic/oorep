@@ -18,16 +18,15 @@ import Defs.maxNumberOfResults
  */
 
 @Singleton
-class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends AbstractController(cc) {
-
+class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends AbstractController(cc) with ServerUrl {
   memberDao = new MemberDao(dbContext)
   RepDatabase.setup(dbContext)
 
   def index() = Action { request: Request[AnyContent] =>
     if (authorizedRequestCookies(request) == List.empty)
-      Redirect(serverUrl() + "/assets/html/index.html")
+      Redirect(serverUrl(request) + "/assets/html/index.html")
     else
-      Redirect(serverUrl() + "/assets/html/private/index.html")
+      Redirect(serverUrl(request) + "/assets/html/private/index.html")
   }
 
   /**

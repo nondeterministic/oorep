@@ -15,7 +15,7 @@ import rx.Ctx.Owner.Unsafe._
 import scalatags.rx.all._
 import org.multics.baueran.frep.shared
 import shared._
-import shared.Defs.{CookieFields, serverUrl}
+import shared.Defs.CookieFields
 import shared.frontend.RemedyFormat.RemedyFormat
 import shared.sec_frontend.FileModalCallbacks._
 import org.scalajs.dom.raw.HTMLInputElement

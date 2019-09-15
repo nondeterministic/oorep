@@ -3,8 +3,8 @@ package org.multics.baueran.frep.shared.sec_frontend
 import fr.hmil.roshttp.HttpRequest
 import fr.hmil.roshttp.body.{MultiPartBody, PlainTextBody}
 import monix.execution.Scheduler.Implicits.global
-import org.multics.baueran.frep.shared.Defs.{ serverUrl, CookieFields }
-import org.multics.baueran.frep.shared.frontend.{ getCookieData, Case }
+import org.multics.baueran.frep.shared.Defs.CookieFields
+import org.multics.baueran.frep.shared.frontend.{ getCookieData, Case, serverUrl }
 import org.scalajs.dom
 import org.scalajs.dom.Event
 import scalatags.JsDom.all._

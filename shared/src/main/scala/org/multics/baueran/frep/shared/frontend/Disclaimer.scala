@@ -1,8 +1,9 @@
 package org.multics.baueran.frep.shared.frontend
 
+import org.multics.baueran.frep.shared.frontend.serverUrl
 import org.querki.jquery.$
-import scalatags.JsDom.all.{li, _}
-import org.multics.baueran.frep.shared.Defs._
+import scalatags.JsDom.all._
+import org.scalajs.dom
 
 import scala.scalajs.js
 
@@ -10,7 +11,7 @@ object Disclaimer {
 
   // TODO: Using JQuery here, because don't know how else to do it. Not nice, I know!
   private def loadAndScroll(file: String) = {
-    $("#content").load(relHtmlPath() + file)
+    $("#content").load(serverUrl() + "/assets/html/" + file)
     js.eval("$('html, body').animate({ scrollTop: 0 }, 'fast');")
   }
 

@@ -15,7 +15,7 @@ import fr.hmil.roshttp.HttpRequest
 import fr.hmil.roshttp.response.SimpleHttpResponse
 import monix.execution.Scheduler.Implicits.global
 import org.multics.baueran.frep.shared._
-import org.multics.baueran.frep.shared.Defs.{ serverUrl, CookieFields }
+import org.multics.baueran.frep.shared.Defs.CookieFields
 import org.multics.baueran.frep.shared.sec_frontend.FileModalCallbacks.updateMemberFiles
 
 object Repertorise {
