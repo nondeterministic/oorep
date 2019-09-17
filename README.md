@@ -1,6 +1,10 @@
-More content soon...
+## Executing the program
 
 Start OOREP as follows:
 
-    sbt "runProd -Dhttps.port=9443 -Dhttp.port=9000"
+    sbt
+
+     run -Dhttps.port=9443 -Dhttp.port=9000
+
+And have `$OOREP_USER_PASS` set appropriately.
 
