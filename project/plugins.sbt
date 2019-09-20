@@ -3,6 +3,7 @@ logLevel := Level.Warn
 
 // Resolvers
 resolvers += "Typesafe repository" at "https://repo.typesafe.com/typesafe/releases/"
+resolvers += Resolver.bintrayRepo("hmil", "maven")
 
 // Sbt plugins
 // cf. https://github.com/vmunier/sbt-web-scalajs
