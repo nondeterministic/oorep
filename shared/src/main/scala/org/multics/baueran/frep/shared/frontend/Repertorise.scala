@@ -50,7 +50,7 @@ object Repertorise {
     // This method is just to display the remedy-summary at the top of the results table.
     // It is not strictly necessary for displaying the results themselves.
     def resultingRemedies() = {
-      var remedies = mutable.HashMap[Remedy, (Integer, Integer)]()
+      val remedies = mutable.HashMap[Remedy, (Integer, Integer)]()
 
       for (cr <- results.now) {
         for (WeightedRemedy(r,w) <- cr.weightedRemedies) {
@@ -164,6 +164,8 @@ object Repertorise {
       results.now.foreach(result => $("#resultsTBody").append(resultRow(result).render))
     else
       results.now.filter(_.containsRemedyAbbrev(remedyFilter.now)).foreach(result => $("#resultsTBody").append(resultRow(result).render))
+
+    Case.updateCaseHeaderView()
   }
 
   // ------------------------------------------------------------------------------------------------------------------

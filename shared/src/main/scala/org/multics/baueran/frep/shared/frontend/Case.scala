@@ -199,7 +199,6 @@ object Case {
     getCookieData(dom.document.cookie, CookieFields.id.toString) match {
       // Not logged in...
       case None =>
-        println("NOT LOGGED IN!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
         $("#openNewCaseButton").hide()
         $("#editDescrButton").hide()
         $("#closeCaseButton").hide()
