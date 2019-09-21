@@ -4,7 +4,6 @@ import org.scalajs.dom
 import dom.Event
 import fr.hmil.roshttp.HttpRequest
 import fr.hmil.roshttp.body.{MultiPartBody, PlainTextBody}
-import fr.hmil.roshttp.response.SimpleHttpResponse
 import monix.execution.Scheduler.Implicits.global
 import scalatags.JsDom.all._
 
@@ -23,8 +22,6 @@ import org.querki.jquery.$
 import org.scalajs.dom
 import scalatags.JsDom
 import io.circe.syntax._
-
-import scala.util.Success
 
 object Case {
 
@@ -183,14 +180,14 @@ object Case {
         tr(scalatags.JsDom.attrs.id := trId,
           td(cr.rubricWeight.toString()),
           td(cr.repertoryAbbrev),
-          td(style := "white-space: nowrap;", data.toggle := "tooltip", title := cr.rubric.fullPath, cr.rubric.fullPath.shorten)
+          td(style:="white-space: nowrap;", cr.rubric.fullPath.shorten)
         ).render)
 
       remedyScores.toList.sortWith(_._2 > _._2).map(_._1) foreach (abbrev => {
         if (cr.rubricWeight > 0 && cr.containsRemedyAbbrev(abbrev))
-          $("#" + trId).append(td(data.toggle := "tooltip", title := abbrev, "" + (cr.getRemedyWeight(abbrev) * cr.rubricWeight)).render)
+          $("#" + trId).append(td(data.toggle:="tooltip", title:=s"${cr.rubric.fullPath.shorten(40)}", "" + (cr.getRemedyWeight(abbrev) * cr.rubricWeight)).render)
         else
-          $("#" + trId).append(td(data.toggle := "tooltip", title := abbrev, " ").render)
+          $("#" + trId).append(td(data.toggle:="tooltip", title:=s"${cr.rubric.fullPath.shorten(40)}", " ").render)
       })
     }
   }
@@ -392,6 +389,10 @@ object Case {
         button(cls:="btn btn-sm btn-primary", `type`:="button", data.toggle:="modal", data.target:="#caseAnalysisModal", style:="margin-left:5px; margin-bottom: 5px;",
           onclick := { (event: Event) => {
             updateCaseViewAndDataStructures()
+
+            // TODO: Ugly work-around to activate tooltips as recommended by Bootstrap documentation. :-(
+            // TODO: Interestingly, it seems, it works without.  In fact, turning this on and then closing a HUGE analysis, slows down the browser dramatically!
+            // js.eval("""$('[data-toggle="tooltip"]').tooltip();""")
           }},
           "Analyse")
       val editDescrButton =

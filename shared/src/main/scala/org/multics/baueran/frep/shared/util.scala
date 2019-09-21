@@ -5,6 +5,7 @@ import scala.scalajs.js
 
 class BetterString(val s: String) {
   def shorten = if (s.length <= 66) s else s.substring(0,62) + "..."
+  def shorten(length: Int) = if (s.length <= length) s else s.substring(0, math.abs(length - 3)) + "..."
 }
 
 class BetterCaseRubric(val cr: CaseRubric) {
