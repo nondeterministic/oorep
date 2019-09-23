@@ -9,28 +9,30 @@ import backend.db.db.DBContext
 import play.api.Logger
 import shared.{CaseRubric, Caze, FIle}
 
-class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends AbstractController(cc) with ServerUrl {
+import play.filters.csrf._
+import play.filters.csrf.CSRF.Token
+
+class Post @Inject()(cc: ControllerComponents, ddToken: CSRFAddToken, checkToken: CSRFCheck, dbContext: DBContext) extends AbstractController(cc) with ServerUrl {
   cazeDao = new CazeDao(dbContext)
   fileDao = new FileDao(dbContext)
 
-  def login() = Action {
-    request: Request[AnyContent] =>
-      val inputEmail: String = request.body.asFormUrlEncoded.get("inputEmail").head
-      val inputPassword: String = request.body.asFormUrlEncoded.get("inputPassword").head
+  def login() = Action { implicit request =>
+    val inputEmail: String = request.body.asFormUrlEncoded.get("inputEmail").head
+    val inputPassword: String = request.body.asFormUrlEncoded.get("inputPassword").head
 
-      val hashedPass = getHash(inputPassword)
-      println("TODO: Remove me: " + hashedPass) // TODO
+    val hashedPass = getHash(inputPassword)
+    println("TODO: Remove me: " + hashedPass) // TODO
 
-      memberDao.getFromEmail(inputEmail) match {
-        case member :: _ if (hashedPass == member.hash) =>
-          Redirect(serverUrl(request) + "/assets/html/private/index.html")
-            .withCookies(
-              Cookie(CookieFields.email.toString, inputEmail, httpOnly = false),
-              Cookie(CookieFields.hash.toString, member.hash, httpOnly = false),
-              Cookie(CookieFields.id.toString, member.member_id.toString, httpOnly = false)
-            )
-        case _ => BadRequest("login() failed: user not authorized to login.")
-      }
+    memberDao.getFromEmail(inputEmail) match {
+      case member :: _ if (hashedPass == member.hash) =>
+        Redirect(serverUrl(request) + "/assets/html/private/index.html")
+          .withCookies(
+            Cookie(CookieFields.email.toString, inputEmail, httpOnly = false),
+            Cookie(CookieFields.hash.toString, member.hash, httpOnly = false),
+            Cookie(CookieFields.id.toString, member.member_id.toString, httpOnly = false)
+          )
+      case _ => BadRequest("login() failed: user not authorized to login.")
+    }
   }
 
   /**
@@ -138,7 +140,7 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
     }
   }
 
-  def updateCaseDescription() = Action { request: Request[AnyContent] =>
+  def updateCaseDescription() = Action { implicit request =>
     doesUserHaveAuthorizedCookie(request) match {
       case Right(_) => {
         val requestData = request.body.asMultipartFormData.get.dataParts
@@ -205,7 +207,7 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
     }
   }
 
-  def updateFileDescription() = Action { request: Request[AnyContent] =>
+  def updateFileDescription() = Action { implicit request =>
     doesUserHaveAuthorizedCookie(request) match {
       case Right(_) => {
         val requestData = request.body.asMultipartFormData.get.dataParts

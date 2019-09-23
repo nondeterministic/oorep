@@ -177,7 +177,9 @@ object EditFileModal {
                     onclick:= { (event: Event) =>
                       currentlyOpenedFile match {
                         case Some(f) =>
+                          val token =
                           HttpRequest(serverUrl() + "/updateFileDescription")
+                            .withHeader("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
                             .post(MultiPartBody(
                               "filedescr" -> PlainTextBody($("#fileDescrEditFileModal").`val`().toString().trim()),
                               "fileId"    -> PlainTextBody(fileName_fileId.now._2)))

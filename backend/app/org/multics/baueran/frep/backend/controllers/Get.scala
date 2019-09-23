@@ -12,13 +12,16 @@ import org.multics.baueran.frep.backend.db.db.DBContext
 import org.multics.baueran.frep.shared.Defs._
 import Defs.maxNumberOfResults
 
+import play.filters.csrf._
+import play.filters.csrf.CSRF.Token
+
 /**
  * This controller creates an `Action` to handle HTTP requests to the
  * application's home page.
  */
 
 @Singleton
-class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends AbstractController(cc) with ServerUrl {
+class Get @Inject()(cc: ControllerComponents, addToken: CSRFAddToken, checkToken: CSRFCheck, dbContext: DBContext) extends AbstractController(cc) with ServerUrl {
   memberDao = new MemberDao(dbContext)
   RepDatabase.setup(dbContext)
 

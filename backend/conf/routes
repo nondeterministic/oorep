@@ -3,7 +3,6 @@
 # https://www.playframework.com/documentation/latest/ScalaRouting
 # ~~~~
 
-# An example controller showing a sample home page
 GET     /                           org.multics.baueran.frep.backend.controllers.Get.index
 
 +nocsrf
@@ -12,7 +11,7 @@ POST   	/login                      org.multics.baueran.frep.backend.controllers
 +nocsrf
 POST   	/savecase                   org.multics.baueran.frep.backend.controllers.Post.saveCaze
 
-+nocsrf
+# +nocsrf
 POST   	/updatecasedescription      org.multics.baueran.frep.backend.controllers.Post.updateCaseDescription
 
 +nocsrf
@@ -24,7 +23,7 @@ POST   	/savefile                   org.multics.baueran.frep.backend.controllers
 +nocsrf
 POST   	/delfileandcases            org.multics.baueran.frep.backend.controllers.Post.delFileAndCases
 
-+nocsrf
+# +nocsrf
 POST   	/updateFileDescription      org.multics.baueran.frep.backend.controllers.Post.updateFileDescription
 
 +nocsrf

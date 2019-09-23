@@ -12,8 +12,9 @@ package object Defs {
   }
   def maxNumberOfResults = 150
 
+  // Do not rename csrfCookie unless you know what you're doing!
   object CookieFields extends Enumeration {
     type CookieFields = Value
-    val email, hash, id = Value
+    val email, hash, id, csrfCookie = Value
   }
 }
