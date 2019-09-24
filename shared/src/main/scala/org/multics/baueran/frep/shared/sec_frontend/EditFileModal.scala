@@ -118,6 +118,7 @@ object EditFileModal {
             button(`type`:="button", cls:="btn btn-primary", data.dismiss:="modal",
               onclick:= { (event: Event) =>
                 HttpRequest(serverUrl() + "/delcase")
+                  .withHeader("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
                   .post(MultiPartBody(
                     "caseId"     -> PlainTextBody(currentlySelectedCaseId.now.toString()),
                     "memberId"   -> PlainTextBody(currentlyActiveMemberId.toString())))

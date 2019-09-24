@@ -19,6 +19,7 @@ object OpenFileModal extends FileModal {
     getCookieData(dom.document.cookie, CookieFields.id.toString) match {
       case Some(memberId) => {
         HttpRequest(serverUrl() + "/delfileandcases")
+          .withHeader("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
           .post(MultiPartBody(
             "fileId" -> PlainTextBody(selected_file_id.now.getOrElse(-1).toString)))
           .onComplete({ case _ =>

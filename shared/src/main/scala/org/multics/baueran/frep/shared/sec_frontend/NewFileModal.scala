@@ -70,6 +70,7 @@ object NewFileModal {
                       currFIle = Some(FIle(None, header, memberId, (new js.Date()).toISOString(), descr, List.empty))
 
                       HttpRequest(serverUrl() + "/savefile")
+                        .withHeader("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
                         .post(PlainTextBody(currFIle.get.asJson.toString()))
                         .onComplete({
                           case response: Success[SimpleHttpResponse] => {

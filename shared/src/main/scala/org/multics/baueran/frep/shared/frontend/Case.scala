@@ -101,6 +101,7 @@ object Case {
             val diff = descr.get.isSupersetOf(prevCase.get)
 
             HttpRequest(serverUrl() + "/addcaserubricstocase")
+              .withHeader("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
               .post(MultiPartBody(
                 "caseID" -> PlainTextBody(descr.get.id.toString),
                 "caserubrics" -> PlainTextBody(diff.asJson.toString)))
@@ -109,6 +110,7 @@ object Case {
             val diff = prevCase.get.isSupersetOf(descr.get)
 
             HttpRequest(serverUrl() + "/delcaserubricsfromcase")
+              .withHeader("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
               .post(MultiPartBody(
                 "caseID" -> PlainTextBody(descr.get.id.toString),
                 "caserubrics" -> PlainTextBody(diff.asJson.toString)))
@@ -117,12 +119,14 @@ object Case {
             val diff = prevCase.get.isEqualExceptWeights(descr.get) // These are the user-changed ones, which we'll need to update in the DB, too.
 
             HttpRequest(serverUrl() + "/updatecaserubricsweights")
+              .withHeader("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
               .post(MultiPartBody(
                 "caseID" -> PlainTextBody(descr.get.id.toString),
                 "caserubrics" -> PlainTextBody(diff.asJson.toString)))
           }
           else if (descr.get.description != prevCase.get.description) {
             HttpRequest(serverUrl() + "/updatecasedescription")
+              .withHeader("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
               .post(MultiPartBody(
                 "caseID" -> PlainTextBody(descr.get.id.toString),
                 "casedescription" -> PlainTextBody(descr.get.description)))
@@ -140,6 +144,7 @@ object Case {
       if (cRubrics.size == 0) {
         if (descr != None && descr.get.id != 0)
           HttpRequest(serverUrl() + "/delcase")
+            .withHeader("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
             .post(MultiPartBody(
               "caseId" -> PlainTextBody(descr.get.id.toString()),
               "memberId" -> PlainTextBody(memberId.toString())))
