@@ -80,7 +80,6 @@ package object FileModalCallbacks {
 
     HttpRequest(serverUrl() + "/availableFiles")
       .withQueryParameter("memberId", memberId.toString)
-      .withCrossDomainCookies(true)
       .send()
       .onComplete((r: Try[SimpleHttpResponse]) => updateMemberFiles(r))
 

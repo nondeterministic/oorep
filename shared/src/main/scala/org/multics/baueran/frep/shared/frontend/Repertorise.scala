@@ -207,7 +207,6 @@ object Repertorise {
 
     HttpRequest(serverUrl() + "/lookup")
       .withQueryParameters(("symptom", symptom), ("repertory", repertory))
-      .withCrossDomainCookies(true)
       .send()
       .onComplete({
         case response: Success[SimpleHttpResponse] => {

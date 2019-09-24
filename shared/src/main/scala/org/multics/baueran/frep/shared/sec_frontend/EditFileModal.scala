@@ -89,7 +89,6 @@ object EditFileModal {
           currentlyActiveMemberId = memberId.toInt
           HttpRequest(serverUrl() + "/file")
             .withQueryParameters("fileId" -> fileId)
-            .withCrossDomainCookies(true)
             .send()
             .onComplete((r: Try[SimpleHttpResponse]) => {
               updateModal(r)
@@ -215,7 +214,6 @@ object EditFileModal {
 
                       HttpRequest(serverUrl() + "/case")
                         .withQueryParameters(("memberId", currentlyActiveMemberId.toString()), ("caseId", currentlySelectedCaseId.now.toString()))
-                        .withCrossDomainCookies(true)
                         .send()
                         .onComplete({
                           case response: Success[SimpleHttpResponse] => {

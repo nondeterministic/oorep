@@ -26,7 +26,6 @@ object Main {
 
     // No access without valid cookies!
     HttpRequest(s"${serverUrl()}/authenticate")
-      .withCrossDomainCookies(true)
       .send()
       .onComplete({
         case response: Success[SimpleHttpResponse] => {
