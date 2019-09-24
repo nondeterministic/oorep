@@ -21,7 +21,7 @@ import play.filters.csrf.CSRF.Token
  */
 
 @Singleton
-class Get @Inject()(cc: ControllerComponents, addToken: CSRFAddToken, checkToken: CSRFCheck, dbContext: DBContext) extends AbstractController(cc) with ServerUrl {
+class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends AbstractController(cc) with ServerUrl {
   memberDao = new MemberDao(dbContext)
   RepDatabase.setup(dbContext)
 

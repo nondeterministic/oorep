@@ -10,6 +10,7 @@ GET     /availableCasesForFile      org.multics.baueran.frep.backend.controllers
 GET     /file                       org.multics.baueran.frep.backend.controllers.Get.getFile(fileId: String)
 GET     /case                       org.multics.baueran.frep.backend.controllers.Get.getCase(memberId: Int, caseId: String)
 
++nocsrf
 POST   	/login                      org.multics.baueran.frep.backend.controllers.Post.login
 POST   	/savecase                   org.multics.baueran.frep.backend.controllers.Post.saveCaze
 POST   	/updatecasedescription      org.multics.baueran.frep.backend.controllers.Post.updateCaseDescription

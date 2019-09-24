@@ -12,7 +12,7 @@ import shared.{CaseRubric, Caze, FIle}
 import play.filters.csrf._
 import play.filters.csrf.CSRF.Token
 
-class Post @Inject()(cc: ControllerComponents, ddToken: CSRFAddToken, checkToken: CSRFCheck, dbContext: DBContext) extends AbstractController(cc) with ServerUrl {
+class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends AbstractController(cc) with ServerUrl {
   cazeDao = new CazeDao(dbContext)
   fileDao = new FileDao(dbContext)
 
