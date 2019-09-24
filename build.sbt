@@ -7,7 +7,7 @@ import sbtcrossproject.{CrossType, crossProject}
 val circeVersion = "0.11.1"
 val scalaTestVersion = "3.1.0"
 
-resolvers += Resolver.bintrayRepo("hmil", "maven")
+resolvers in ThisBuild += Resolver.bintrayRepo("hmil", "maven")
 
 lazy val backend = (project in file("backend")).settings(commonSettings).settings(
   scalaJSProjects := Seq(frontend, sec_frontend),

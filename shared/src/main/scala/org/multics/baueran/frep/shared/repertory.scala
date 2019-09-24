@@ -269,11 +269,11 @@ case class Repertory(val info: Info, val chapters: Seq[Chapter], val remedies: S
 
   @deprecated("Use RepertoryDao.lookupSymptom() instead.","24-02-2019")
   def findRubrics(enteredSearchString: String, caseSensitive: Boolean = false): Seq[Rubric] = {
-    val searchStrings = enteredSearchString.
-                          trim.                               // Remove trailing spaces
-                          replaceAll(" +", " ").              // Remove double spaces
-                          replaceAll("[^A-Za-z0-9 äüößÄÖÜ\\-*]", "").// Remove all but alphanum-, wildcard-, minus-symbols
-                          split(" ")                          // Get list of search strings
+    val searchStrings = enteredSearchString
+      .trim                                             // Remove trailing spaces
+      .replaceAll(" +", " ")                       // Remove double spaces
+      .replaceAll("[^A-Za-z0-9 äüößÄÖÜ\\-*]", "")  // Remove all but alphanum-, wildcard-, minus-symbols
+      .split(" ")                                       // Get list of search strings
 
     val posSearchTerms = searchStrings.filter(!_.startsWith("-")).toList
     val negSearchTerms = searchStrings.filter(_.startsWith("-")).map(_.substring(1)).toList

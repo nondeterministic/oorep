@@ -104,12 +104,35 @@ class RepertoryDao(dbContext: db.db.DBContext) {
     run(get)
   }
 
-  def lookupSymptom(abbrev: String, symptom: String): List[CaseRubric] = {
-    val searchStrings = symptom.
-      trim.                                                    // Remove trailing spaces
-      replaceAll(" +", " ").              // Remove double spaces
-      replaceAll("[^A-Za-z0-9 äÄÜüÖöß\\-*]", "").// Remove all but alphanum-, wildcard-, minus-symbols
-      split(" ")                                       // Get list of search strings
+  def lookupSymptom(abbrevFromMenu: String, symptom: String): List[CaseRubric] = {
+
+    // Extract abbrev from search string, if user supplied "rep:".
+    // Otherwise abbrevFromMenu is used.
+    def getAbbrev(submittedAbbrevString: String, submittedSymptomString: String): String = {
+      if (symptom.contains("rep:")) {
+        val abbrevPattern = """.*rep:([\w\-_]+).*""".r
+        val abbrevPattern(abbrev) = symptom
+        abbrev
+      }
+      else
+        abbrevFromMenu
+    }
+
+    // Extract cleaned-up search string from raw input search string, if user supplied "rep:".
+    // Otherwise, raw input search string is used.
+    def getSymptomString(submittedSymptomString: String): String = {
+      if (symptom.contains("rep:"))
+        symptom.replaceAll("""rep:([\w\-_]+)""", "")
+      else
+        symptom
+    }
+
+    val abbrev = getAbbrev(abbrevFromMenu, symptom)
+    val searchStrings = getSymptomString(symptom)
+      .trim                                                    // Remove trailing spaces
+      .replaceAll(" +", " ")                              // Remove double spaces
+      .replaceAll("[^A-Za-z0-9 äÄÜüÖöß\\-*]", "")         // Remove all but alphanum-, wildcard-, minus-symbols
+      .split(" ")                                              // Get list of search strings
 
     val posSearchTerms = searchStrings.filter(!_.startsWith("-")).toList
     val negSearchTerms = searchStrings.filter(_.startsWith("-")).map(_.substring(1)).toList
