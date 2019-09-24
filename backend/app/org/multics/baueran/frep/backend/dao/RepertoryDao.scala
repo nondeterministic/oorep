@@ -1,8 +1,5 @@
 package org.multics.baueran.frep.backend.dao
 
-import java.sql.{Connection, PreparedStatement, ResultSet}
-
-import io.getquill
 import org.multics.baueran.frep.shared._
 import org.multics.baueran.frep.backend.db
 import Defs.maxNumberOfResults
@@ -112,7 +109,14 @@ class RepertoryDao(dbContext: db.db.DBContext) {
       if (symptom.contains("rep:")) {
         val abbrevPattern = """.*rep:([\w\-_]+).*""".r
         val abbrevPattern(abbrev) = symptom
-        abbrev
+
+        // Check that repertory exists, otherwise use the one from the drop-down menu
+        // (this is also important so that we don't do 'crooked' DB lookups later!)
+        // TODO: Add "special repertory", "all" which will search in ALL repertories, like so: "rep:all"!
+        if (getAllAvailableRepertoryInfos().filter{ case ri => ri.abbrev == abbrev }.size == 1)
+          abbrev
+        else
+          abbrevFromMenu
       }
       else
         abbrevFromMenu
