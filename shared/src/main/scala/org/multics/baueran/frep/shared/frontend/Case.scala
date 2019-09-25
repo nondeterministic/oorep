@@ -245,11 +245,11 @@ object Case {
           ),
           div(cls:="modal-body",
             div(cls:="table-responsive",
-              table(cls:="table table-striped table-hover table-sm table-bordered",
-                thead(scalatags.JsDom.attrs.id:="analysisTHead", style:="padding: 1px !important; height: 110px;",
+              table(cls:="table case table-striped table-hover table-sm table-bordered",
+                thead(scalatags.JsDom.attrs.id:="analysisTHead",
                   th(attr("scope"):="col", "W."),
                   th(attr("scope"):="col", "Rep."),
-                  th(attr("scope"):="col", style:="padding: 1px !important; height: 150px; width: 100%;", "Symptom")
+                  th(attr("scope"):="col", "Symptom")
                 ),
                 tbody(scalatags.JsDom.attrs.id:="analysisTBody")
               )
