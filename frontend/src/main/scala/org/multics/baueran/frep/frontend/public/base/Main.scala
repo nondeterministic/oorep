@@ -16,14 +16,14 @@ import org.multics.baueran.frep.shared.sec_frontend.RepertoryModal
 object Main {
 
   def main(args: Array[String]): Unit = {
-    cookiePopup()
-
     dom.document.body.appendChild(div(style:="width:100%;", id:="nav_bar").render)
     dom.document.body.appendChild(div(style:="width:100%;", id:="content").render)
     dom.document.body.appendChild(div(style:="width:100%;", id:="content_bottom").render)
 
     dom.document.body.appendChild(RepertoryModal().render)
     dom.document.body.appendChild(Case.analysisModalDialogHTML().render)
+
+    cookiePopup()
 
     $("#nav_bar").empty()
     $("#nav_bar").append(NavBar.apply().render)
@@ -63,7 +63,6 @@ object Main {
   // /////////////////////////////////////////////////////////////////////////////////////////
 
   def cookiePopup() = {
-    // TODO: Using JQuery here, because don't know how else to do it. Not nice, I know!
     def loadAndScroll(file: String) = {
       $("#content").load(serverUrl() + "/assets/html/" + file)
       js.eval("$('html, body').animate({ scrollTop: 0 }, 'fast');")
@@ -84,14 +83,14 @@ object Main {
                     a(href:="#",
                       onclick:= { () =>
                         loadAndScroll("datenschutz.html")
-                        js.eval("$('#cookiePopup').modal('hide');")  // TODO: Ugly as sin
+                        js.eval("$('#cookiePopup').modal('hide');")
                       }, "Datenschutzrichtline"),
                     " gelesen und verstanden haben und einverstanden mit der Vewendung der übertragenen Cookies sind."),
                   p("The basic functionality of this web site depends on the use of cookies. By using our web site, you acknowledge that you have read and understand our ",
                     a(href:="#",
                       onclick:= { () =>
                         loadAndScroll("cookies.html")
-                        js.eval("$('#cookiePopup').modal('hide');")  // TODO: Ugly as sin
+                        js.eval("$('#cookiePopup').modal('hide');")
                       }, "privacy policy"),
                     ", and consent to the use and transmission of cookies.")
                 ),
@@ -111,8 +110,8 @@ object Main {
             )
           )
 
-        dom.document.body.appendChild(dialog.render)
-        js.eval("$('#cookiePopup').modal('show');")  // TODO: Ugly as sin
+        $("#content").append(dialog.render)
+        js.eval("$('#cookiePopup').modal('show');")
       case Some(_) =>
         println("Initial cookie already present. Not the first visit of site!")
     }
