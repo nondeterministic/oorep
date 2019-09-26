@@ -4,13 +4,15 @@ import javax.inject._
 import play.api.mvc._
 import play.api.Logger
 import io.circe.syntax._
-import org.multics.baueran.frep.backend.dao.{FileDao, RepertoryDao, CazeDao}
+import org.multics.baueran.frep.backend.dao.{CazeDao, FileDao, RepertoryDao}
 import org.multics.baueran.frep.backend.repertory._
 import org.multics.baueran.frep.shared._
 import org.multics.baueran.frep.backend.dao.MemberDao
 import org.multics.baueran.frep.backend.db.db.DBContext
 import org.multics.baueran.frep.shared.Defs._
 import Defs.maxNumberOfResults
+import org.multics.baueran.frep.shared.frontend.serverUrl
+import org.scalajs.dom
 
 /**
  * This controller creates an `Action` to handle HTTP requests to the
@@ -25,9 +27,12 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
   def index() = Action { request: Request[AnyContent] =>
     if (authorizedRequestCookies(request) == List.empty)
       Redirect(serverUrl(request) + "/assets/html/index.html")
-        .withCookies(Cookie(CookieFields.cookiePopupAccepted.toString, "1", httpOnly = false))
     else
       Redirect(serverUrl(request) + "/assets/html/private/index.html")
+  }
+
+  def acceptCookies() = Action { request: Request[AnyContent] =>
+    Redirect(serverUrl(request))
         .withCookies(Cookie(CookieFields.cookiePopupAccepted.toString, "1", httpOnly = false))
   }
 

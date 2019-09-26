@@ -76,10 +76,9 @@ object Main {
               div(cls:="modal-content",
                 div(cls:="modal-header",
                   h5(cls:="modal-title", "Cookie-Einverständniserklärung / Agreement to use cookies")
-                  // button(`type`:="button", cls:="close", data.dismiss:="modal", aria.label:="Close", span(aria.hidden:="true", "\u00d7"))
                 ),
                 div(cls:="modal-body",
-                  p("Diese Website benötigt Cookies als technische Grundvoraussetzung. Durch Verwendung dieser Website erklären Sie, dass sie unsere ",
+                  p("Diese Website benötigt Cookies als technische Grundvoraussetzung. Durch Klicken des Annehmen-Buttons erklären Sie, dass sie unsere ",
                     a(href:="#",
                       onclick:= { () =>
                         $("#content").empty()
@@ -87,7 +86,7 @@ object Main {
                         loadAndScroll("datenschutz.html")
                       }, "Datenschutzrichtline"),
                     " gelesen und verstanden haben und einverstanden mit der Vewendung der übertragenen Cookies sind."),
-                  p("The basic functionality of this web site depends on the use of cookies. By using our web site, you acknowledge that you have read and understand our ",
+                  p("The basic functionality of this web site depends on the use of cookies. By clicking the accept button, you acknowledge that you have read and understand our ",
                     a(href:="#",
                       onclick:= { () =>
                         js.eval("$('#cookiePopup').modal('hide');")
@@ -104,7 +103,7 @@ object Main {
                   button(`type`:="button", cls:="btn btn-primary", data.dismiss:="modal",
                     onclick:= { (event: Event) =>
                       event.stopPropagation()
-                      dom.window.location.replace(serverUrl())
+                      dom.window.location.replace(serverUrl() + "/accept_cookies")
                     }, "Annehmen / Accept"),
                 )
               )
