@@ -21,7 +21,7 @@ import scala.util.Success
 object NavBar {
 
   private def getRepertories() = {
-    HttpRequest(serverUrl() + "/availableReps")
+    HttpRequest(serverUrl() + "/available_reps")
       .send()
       .onComplete({
         case response: Success[SimpleHttpResponse] => {

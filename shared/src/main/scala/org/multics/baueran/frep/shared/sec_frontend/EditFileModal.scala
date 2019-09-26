@@ -116,7 +116,7 @@ object EditFileModal {
             button(`type`:="button", cls:="btn btn-secondary", data.dismiss:="modal", "Cancel"),
             button(`type`:="button", cls:="btn btn-primary", data.dismiss:="modal",
               onclick:= { (event: Event) =>
-                HttpRequest(serverUrl() + "/delcase")
+                HttpRequest(serverUrl() + "/del_case")
                   .withHeader("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
                   .post(MultiPartBody(
                     "caseId"     -> PlainTextBody(currentlySelectedCaseId.now.toString()),
@@ -178,7 +178,7 @@ object EditFileModal {
                       currentlyOpenedFile match {
                         case Some(f) =>
                           val token =
-                          HttpRequest(serverUrl() + "/updateFileDescription")
+                          HttpRequest(serverUrl() + "/update_file_description")
                             .withHeader("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
                             .post(MultiPartBody(
                               "filedescr" -> PlainTextBody($("#fileDescrEditFileModal").`val`().toString().trim()),

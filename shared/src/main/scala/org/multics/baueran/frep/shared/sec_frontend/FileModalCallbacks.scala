@@ -78,7 +78,7 @@ package object FileModalCallbacks {
       }
     }
 
-    HttpRequest(serverUrl() + "/availableFiles")
+    HttpRequest(serverUrl() + "/available_files")
       .withQueryParameter("memberId", memberId.toString)
       .send()
       .onComplete((r: Try[SimpleHttpResponse]) => updateMemberFiles(r))

@@ -253,7 +253,7 @@ object Repertorise {
       )
 
     def updateAvailableRepertories() = {
-      HttpRequest(serverUrl() + "/availableReps")
+      HttpRequest(serverUrl() + "/available_reps")
         .send()
         .onComplete({
           case response: Success[SimpleHttpResponse] => {

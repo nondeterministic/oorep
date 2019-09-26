@@ -1,27 +1,27 @@
 # This file defines all application routes (Higher priority routes first)
 # https://www.playframework.com/documentation/latest/ScalaRouting
 
-GET     /                           org.multics.baueran.frep.backend.controllers.Get.index
-GET		/authenticate               org.multics.baueran.frep.backend.controllers.Get.authenticate
-GET		/lookup						org.multics.baueran.frep.backend.controllers.Get.repertorise(repertory: String, symptom: String)
-GET     /availableReps              org.multics.baueran.frep.backend.controllers.Get.availableReps
-GET     /availableFiles             org.multics.baueran.frep.backend.controllers.Get.availableFiles(memberId: Int)
-GET     /availableCasesForFile      org.multics.baueran.frep.backend.controllers.Get.availableCasesForFile(fileId: String)
-GET     /file                       org.multics.baueran.frep.backend.controllers.Get.getFile(fileId: String)
-GET     /case                       org.multics.baueran.frep.backend.controllers.Get.getCase(memberId: Int, caseId: String)
-GET     /accept_cookies             org.multics.baueran.frep.backend.controllers.Get.acceptCookies
+GET     /                              org.multics.baueran.frep.backend.controllers.Get.index
+GET		/authenticate                  org.multics.baueran.frep.backend.controllers.Get.authenticate
+GET		/lookup						   org.multics.baueran.frep.backend.controllers.Get.repertorise(repertory: String, symptom: String)
+GET     /available_reps                org.multics.baueran.frep.backend.controllers.Get.availableReps
+GET     /available_files               org.multics.baueran.frep.backend.controllers.Get.availableFiles(memberId: Int)
+GET     /available_cases_for_file      org.multics.baueran.frep.backend.controllers.Get.availableCasesForFile(fileId: String)
+GET     /file                          org.multics.baueran.frep.backend.controllers.Get.getFile(fileId: String)
+GET     /case                          org.multics.baueran.frep.backend.controllers.Get.getCase(memberId: Int, caseId: String)
+GET     /accept_cookies                org.multics.baueran.frep.backend.controllers.Get.acceptCookies
 
 +nocsrf
-POST   	/login                      org.multics.baueran.frep.backend.controllers.Post.login
-POST   	/savecase                   org.multics.baueran.frep.backend.controllers.Post.saveCaze
-POST   	/updatecasedescription      org.multics.baueran.frep.backend.controllers.Post.updateCaseDescription
-POST   	/delcase                    org.multics.baueran.frep.backend.controllers.Post.delCaze
-POST   	/savefile                   org.multics.baueran.frep.backend.controllers.Post.saveFile
-POST   	/delfileandcases            org.multics.baueran.frep.backend.controllers.Post.delFileAndCases
-POST   	/updateFileDescription      org.multics.baueran.frep.backend.controllers.Post.updateFileDescription
-POST    /addcaserubricstocase       org.multics.baueran.frep.backend.controllers.Post.addCaseRubricsToCaze
-POST    /delcaserubricsfromcase     org.multics.baueran.frep.backend.controllers.Post.delCaseRubricsFromCaze
-POST    /updatecaserubricsweights   org.multics.baueran.frep.backend.controllers.Post.updateCaseRubricsWeights
+POST   	/login                         org.multics.baueran.frep.backend.controllers.Post.login
+POST   	/save_case                     org.multics.baueran.frep.backend.controllers.Post.saveCaze
+POST   	/update_case_description       org.multics.baueran.frep.backend.controllers.Post.updateCaseDescription
+POST   	/del_case                      org.multics.baueran.frep.backend.controllers.Post.delCaze
+POST   	/save_file                     org.multics.baueran.frep.backend.controllers.Post.saveFile
+POST   	/del_file_and_cases            org.multics.baueran.frep.backend.controllers.Post.delFileAndCases
+POST   	/update_file_description       org.multics.baueran.frep.backend.controllers.Post.updateFileDescription
+POST    /add_caserubrics_to_case       org.multics.baueran.frep.backend.controllers.Post.addCaseRubricsToCaze
+POST    /del_caserubrics_from_case     org.multics.baueran.frep.backend.controllers.Post.delCaseRubricsFromCaze
+POST    /update_caserubrics_weights    org.multics.baueran.frep.backend.controllers.Post.updateCaseRubricsWeights
 
 # Map static resources from the /public folder to the /assets URL path
-GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
+GET     /assets/*file                  controllers.Assets.versioned(path="/public", file: Asset)
