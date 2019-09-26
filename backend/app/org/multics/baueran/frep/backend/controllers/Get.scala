@@ -11,12 +11,9 @@ import org.multics.baueran.frep.backend.dao.MemberDao
 import org.multics.baueran.frep.backend.db.db.DBContext
 import org.multics.baueran.frep.shared.Defs._
 import Defs.maxNumberOfResults
-import org.multics.baueran.frep.shared.frontend.serverUrl
-import org.scalajs.dom
 
 /**
- * This controller creates an `Action` to handle HTTP requests to the
- * application's home page.
+ * This controller creates an `Action` to handle HTTP requests to the application's home page.
  */
 
 @Singleton
