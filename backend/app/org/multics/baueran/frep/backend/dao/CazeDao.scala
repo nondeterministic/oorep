@@ -99,7 +99,7 @@ class CazeDao(dbContext: db.db.DBContext) {
 
       statement.close()
     } catch {
-      case e =>
+      case e: Throwable =>
         val errorMsg = s"CazeDao: getRaw($ids) failed: ${e.getStackTrace.map(_.toString).mkString("\n")}"
         Logger.error(errorMsg)
         returnValue = List()
@@ -273,6 +273,8 @@ class CazeDao(dbContext: db.db.DBContext) {
 
         if (run(rawQuery(lift(caseId), lift(leftOverCaseResultIds))) > 0)
           return deletedCaseResultIds.length
+      case _ =>
+        Logger.warn(s"CazeDao: DELCASERUBRICS($caseId, #${caseRubrics.length}): failed.")
     }
 
     0

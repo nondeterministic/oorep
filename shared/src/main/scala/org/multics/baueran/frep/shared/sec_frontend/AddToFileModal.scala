@@ -63,10 +63,12 @@ object AddToFileModal extends FileModal {
                             js.eval("$('#addToFileModal').modal('hide');")
                           }
                           case response: Failure[SimpleHttpResponse] => {
-                            println("Failure: " + response.get.body)
+                            println("ERROR: AddToFileModal: " + response.get.body)
                           }
                         })
                     }
+                    case None =>
+                      println("ERROR: AddToFileModal: no case description available to complete operation. This should never have happened.")
                   }
 
                   js.eval("$('#addToFileModal').modal('hide');")

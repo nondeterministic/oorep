@@ -82,10 +82,17 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
                   Ok
                 }
                 else {
-                  Logger.error(s"Post: addCaseRubrics(): failed")
+                  Logger.error(s"Post: addCaseRubrics() failed")
                   BadRequest("addCaseRubrics() failed")
                 }
+              case _ =>
+                Logger.error(s"Post: addCaseRubrics() failed: type conversion error which should never have happened")
+                BadRequest("addCaseRubrics() failed: type conversion error which should never have happened")
             }
+          case _ => {
+            Logger.error(s"Post: addCaseRubrics() failed: no or the wrong form data received.")
+            BadRequest("addCaseRubrics() failed: no or the wrong form data received.")
+          }
         }
       }
       case Left(err) => BadRequest("addCaseRubrics() failed: " + err)
@@ -109,7 +116,14 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
                   Logger.error(s"Post: delCaseRubrics(): failed")
                   BadRequest("delCaseRubrics() failed")
                 }
+              case _ =>
+                Logger.error(s"Post: delCaseRubricsFromCaze() failed: type conversion error which should never have happened")
+                BadRequest("delCaseRubricsFromCaze() failed: type conversion error which should never have happened")
             }
+          case _ => {
+            Logger.error(s"Post: delCaseRubricsFromCaze() failed: no or the wrong form data received.")
+            BadRequest("delRubricsFromCaze() failed: no or the wrong form data received.")
+          }
         }
       }
       case Left(err) => BadRequest("delCaseRubrics() failed: " + err)
@@ -133,7 +147,14 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
                   Logger.error(s"Post: updateCaseRubricsWeights(): failed")
                   BadRequest("updateCaseRubricsWeights() failed")
                 }
+              case _ =>
+                Logger.error(s"Post: updateCaseRubricsWeights() failed: type conversion error which should never have happened")
+                BadRequest("updateCaseRubricsWeights() failed: type conversion error which should never have happened")
             }
+          case _ => {
+            Logger.error(s"Post: updateCaseRubricsWeights() failed: no or the wrong form data received.")
+            BadRequest("updateCaseRubricsWeights() failed: no or the wrong form data received.")
+          }
         }
       }
       case Left(err) => BadRequest("updateCaseRubricsWeights() failed: " + err)

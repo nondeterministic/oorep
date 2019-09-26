@@ -97,7 +97,7 @@ object EditFileModal {
         }
         else
           println("fileName_fileId rx-activation failed: " + fileName_fileId.toString())
-      case None => println("WARNING: getCasesForFile() failed. Could not get memberID from cookie."); -1
+      case None => println("WARNING: getCasesForFile() failed. Could not get memberID from cookie.")
     }
   }
 

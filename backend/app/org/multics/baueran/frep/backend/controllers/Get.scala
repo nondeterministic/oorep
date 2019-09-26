@@ -77,7 +77,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
         val errStr = "Get: availableFiles(): availableFiles() failed: " + err
         Logger.error(errStr)
         BadRequest(errStr)
-      case Right(true) =>
+      case Right(_) =>
         val dao = new FileDao(dbContext)
         val dbFiles = dao.getDbFilesForMember(memberId)
         Ok(dbFiles.map(dbFile => (dbFile.id, dbFile.header)).asJson.toString)
@@ -89,7 +89,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
       case Left(err) =>
         Logger.error(err)
         BadRequest(err)
-      case Right(true) => {
+      case Right(_) => {
         val dao = new FileDao(dbContext)
         dao.get(fileId.toInt) match {
           case file :: Nil =>
@@ -126,7 +126,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
       case Left(err) =>
         Logger.error(err)
         BadRequest(err)
-      case Right(true) => {
+      case Right(_) => {
         val dao = new FileDao(dbContext)
         val r = dao.getCasesFromFile(fileId).asJson.toString()
         Ok(r)

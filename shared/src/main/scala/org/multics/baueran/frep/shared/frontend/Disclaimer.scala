@@ -1,9 +1,7 @@
 package org.multics.baueran.frep.shared.frontend
 
-import org.multics.baueran.frep.shared.frontend.serverUrl
 import org.querki.jquery.$
 import scalatags.JsDom.all._
-import org.scalajs.dom
 
 import scala.scalajs.js
 

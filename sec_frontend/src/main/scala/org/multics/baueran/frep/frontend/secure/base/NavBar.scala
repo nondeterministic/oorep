@@ -16,7 +16,7 @@ import org.multics.baueran.frep.shared.sec_frontend.RepertoryModal
 
 import scala.scalajs
 import scala.scalajs.js
-import scala.util.Success
+import scala.util.{Failure, Success}
 
 object NavBar {
 
@@ -40,10 +40,16 @@ object NavBar {
                         data.target:="#repertoryInfoModal")(info.abbrev).render)
                   })
                 }
+                case Left(err) =>
+                  println(s"ERROR: secure.NavBar: JSON decoding error: $err")
               }
             }
+            case Left(err) =>
+              println(s"ERROR: secure.NavBar: JSON parsing error: $err")
           }
         }
+        case failure: Failure[_] =>
+          println(s"ERROR: secure.NavBar: available_reps failed: ${failure.toString}")
       })
   }
 
