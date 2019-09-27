@@ -15,6 +15,6 @@ package object Defs {
   // Do not rename csrfCookie unless you know what you're doing!
   object CookieFields extends Enumeration {
     type CookieFields = Value
-    val email, hash, id, csrfCookie, cookiePopupAccepted = Value
+    val email, salt, id, csrfCookie, cookiePopupAccepted = Value
   }
 }

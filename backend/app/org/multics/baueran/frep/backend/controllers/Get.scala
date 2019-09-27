@@ -22,7 +22,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
   RepDatabase.setup(dbContext)
 
   def index() = Action { request: Request[AnyContent] =>
-    if (authorizedRequestCookies(request) == List.empty)
+    if (getRequestCookies(request) == List.empty)
       Redirect(serverUrl(request) + "/assets/html/index.html")
     else
       Redirect(serverUrl(request) + "/assets/html/private/index.html")
@@ -39,9 +39,9 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     * of further application functionality.
     */
   def authenticate() = Action { request: Request[AnyContent] =>
-    val cookies = authorizedRequestCookies(request)
+    val cookies = getRequestCookies(request)
 
-    getFrom(cookies, CookieFields.id.toString) match {
+    getCookieValue(cookies, CookieFields.id.toString) match {
       case Some(memberIdStr) => {
         doesUserHaveAuthorizedCookie(request) match {
           case Right(_) =>
@@ -62,7 +62,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
   def availableReps() = Action { request: Request[AnyContent] =>
     val dao = new RepertoryDao(dbContext)
 
-    if (authorizedRequestCookies(request) == List.empty)
+    if (getRequestCookies(request) == List.empty)
       Ok(dao.getAllAvailableRepertoryInfos().filter(r => r.access == RepAccess.Default || r.access == RepAccess.Public).asJson.toString())
     else
       Ok(dao.getAllAvailableRepertoryInfos().asJson.toString())

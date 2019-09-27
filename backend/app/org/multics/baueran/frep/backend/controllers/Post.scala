@@ -9,9 +9,6 @@ import backend.db.db.DBContext
 import play.api.Logger
 import shared.{CaseRubric, Caze, FIle}
 
-import play.filters.csrf._
-import play.filters.csrf.CSRF.Token
-
 class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends AbstractController(cc) with ServerUrl {
   cazeDao = new CazeDao(dbContext)
   fileDao = new FileDao(dbContext)
@@ -19,19 +16,25 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
   def login() = Action { implicit request =>
     val inputEmail: String = request.body.asFormUrlEncoded.get("inputEmail").head
     val inputPassword: String = request.body.asFormUrlEncoded.get("inputPassword").head
+    val member = getRegisteredMemberForPasswordAndEmail(inputPassword, inputEmail)
 
-    val hashedPass = getHash(inputPassword)
-    println("TODO: Remove me: " + hashedPass) // TODO
+    // TODO: Remove me!
+    println("some random hash: " + getRandomHash(inputPassword))
 
-    memberDao.getFromEmail(inputEmail) match {
-      case member :: _ if (hashedPass == member.hash) =>
-        Redirect(serverUrl(request) + "/assets/html/private/index.html")
-          .withCookies(
-            Cookie(CookieFields.email.toString, inputEmail, httpOnly = false),
-            Cookie(CookieFields.hash.toString, member.hash, httpOnly = false),
-            Cookie(CookieFields.id.toString, member.member_id.toString, httpOnly = false)
-          )
-      case _ => BadRequest("login() failed: user not authorized to login.")
+    member match {
+      case Some(m) =>
+        m.hash.split(":") match {
+          case Array(_, salt, _) =>
+            Redirect(serverUrl(request) + "/assets/html/private/index.html")
+              .withCookies(
+                Cookie(CookieFields.salt.toString, salt, httpOnly = false),
+                Cookie(CookieFields.id.toString, m.member_id.toString, httpOnly = false)
+              )
+          case _ =>
+            BadRequest("login() failed: user not authorized to login.")
+        }
+      case None =>
+        BadRequest("login() failed: user not authorized to login.")
     }
   }
 
