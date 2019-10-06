@@ -5,7 +5,11 @@ import org.scalajs.dom
 package object frontend {
 
   def serverUrl() = {
-    dom.document.location.protocol + "//" + dom.document.location.hostname + ":" + dom.document.location.port
+    dom.document.location.protocol + "//" + dom.document.location.hostname +
+      (if (dom.document.location.port.length > 0)
+        ":" + dom.document.location.port
+      else
+        "")
   }
 
   def getCookieData(cookie: String, elementName: String): Option[String] = {
