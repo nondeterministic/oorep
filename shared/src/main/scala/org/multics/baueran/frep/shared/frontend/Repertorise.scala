@@ -17,9 +17,11 @@ import monix.execution.Scheduler.Implicits.global
 import org.multics.baueran.frep.shared._
 import org.multics.baueran.frep.shared.Defs.CookieFields
 import org.multics.baueran.frep.shared.sec_frontend.FileModalCallbacks.updateMemberFiles
+import scalatags.JsDom
 
 object Repertorise {
 
+  private var prevQuery = ""
   private var symptomQuery = ""
   private var selectedRepertory = ""
   private val remedyFilter = Var("")
@@ -190,8 +192,29 @@ object Repertorise {
   }
 
   // ------------------------------------------------------------------------------------------------------------------
-  private def onSubmitSymptom(event: Event): Unit = {
-    val symptom = dom.document.getElementById("inputField").asInstanceOf[HTMLInputElement].value
+  private def onSymptomEntered(event: Event) = {
+    event.stopPropagation()
+    remedyFilter() = ""
+    prevQuery = dom.document.getElementById("inputField").asInstanceOf[HTMLInputElement].value
+    doLookup(prevQuery)
+  }
+
+  // ------------------------------------------------------------------------------------------------------------------
+  private def onSymptomListCleared(event: Event) = {
+    event.stopPropagation()
+    $("#inputField").value("")
+    dom.document.getElementById("inputField").asInstanceOf[HTMLInputElement].focus()
+  }
+
+  // ------------------------------------------------------------------------------------------------------------------
+  private def onSymptomListRedoPressed(event: Event) = {
+    event.stopPropagation()
+    $("#inputField").value(prevQuery)
+    dom.document.getElementById("inputField").asInstanceOf[HTMLInputElement].focus()
+  }
+
+  // ------------------------------------------------------------------------------------------------------------------
+  private def doLookup(symptom: String): Unit = {
     val repertory = selectedRepertory
 
     if (repertory.length == 0 || symptom.trim.replaceAll("[^A-Za-z0-9äüöÄÜÖß]", "").length <= 3) {
@@ -246,7 +269,7 @@ object Repertorise {
         button(`type`:="button",
           style:="overflow: hidden;",
           cls:="btn btn-block dropdown-toggle",
-          data("toggle"):="dropdown",
+          data.toggle:="dropdown",
           `id`:="repSelectionDropDownButton",
           "Repertories"),
         div(cls:="dropdown-menu", `id`:="repSelectionDropDown")
@@ -301,22 +324,22 @@ object Repertorise {
                 div(cls := "col-sm-9",
                   input(cls := "form-control", `id` := "inputField",
                     onkeydown := { (event: dom.KeyboardEvent) =>
-                      if (event.keyCode == 13) {
-                        remedyFilter() = ""
-                        event.stopImmediatePropagation()
-                        onSubmitSymptom(event)
-                      }
-                    },
-                    `placeholder` := "Enter a symptom (for example: head, pain, left)")
+                      if (event.keyCode == 13)
+                        onSymptomEntered(event)
+                    }, `placeholder` := "Enter a symptom (for example: head, pain, left)")
                 ),
               ),
               div(cls := "col-sm-1")
             ),
             div(cls := "col-sm-12 text-center", style := "margin-top:20px;",
               button(cls := "btn btn-primary", style := "width: 120px; margin-right:5px;", `type` := "button",
-                onclick := { (event: Event) => remedyFilter() = ""; onSubmitSymptom(event); event.stopPropagation() }, "Find"),
+                onclick := { (event: Event) =>
+                  onSymptomEntered(event)
+                }, "Find"),
               button(cls := "btn", style := "width: 100px;", `type` := "button",
-                onclick := { (event: Event) => $("#inputField").value(""); event.stopPropagation() }, "Clear")
+                onclick := { (event: Event) =>
+                  onSymptomListCleared(event)
+                }, "Clear")
             )
           ),
           div(cls := "container-fluid", style := "margin-top: 23px;", id := "resultStatus"),
@@ -340,18 +363,26 @@ object Repertorise {
                   input(cls := "form-control", `id` := "inputField",
                     onkeydown := { (event: dom.KeyboardEvent) =>
                       if (event.keyCode == 13) {
-                        remedyFilter() = ""
-                        event.stopImmediatePropagation()
-                        onSubmitSymptom(event)
+                        onSymptomEntered(event)
                       }
                     },
                     `placeholder` := "Enter a symptom (for example: head, pain, left)")
                 ),
-                span(button(cls := "btn btn-primary", style := "width: 80px; margin-right:5px;", `type` := "button",
-                  onclick := { (event: Event) => remedyFilter() = ""; onSubmitSymptom(event); event.stopPropagation() },
-                  span(cls := "oi oi-magnifying-glass", title := "Find", aria.hidden := "true")),
-                  button(cls := "btn", style := "width: 80px;", `type` := "button",
-                    onclick := { (event: Event) => $("#inputField").value(""); event.stopPropagation() },
+                span(
+                  button(cls := "btn btn-primary", style:="width: 80px; margin-right:5px;", `type` := "button",
+                    onclick := { (event: Event) =>
+                      onSymptomEntered(event)
+                    },
+                    span(cls := "oi oi-magnifying-glass", title := "Find", aria.hidden := "true")),
+                  button(cls := "btn", style := "width: 70px; margin-right:5px;", `type` := "button",
+                    onclick := { (event: Event) =>
+                      onSymptomListRedoPressed(event)
+                    },
+                    span(cls := "oi oi-action-redo", title := "Clear", aria.hidden := "true")),
+                  button(cls := "btn", style := "width: 70px;", `type` := "button",
+                    onclick := { (event: Event) =>
+                      onSymptomListCleared(event)
+                    },
                     span(cls := "oi oi-trash", title := "Clear", aria.hidden := "true"))
                 )
               ),
