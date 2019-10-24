@@ -170,78 +170,71 @@ object EditFileModal {
                     }
                   })
               ),
-              div(cls:="form-row",
-                div(cls:="col"),
-                div(cls:="col-2",
-                  button(cls:="btn mb-2 mr-2", id:="saveFileDescrEditFileModal", data.toggle:="modal", data.dismiss:="modal", disabled:=true,
-                    onclick:= { (event: Event) =>
-                      currentlyOpenedFile match {
-                        case Some(f) =>
-                          val token =
-                          HttpRequest(serverUrl() + "/update_file_description")
-                            .withHeader("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
-                            .post(MultiPartBody(
-                              "filedescr" -> PlainTextBody($("#fileDescrEditFileModal").`val`().toString().trim()),
-                              "fileId"    -> PlainTextBody(fileName_fileId.now._2)))
-                        case None => ;
-                      }
-                      $("#saveFileDescrEditFileModal").attr("disabled", true)
-                      js.eval("$('#editFileModal').modal('hide');") // TODO: This is ugly! No idea for an alternative :-(
-                    },
-                    "Save"),
-                  button(cls:="btn mb-2", data.dismiss:="modal", "Cancel")
-                ),
-                div(cls:="col")
+              div(cls:="form-row d-flex flex-row-reverse",
+                button(cls:="btn mb-2 mr-2 ml-2", id:="saveFileDescrEditFileModal", data.toggle:="modal", data.dismiss:="modal", disabled:=true,
+                  onclick:= { (event: Event) =>
+                    currentlyOpenedFile match {
+                      case Some(f) =>
+                        val token =
+                        HttpRequest(serverUrl() + "/update_file_description")
+                          .withHeader("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
+                          .post(MultiPartBody(
+                            "filedescr" -> PlainTextBody($("#fileDescrEditFileModal").`val`().toString().trim()),
+                            "fileId"    -> PlainTextBody(fileName_fileId.now._2)))
+                      case None => ;
+                    }
+                    $("#saveFileDescrEditFileModal").attr("disabled", true)
+                    js.eval("$('#editFileModal').modal('hide');") // TODO: This is ugly! No idea for an alternative :-(
+                  },
+                  "Save"),
+                button(cls:="btn mb-2", data.dismiss:="modal", "Cancel")
               )
             ),
 
             div(cls:="border-top my-3"),
 
             div(cls:="form-group",
-              div(
+              div(cls:="form-row",
                 label(`for`:="editFileAvailableFilesList", "Cases"),
-                div(
-                  cls:="list-group", role:="tablist", id:="editFileAvailableCasesList", style:=Rx("height: " + casesHeight().toString() + "px; overflow-y: scroll;"),
+                div(cls:="row",
+                  cls:="col-12 list-group", role:="tablist", id:="editFileAvailableCasesList", style:=Rx("height: " + casesHeight().toString() + "px; overflow-y: scroll;"),
                   caseAnchors
                 )
               ),
-              div(cls:="form-row",
-                div(cls:="col"),
-                div(cls:="col-2",
-                  button(cls:="btn mb-2 mr-2", id:="openFileEditFileModal", data.toggle:="modal", data.dismiss:="modal", disabled:=true,
-                    onclick:={ (event: Event) =>
-                      getCaseFromCurrentSelection()
+              div(cls:="form-row d-flex flex-row-reverse",
+                button(cls:="btn mb-2 mt-2 ml-2", id:="openFileEditFileModal", data.toggle:="modal", data.dismiss:="modal", disabled:=true,
+                  onclick:={ (event: Event) =>
+                    getCaseFromCurrentSelection()
 
-                      HttpRequest(serverUrl() + "/case")
-                        .withQueryParameters(("memberId", currentlyActiveMemberId.toString()), ("caseId", currentlySelectedCaseId.now.toString()))
-                        .send()
-                        .onComplete({
-                          case response: Success[SimpleHttpResponse] => {
-                            parse(response.get.body) match {
-                              case Right(json) => {
-                                val cursor = json.hcursor
-                                cursor.as[Caze] match {
-                                  case Right(caze) => {
-                                    Case.descr = Some(caze)
-                                    Case.cRubrics = caze.results
-                                    Repertorise.showResults()
-                                    Case.updateCaseHeaderView() // So that the buttons Add, Edit, etc. are redrawn properly
-                                  }
-                                  case Left(err) => println("Decoding of case failed: " + err)
+                    HttpRequest(serverUrl() + "/case")
+                      .withQueryParameters(("memberId", currentlyActiveMemberId.toString()), ("caseId", currentlySelectedCaseId.now.toString()))
+                      .send()
+                      .onComplete({
+                        case response: Success[SimpleHttpResponse] => {
+                          parse(response.get.body) match {
+                            case Right(json) => {
+                              val cursor = json.hcursor
+                              cursor.as[Caze] match {
+                                case Right(caze) => {
+                                  Case.descr = Some(caze)
+                                  Case.cRubrics = caze.results
+                                  Repertorise.showResults()
+                                  Case.updateCaseHeaderView() // So that the buttons Add, Edit, etc. are redrawn properly
                                 }
+                                case Left(err) => println("Decoding of case failed: " + err)
                               }
-                              case Left(err) => println("Parsing of case (is it JSON?): " + err)
                             }
+                            case Left(err) => println("Parsing of case (is it JSON?): " + err)
                           }
-                          case error: Failure[SimpleHttpResponse] => println("Lookup of case failed: " + error.toString())
-                        })
-                    },
-                    "Open"),
-                  button(cls:="btn mb-2", id:="deleteFileEditFileModal", data.toggle:="modal", data.dismiss:="modal", data.target:="#editFileModalAreYouSureCase", disabled:=true,
-                    onclick:= { (event: Event) => getCaseFromCurrentSelection() },
-                    "Delete")
-                ),
-                div(cls:="col")
+                        }
+                        case error: Failure[SimpleHttpResponse] => println("Lookup of case failed: " + error.toString())
+                      })
+                  },
+                  "Open"),
+                button(cls:="btn mb-2 mt-2", id:="deleteFileEditFileModal", data.toggle:="modal", data.dismiss:="modal", data.target:="#editFileModalAreYouSureCase", disabled:=true,
+                  onclick:= { (event: Event) => getCaseFromCurrentSelection() },
+                  "Delete")
+
               )
             )
 

@@ -43,20 +43,8 @@ object NewFileModal {
                   label(`for`:="fileDescr", "Description"),
                   textarea(cls:="form-control", id:="fileDescr", rows:="3", placeholder:="A more verbose description of the file")
                 ),
-                div(
-                  button(data.dismiss:="modal", cls:="btn mb-2",
-                    "Cancel",
-                    onclick:={ (event: Event) =>
-                      currFIle match {
-                        case None =>
-                          $("#fileHeader").`val`("")
-                          $("#fileDescr").`val`("")
-                        case Some(file) =>
-                          $("#fileHeader").`val`(file.header)
-                          $("#fileDescr").`val`(file.description)
-                      }
-                    }),
-                  button(cls:="btn btn-primary mb-2", `type`:="button",
+                div(cls:="d-flex flex-row-reverse",
+                  button(cls:="btn btn-primary mb-2", style:="margin-left:8px;", `type`:="button",
                     "Submit",
                     onclick:={(event: Event) =>
                       event.stopPropagation()
@@ -81,7 +69,19 @@ object NewFileModal {
                             println("Failure in NewFileModal: " + response.get.body)
                           }
                         })
-                    })
+                    }),
+                  button(data.dismiss:="modal", cls:="btn mb-2",
+                    "Cancel",
+                    onclick:={ (event: Event) =>
+                      currFIle match {
+                        case None =>
+                          $("#fileHeader").`val`("")
+                          $("#fileDescr").`val`("")
+                        case Some(file) =>
+                          $("#fileHeader").`val`(file.header)
+                          $("#fileDescr").`val`(file.description)
+                      }
+                    }),
                 )
               )
             )

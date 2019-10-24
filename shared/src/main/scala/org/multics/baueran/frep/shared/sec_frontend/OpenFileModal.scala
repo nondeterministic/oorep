@@ -70,12 +70,8 @@ object OpenFileModal extends FileModal {
             div(cls:="form-group",
               div(cls:="list-group", role:="tablist", id:="openFileAvailableFilesList", style:="height: 250px; overflow-y: scroll;", Rx(files()))
             ),
-            div(cls:="form-group",
-              button(data.dismiss:="modal", cls:="btn mb-2", "Cancel"),
-              button(cls:="btn mb-2", id:="deleteFileOpenFileModal", data.toggle:="modal", data.dismiss:="modal", data.target:="#openFileModalAreYouSure", disabled:=true,
-                "Delete"
-              ),
-              button(cls:="btn btn-primary mb-2", id:="submitOpenFileModal", `type`:="button", disabled:=true,
+            div(cls:="form-group d-flex flex-row-reverse",
+              button(cls:="btn btn-primary mb-2", style:="margin-left:8px;", id:="submitOpenFileModal", `type`:="button", disabled:=true,
                 data.toggle:="modal", data.dismiss:="modal", data.target:="#editFileModal",
                 onclick:={(event: Event) =>
                   $("body").css("cursor", "wait")
@@ -84,8 +80,11 @@ object OpenFileModal extends FileModal {
                   EditFileModal.fileName_fileId.recalc()
                 },
                 "Open"
-              )
-
+              ),
+              button(cls:="btn mb-2", style:="margin-left:8px;", id:="deleteFileOpenFileModal", data.toggle:="modal", data.dismiss:="modal", data.target:="#openFileModalAreYouSure", disabled:=true,
+                "Delete"
+              ),
+              button(data.dismiss:="modal", cls:="btn mb-2", "Cancel")
             )
           )
         )

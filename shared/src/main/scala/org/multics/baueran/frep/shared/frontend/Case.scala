@@ -281,20 +281,8 @@ object Case {
                   label(`for`:="caseDescrDescr", "Description"),
                   textarea(cls:="form-control", id:="caseDescrDescr", rows:="3", placeholder:="A more verbose description of the case")
                 ),
-                div(
-                  button(data.dismiss:="modal", cls:="btn mb-2",
-                    "Cancel",
-                    onclick:={ (event: Event) =>
-                      descr match {
-                        case Some(descr) =>
-                          $("#caseDescrId").`val`(descr.header)
-                          $("#caseDescrDescr").`val`(descr.description)
-                        case None =>
-                          $("#caseDescrId").`val`("")
-                          $("#caseDescrDescr").`val`("")
-                      }
-                    }),
-                  button(cls:="btn btn-primary mb-2", `type`:="button",
+                div(cls:="d-flex flex-row-reverse",
+                  button(cls:="btn btn-primary mb-2", style:="margin-left:8px;", `type`:="button",
                     "Submit",
                     onclick:={(event: Event) =>
                       event.stopPropagation()
@@ -323,6 +311,18 @@ object Case {
                       js.eval("$('#caseDescriptionModal').modal('hide');")
 
                       updateCaseViewAndDataStructures()
+                    }),
+                  button(data.dismiss:="modal", cls:="btn mb-2",
+                    "Cancel",
+                    onclick:={ (event: Event) =>
+                      descr match {
+                        case Some(descr) =>
+                          $("#caseDescrId").`val`(descr.header)
+                          $("#caseDescrDescr").`val`(descr.description)
+                        case None =>
+                          $("#caseDescrId").`val`("")
+                          $("#caseDescrDescr").`val`("")
+                      }
                     })
                 )
               )

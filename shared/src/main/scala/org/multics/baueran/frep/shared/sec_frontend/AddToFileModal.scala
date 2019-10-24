@@ -42,9 +42,8 @@ object AddToFileModal extends FileModal {
             div(cls:="form-group",
               div(cls:="list-group", role:="tablist", id:="addToFileAvailableFilesList", style:="height: 250px; overflow-y: scroll;", Rx(files()))
             ),
-            div(cls:="form-group",
-              button(data.dismiss:="modal", cls:="btn mb-2", "Cancel"),
-              button(cls:="btn btn-primary mb-2", `type`:="button", id:="submitAddToFileModal", disabled:=true,
+            div(cls:="form-group d-flex flex-row-reverse",
+              button(cls:="btn btn-primary mb-2", style:="margin-left:8px;", `type`:="button", id:="submitAddToFileModal", disabled:=true,
                 "Submit",
                 onclick:={(event: Event) =>
                   Case.descr match {
@@ -72,8 +71,8 @@ object AddToFileModal extends FileModal {
                   }
 
                   js.eval("$('#addToFileModal').modal('hide');")
-                })
-
+                }),
+              button(data.dismiss:="modal", cls:="btn mb-2", "Cancel")
             )
           )
         )
