@@ -30,15 +30,17 @@ object NavBar {
               val cursor = json.hcursor
               cursor.as[List[Info]] match {
                 case Right(infos) => {
-                  infos.foreach(info => {
-                    dom.document
-                      .getElementById("secNavBarRepertories").asInstanceOf[dom.html.Div]
-                      .appendChild(a(cls:="dropdown-item", href:="#", data.toggle:="modal",
-                        onclick := { (e: Event) =>
-                          RepertoryModal.info() = Some(info)
-                        },
-                        data.target:="#repertoryInfoModal")(info.abbrev).render)
-                  })
+                  infos
+                    .sortBy(_.abbrev)
+                    .foreach(info => {
+                      dom.document
+                        .getElementById("secNavBarRepertories").asInstanceOf[dom.html.Div]
+                        .appendChild(a(cls:="dropdown-item", href:="#", data.toggle:="modal",
+                          onclick := { (e: Event) =>
+                            RepertoryModal.info() = Some(info)
+                          },
+                          data.target:="#repertoryInfoModal")(info.abbrev).render)
+                    })
                 }
                 case Left(err) =>
                   println(s"ERROR: secure.NavBar: JSON decoding error: $err")
