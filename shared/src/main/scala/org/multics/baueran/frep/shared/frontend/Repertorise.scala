@@ -285,21 +285,23 @@ object Repertorise {
                 val cursor = json.hcursor
                 cursor.as[List[Info]] match {
                   case Right(infos) => {
-                    infos.foreach(info => {
-                      $("#repSelectionDropDown")
-                        .append(a(cls:="dropdown-item", href:="#", data.value:=info.abbrev,
-                          onclick := { (event: Event) =>
-                            selectedRepertory = info.abbrev
-                            $("#repSelectionDropDownButton").text("Repertory: " + selectedRepertory)
-                          }, info.abbrev).render)
+                    infos
+                      .sortBy(_.abbrev)
+                      .foreach(info => {
+                        $("#repSelectionDropDown")
+                          .append(a(cls:="dropdown-item", href:="#", data.value:=info.abbrev,
+                            onclick := { (event: Event) =>
+                              selectedRepertory = info.abbrev
+                              $("#repSelectionDropDownButton").text("Repertory: " + selectedRepertory)
+                            }, info.abbrev).render)
 
-                      if (selectedRepertory.length > 0)
-                        $("#repSelectionDropDownButton").text("Repertory: " + selectedRepertory)
-                      else if (info.access == RepAccess.Default) {
-                        selectedRepertory = info.abbrev
-                        $("#repSelectionDropDownButton").text("Repertory: " + selectedRepertory)
-                      }
-                    })
+                        if (selectedRepertory.length > 0)
+                          $("#repSelectionDropDownButton").text("Repertory: " + selectedRepertory)
+                        else if (info.access == RepAccess.Default) {
+                          selectedRepertory = info.abbrev
+                          $("#repSelectionDropDownButton").text("Repertory: " + selectedRepertory)
+                        }
+                      })
                   }
                   case Left(t) => println("Parsing of available repertories failed: " + t)
                 }
