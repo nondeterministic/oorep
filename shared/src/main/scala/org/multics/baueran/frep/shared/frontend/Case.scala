@@ -178,7 +178,7 @@ object Case {
 
     // Redraw table body
     $("#analysisTBody").empty()
-    for (cr <- cRubrics.sortBy(cr => cr.repertoryAbbrev + cr.rubric.fullPath)) {
+    for (cr <- cRubrics.filter(_.rubricWeight > 0).sortBy(cr => cr.repertoryAbbrev + cr.rubric.fullPath)) {
       val trId = cr.rubric.fullPath.replaceAll("[^A-Za-z0-9]", "") + "_" + cr.repertoryAbbrev
 
       $("#analysisTBody").append(
