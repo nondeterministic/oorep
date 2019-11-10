@@ -3,6 +3,9 @@ package org.multics.baueran.frep.backend.dao
 import org.multics.baueran.frep.backend.db
 import org.multics.baueran.frep.shared.Member
 
+import java.util.Date
+
+
 class MemberDao(dbContext: db.db.DBContext) {
 
   import dbContext._
@@ -27,4 +30,26 @@ class MemberDao(dbContext: db.db.DBContext) {
     val select = quote{ query[Member].filter(_.email == lift(email)) }
     run(select)
   }
+
+  def setLastSeen(memberId: Int, date: Date) = {
+    run {
+      quote {
+        tableMember
+          .filter(_.member_id == lift(memberId))
+          .update(_.lastseen -> Some(lift(date)))
+      }
+    }
+  }
+
+  def increaseLoginCounter(memberId: Int) = {
+    run {
+      quote {
+        tableMember
+          .filter(_.member_id == lift(memberId))
+          .update(member => member.numberoflogins -> (member.numberoflogins + 1))
+      }
+    }
+  }
+
+
 }

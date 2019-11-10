@@ -1,10 +1,12 @@
 package org.multics.baueran.frep.backend.controllers
 
+import java.util.Calendar
+
 import javax.inject._
 import play.api.mvc._
 import org.multics.baueran.frep._
 import shared.Defs._
-import backend.dao.{CazeDao, FileDao}
+import backend.dao.{CazeDao, FileDao, MemberDao}
 import backend.db.db.DBContext
 import play.api.Logger
 import shared.{CaseRubric, Caze, FIle}
@@ -12,6 +14,7 @@ import shared.{CaseRubric, Caze, FIle}
 class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends AbstractController(cc) with ServerUrl {
   cazeDao = new CazeDao(dbContext)
   fileDao = new FileDao(dbContext)
+  memberDao = new MemberDao(dbContext)
 
   def login() = Action { implicit request =>
     val inputEmail: String = request.body.asFormUrlEncoded.get("inputEmail").head
@@ -25,6 +28,9 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
       case Some(m) =>
         m.hash.split(":") match {
           case Array(_, salt, _) =>
+            memberDao.setLastSeen(m.member_id, Calendar.getInstance().getTime())
+            memberDao.increaseLoginCounter(m.member_id)
+
             Redirect(serverUrl(request) + "/assets/html/private/index.html")
               .withCookies(
                 Cookie(CookieFields.salt.toString, salt, httpOnly = false),

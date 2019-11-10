@@ -16,7 +16,9 @@ case class Member(member_id: Int,
                   company: Option[String] = None,
                   title: Option[String] = None,
                   student_until: Option[Date] = None,
-                  profession: Option[String] = None)
+                  profession: Option[String] = None,
+                  lastseen: Option[Date] = None,
+                  numberoflogins: Int)
 
 //object Member {
 //  implicit val memberDecoder: Decoder[Member] = deriveDecoder[Member]
@@ -24,7 +26,7 @@ case class Member(member_id: Int,
 //}
 
 object Member {
-  private val dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+  val dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
 
   implicit val memberDecoder: Decoder[Member] = new Decoder[Member] {
     final def apply(c: HCursor): Decoder.Result[Member] = {
@@ -59,8 +61,16 @@ object Member {
         case _ => None
       }
       val profession = c.downField("profession").as[String].toOption
+      val lastseen = c.downField("lastseen").as[String] match {
+        case Right(date) => Some(dateFormat.parse(date))
+        case _ => None
+      }
+      val numberoflogins = c.downField("numberoflogins").as[Int] match {
+        case Right(d) => d
+        case _ => return Left(DecodingFailure("Member decoding failed: numberoflogins.", c.history))
+      }
 
-      Right(Member(member_id, member_name, hash, realname, email, country, company, title, student_until, profession))
+      Right(Member(member_id, member_name, hash, realname, email, country, company, title, student_until, profession, lastseen, numberoflogins))
     }
   }
 
@@ -87,7 +97,12 @@ object Member {
       ("profession", m.profession match {
         case Some(d) => Json.fromString(d)
         case None => Json.Null
-      })
+      }),
+      ("lastseen", m.lastseen match {
+        case Some(d) => Json.fromString(dateFormat.format(d))
+        case None => Json.Null
+      }),
+      ("numberoflogins", Json.fromInt(m.numberoflogins))
     )
   }
 
