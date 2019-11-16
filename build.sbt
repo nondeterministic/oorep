@@ -14,6 +14,10 @@ val pgDriverVersion    = "42.2.5"
 
 resolvers in ThisBuild += Resolver.bintrayRepo("hmil", "maven")
 
+javaOptions in Universal ++= Seq(
+  "-Dpidfile.path=/dev/null"
+)
+
 lazy val backend = (project in file("backend")).settings(commonSettings).settings(
   scalaJSProjects := Seq(frontend, sec_frontend),
   pipelineStages in Assets := Seq(scalaJSPipeline),
