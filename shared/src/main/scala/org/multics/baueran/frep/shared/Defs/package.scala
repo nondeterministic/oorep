@@ -10,7 +10,7 @@ package object Defs {
       }
     }
   }
-  def maxNumberOfResults = 150
+  def maxNumberOfResults = 130
 
   // Do not rename csrfCookie unless you know what you're doing!
   object CookieFields extends Enumeration {
