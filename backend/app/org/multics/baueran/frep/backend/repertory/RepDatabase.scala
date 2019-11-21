@@ -51,7 +51,7 @@ object RepDatabase {
       }
 
       for (file <- arrayOfFiles)
-        if (!file.isDirectory)
+        if (!file.isDirectory && file.getName.endsWith(".json"))
           availableRepertoriesAbbrevs += file.getName.substring(0, file.getName.indexOf('_'))
 
       for (repAbbrev <- availableRepertoriesAbbrevs.toList) {
