@@ -18,7 +18,10 @@ import Defs.maxNumberOfResults
 
 @Singleton
 class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends AbstractController(cc) with ServerUrl {
+  cazeDao = new CazeDao(dbContext)
+  fileDao = new FileDao(dbContext)
   memberDao = new MemberDao(dbContext)
+
   RepDatabase.setup(dbContext)
 
   def index() = Action { request: Request[AnyContent] =>
@@ -91,7 +94,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
         BadRequest(err)
       case Right(_) => {
         val dao = new FileDao(dbContext)
-        dao.get(fileId.toInt) match {
+        dao.getFIle(fileId.toInt) match {
           case file :: Nil =>
             Ok(file.asJson.toString())
           case _ =>
@@ -127,10 +130,35 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
         Logger.error(err)
         BadRequest(err)
       case Right(_) => {
-        val dao = new FileDao(dbContext)
-        val r = dao.getCasesFromFile(fileId).asJson.toString()
-        Ok(r)
+        Ok(fileDao
+          .getCasesFromFile(fileId)
+          .asJson
+          .toString())
       }
+    }
+  }
+
+  /**
+   * Returns basically a list of pairs with single entries like
+   *
+   *   (file_description, case_id, "[date] 'header'"),
+   *
+   * but JSON-encoded, of course.
+   */
+  def fileOverview(fileId: String) = Action { request: Request[AnyContent] =>
+    doesUserHaveAuthorizedCookie(request) match {
+      case Right(_) if (fileId.forall(_.isDigit)) =>
+        val results = fileDao
+          .getFIle(fileId.toInt)
+          .flatMap(f => f.cazes.map(c => (f.description, c.id, s"[${c.date.take(10)}] '${c.header}'")))
+        Ok(results.asJson.toString())
+      case Left(err) =>
+        Logger.error(err)
+        BadRequest(err)
+      case _ =>
+        val err = "Get: fileOverview failed."
+        Logger.error(err)
+        BadRequest(err)
     }
   }
 

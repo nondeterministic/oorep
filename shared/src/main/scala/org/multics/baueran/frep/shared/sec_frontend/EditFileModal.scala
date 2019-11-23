@@ -6,7 +6,7 @@ import fr.hmil.roshttp.response.SimpleHttpResponse
 import io.circe.parser.parse
 import monix.execution.Scheduler.Implicits.global
 import org.multics.baueran.frep.shared.Defs.CookieFields
-import org.multics.baueran.frep.shared.{Caze, FIle}
+import org.multics.baueran.frep.shared.{Caze}
 import org.multics.baueran.frep.shared.frontend.{Case, Repertorise, getCookieData, serverUrl}
 import org.scalajs.dom
 import org.scalajs.dom.Event
@@ -23,63 +23,70 @@ import scala.util.{Failure, Success, Try}
 
 object EditFileModal {
 
+  val fileName_fileId = Var(("", ""))
+  private var currentFileDescription: Option[String] = None
+  private val currentlyAssociatedCaseHeaders: Var[List[(Int, String)]] = Var(Nil)
   private var currentlyActiveMemberId = -1
-  private var currentlyOpenedFile: Option[FIle] = None
   private val currentlySelectedCaseId = Var(-1)
   private val currentlySelectedCaseHeader = Var("")
-  private val cases: Var[List[Caze]] = Var(List())
-  private val casesHeight = Rx(max(200, min(100, cases().length * 30)))
+  private val casesHeight = Rx(max(200, min(100, currentlyAssociatedCaseHeaders().length * 30)))
   private val caseAnchors = Rx {
-    cases() match {
+    currentlyAssociatedCaseHeaders() match {
       case Nil =>
         List(a(cls:="list-group-item list-group-item-action", data.toggle:="list", id:="-1", href:="#list-profile", role:="tab", "<no cases created yet>").render)
-      case _ => cases()
-        .sortBy(_.date)
+      case _ => currentlyAssociatedCaseHeaders()
+        .sortBy(_._2) // date, effectively
         .reverse
-        .map { c =>
-          a(cls:="list-group-item list-group-item-action", id:=c.id.toString(), data.toggle:="list", href:="#list-profile", role:="tab",
+        .map { case (caseId, caseEnrichedDescr) =>
+          a(cls:="list-group-item list-group-item-action", id:=caseId.toString(), data.toggle:="list", href:="#list-profile", role:="tab",
             onclick:={ (event: Event) =>
               $("#openFileEditFileModal").removeAttr("disabled")
               $("#deleteFileEditFileModal").removeAttr("disabled")
-              currentlySelectedCaseId() = c.id
+              currentlySelectedCaseId() = caseId
             },
-            s"[${c.date.take(10)}]   '${c.header}'")
+            caseEnrichedDescr)
             .render
-      }
+        }
     }
   }
-  val fileName_fileId = Var(("", ""))
 
-  fileName_fileId.foreach { case (fileName,fileId) =>
-    // Update modal dialog with data obtained from backend...
+  fileName_fileId.foreach { case (fileName,fileId) if (fileId.forall(_.isDigit)) =>
+    // Reset UI and some data
+    currentlySelectedCaseId() = -1
+    currentlySelectedCaseHeader() = ""
+    currentlyActiveMemberId = -1
+    currentFileDescription = None
+    $("#openFileEditFileModal").attr("disabled", true)
+    $("#deleteFileEditFileModal").attr("disabled", true)
+
+    // Callback function for http request below...
     def updateModal(response: Try[SimpleHttpResponse]) = {
+      $("body").css("cursor", "default")
+
       response match {
         case response: Success[SimpleHttpResponse] => {
           parse(response.get.body) match {
             case Right(json) => {
-              val cursor = json.hcursor
-              cursor.as[FIle] match {
-                case Right(f) =>
-                  $("#fileDescrEditFileModal").`val`(f.description) // Update description
-                  cases() = f.cazes // Update cases
-                  currentlyOpenedFile = Some(f) // Update currently opened file
-                case Left(err) => println("Decoding of file failed: " + err)
+              json.hcursor.as[Seq[(String, Int, String)]] match {
+                case Right(results) =>
+                  currentlyAssociatedCaseHeaders() =
+                    results.toList.map{ case (_, caseId, caseEnrichedHdr) => (caseId, caseEnrichedHdr) }
+
+                  if (results.length > 0)
+                    currentFileDescription = Some(results.head._1)
+                  $("#fileDescrEditFileModal").`val`(currentFileDescription.getOrElse(""))
+
+                case Left(err) =>
+                  println("Decoding of cases' ids and headers failed: " + err + "; " + response.get.body)
               }
             }
-            case Left(err) => println("Parsing of file failed (is it JSON?): " + err)
+            case Left(err) =>
+              println("Parsing of file failed (is it JSON?): " + err + "; " + response.get.body)
           }
         }
         case error: Failure[SimpleHttpResponse] => println("ERROR: " + error.get.body)
       }
     }
-
-    // Reset UI and some data
-    cases() = List.empty
-    currentlySelectedCaseId() = -1
-    currentlySelectedCaseHeader() = ""
-    currentlyActiveMemberId = -1
-    $("#openFileEditFileModal").attr("disabled", true)
-    $("#deleteFileEditFileModal").attr("disabled", true)
 
     // Request data from backend...
     getCookieData(dom.document.cookie, CookieFields.id.toString) match {
@@ -87,12 +94,11 @@ object EditFileModal {
         // TODO: This is a clumsy if-condition and else-feedback. OK for now, but fix!
         if (fileName.length() > 0 && fileId.forall(_.isDigit) && memberId.forall(_.isDigit) && memberId.toInt >= 0) {
           currentlyActiveMemberId = memberId.toInt
-          HttpRequest(serverUrl() + "/file")
+          HttpRequest(serverUrl() + "/file_overview")
             .withQueryParameters("fileId" -> fileId)
             .send()
             .onComplete((r: Try[SimpleHttpResponse]) => {
               updateModal(r)
-              $("body").css("cursor", "default")
             })
         }
         else
@@ -160,9 +166,9 @@ object EditFileModal {
                 label(`for`:="fileDescr", "Description"),
                 textarea(cls:="form-control", id:="fileDescrEditFileModal", rows:="8", placeholder:="A more verbose description of the file",
                   onkeyup:= { (event: Event) =>
-                    currentlyOpenedFile match {
-                      case Some(f) =>
-                        if ($("#fileDescrEditFileModal").`val`().toString() != f.description)
+                    currentFileDescription match {
+                      case Some(fileDescription) =>
+                        if ($("#fileDescrEditFileModal").`val`().toString() != fileDescription)
                           $("#saveFileDescrEditFileModal").removeAttr("disabled")
                         else
                           $("#saveFileDescrEditFileModal").attr("disabled", true)
@@ -173,15 +179,14 @@ object EditFileModal {
               div(cls:="form-row d-flex flex-row-reverse",
                 button(cls:="btn mb-2 mr-2 ml-2", id:="saveFileDescrEditFileModal", data.toggle:="modal", data.dismiss:="modal", disabled:=true,
                   onclick:= { (event: Event) =>
-                    currentlyOpenedFile match {
-                      case Some(f) =>
-                        val token =
+                    fileName_fileId.now match {
+                      case (fileName, fileId) if fileId.forall(_.isDigit) =>
                         HttpRequest(serverUrl() + "/update_file_description")
                           .withHeader("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
                           .post(MultiPartBody(
                             "filedescr" -> PlainTextBody($("#fileDescrEditFileModal").`val`().toString().trim()),
-                            "fileId"    -> PlainTextBody(fileName_fileId.now._2)))
-                      case None => ;
+                            "fileId"    -> PlainTextBody(fileId)))
+                      case _ => ;
                     }
                     $("#saveFileDescrEditFileModal").attr("disabled", true)
                     js.eval("$('#editFileModal').modal('hide');") // TODO: This is ugly! No idea for an alternative :-(
@@ -197,7 +202,7 @@ object EditFileModal {
               div(cls:="form-row",
                 label(`for`:="editFileAvailableFilesList", "Cases"),
                 div(cls:="row",
-                  cls:="col-12 list-group", role:="tablist", id:="editFileAvailableCasesList", style:=Rx("height: " + casesHeight().toString() + "px; overflow-y: scroll;"),
+                  cls:="col-12 list-group", role:="tablist", id:="editFileAvailableCasesList", style:=Rx("height: " + casesHeight.toString() + "px; overflow-y: scroll;"),
                   caseAnchors
                 )
               ),

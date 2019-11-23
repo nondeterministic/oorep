@@ -12,9 +12,6 @@ import play.api.Logger
 import shared.{CaseRubric, Caze, FIle}
 
 class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends AbstractController(cc) with ServerUrl {
-  cazeDao = new CazeDao(dbContext)
-  fileDao = new FileDao(dbContext)
-  memberDao = new MemberDao(dbContext)
 
   def login() = Action { implicit request =>
     val inputEmail: String = request.body.asFormUrlEncoded.get("inputEmail").head

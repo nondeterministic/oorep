@@ -2,15 +2,8 @@ package org.multics.baueran.frep.backend.dao
 
 import org.multics.baueran.frep._
 import backend.db
-import shared.{Caze, FIle}
+import shared.{Caze, FIle, dbFile}
 import play.api.Logger
-
-case class dbFile(id: Int,
-                  header: String,
-                  member_id: Int,
-                  date: String,
-                  description: String,
-                  case_ids: List[Int])
 
 class FileDao(dbContext: db.db.DBContext) {
 
@@ -20,7 +13,7 @@ class FileDao(dbContext: db.db.DBContext) {
     querySchema[dbFile]("File", _.date -> "date_")
   }
 
-  def get(id: Int) = {
+  def getFIle(id: Int) = {
     try {
       Logger.debug(s"FileDao: get(): getting file with id ${id}")
       run ( quote {
@@ -71,7 +64,7 @@ class FileDao(dbContext: db.db.DBContext) {
 
   def getCasesFromFile(fileId: String): List[Caze] = {
     if (fileId.forall(_.isDigit)) {
-      get(fileId.toInt) match {
+      getFIle(fileId.toInt) match {
         case file :: Nil => file.cazes
         case _ => List()
       }
