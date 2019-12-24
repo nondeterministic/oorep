@@ -31,6 +31,14 @@ html {
   margin: 0px;
 }
 
+h5 {
+  color: #afc6e9;
+  font-family: serif;
+  # font-weight: bold;
+  # margin-top: 0px;
+  # margin-bottom: 1px;
+}
+
 a.underline, a.underline:focus {
   text-decoration: underline;
 }
