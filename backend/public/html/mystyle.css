@@ -31,6 +31,19 @@ html {
   margin: 0px;
 }
 
+h2.freetext {
+  margin-bottom: 25px;
+  margin-top: 50px;
+  font-weight: bold;
+}
+
+h3.freetext {
+  margin-bottom: 18px;
+  margin-top: 50px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #ccc;
+}
+
 h5 {
   color: #afc6e9;
   font-family: serif;
