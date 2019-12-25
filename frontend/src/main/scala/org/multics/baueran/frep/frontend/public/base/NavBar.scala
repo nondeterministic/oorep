@@ -45,9 +45,15 @@ object NavBar {
             li(cls:="navbar-item",
               a(cls:="nav-link py-0", href:="#content_bottom", onclick:={ () => goToAnchor("content_bottom") })("Contact")),
             li(cls:="navbar-item", style:="margin-right:5px; margin-left:10px;",
-              a(cls:="py-0", href:="login.html", p(cls:="btn btn-sm btn-success my-auto", "Login"))),
+              a(cls:="py-0", href:="login.html", p(cls:="btn btn-sm btn-success my-auto",
+                span(cls := "oi oi-account-login", title := "Login", aria.hidden := "true"),
+                " Login"
+              ))),
             li(cls:="navbar-item",
-              a(cls:="py-0", href:="register.html", p(cls:="btn btn-sm btn-danger my-auto", onclick:={ () => println("pressed6") }, "Register")))
+              a(cls:="py-0", href:="register.html", p(cls:="btn btn-sm btn-danger my-auto", onclick:={ () => println("pressed6") },
+                span(cls := "oi oi-check", title := "Register", aria.hidden := "true"),
+                " Register"
+              )))
           )
         )
       )
