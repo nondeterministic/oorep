@@ -22,7 +22,7 @@ object About {
              you cannot obtain from its original sources.  However, online repertorisation is so much easier sometimes than
              looking up the categories yourself.
                 """),
-              p("""
+              p("""A word from the author:
              OOREP was especially developed for people who study homeopathy, either professionally or as a hobby like I am.
              I am not making any money from developing this software or from a homeopathic practice of any sorts.  As an interested
              layperson I have found it difficult, if not impossible, to get access to a good electronic repertorisation.
