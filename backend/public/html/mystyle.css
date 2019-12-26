@@ -44,7 +44,7 @@ h3.freetext {
   border-bottom: 1px solid #ccc;
 }
 
-h5 {
+h5.freetext {
   color: #afc6e9;
   font-family: serif;
   # font-weight: bold;
