@@ -39,7 +39,7 @@ object Main {
         if ($(document).scrollTop() > 150) {
           if (!navBarDark) {
             $("#public_nav_bar").addClass("bg-dark navbar-dark shadow p-3 mb-5")
-            $("#nav_bar_logo").append(a(cls := "navbar-brand py-0", href := serverUrl(), "OOREP").render)
+            $("#nav_bar_logo").append(a(cls := "navbar-brand py-0", href := serverUrl(), h5(cls:="freetext", "OOREP")).render)
             navBarDark = true
           }
         }

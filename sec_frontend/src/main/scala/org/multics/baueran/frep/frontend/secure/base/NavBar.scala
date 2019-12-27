@@ -61,7 +61,7 @@ object NavBar {
     nav(cls:="navbar py-0 fixed-top navbar-expand-sm navbar-light", id:="public_nav_bar", style:="height:60px; line-height:55px;",
       button(cls:="navbar-toggler", `type`:="button", data.toggle:="collapse", data.target:="#navbarToggler",
         span(cls:="navbar-toggler-icon")),
-      div(id:="nav_bar_logo"),// a(cls := "navbar-brand py-0", href := serverUrl(), "OOREP")),
+      div(id:="nav_bar_logo"),
       div(cls:="collapse navbar-collapse", id:="navbarToggler",
         div( // cls:="ml-auto",
           ul(cls:="navbar-nav",

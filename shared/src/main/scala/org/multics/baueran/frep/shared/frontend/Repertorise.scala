@@ -411,7 +411,7 @@ object Repertorise {
     else {
       if (dom.document.getElementById("nav_bar_logo").innerHTML.length() == 0) {
         $("#public_nav_bar").addClass("bg-dark navbar-dark shadow p-3 mb-5")
-        $("#nav_bar_logo").append(a(cls := "navbar-brand py-0", href := serverUrl(), "OOREP").render)
+        $("#nav_bar_logo").append(a(cls := "navbar-brand py-0", href := serverUrl(), h5(cls:="freetext", "OOREP")).render)
       }
       div(style:="margin-top:100px;", myHTML)
     }

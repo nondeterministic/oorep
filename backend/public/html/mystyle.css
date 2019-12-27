@@ -1,3 +1,12 @@
+@font-face {
+    font-family: 'Linux Libertine Display';
+    src: url('fonts/LinLibertine_DR.woff') format('woff'),
+         url('fonts/LinLibertine_DRah.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
 html {
   scroll-behavior: smooth;
 }
@@ -45,8 +54,10 @@ h3.freetext {
 }
 
 h5.freetext {
-  color: #afc6e9;
-  font-family: serif;
+  color: #aec5e8;
+  # original color of logo: color: #afc6e9;
+  font-family: 'Linux Libertine Display', serif;
+  font-size: 1.414rem;
   # font-weight: bold;
   # margin-top: 0px;
   # margin-bottom: 1px;
