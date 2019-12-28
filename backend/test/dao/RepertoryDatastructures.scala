@@ -24,7 +24,7 @@ class RepertoryDatastructures extends PlaySpec with GuiceOneAppPerTest with Inje
       assert(caust1 == caust1_same)
     }
 
-    "not be the same, if it is'nt the same" in {
+    "not be the same, if it isn't the same" in {
       assert(caust1 != sil)
     }
   }
