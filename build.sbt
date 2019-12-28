@@ -14,6 +14,7 @@ val pgDriverVersion    = "42.2.5"
 
 resolvers in ThisBuild += Resolver.bintrayRepo("hmil", "maven")
 
+// I think, this one has no effect, and we remove pid file in Dockerfile anyway. CHECK & KILL!
 javaOptions in Universal ++= Seq(
   "-Dpidfile.path=/dev/null"
 )
@@ -44,14 +45,7 @@ lazy val backend = (project in file("backend")).settings(commonSettings).setting
 
 lazy val frontend = (project in file("frontend")).settings(commonSettings).settings(
   scalaJSUseMainModuleInitializer := true,
-  // cf. https://stackoverflow.com/questions/51481152/unresolved-webjars-dependency-even-though-it-seems-to-be-in-maven-central
-  // dependencyOverrides += "org.webjars.npm" % "js-tokens" % "3.0.2",
-  
   skip in packageJSDependencies := false,
- 
-  // https://stackoverflow.com/questions/37127313/scalajs-to-simply-redirect-complication-output-to-specified-directory
-  artifactPath in(Compile, fastOptJS) :=
-    baseDirectory.value / ".." / "backend" / "public" / "javascripts" / "frontend-pub-fastOpt.js",
  
   libraryDependencies ++= Seq(
     "org.scala-js" %%% "scalajs-dom" % scalaJsDomVersion,
@@ -68,14 +62,8 @@ lazy val frontend = (project in file("frontend")).settings(commonSettings).setti
 
 lazy val sec_frontend = (project in file("sec_frontend")).settings(commonSettings).settings(
   scalaJSUseMainModuleInitializer := true,
-  // cf. https://stackoverflow.com/questions/51481152/unresolved-webjars-dependency-even-though-it-seems-to-be-in-maven-central
-  // dependencyOverrides += "org.webjars.npm" % "js-tokens" % "3.0.2",
-  
   skip in packageJSDependencies := false,
  
-  artifactPath in(Compile, fastOptJS) :=
-    baseDirectory.value / ".." / "backend" / "public" / "javascripts" / "frontend-priv-fastOpt.js",
-
   libraryDependencies ++= Seq(
     "org.scala-js" %%% "scalajs-dom" % scalaJsDomVersion,
     "com.lihaoyi" %%% "scalatags" % scalaTagsVersion,
@@ -93,7 +81,6 @@ lazy val shared = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
   .in(file("shared"))
   .settings(
-    // dependencyOverrides += "org.webjars.npm" % "js-tokens" % "3.0.2",
     libraryDependencies ++= Seq(
       "io.circe" %% "circe-core" % circeVersion,
       "io.circe" %% "circe-generic" % circeVersion,
@@ -102,7 +89,10 @@ lazy val shared = crossProject(JSPlatform, JVMPlatform)
       "com.lihaoyi" %%% "scalatags" % scalaTagsVersion,
       "org.querki" %%% "jquery-facade" % scalaJQueryVersion,
       "fr.hmil" %%% "roshttp" % rosHttpVersion,
-      "com.timushev" %%% "scalatags-rx" % scalatagsrxVersion
+      "com.timushev" %%% "scalatags-rx" % scalatagsrxVersion,
+      "org.scalatestplus.play" %% "scalatestplus-play" % scalaTestVersion % "test",
+      guice,
+      specs2 % Test
     )
   )
   .enablePlugins(ScalaJSPlugin, ScalaJSWeb)
@@ -112,7 +102,8 @@ lazy val sharedJs = shared.js
 
 lazy val commonSettings = Seq(
   scalaVersion := myScalaVersion,
-  organization := "org.multics.baueran.frep"
+  organization := "org.multics.baueran.frep",
+  version := "0.1.1"
 )
 
 // loads the frontend project at sbt startup
