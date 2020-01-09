@@ -141,16 +141,22 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
   /**
    * Returns basically a list of pairs with single entries like
    *
-   *   (file_description, case_id, "[date] 'header'"),
+   *   (file_description, Some(case_id), Some("[date] 'header'")),
    *
-   * but JSON-encoded, of course.
+   * but JSON-encoded, of course.  (Descr, None, None) if no cases
+   * are associated.
    */
   def fileOverview(fileId: String) = Action { request: Request[AnyContent] =>
     doesUserHaveAuthorizedCookie(request) match {
       case Right(_) if (fileId.forall(_.isDigit)) =>
         val results = fileDao
           .getFIle(fileId.toInt)
-          .flatMap(f => f.cazes.map(c => (f.description, c.id, s"[${c.date.take(10)}] '${c.header}'")))
+          .flatMap(f =>
+            f.cazes match {
+              case Nil => List((f.description, None, None))
+              case cazes => cazes.map(c => (f.description, Some(c.id), Some(s"[${c.date.take(10)}] '${c.header}'")))
+            }
+          )
         Ok(results.asJson.toString())
       case Left(err) =>
         Logger.error(err)

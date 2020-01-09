@@ -240,7 +240,7 @@ object Case {
         // style:="left: 10%; min-width: 80%; margin-left:0px; margin-right:0px; margin-top:20px;",
         div(cls:="modal-content",
           div(cls:="modal-header",
-            h5(cls:="modal-title", "Case analysis"),
+            h5(cls:="modal-title", "Case repertorisation"),
             button(`type`:="button", cls:="close", data.dismiss:="modal", "\u00d7")
           ),
           div(cls:="modal-body",
@@ -390,7 +390,7 @@ object Case {
     }
 
     def header() = {
-      val analyseButton =
+      val repertoriseButton =
         button(cls:="btn btn-sm btn-primary", `type`:="button", data.toggle:="modal", data.target:="#caseAnalysisModal", style:="margin-left:5px; margin-bottom: 5px;",
           onclick := { (event: Event) => {
             updateCaseViewAndDataStructures()
@@ -399,7 +399,7 @@ object Case {
             // TODO: Interestingly, it seems, it works without.  In fact, turning this on and then closing a HUGE analysis, slows down the browser dramatically!
             // js.eval("""$('[data-toggle="tooltip"]').tooltip();""")
           }},
-          "Analyse")
+          "Repertorise")
       val editDescrButton =
         button(cls:="btn btn-sm btn-dark", id:="editDescrButton", `type`:="button", data.toggle:="modal", data.target:="#caseDescriptionModal", style:="display: none; margin-left:5px; margin-bottom: 5px;",
           onclick := { (event: Event) => {
@@ -448,7 +448,7 @@ object Case {
               editDescrButton,
               closeCaseButton,
               addToFileButton,
-              analyseButton
+              repertoriseButton
             )
           }
           else {
@@ -458,13 +458,13 @@ object Case {
               openNewCaseButton,
               closeCaseButton,
               addToFileButton,
-              analyseButton
+              repertoriseButton
             )
           }
         case None =>
           div(
             b(id:="caseHeader", "Case: "),
-            analyseButton
+            repertoriseButton
           )
       }
     }

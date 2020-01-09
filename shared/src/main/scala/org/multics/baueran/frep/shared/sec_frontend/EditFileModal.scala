@@ -67,10 +67,15 @@ object EditFileModal {
         case response: Success[SimpleHttpResponse] => {
           parse(response.get.body) match {
             case Right(json) => {
-              json.hcursor.as[Seq[(String, Int, String)]] match {
+              json.hcursor.as[Seq[(String, Option[Int], Option[String])]] match {
                 case Right(results) =>
                   currentlyAssociatedCaseHeaders() =
-                    results.toList.map{ case (_, caseId, caseEnrichedHdr) => (caseId, caseEnrichedHdr) }
+                    results.toList.map(result =>
+                      result match {
+                        case (_, Some(caseId), Some(caseEnrichedHdr)) => Some(caseId, caseEnrichedHdr)
+                        case _ => None
+                      }
+                    ).flatten
 
                   if (results.length > 0)
                     currentFileDescription = Some(results.head._1)

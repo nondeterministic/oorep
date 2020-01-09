@@ -15,9 +15,9 @@ val pgDriverVersion    = "42.2.5"
 resolvers in ThisBuild += Resolver.bintrayRepo("hmil", "maven")
 
 // I think, this one has no effect, and we remove pid file in Dockerfile anyway. CHECK & KILL!
-javaOptions in Universal ++= Seq(
-  "-Dpidfile.path=/dev/null"
-)
+// javaOptions in Universal ++= Seq(
+//  "-Dpidfile.path=/dev/null"
+// )
 
 lazy val backend = (project in file("backend")).settings(commonSettings).settings(
   scalaJSProjects := Seq(frontend, sec_frontend),
@@ -25,6 +25,7 @@ lazy val backend = (project in file("backend")).settings(commonSettings).setting
   pipelineStages := Seq(digest, gzip),
   // triggers scalaJSPipeline when using compile or continuous compilation
   compile in Compile := ((compile in Compile) dependsOn scalaJSPipeline).value,
+  isDevMode in scalaJSPipeline := false,
   libraryDependencies ++= Seq(
     "com.vmunier" %% "scalajs-scripts" % "1.1.2",
     jdbc,
@@ -46,7 +47,7 @@ lazy val backend = (project in file("backend")).settings(commonSettings).setting
 lazy val frontend = (project in file("frontend")).settings(commonSettings).settings(
   scalaJSUseMainModuleInitializer := true,
   skip in packageJSDependencies := false,
- 
+
   libraryDependencies ++= Seq(
     "org.scala-js" %%% "scalajs-dom" % scalaJsDomVersion,
     "com.lihaoyi" %%% "scalatags" % scalaTagsVersion,
@@ -63,7 +64,7 @@ lazy val frontend = (project in file("frontend")).settings(commonSettings).setti
 lazy val sec_frontend = (project in file("sec_frontend")).settings(commonSettings).settings(
   scalaJSUseMainModuleInitializer := true,
   skip in packageJSDependencies := false,
- 
+
   libraryDependencies ++= Seq(
     "org.scala-js" %%% "scalajs-dom" % scalaJsDomVersion,
     "com.lihaoyi" %%% "scalatags" % scalaTagsVersion,
@@ -103,6 +104,7 @@ lazy val sharedJs = shared.js
 lazy val commonSettings = Seq(
   scalaVersion := myScalaVersion,
   organization := "org.multics.baueran.frep",
+  maintainer := "baueran@gmail.com",
   version := "0.1.1"
 )
 

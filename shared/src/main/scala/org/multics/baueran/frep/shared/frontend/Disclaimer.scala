@@ -25,7 +25,7 @@ object Disclaimer {
         ),
         p(style:="text-align:justify;",
           """
-            Diese Homöopathie-Website ist ausschließlich für Übungszwecke gedacht.
+            Diese Homöopathie-Website ist ausschließlich zu Informationszwecken gedacht.
             Sie ist nicht geeignet zur Selbstmedikation oder ersetzt den Besuch eines Arztes oder Apothekers.
             Die Wirksamkeit von Homöopathie ist wissenschaftlich nicht bewiesen!
             Der Autor dieser Website übernimmt keine Verantwortung für die Richtigkeit der Ergebnisse oder die Folgen,
@@ -33,7 +33,7 @@ object Disclaimer {
           """),
         p(style:="text-align:justify;",
           """
-            This homeopathy web site is intended as a training tool only.
+            This homeopathy web site is intended for information purposes only.
             It is not suitable for self-medication or can replace the visit of a medical doctor/GP.
             Scientifically, homeopathy was never proven to actually work!
             The author of this web site does not take responsibility for the correctness of this sites'
@@ -48,7 +48,7 @@ object Disclaimer {
         " | ",
         a(cls:="underline", style:="color:white;", href:="#", onclick:= { () => loadAndScroll("contact.html") }, "Contact"),
         " | ",
-        a(cls:="underline", style:="color:white;", href:="#", onclick:= { () => loadAndScroll("cookies.html") }, "Privacy Policy"),
+        a(cls:="underline", style:="color:white;", href:="#", onclick:= { () => loadAndScroll("cookies.html") }, "Privacy policy"),
       )
     )
   }

@@ -15,7 +15,7 @@ class FileDao(dbContext: db.db.DBContext) {
 
   def getFIle(id: Int) = {
     try {
-      Logger.debug(s"FileDao: get(): getting file with id ${id}")
+      Logger.debug(s"FileDao: getFIle(${id}): getting file with id ${id}")
       run ( quote {
         tableFile.filter(_.id == lift(id))
       }).map { case dbFile =>
@@ -25,7 +25,7 @@ class FileDao(dbContext: db.db.DBContext) {
       }
     } catch {
       case exception: Throwable =>
-        Logger.warn(s"FileDao: get(): get(${id}) == List(): ${exception.getStackTrace.map(_.toString).mkString("\n")}")
+        Logger.warn(s"FileDao: getFIle(${id}) == List(): ${exception.getStackTrace.map(_.toString).mkString("\n")}")
         List()
     }
   }
