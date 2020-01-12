@@ -9,7 +9,7 @@ import scala.scalajs.js
 import scala.scalajs.js.annotation.JSExportTopLevel
 import org.querki.jquery._
 import scalatags.JsDom.all._
-import org.multics.baueran.frep.shared.frontend.{Case, Disclaimer, Repertorise, getCookieData, serverUrl}
+import org.multics.baueran.frep.shared.frontend.{Case, Disclaimer, Repertorise, getCookieData, serverUrl, apiPrefix}
 import org.multics.baueran.frep.shared.sec_frontend.RepertoryModal
 
 @JSExportTopLevel("Main")
@@ -64,7 +64,7 @@ object Main {
 
   def cookiePopup() = {
     def loadAndScroll(file: String) = {
-      $("#content").load(serverUrl() + "/assets/html/" + file)
+      $("#content").load(s"${serverUrl()}/assets/html/$file")
       js.eval("$('html, body').animate({ scrollTop: 0 }, 'fast');")
     }
 
@@ -103,7 +103,7 @@ object Main {
                   button(`type`:="button", cls:="btn btn-primary", data.dismiss:="modal",
                     onclick:= { (event: Event) =>
                       event.stopPropagation()
-                      dom.window.location.replace(serverUrl() + "/accept_cookies")
+                      dom.window.location.replace(s"${serverUrl()}/${apiPrefix()}/accept_cookies")
                     }, "Annehmen / Accept"),
                 )
               )

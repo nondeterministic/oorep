@@ -7,7 +7,7 @@ import io.circe.parser.parse
 import monix.execution.Scheduler.Implicits.global
 import org.multics.baueran.frep.shared.Defs.CookieFields
 import org.multics.baueran.frep.shared.{Caze}
-import org.multics.baueran.frep.shared.frontend.{Case, Repertorise, getCookieData, serverUrl}
+import org.multics.baueran.frep.shared.frontend.{Case, Repertorise, getCookieData, serverUrl, apiPrefix}
 import org.scalajs.dom
 import org.scalajs.dom.Event
 import scalatags.JsDom.all.{onclick, _}
@@ -99,7 +99,7 @@ object EditFileModal {
         // TODO: This is a clumsy if-condition and else-feedback. OK for now, but fix!
         if (fileName.length() > 0 && fileId.forall(_.isDigit) && memberId.forall(_.isDigit) && memberId.toInt >= 0) {
           currentlyActiveMemberId = memberId.toInt
-          HttpRequest(serverUrl() + "/file_overview")
+          HttpRequest(s"${serverUrl()}/${apiPrefix()}/file_overview")
             .withQueryParameters("fileId" -> fileId)
             .send()
             .onComplete((r: Try[SimpleHttpResponse]) => {
@@ -127,7 +127,7 @@ object EditFileModal {
             button(`type`:="button", cls:="btn btn-secondary", data.dismiss:="modal", "Cancel"),
             button(`type`:="button", cls:="btn btn-primary", data.dismiss:="modal",
               onclick:= { (event: Event) =>
-                HttpRequest(serverUrl() + "/del_case")
+                HttpRequest(s"${serverUrl()}/${apiPrefix()}/del_case")
                   .withHeader("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
                   .post(MultiPartBody(
                     "caseId"     -> PlainTextBody(currentlySelectedCaseId.now.toString()),
@@ -186,7 +186,7 @@ object EditFileModal {
                   onclick:= { (event: Event) =>
                     fileName_fileId.now match {
                       case (fileName, fileId) if fileId.forall(_.isDigit) =>
-                        HttpRequest(serverUrl() + "/update_file_description")
+                        HttpRequest(s"${serverUrl()}/${apiPrefix()}/update_file_description")
                           .withHeader("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
                           .post(MultiPartBody(
                             "filedescr" -> PlainTextBody($("#fileDescrEditFileModal").`val`().toString().trim()),
@@ -216,7 +216,7 @@ object EditFileModal {
                   onclick:={ (event: Event) =>
                     getCaseFromCurrentSelection()
 
-                    HttpRequest(serverUrl() + "/case")
+                    HttpRequest(s"${serverUrl()}/${apiPrefix()}/case")
                       .withQueryParameters(("memberId", currentlyActiveMemberId.toString()), ("caseId", currentlySelectedCaseId.now.toString()))
                       .send()
                       .onComplete({

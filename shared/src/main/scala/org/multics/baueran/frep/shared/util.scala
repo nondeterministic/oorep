@@ -2,6 +2,8 @@ package org.multics.baueran.frep.shared
 
 import scalatags.JsDom.all._
 import scala.scalajs.js
+import java.text.SimpleDateFormat
+import java.util.Date
 
 class BetterString(val s: String) {
   def shorten = if (s.length <= 66) s else s.substring(0,62) + "..."
@@ -37,12 +39,12 @@ class BetterCaseRubric(val cr: CaseRubric) {
 }
 
 class MyDate(isoDateString: String) {
-  def this() = {
-    this((new js.Date()).toISOString())
+  def this() {
+    this(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()))
   }
 
-  def this(javaScriptDate: js.Date) = {
-    this(javaScriptDate.toISOString())
+  def this(javaDate: Date) {
+    this(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(javaDate))
   }
 
   override def toString() = isoDateString

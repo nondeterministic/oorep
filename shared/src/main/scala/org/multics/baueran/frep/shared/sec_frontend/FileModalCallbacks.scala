@@ -6,7 +6,7 @@ import fr.hmil.roshttp.response.SimpleHttpResponse
 import org.multics.baueran.frep.shared.FIle
 import org.scalajs.dom
 import io.circe.parser.parse
-import org.multics.baueran.frep.shared.frontend.serverUrl
+import org.multics.baueran.frep.shared.frontend.{serverUrl, apiPrefix}
 import scalatags.JsDom.all._
 
 import scala.util.{Failure, Success}
@@ -78,7 +78,7 @@ package object FileModalCallbacks {
       }
     }
 
-    HttpRequest(serverUrl() + "/available_files")
+    HttpRequest(s"${serverUrl()}/${apiPrefix()}/available_files")
       .withQueryParameter("memberId", memberId.toString)
       .send()
       .onComplete((r: Try[SimpleHttpResponse]) => updateMemberFiles(r))

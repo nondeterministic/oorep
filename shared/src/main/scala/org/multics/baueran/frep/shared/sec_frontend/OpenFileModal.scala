@@ -4,7 +4,7 @@ import fr.hmil.roshttp.HttpRequest
 import fr.hmil.roshttp.body.{MultiPartBody, PlainTextBody}
 import monix.execution.Scheduler.Implicits.global
 import org.multics.baueran.frep.shared.Defs.CookieFields
-import org.multics.baueran.frep.shared.frontend.{ getCookieData, Case, serverUrl }
+import org.multics.baueran.frep.shared.frontend.{ getCookieData, Case, serverUrl, apiPrefix }
 import org.scalajs.dom
 import org.scalajs.dom.Event
 import scalatags.JsDom.all._
@@ -18,9 +18,10 @@ object OpenFileModal extends FileModal {
   private def requestFileDeletion() = {
     getCookieData(dom.document.cookie, CookieFields.id.toString) match {
       case Some(memberId) => {
-        HttpRequest(serverUrl() + "/del_file_and_cases")
+        HttpRequest(s"${serverUrl()}/${apiPrefix()}/del_file_and_cases")
           .withHeader("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
           .post(MultiPartBody(
+            "memberId" -> PlainTextBody(memberId.toString()),
             "fileId" -> PlainTextBody(selected_file_id.now.getOrElse(-1).toString)))
           .onComplete({ case _ =>
             FileModalCallbacks.updateMemberFiles(memberId.toInt)

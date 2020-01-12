@@ -1,10 +1,7 @@
 package org.multics.baueran.frep.backend.dao
 
+import org.multics.baueran.frep.shared.{Member, MyDate}
 import org.multics.baueran.frep.backend.db
-import org.multics.baueran.frep.shared.Member
-
-import java.util.Date
-
 
 class MemberDao(dbContext: db.db.DBContext) {
 
@@ -19,7 +16,7 @@ class MemberDao(dbContext: db.db.DBContext) {
     run(insert)
   }
 
-  def get(id: Int) = { // : Future[Option[User]] = {
+  def get(id: Int) = {
     val select = quote {
       tableMember.filter(_.member_id == lift(id))
     }
@@ -31,12 +28,12 @@ class MemberDao(dbContext: db.db.DBContext) {
     run(select)
   }
 
-  def setLastSeen(memberId: Int, date: Date) = {
+  def setLastSeen(memberId: Int, date: MyDate) = {
     run {
       quote {
         tableMember
           .filter(_.member_id == lift(memberId))
-          .update(_.lastseen -> Some(lift(date)))
+          .update(_.lastseen -> Some(lift(date.toString())))
       }
     }
   }
@@ -50,6 +47,5 @@ class MemberDao(dbContext: db.db.DBContext) {
       }
     }
   }
-
 
 }

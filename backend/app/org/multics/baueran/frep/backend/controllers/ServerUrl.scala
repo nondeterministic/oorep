@@ -12,4 +12,6 @@ trait ServerUrl {
       "http://" + path
   }
 
+  def apiPrefix() = "api"
+
 }

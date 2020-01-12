@@ -4,7 +4,7 @@ import fr.hmil.roshttp.HttpRequest
 import fr.hmil.roshttp.response.SimpleHttpResponse
 import org.scalajs.dom.document
 import monix.execution.Scheduler.Implicits.global
-import org.multics.baueran.frep.shared.frontend.serverUrl
+import org.multics.baueran.frep.shared.frontend.{serverUrl, apiPrefix}
 import org.scalajs.dom
 
 import scala.scalajs.js.annotation.JSExportTopLevel
@@ -25,7 +25,7 @@ object Main {
     dom.document.body.appendChild(div(style:="width:100%;", id:="content_bottom").render)
 
     // No access without valid cookies!
-    HttpRequest(s"${serverUrl()}/authenticate")
+    HttpRequest(s"${serverUrl()}/${apiPrefix()}/authenticate")
       .send()
       .onComplete({
         case response: Success[SimpleHttpResponse] => {

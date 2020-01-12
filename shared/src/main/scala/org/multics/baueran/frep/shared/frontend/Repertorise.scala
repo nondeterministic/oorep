@@ -228,7 +228,7 @@ object Repertorise {
 
     $("body").css("cursor", "wait")
 
-    HttpRequest(serverUrl() + "/lookup")
+    HttpRequest(s"${serverUrl()}/${apiPrefix()}/lookup")
       .withQueryParameters(("symptom", symptom), ("repertory", repertory))
       .send()
       .onComplete({
@@ -276,7 +276,7 @@ object Repertorise {
       )
 
     def updateAvailableRepertories() = {
-      HttpRequest(serverUrl() + "/available_reps")
+      HttpRequest(s"${serverUrl()}/${apiPrefix()}/available_reps")
         .send()
         .onComplete({
           case response: Success[SimpleHttpResponse] => {

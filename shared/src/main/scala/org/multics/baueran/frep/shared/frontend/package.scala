@@ -12,6 +12,8 @@ package object frontend {
         "")
   }
 
+  def apiPrefix() = "api"
+
   def getCookieData(cookie: String, elementName: String): Option[String] = {
     cookie.split(";").map(_.trim).foreach({ c: String =>
       c.split("=").map(_.trim).toList match {

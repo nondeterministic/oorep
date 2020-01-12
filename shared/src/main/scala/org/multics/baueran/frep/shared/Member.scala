@@ -17,7 +17,7 @@ case class Member(member_id: Int,
                   title: Option[String] = None,
                   student_until: Option[Date] = None,
                   profession: Option[String] = None,
-                  lastseen: Option[Date] = None,
+                  lastseen: Option[String] = None,
                   numberoflogins: Int)
 
 //object Member {
@@ -62,7 +62,7 @@ object Member {
       }
       val profession = c.downField("profession").as[String].toOption
       val lastseen = c.downField("lastseen").as[String] match {
-        case Right(date) => Some(dateFormat.parse(date))
+        case Right(date) => Some(date)
         case _ => None
       }
       val numberoflogins = c.downField("numberoflogins").as[Int] match {

@@ -26,9 +26,9 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
 
   def index() = Action { request: Request[AnyContent] =>
     if (getRequestCookies(request) == List.empty)
-      Redirect(serverUrl(request) + "/assets/html/index.html")
+      Redirect(s"${serverUrl(request)}/assets/html/index.html")
     else
-      Redirect(serverUrl(request) + "/assets/html/private/index.html")
+      Redirect(s"${serverUrl(request)}/assets/html/private/index.html")
   }
 
   def acceptCookies() = Action { request: Request[AnyContent] =>
@@ -46,19 +46,19 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
 
     getCookieValue(cookies, CookieFields.id.toString) match {
       case Some(memberIdStr) => {
-        doesUserHaveAuthorizedCookie(request) match {
+        isUserAuthenticated(request) match {
           case Right(_) =>
             Ok(memberIdStr).withCookies(cookies.map({ c => Cookie(name = c.name, value = c.value, httpOnly = false) }):_*)
           case _ =>
-            val errStr = s"Get: authenticate(): Not authorized: user not authorized to login."
+            val errStr = s"Get: authenticate(): User cannot be authenticated."
             Logger.error(errStr)
-            BadRequest(errStr)
+            BadRequest(views.html.defaultpages.badRequest("GET", request.uri, errStr))
         }
       }
       case _ =>
-        val errStr = s"Get: authenticate(): Not authorized: user not in database."
+        val errStr = s"Get: authenticate(): User not in database."
         Logger.error(errStr)
-        BadRequest(errStr)
+        BadRequest(views.html.defaultpages.badRequest("GET", request.uri, errStr))
     }
   }
 
@@ -75,68 +75,86 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     * Won't actually return files with associated cases, but a list of tuples, (file ID, file header).
     */
   def availableFiles(memberId: Int) = Action { request: Request[AnyContent] =>
-    doesUserHaveAuthorizedCookie(request) match {
+    isUserAuthenticated(request) match {
       case Left(err) =>
         val errStr = "Get: availableFiles(): availableFiles() failed: " + err
         Logger.error(errStr)
-        BadRequest(errStr)
+        BadRequest(views.html.defaultpages.badRequest("GET", request.uri, errStr))
       case Right(_) =>
-        val dao = new FileDao(dbContext)
-        val dbFiles = dao.getDbFilesForMember(memberId)
-        Ok(dbFiles.map(dbFile => (dbFile.id, dbFile.header)).asJson.toString)
+        isUserAuthorized(request, memberId) match {
+          case Left(err) =>
+            Logger.error(s"Get: availableFiles() failed: not authorised: $err")
+            Unauthorized(views.html.defaultpages.unauthorized())
+          case Right(_) =>
+            val dbFiles = fileDao.getDbFilesForMember(memberId)
+            Ok(dbFiles.map(dbFile => (dbFile.id, dbFile.header)).asJson.toString)
+        }
     }
   }
 
   def getFile(fileId: String) = Action { request: Request[AnyContent] =>
-    doesUserHaveAuthorizedCookie(request) match {
+    isUserAuthenticated(request) match {
       case Left(err) =>
         Logger.error(err)
-        BadRequest(err)
+        BadRequest(views.html.defaultpages.badRequest("GET", request.uri, err))
       case Right(_) => {
-        val dao = new FileDao(dbContext)
-        dao.getFIle(fileId.toInt) match {
+        fileDao.getFIle(fileId.toInt) match {
           case file :: Nil =>
-            Ok(file.asJson.toString())
+            isUserAuthorized(request, file.member_id) match {
+              case Left(err) =>
+                Logger.error(s"Get: getFile() failed: not authorised: $err")
+                Unauthorized(views.html.defaultpages.unauthorized())
+              case Right(_) =>
+                Ok(file.asJson.toString())
+            }
           case _ =>
             val errStr = "Get: getFile() returned nothing"
             Logger.error(errStr)
-            BadRequest(errStr)
+            BadRequest(views.html.defaultpages.badRequest("GET", request.uri, errStr))
         }
       }
     }
   }
 
   def getCase(memberId: Int, caseId: String) = Action { request: Request[AnyContent] =>
-    doesUserHaveAuthorizedCookie(request) match {
+    isUserAuthenticated(request) match {
       case Right(_) if (caseId.forall(_.isDigit)) => {
         val dao = new CazeDao(dbContext)
         dao.get(caseId.toInt) match {
           case Right(caze) if (caze.member_id == memberId) =>
-            Ok(caze.asJson.toString())
+            isUserAuthorized(request, caze.member_id) match {
+              case Left(err) =>
+                Logger.error(s"Get: getCase() failed: not authorised: $err")
+                Unauthorized(views.html.defaultpages.unauthorized())
+              case Right(_) =>
+                Ok(caze.asJson.toString())
+            }
           case _ =>
             val errStr = "Get: getCase() failed: DB returned nothing."
             Logger.error(errStr)
-            BadRequest(errStr)
+            BadRequest(views.html.defaultpages.badRequest("GET", request.uri, errStr))
         }
       }
       case _ =>
-        BadRequest("Get: getCase() failed.")
+        BadRequest(views.html.defaultpages.badRequest("GET", request.uri, "getCase() failed"))
     }
   }
 
-  def availableCasesForFile(fileId: String) = Action { request: Request[AnyContent] =>
-    doesUserHaveAuthorizedCookie(request) match {
-      case Left(err) =>
-        Logger.error(err)
-        BadRequest(err)
-      case Right(_) => {
-        Ok(fileDao
-          .getCasesFromFile(fileId)
-          .asJson
-          .toString())
-      }
-    }
-  }
+// TODO: If noone's missing this, delete!
+//
+//  def availableCasesForFile(fileId: String) = Action { request: Request[AnyContent] =>
+//    isUserAuthenticated(request) match {
+//      case Left(err) =>
+//        Logger.error(err)
+//        BadRequest(views.html.defaultpages.badRequest("GET", request.uri, err))
+//      case Right(_) => {
+//        Ok(fileDao
+//          .getCasesFromFile(fileId)
+//          .asJson
+//          .toString())
+//      }
+//    }
+//  }
 
   /**
    * Returns basically a list of pairs with single entries like
@@ -147,24 +165,37 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
    * are associated.
    */
   def fileOverview(fileId: String) = Action { request: Request[AnyContent] =>
-    doesUserHaveAuthorizedCookie(request) match {
+    isUserAuthenticated(request) match {
       case Right(_) if (fileId.forall(_.isDigit)) =>
-        val results = fileDao
-          .getFIle(fileId.toInt)
-          .flatMap(f =>
-            f.cazes match {
-              case Nil => List((f.description, None, None))
-              case cazes => cazes.map(c => (f.description, Some(c.id), Some(s"[${c.date.take(10)}] '${c.header}'")))
-            }
-          )
-        Ok(results.asJson.toString())
+        val files = fileDao.getFIle(fileId.toInt)
+
+        if (files.length > 0) {
+          val results =
+            files
+              .flatMap(f =>
+                f.cazes match {
+                  case Nil => List((f.description, None, None))
+                  case cazes => cazes.map(c => (f.description, Some(c.id), Some(s"[${c.date.take(10)}] '${c.header}'")))
+                }
+              )
+
+          isUserAuthorized(request, files.head.member_id) match {
+            case Left(err) =>
+              Logger.error(s"Get: fileOverview() failed: not authorised: $err")
+              Unauthorized(views.html.defaultpages.unauthorized())
+            case Right(_) =>
+              Ok(results.asJson.toString())
+          }
+        }
+        else
+          BadRequest(views.html.defaultpages.badRequest("GET", request.uri, s"fileOverview($fileId) failed: no files found."))
       case Left(err) =>
         Logger.error(err)
-        BadRequest(err)
+        BadRequest(views.html.defaultpages.badRequest("GET", request.uri, err))
       case _ =>
         val err = "Get: fileOverview failed."
         Logger.error(err)
-        BadRequest(err)
+        BadRequest(views.html.defaultpages.badRequest("GET", request.uri, err))
     }
   }
 
@@ -175,7 +206,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     if (results.size == 0) {
       val errStr = s"Get: repertorise(${repertoryAbbrev}, ${symptom}): no results found"
       Logger.warn(errStr)
-      BadRequest(errStr)
+      BadRequest(views.html.defaultpages.badRequest("GET", request.uri, errStr))
     }
     else {
       Logger.debug(s"Get: repertorise(${repertoryAbbrev}, ${symptom}): #results: ${results.size}.")

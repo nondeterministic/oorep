@@ -4,12 +4,11 @@ import java.util.Calendar
 
 import javax.inject._
 import play.api.mvc._
+import play.api.Logger
 import org.multics.baueran.frep._
 import shared.Defs._
-import backend.dao.{CazeDao, FileDao, MemberDao}
+import shared.{CaseRubric, Caze, FIle, MyDate}
 import backend.db.db.DBContext
-import play.api.Logger
-import shared.{CaseRubric, Caze, FIle}
 
 class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends AbstractController(cc) with ServerUrl {
 
@@ -17,6 +16,9 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
     val inputEmail: String = request.body.asFormUrlEncoded.get("inputEmail").head
     val inputPassword: String = request.body.asFormUrlEncoded.get("inputPassword").head
     val member = getRegisteredMemberForPasswordAndEmail(inputPassword, inputEmail)
+    val errorMessage =
+      s"User login failed. Go back to ${serverUrl(request)} and try again! " +
+        s"But after 3 failed attempts your IP is going to be blocked for at least 15 minutes."
 
     // TODO: Remove me!
     println("some random hash: " + getRandomHash(inputPassword))
@@ -25,19 +27,22 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
       case Some(m) =>
         m.hash.split(":") match {
           case Array(_, salt, _) =>
-            memberDao.setLastSeen(m.member_id, Calendar.getInstance().getTime())
+            val cookieCreationDate = new MyDate()
+            memberDao.setLastSeen(m.member_id, cookieCreationDate)
             memberDao.increaseLoginCounter(m.member_id)
 
-            Redirect(serverUrl(request) + "/assets/html/private/index.html")
+            Redirect(s"${serverUrl(request)}/assets/html/private/index.html")
               .withCookies(
                 Cookie(CookieFields.salt.toString, salt, httpOnly = false),
-                Cookie(CookieFields.id.toString, m.member_id.toString, httpOnly = false)
+                Cookie(CookieFields.id.toString, m.member_id.toString, httpOnly = false),
+                Cookie(CookieFields.email.toString, m.email, httpOnly = false),
+                Cookie(CookieFields.creationDate.toString, cookieCreationDate.toString(), httpOnly = false)
               )
           case _ =>
-            BadRequest("login() failed: user not authorized to login.")
+            BadRequest(views.html.defaultpages.badRequest("POST", request.uri, errorMessage))
         }
       case None =>
-        BadRequest("login() failed: user not authorized to login.")
+        BadRequest(views.html.defaultpages.badRequest("POST", request.uri, errorMessage))
     }
   }
 
@@ -47,7 +52,7 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
     */
 
   def saveCaze() = Action { request: Request[AnyContent] =>
-    doesUserHaveAuthorizedCookie(request) match {
+    isUserAuthenticated(request) match {
       case Right(_) => {
         val requestData = request.body.asMultipartFormData.get.dataParts
         (requestData("fileId"), requestData("case").toList) match {
@@ -55,198 +60,268 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
             Caze.decode(cazeJson.toString) match {
               case Some(caze) =>
                 var newCaseId = caze.id
-                if (newCaseId < 0)
-                  newCaseId = cazeDao.insert(caze)
 
-                if (fileDao.addCaseIdToFile(newCaseId, fileId.toInt))
-                  Ok(newCaseId.toString)
-                else
-                  BadRequest(s"Post: saveCaze() failed: failed to add case with new ID ${newCaseId} (old case id: ${caze.id}) to file with ID ${fileId}.")
+                isUserAuthorized(request, caze.member_id) match {
+                  case Left(err) =>
+                    Logger.error(s"Post: saveCaze() failed: not authorised: $err")
+                    Unauthorized(views.html.defaultpages.unauthorized())
+                  case Right(_) =>
+                    if (newCaseId < 0)
+                      newCaseId = cazeDao.insert(caze)
 
+                    if (fileDao.addCaseIdToFile(newCaseId, fileId.toInt))
+                      Ok(newCaseId.toString)
+                    else
+                      BadRequest(views.html.defaultpages.badRequest("POST", request.uri, s"saveCaze() failed: failed to add case with new ID ${newCaseId} (old case id: ${caze.id}) to file with ID ${fileId}."))
+                }
               case None =>
-                BadRequest("Post: saveCaze() failed: decoding of caze failed. Json wrong? " + cazeJson)
+                BadRequest(views.html.defaultpages.badRequest("POST", request.uri, "saveCaze() failed: decoding of caze failed. Json wrong? " + cazeJson))
             }
           }
-          case _ => BadRequest("Post: saveCaze() failed: no data received in request: " + requestData)
+          case _ => BadRequest(views.html.defaultpages.badRequest("POST", request.uri, "saveCaze() failed: no data received in request: " + requestData))
         }
       }
-      case Left(err) => BadRequest("Post: saveCaze() failed: not authorised: " + err)
+      case Left(err) =>
+        BadRequest(views.html.defaultpages.badRequest("POST", request.uri, "saveCaze() failed: not authorised: " + err))
     }
   }
 
   def addCaseRubricsToCaze() = Action { request: Request[AnyContent] =>
-    doesUserHaveAuthorizedCookie(request) match {
+    isUserAuthenticated(request) match {
       case Right(_) => {
         val requestData = request.body.asMultipartFormData.get.dataParts
 
-        (requestData("caseID"), requestData("caserubrics")) match {
-          case (Seq(cazeIDStr), Seq(caserubricsJson)) if (cazeIDStr.forall(_.isDigit)) =>
-            (cazeIDStr.toInt, CaseRubric.decodeList(caserubricsJson)) match {
-              case (caseID, Some(caseRubrics)) =>
-                if (cazeDao.addCaseRubrics(caseID, caseRubrics).length > 0) {
-                  Logger.debug(s"Post: addCaseRubrics(): success")
-                  Ok
-                }
-                else {
-                  Logger.error(s"Post: addCaseRubrics() failed")
-                  BadRequest("addCaseRubrics() failed")
+        (requestData("memberID"), requestData("caseID"), requestData("caserubrics")) match {
+          case (Seq(memberIdStr), Seq(cazeIDStr), Seq(caserubricsJson)) if (cazeIDStr.forall(_.isDigit) && (memberIdStr.forall(_.isDigit))) =>
+            (memberIdStr.toInt, cazeIDStr.toInt, CaseRubric.decodeList(caserubricsJson)) match {
+              case (memberId, caseID, Some(caseRubrics)) =>
+                isUserAuthorized(request, memberId) match {
+                  case Left(err) =>
+                    Logger.error(s"Post: addRubricsToCaze() failed: not authorised: $err")
+                    Unauthorized(views.html.defaultpages.unauthorized())
+                  case Right(_) =>
+                    if (cazeDao.addCaseRubrics(caseID, caseRubrics).length > 0) {
+                      Logger.debug(s"Post: addCaseRubricsToCaze(): success")
+                      Ok
+                    }
+                    else {
+                      Logger.error(s"Post: addCaseRubricsToCaze() failed")
+                      BadRequest(views.html.defaultpages.badRequest("POST", request.uri, "addCaseRubrics() failed"))
+                    }
                 }
               case _ =>
-                Logger.error(s"Post: addCaseRubrics() failed: type conversion error which should never have happened")
-                BadRequest("addCaseRubrics() failed: type conversion error which should never have happened")
+                Logger.error(s"Post: addCaseRubricsToCaze() failed: type conversion error which should never have happened")
+                BadRequest(views.html.defaultpages.badRequest("POST", request.uri, "addCaseRubricsToCaze() failed: type conversion error which should never have happened"))
             }
           case _ => {
-            Logger.error(s"Post: addCaseRubrics() failed: no or the wrong form data received.")
-            BadRequest("addCaseRubrics() failed: no or the wrong form data received.")
+            Logger.error(s"Post: addCaseRubricsToCaze() failed: no or the wrong form data received.")
+            BadRequest(views.html.defaultpages.badRequest("POST", request.uri, "addCaseRubricsToCaze() failed: no or the wrong form data received."))
           }
         }
       }
-      case Left(err) => BadRequest("addCaseRubrics() failed: " + err)
+      case Left(err) => BadRequest(views.html.defaultpages.badRequest("POST", request.uri, "addCaseRubrics() failed: " + err))
     }
   }
 
   def delCaseRubricsFromCaze() = Action { request: Request[AnyContent] =>
-    doesUserHaveAuthorizedCookie(request) match {
+    isUserAuthenticated(request) match {
       case Right(_) => {
         val requestData = request.body.asMultipartFormData.get.dataParts
 
-        (requestData("caseID"), requestData("caserubrics")) match {
-          case (Seq(cazeIDStr), Seq(caserubricsJson)) if (cazeIDStr.forall(_.isDigit)) =>
-            (cazeIDStr.toInt, CaseRubric.decodeList(caserubricsJson)) match {
-              case (caseID, Some(caseRubrics)) =>
-                if (cazeDao.delCaseRubrics(caseID, caseRubrics) > 0) {
-                  Logger.debug(s"Post: delCaseRubrics(): success")
-                  Ok
-                }
-                else {
-                  Logger.error(s"Post: delCaseRubrics(): failed")
-                  BadRequest("delCaseRubrics() failed")
+        (requestData("memberID"), requestData("caseID"), requestData("caserubrics")) match {
+          case (Seq(memberIdStr), Seq(cazeIDStr), Seq(caserubricsJson)) if (cazeIDStr.forall(_.isDigit) && (memberIdStr.forall(_.isDigit))) =>
+            (memberIdStr.toInt, cazeIDStr.toInt, CaseRubric.decodeList(caserubricsJson)) match {
+              case (memberId, caseID, Some(caseRubrics)) =>
+                isUserAuthorized(request, memberId) match {
+                  case Left(err) =>
+                    Logger.error(s"Post: delCaseRubricsFromCaze() failed: not authorised: $err")
+                    Unauthorized(views.html.defaultpages.unauthorized())
+                  case Right(_) =>
+                    if (cazeDao.delCaseRubrics(caseID, caseRubrics) > 0) {
+                      Logger.debug(s"Post: delCaseRubricsFromCaze(): success")
+                      Ok
+                    }
+                    else {
+                      Logger.error(s"Post: delCaseRubricsFromCaze(): failed")
+                      BadRequest(views.html.defaultpages.badRequest("POST", request.uri, "delCaseRubrics() failed"))
+                    }
                 }
               case _ =>
                 Logger.error(s"Post: delCaseRubricsFromCaze() failed: type conversion error which should never have happened")
-                BadRequest("delCaseRubricsFromCaze() failed: type conversion error which should never have happened")
+                BadRequest(views.html.defaultpages.badRequest("POST", request.uri, "delCaseRubricsFromCaze() failed: type conversion error which should never have happened"))
             }
           case _ => {
             Logger.error(s"Post: delCaseRubricsFromCaze() failed: no or the wrong form data received.")
-            BadRequest("delRubricsFromCaze() failed: no or the wrong form data received.")
+            BadRequest(views.html.defaultpages.badRequest("POST", request.uri, "delRubricsFromCaze() failed: no or the wrong form data received."))
           }
         }
       }
-      case Left(err) => BadRequest("delCaseRubrics() failed: " + err)
+      case Left(err) => BadRequest(views.html.defaultpages.badRequest("POST", request.uri, "delCaseRubricsFromCaze() failed: " + err))
     }
   }
 
   def updateCaseRubricsWeights() = Action { request: Request[AnyContent] =>
-    doesUserHaveAuthorizedCookie(request) match {
+    isUserAuthenticated(request) match {
       case Right(_) => {
         val requestData = request.body.asMultipartFormData.get.dataParts
 
-        (requestData("caseID"), requestData("caserubrics")) match {
-          case (Seq(cazeIDStr), Seq(caserubricsJson)) if (cazeIDStr.forall(_.isDigit)) =>
-            (cazeIDStr.toInt, CaseRubric.decodeList(caserubricsJson)) match {
-              case (caseID, Some(caseRubrics)) =>
-                if (cazeDao.updateCaseRubricsWeights(caseID, caseRubrics) > 0) {
-                  Logger.debug(s"Post: updateCaseRubricsWeights(): success")
-                  Ok
-                }
-                else {
-                  Logger.error(s"Post: updateCaseRubricsWeights(): failed")
-                  BadRequest("updateCaseRubricsWeights() failed")
+        (requestData("memberID"), requestData("caseID"), requestData("caserubrics")) match {
+          case (Seq(memberIdStr), Seq(cazeIDStr), Seq(caserubricsJson)) if (cazeIDStr.forall(_.isDigit) && (memberIdStr.forall(_.isDigit))) =>
+            (memberIdStr.toInt, cazeIDStr.toInt, CaseRubric.decodeList(caserubricsJson)) match {
+              case (memberId, caseID, Some(caseRubrics)) =>
+                isUserAuthorized(request, memberId) match {
+                  case Left(err) =>
+                    Logger.error(s"Post: delCaseRubricsFromCaze() failed: not authorised: $err")
+                    Unauthorized(views.html.defaultpages.unauthorized())
+                  case Right(_) =>
+                    if (cazeDao.updateCaseRubricsWeights(caseID, caseRubrics) > 0) {
+                      Logger.debug(s"Post: updateCaseRubricsWeights(): success")
+                      Ok
+                    }
+                    else {
+                      Logger.error(s"Post: updateCaseRubricsWeights(): failed")
+                      BadRequest(views.html.defaultpages.badRequest("POST", request.uri, "updateCaseRubricsWeights() failed"))
+                    }
                 }
               case _ =>
                 Logger.error(s"Post: updateCaseRubricsWeights() failed: type conversion error which should never have happened")
-                BadRequest("updateCaseRubricsWeights() failed: type conversion error which should never have happened")
+                BadRequest(views.html.defaultpages.badRequest("POST", request.uri, "updateCaseRubricsWeights() failed: type conversion error which should never have happened"))
             }
           case _ => {
             Logger.error(s"Post: updateCaseRubricsWeights() failed: no or the wrong form data received.")
-            BadRequest("updateCaseRubricsWeights() failed: no or the wrong form data received.")
+            BadRequest(views.html.defaultpages.badRequest("POST", request.uri, "updateCaseRubricsWeights() failed: no or the wrong form data received."))
           }
         }
       }
-      case Left(err) => BadRequest("updateCaseRubricsWeights() failed: " + err)
+      case Left(err) =>
+        BadRequest(views.html.defaultpages.badRequest("POST", request.uri, "updateCaseRubricsWeights() failed: " + err))
     }
   }
 
   def updateCaseDescription() = Action { implicit request =>
-    doesUserHaveAuthorizedCookie(request) match {
+    isUserAuthenticated(request) match {
       case Right(_) => {
         val requestData = request.body.asMultipartFormData.get.dataParts
 
-        (requestData("caseID"), requestData("casedescription")) match {
-          case (Seq(cazeIDStr), Seq(casedescription)) if (cazeIDStr.forall(_.isDigit)) =>
-            if (cazeDao.updateCaseDescription(cazeIDStr.toInt, casedescription) > 0) {
-              Logger.debug(s"Post: updateCaseDescription(): success")
-              Ok
-            }
-            else {
-              Logger.error(s"Post: updateCaseDescription(): failed")
-              BadRequest("updateCaseDescription() failed")
+        (requestData("memberID"), requestData("caseID"), requestData("casedescription")) match {
+          case (Seq(memberIdStr), Seq(cazeIDStr), Seq(casedescription)) if (cazeIDStr.forall(_.isDigit) && (memberIdStr.forall(_.isDigit))) =>
+            isUserAuthorized(request, memberIdStr.toInt) match {
+              case Left(err) =>
+                Logger.error(s"Post: updateCaseDescription() failed: not authorised: $err")
+                Unauthorized(views.html.defaultpages.unauthorized())
+              case Right(_) =>
+                if (cazeDao.updateCaseDescription(cazeIDStr.toInt, casedescription) > 0) {
+                  Logger.debug(s"Post: updateCaseDescription(): success")
+                  Ok
+                }
+                else {
+                  Logger.error(s"Post: updateCaseDescription(): failed")
+                  BadRequest(views.html.defaultpages.badRequest("POST", request.uri, "updateCaseDescription() failed"))
+                }
             }
         }
       }
-      case Left(err) => BadRequest("updateCaseDescription() failed: " + err)
+      case Left(err) => BadRequest(views.html.defaultpages.badRequest("POST", request.uri, "updateCaseDescription() failed: " + err))
     }
   }
 
   def delCaze() = Action { request: Request[AnyContent] =>
-    doesUserHaveAuthorizedCookie(request) match {
+    isUserAuthenticated(request) match {
       case Right(_) => {
         val requestData = request.body.asMultipartFormData.get.dataParts
 
         (requestData("caseId"), requestData("memberId")) match {
-          case (Seq(caseIdStr), Seq(memberIdStr)) =>
-            cazeDao.delete(caseIdStr.toInt)
-            Ok
+          case (Seq(caseIdStr), Seq(memberIdStr)) if (caseIdStr.forall(_.isDigit) && (memberIdStr.forall(_.isDigit))) =>
+            isUserAuthorized(request, memberIdStr.toInt) match {
+              case Left(err) =>
+                Logger.error(s"Post: delCaze() failed: not authorised: $err")
+                Unauthorized(views.html.defaultpages.unauthorized())
+              case Right(_) =>
+                cazeDao.delete(caseIdStr.toInt)
+                Ok
+            }
           case _ =>
-            BadRequest("delCaze() failed")
+            BadRequest(views.html.defaultpages.badRequest("POST", request.uri, "delCaze() failed"))
         }
       }
-      case Left(err) => BadRequest("delCaze() failed: " + err)
+      case Left(err) =>
+        BadRequest(views.html.defaultpages.badRequest("POST", request.uri, "delCaze() failed: " + err))
     }
   }
 
   def saveFile() = Action { request: Request[AnyContent] =>
-    doesUserHaveAuthorizedCookie(request) match {
+    isUserAuthenticated(request) match {
       case Right(_) => {
         FIle.decode(request.body.asText.get) match {
           case Some(file) =>
-            Ok(fileDao.insert(file).toString())
+            isUserAuthorized(request, file.member_id) match {
+              case Left(err) =>
+                Logger.error(s"Post: saveFile() failed: not authorised: $err")
+                Unauthorized(views.html.defaultpages.unauthorized())
+              case Right(_) =>
+                Ok(fileDao.insert(file).toString())
+            }
           case None =>
-            BadRequest("saveFile() failed: saving of file failed. Json wrong? " + request.body.asText.get)
+            BadRequest(views.html.defaultpages.badRequest("POST", request.uri, "saveFile() failed: saving of file failed. Json wrong? " + request.body.asText.get))
         }
       }
-      case Left(err) => BadRequest("saveFile() failed: " + err)
+      case Left(err) =>
+        BadRequest(views.html.defaultpages.badRequest("POST", request.uri, "saveFile() failed: " + err))
     }
   }
 
   def delFileAndCases() = Action { request: Request[AnyContent] =>
-    doesUserHaveAuthorizedCookie(request) match {
+    isUserAuthenticated(request) match {
       case Right(_) => {
-        request.body.asMultipartFormData.get.dataParts("fileId") match {
-          case Seq(fileId) => {
-            fileDao.delFileAndAllCases(fileId.toInt)
-            Ok
+        val requestData = request.body.asMultipartFormData.get.dataParts
+
+        (requestData("memberId"), requestData("fileId")) match {
+          case (Seq(memberIdStr), Seq(fileIdStr)) if (fileIdStr.forall(_.isDigit) && (memberIdStr.forall(_.isDigit))) => {
+            isUserAuthorized(request, memberIdStr.toInt) match {
+              case Left(err) =>
+                Logger.error(s"Post: delFileAndCases() failed: not authorised: $err")
+                Unauthorized(views.html.defaultpages.unauthorized())
+              case Right(_) =>
+                fileDao.delFileAndAllCases(fileIdStr.toInt)
+                Ok
+            }
           }
-          case _ => BadRequest("delFile() failed: wrong data received.")
+          case _ =>
+            BadRequest(views.html.defaultpages.badRequest("POST", request.uri, "delFile() failed: wrong data received."))
         }
       }
-      case Left(err) => BadRequest("delFile() failed: " + err)
+      case Left(err) =>
+        BadRequest(views.html.defaultpages.badRequest("POST", request.uri, "delFile() failed: " + err))
     }
   }
 
   def updateFileDescription() = Action { implicit request =>
-    doesUserHaveAuthorizedCookie(request) match {
+    isUserAuthenticated(request) match {
       case Right(_) => {
         val requestData = request.body.asMultipartFormData.get.dataParts
         (requestData("filedescr"), requestData("fileId")) match {
           case (Seq(filedescr), Seq(fileId)) if (fileId.forall(_.isDigit)) =>
-            fileDao.changeDescription(fileId.toInt, filedescr)
-            Ok
+            // Get file from DB to extract a memberId for authorisation
+            fileDao.getFIle(fileId.toInt) match {
+              case tmpFile :: Nil =>
+                val memberId = tmpFile.member_id
+                isUserAuthorized(request, memberId) match {
+                  case Left(err) =>
+                    Logger.error(s"Post: updateFileDescription() failed: not authorised: $err")
+                    Unauthorized(views.html.defaultpages.unauthorized())
+                  case Right(_) =>
+                    fileDao.changeDescription(fileId.toInt, filedescr)
+                    Ok
+                }
+              case _ =>
+                BadRequest(views.html.defaultpages.badRequest("POST", request.uri, "updateFileDescription() failed"))
+            }
           case _ =>
-            BadRequest("updateFileDescription() failed")
+            BadRequest(views.html.defaultpages.badRequest("POST", request.uri, "updateFileDescription() failed"))
         }
       }
-      case Left(err) => BadRequest("updateFileDescription() failed: " + err)
+      case Left(err) =>
+        BadRequest(views.html.defaultpages.badRequest("POST", request.uri, "updateFileDescription() failed: " + err))
     }
   }
 

@@ -2,7 +2,7 @@ package org.multics.baueran.frep.shared.sec_frontend
 
 import org.scalajs.dom
 import org.querki.jquery.$
-import org.multics.baueran.frep.shared.frontend.{getCookieData, Case, serverUrl}
+import org.multics.baueran.frep.shared.frontend.{getCookieData, Case, serverUrl, apiPrefix}
 import org.multics.baueran.frep.shared.Defs.CookieFields
 import fr.hmil.roshttp.HttpRequest
 import fr.hmil.roshttp.body.{MultiPartBody, PlainTextBody}
@@ -48,7 +48,7 @@ object AddToFileModal extends FileModal {
                 onclick:={(event: Event) =>
                   Case.descr match {
                     case Some(caze) => {
-                      HttpRequest(serverUrl() + "/save_case")
+                      HttpRequest(s"${serverUrl()}/${apiPrefix()}/save_case")
                         .withHeader("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
                         .post(MultiPartBody(
                           "fileId" -> PlainTextBody(selected_file_id.now.getOrElse(-1).toString()),

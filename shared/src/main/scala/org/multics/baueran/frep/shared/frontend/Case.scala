@@ -5,23 +5,28 @@ import dom.Event
 import fr.hmil.roshttp.HttpRequest
 import fr.hmil.roshttp.body.{MultiPartBody, PlainTextBody}
 import monix.execution.Scheduler.Implicits.global
+
+import org.scalajs.dom.raw.HTMLInputElement
+import org.querki.jquery.$
+import org.scalajs.dom
+import scalatags.JsDom
 import scalatags.JsDom.all._
+import io.circe.syntax._
 
 import scala.scalajs.js
 import scala.collection.mutable
 import rx.{Rx, Var}
 import rx.Ctx.Owner.Unsafe._
 import scalatags.rx.all._
+import fr.hmil.roshttp.response.SimpleHttpResponse
+import scala.util.{Failure, Success}
+import com.github.nondeterministic.notifyjs._
+
 import org.multics.baueran.frep.shared
 import shared._
 import shared.Defs.CookieFields
 import shared.frontend.RemedyFormat.RemedyFormat
 import shared.sec_frontend.FileModalCallbacks._
-import org.scalajs.dom.raw.HTMLInputElement
-import org.querki.jquery.$
-import org.scalajs.dom
-import scalatags.JsDom
-import io.circe.syntax._
 
 object Case {
 
@@ -72,10 +77,10 @@ object Case {
 
   // ------------------------------------------------------------------------------------------------------------------
   def updateCaseViewAndDataStructures() = {
-    def updateAllCaseDataStructures() = {
+    def updateFileModalDataStructures() = {
       val memberId = getCookieData(dom.document.cookie, CookieFields.id.toString) match {
         case Some(id) => updateMemberFiles(id.toInt); id.toInt
-        case None => println("WARNING: updateDataStructures() failed. Could not get memberID from cookie."); -1
+        case None => println("WARNING: updateFileModalDataStructures() failed. Could not get memberID from cookie."); -1
       }
 
       remedyScores.clear()
@@ -100,50 +105,56 @@ object Case {
           if (descr.get.isSupersetOf(prevCase.get).length > 0) { // Add additional case rubrics to DB
             val diff = descr.get.isSupersetOf(prevCase.get)
 
-            HttpRequest(serverUrl() + "/add_caserubrics_to_case")
+            HttpRequest(s"${serverUrl()}/${apiPrefix()}/add_caserubrics_to_case")
               .withHeader("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
               .post(MultiPartBody(
+                "memberID" -> PlainTextBody(memberId.toString),
                 "caseID" -> PlainTextBody(descr.get.id.toString),
                 "caserubrics" -> PlainTextBody(diff.asJson.toString)))
           }
           else if (prevCase.get.isSupersetOf(descr.get).length > 0) { // Delete the removed case rubrics in DB
             val diff = prevCase.get.isSupersetOf(descr.get)
 
-            HttpRequest(serverUrl() + "/del_caserubrics_from_case")
+            HttpRequest(s"${serverUrl()}/${apiPrefix()}/del_caserubrics_from_case")
               .withHeader("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
               .post(MultiPartBody(
+                "memberID" -> PlainTextBody(memberId.toString),
                 "caseID" -> PlainTextBody(descr.get.id.toString),
                 "caserubrics" -> PlainTextBody(diff.asJson.toString)))
           }
           else if (descr.get.isEqualExceptWeights(prevCase.get).length > 0) { // Update weights only in DB
             val diff = prevCase.get.isEqualExceptWeights(descr.get) // These are the user-changed ones, which we'll need to update in the DB, too.
 
-            HttpRequest(serverUrl() + "/update_caserubrics_weights")
+            HttpRequest(s"${serverUrl()}/${apiPrefix()}/update_caserubrics_weights")
               .withHeader("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
               .post(MultiPartBody(
+                "memberID" -> PlainTextBody(memberId.toString),
                 "caseID" -> PlainTextBody(descr.get.id.toString),
                 "caserubrics" -> PlainTextBody(diff.asJson.toString)))
           }
           else if (descr.get.description != prevCase.get.description) {
-            HttpRequest(serverUrl() + "/update_case_description")
+            HttpRequest(s"${serverUrl()}/${apiPrefix()}/update_case_description")
               .withHeader("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
               .post(MultiPartBody(
+                "memberID" -> PlainTextBody(memberId.toString),
                 "caseID" -> PlainTextBody(descr.get.id.toString),
                 "casedescription" -> PlainTextBody(descr.get.description)))
           }
           else {
-            println("Case: updateAllCaseDataStructures(): NOT saving case, although something indicates it may have changed. " +
+            println("Case: updateFileModalDataStructures(): NOT saving case, although something indicates it may have changed. " +
               "This shouldn't have happened, but previous saves should have taken care that no data-loss occurred.")
           }
         }
+        else if (memberId == -1)
+          Notify("Saving case failed. Please log out and back in, and then try again.", "error")
         else
-          println("Case: updateAllCaseDataStructures(): NOT updating case in DB as case is currently unchanged.")
+          println("Case: updateFileModalDataStructures(): NOT updating case in DB as case is currently unchanged (or member not authorised).")
       }
 
       // Delete not only view but entire case from DB, when user removed all of its rubrics...
       if (cRubrics.size == 0) {
         if (descr != None && descr.get.id != 0)
-          HttpRequest(serverUrl() + "/del_case")
+          HttpRequest(s"${serverUrl()}/${apiPrefix()}/del_case")
             .withHeader("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
             .post(MultiPartBody(
               "caseId" -> PlainTextBody(descr.get.id.toString()),
@@ -155,7 +166,7 @@ object Case {
     }
 
     // Update data structures first
-    updateAllCaseDataStructures()
+    updateFileModalDataStructures()
 
     // Now, put previous case to current case; a bit more verbose in order to avoid that prevCase.eq(descr) holds
     // as would be the case with prevCase = descr from what I've tried...

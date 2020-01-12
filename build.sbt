@@ -11,6 +11,7 @@ val circeVersion       = "0.11.1"
 val rosHttpVersion     = "2.2.4"
 val quillVersion       = "3.4.3"
 val pgDriverVersion    = "42.2.5"
+val notifyjsVersion    = "0.1.1"
 
 resolvers in ThisBuild += Resolver.bintrayRepo("hmil", "maven")
 
@@ -92,6 +93,7 @@ lazy val shared = crossProject(JSPlatform, JVMPlatform)
       "fr.hmil" %%% "roshttp" % rosHttpVersion,
       "com.timushev" %%% "scalatags-rx" % scalatagsrxVersion,
       "org.scalatestplus.play" %% "scalatestplus-play" % scalaTestVersion % "test",
+      "com.github.nondeterministic" %%% "scalajs-notifyjs" % notifyjsVersion,
       guice,
       specs2 % Test
     )
@@ -105,7 +107,7 @@ lazy val commonSettings = Seq(
   scalaVersion := myScalaVersion,
   organization := "org.multics.baueran.frep",
   maintainer := "baueran@gmail.com",
-  version := "0.1.1"
+  version := "0.2.0"
 )
 
 // loads the frontend project at sbt startup

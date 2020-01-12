@@ -3,7 +3,7 @@ package org.multics.baueran.frep.shared.sec_frontend
 import org.querki.jquery.$
 import org.multics.baueran.frep.shared.Defs.CookieFields
 import org.multics.baueran.frep.shared.FIle
-import org.multics.baueran.frep.shared.frontend.{Case, getCookieData, serverUrl}
+import org.multics.baueran.frep.shared.frontend.{Case, getCookieData, serverUrl, apiPrefix}
 import fr.hmil.roshttp.HttpRequest
 import fr.hmil.roshttp.body.PlainTextBody
 import fr.hmil.roshttp.response.SimpleHttpResponse
@@ -57,7 +57,7 @@ object NewFileModal {
                       }
                       currFIle = Some(FIle(None, header, memberId, (new js.Date()).toISOString(), descr, List.empty))
 
-                      HttpRequest(serverUrl() + "/save_file")
+                      HttpRequest(s"${serverUrl()}/${apiPrefix()}/save_file")
                         .withHeader("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
                         .post(PlainTextBody(currFIle.get.asJson.toString()))
                         .onComplete({

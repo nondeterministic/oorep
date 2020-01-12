@@ -18,14 +18,14 @@ package object controllers {
   var fileDao: FileDao = _
 
   /**
-    * Returns empty list if request does not contain valid cookies that are useful for authorization.
-    * Otherwise returns list of valid cookies that were contained in request.
+    * Returns empty list if request does not contain valid cookies that are useful for authentication
+    * and authorization. Otherwise returns list of valid cookies that were contained in request.
     */
 
   def getRequestCookies(request: Request[AnyContent]): List[Cookie] = {
-    (request.cookies.get(CookieFields.salt.toString), request.cookies.get(CookieFields.id.toString)) match {
-      case (Some(cookie_hash), Some(cookie_id)) =>
-        List(cookie_hash, cookie_id)
+    (request.cookies.get(CookieFields.creationDate.toString), request.cookies.get(CookieFields.salt.toString), request.cookies.get(CookieFields.id.toString), request.cookies.get(CookieFields.email.toString)) match {
+      case (Some(cookie_date), Some(cookie_hash), Some(cookie_id), Some(cookie_email)) =>
+        List(cookie_date, cookie_hash, cookie_id, cookie_email)
       case _ =>
         List.empty
     }
@@ -106,7 +106,7 @@ package object controllers {
   }
 
   /**
-    * Check if user has received a cookie after authorization (but do not check authorization itself here! This is not
+    * Check if user has received a cookie after authentication (but do not check authorization here! This is not
     * a login method or the like!  Look inside Post.scala for how login is done, AFTER which a cookie is stored.)
     *
     * This cookie needs to contain a matching member ID and salt, so that a user cannot easily access the data of
@@ -116,8 +116,8 @@ package object controllers {
     * @return true, if the user who triggered the call of this function has a cookie with the corresponding salt value
     *         as in the DB.  This indicates that the user has prior logged in to the system.
     */
-  def doesUserHaveAuthorizedCookie(request: Request[AnyContent]): Either[String, Boolean] = {
-    val errorMsg = "Not authorized: bad request"
+  def isUserAuthenticated(request: Request[AnyContent]): Either[String, Boolean] = {
+    val errorMsg = "Not authenticated."
     getRequestCookies(request) match {
       case Nil => Left(errorMsg)
       case cookies =>
@@ -141,4 +141,33 @@ package object controllers {
     }
   }
 
+  /**
+    * Check if user is authorized to access a resource for a member with ID
+    * tries_to_access_data_of_member_id.  Under normal circumstances those IDs should be
+    * the same, or we'll assume something fishy is going on (and return false here).
+    *
+    * @param request
+    * @param tries_to_access_data_of_member_id
+    * @return true, if user is authorised; false otherwise.
+    */
+  def isUserAuthorized(request: Request[AnyContent], tries_to_access_data_of_member_id: Int): Either[String, Boolean] = {
+    getRequestCookies(request) match {
+      case Nil => Left(s"Not authorised to access ${request.path}")
+      case cookies =>
+        (getCookieValue(cookies, CookieFields.creationDate.toString), getCookieValue(cookies, CookieFields.id.toString), getCookieValue(cookies, CookieFields.email.toString)) match {
+          case (creationDate, Some(memberIdStr), Some(memberEmail)) if (memberIdStr.forall(_.isDigit)) =>
+            val cookieMemberId = memberIdStr.toInt
+            (memberDao.get(cookieMemberId), memberDao.getFromEmail(memberEmail)) match {
+              case (foundMemberOne :: Nil, foundMemberTwo :: Nil) if (foundMemberOne == foundMemberTwo) =>
+                if (tries_to_access_data_of_member_id == foundMemberOne.member_id  &&  creationDate == foundMemberOne.lastseen)
+                  Right(true)
+                else
+                  Left(s"Member with ID ${cookieMemberId} not authorised to access data of member with ID ${tries_to_access_data_of_member_id} in ${request.path}.")
+              case _ =>
+                Left(s"Member with ID ${cookieMemberId} not authorised to access data of member with ID ${tries_to_access_data_of_member_id} in ${request.path}.")
+            }
+          case _ => Left(s"Not authorised to access ${request.path}")
+        }
+    }
+  }
 }
