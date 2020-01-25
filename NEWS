@@ -1,13 +1,13 @@
 OOREP NEWS
 =-=-=-=-=-
 
-v0.2.0  Sat Jan 25 13:25:04 2020 +0100  [commit: 538f38a853f6d307905a38ac8b07de08c9bd98a5, tag: v0.2.0]
+v0.2.0  Sat Jan 25 13:25:04 2020 +0100  [tag: v0.2.0]
 
 - Check authorisation for authenticated users in API calls
 - All REST-API calls now have a preceeding /api/ in their paths
 - Improved error pages on BadRequest-errors from API calls
 
-v0.1.1  Thu Jan 9 20:12:59 2020 +0100  [commit: c481880dad4509566ba2b8faa139836880f2f03d, tag: v0.1.1]
+v0.1.1  Thu Jan 9 20:12:59 2020 +0100  [tag: v0.1.1]
 
 - Initial version that was uploaeded to oorep.pspace.org
 
