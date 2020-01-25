@@ -1,7 +1,7 @@
 OOREP NEWS
 =-=-=-=-=-
 
-v0.2.0  under development
+v0.2.0  Sat Jan 25 13:25:04 2020 +0100  [commit: 538f38a853f6d307905a38ac8b07de08c9bd98a5, tag: v0.2.0]
 
 - Check authorisation for authenticated users in API calls
 - All REST-API calls now have a preceeding /api/ in their paths
