@@ -1,6 +1,10 @@
 OOREP NEWS
 =-=-=-=-=-
 
+v0.2.1  under development
+
+- Add www.oorep.com to application.conf
+
 v0.2.0  Sat Jan 25 13:25:04 2020 +0100  [tag: v0.2.0]
 
 - Check authorisation for authenticated users in API calls
