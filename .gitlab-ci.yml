@@ -5,10 +5,10 @@ before_script:
   # - apt-get update -y
   # - apt-get install apt-transport-https -y
   # Install SBT
-  - wget https://bintray.com/artifact/download/sbt/debian/sbt-0.13.9.deb
-  - dpkg -i sbt-0.13.9.deb
-  - apt-get update
-  - apt-get install sbt
+  - wget https://bintray.com/artifact/download/sbt/debian/sbt-1.3.4.deb
+  - dpkg -i sbt-1.3.4.deb
+  # - apt-get update
+  #- apt-get install sbt
 #  - echo "deb http://dl.bintray.com/sbt/debian /" | tee -a /etc/apt/sources.list.d/sbt.list
 #  - apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 642AC823
 #  - apt-get update -y
