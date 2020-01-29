@@ -1,9 +1,9 @@
 image: java:8
 
 before_script:
-  - apt-key adv --keyserver keyserver.ubuntu.com --recv-keys AA8E81B4331F7F50
-  - apt-get update -y
-  - apt-get install apt-transport-https -y
+  #  - apt-key adv --keyserver keyserver.ubuntu.com --recv-keys AA8E81B4331F7F50
+  # - apt-get update -y
+  # - apt-get install apt-transport-https -y
   # Install SBT
   - wget https://bintray.com/artifact/download/sbt/debian/sbt-0.13.9.deb
   - dpkg -i sbt-0.13.9.deb
