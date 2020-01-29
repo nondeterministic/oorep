@@ -14,7 +14,7 @@ latest updates.
 
 Prerequisites:
 
-* Java SDK (For best results, use JDK 8.  (In particular, I've had build
+* Java SDK (for best results, use JDK 8.  (In particular, I've had build
   problems with JDK 12 - broken String class.))
 * Scala Build Tool (SBT, tested with >= 1.3.0)
 * An SQL database (tested with PostgreSQL >= 10.0)
