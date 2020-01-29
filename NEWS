@@ -1,7 +1,7 @@
 OOREP NEWS
 =-=-=-=-=-
 
-v0.2.1  under development
+v0.2.1  Wed 29 Jan 2020 09:17:11 PM CET [tag: v0.2.1]
 
 - Removed superfluous REST-API calls to available_reps
 - Minor fixes and improvements:

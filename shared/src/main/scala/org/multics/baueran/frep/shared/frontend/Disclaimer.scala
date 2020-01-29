@@ -15,12 +15,9 @@ object Disclaimer {
 
   def toHTML() = {
     div(cls:="jumbotron jumbo-dark horizontal-center", id:="content_bottom", style:="position: relative;",
-//      a(href:="https://gitlab.com/nondeterministic/oorep",
-//        span(style:="font-family: tahoma; font-size: 20px; position: absolute; top:50px; right:-45px; display:block; -webkit-transform: rotate(45deg); -moz-transform: rotate(45deg); background-color:red; color:white; padding: 4px 30px 4px 30px; z-index:99",
-//          "Fork Me On GitLab")
-//      ),
-      a(href:="https://github.com/nondeterministic/oorep",
-        img(style:="position: absolute; top: 0; right: 0; border: 0;", src:="https://s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png", alt:="Fork me on GitHub")
+      a(href:="https://gitlab.com/nondeterministic/oorep",
+        // img(style:="position: absolute; top: 0; right: 0; border: 0;", src:="https://s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png", alt:="Fork me on GitHub")
+        img(style:="position: absolute; top: 0; right: 0; border: 0;", src:=s"${serverUrl()}/assets/html/img/forkme_right_red.png", alt:="Fork me on GitLab")
       ),
       br,
       div(style:="font-size:12px; max-width:700px;",
