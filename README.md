@@ -1,18 +1,30 @@
-## Executing the OOREP software
+# OOREP
 
-For best results, use JDK 8.  (In particular, I've had build problems with JDK 12; broken String class.)
+OOREP is an acronym for open online repertory for homeopathy.  That is, it lets
+users look up categories in homeopathic repertories.  This GitLab repository
+consists of its (mainly) ScalaJS source code.  A running version of it, however,
+can also be found at https://www.oorep.com/.
 
-Set the following environment variables appropriately:
+## How to get the source code running
 
-* `$OOREP_APPLICATION_SECRET`: application-specific password you need to see if you run the server using `https` instead of `http`
+Prerequisites:
+
+* Java SDK (For best results, use JDK 8.  (In particular, I've had build
+  problems with JDK 12 - broken String class.))
+* Scala Build Tool (SBT, tested with >= 1.3.0)
+* An SQL database (tested with PostgreSQL >= 10.0)
+
+Before executing SBT, the database needs to be up and running.  Also, you will
+need to define the following environment variables:
+
+* `$OOREP_APPLICATION_SECRET`: application-specific password you need to see
+  if you run the server using `https` instead of `http`
 * `$OOREP_USER_PASS`: password used by the DB-user
-* `$OOREP_REP_PATH`: directory in the local file system, where the repertory raw data is located
-* `$OOREP_KEYSTORE_FILE`: full path of your `.keystore` file
-* `$OOREP_KEYSTORE_PASS`: password of your keystore
+* `$OOREP_REP_PATH`: directory in the local file system, where the repertory
+  raw data is located
 
-Adjustments to this can also be made in `backend/conf/application.conf`, of course.
+Check `backend/conf/application.conf` for their respective use, and make other
+adjustments as you see fit there.
 
-When satisfied with your configuration, you can start OOREP as follows:
-
-    sbt
-    run -Dhttps.port=9443 -Dhttp.port=9000
+When you're content with your setup, OOREP, a Play-application, can be run
+like any other using `run` or `compile`.
