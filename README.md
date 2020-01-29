@@ -5,6 +5,11 @@ users look up categories in homeopathic repertories.  This GitLab repository
 consists of its (mainly) ScalaJS source code.  A running version of it, however,
 can also be found at https://www.oorep.com/.
 
+## Current status / what's new
+
+Besides the aforementioned homepage, check out the [NEWS](NEWS) file for the
+latest updates.
+
 ## How to get the source code running
 
 Prerequisites:
