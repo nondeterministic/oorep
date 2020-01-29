@@ -401,7 +401,9 @@ object Repertorise {
         )
       }
 
-    updateAvailableRepertories()
+    // Update available repertories only in the beginning.  (TODO: Added this if later on. Not sure if update shouldn't be done all the time like before...)
+    if (selectedRepertory.length() == 0)
+      updateAvailableRepertories()
 
     // If initial page, then vertically center search form
     if (results.now.size == 0 && Case.size() == 0) {

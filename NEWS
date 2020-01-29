@@ -3,7 +3,10 @@ OOREP NEWS
 
 v0.2.1  under development
 
-- Add www.oorep.com to application.conf
+- Removed superfluous REST-API calls to available_reps
+- Minor fixes and improvements:
+  - Add www.oorep.com to application.conf
+  - Insert date into privacy policies (January 27, 2020)
 
 v0.2.0  Sat Jan 25 13:25:04 2020 +0100  [tag: v0.2.0]
 
@@ -14,4 +17,3 @@ v0.2.0  Sat Jan 25 13:25:04 2020 +0100  [tag: v0.2.0]
 v0.1.1  Thu Jan 9 20:12:59 2020 +0100  [tag: v0.1.1]
 
 - Initial version that was uploaeded to oorep.pspace.org
-
