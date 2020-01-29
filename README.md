@@ -27,4 +27,10 @@ Check `backend/conf/application.conf` for their respective use, and make other
 adjustments as you see fit there.
 
 When you're content with your setup, OOREP, a Play-application, can be run
-like any other using `run` or `compile`.
+like any other using `run` or `compile`.  If all went well, the result should
+then be available at http://localhost:9000/.
+
+You can also build a distribution package of OOREP by first executing `compile`
+and then `dist`, which will build an executable, 
+`backend/target/universal/backend-x.y.z.zip`, which can also be used to run
+a stand-alone version of the application.
