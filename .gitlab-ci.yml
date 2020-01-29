@@ -15,6 +15,6 @@ before_script:
 #  - apt-get install sbt -y
   - sbt compile
 
-test:
-  script:
-    - sbt clean test
+#test:
+#  script:
+#    - sbt clean test
