@@ -1,4 +1,4 @@
-image: java:8324
+image: java:8
 
 before_script:
   #  - apt-key adv --keyserver keyserver.ubuntu.com --recv-keys AA8E81B4331F7F50
