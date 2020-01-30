@@ -5,6 +5,7 @@ services:
 
 variables:
   OOREP_DBUSER_PASS: test
+  OOREP_DBHOST: postgres  
   OOREP_APPLICATION_SECRET: test
   OOREP_REP_PATH: /
   POSTGRES_DB: oorep
