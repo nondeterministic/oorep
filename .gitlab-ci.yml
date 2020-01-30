@@ -4,9 +4,9 @@ services:
   - postgres:11
 
 variables:
-  OOREP_DBUSER_PASS=test
-  OOREP_APPLICATION_SECRET=test
-  OOREP_REP_PATH=/
+  OOREP_DBUSER_PASS: test
+  OOREP_APPLICATION_SECRET: test
+  OOREP_REP_PATH: /
 
 before_script:
   # Install SBT
