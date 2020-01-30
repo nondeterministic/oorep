@@ -2,9 +2,13 @@
 *.iml
 bin
 logs
-repertories
 target
 tmp
+backend/public/repertories/b*
+backend/public/repertories/atama*
+backend/public/repertories/hering*
+backend/public/repertories/kent_*
+backend/public/repertories/README.txt
 *fastOpt*
 *fastopt*
 third-party*

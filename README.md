@@ -39,7 +39,7 @@ libraries and fonts:
 * [bootstrap](https://getbootstrap.com/) (tested with v4.1.3)
 * [jquery](https://jquery.com/) (tested with v3.3.1)
 * [popper](https://popper.js.org/) (tested with v1.15.0)
-* [notify.js](https://github.com/jpillora/notifyjs) (tested with v.0.4.2)
+* [notify.js](https://github.com/jpillora/notifyjs) (tested with v0.4.2)
 * [Open Iconic font](https://useiconic.com/open)
 
 For your convenience, an archived package with the respective versions 

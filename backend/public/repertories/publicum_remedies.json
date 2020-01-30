@@ -1,0 +1,4226 @@
+[
+  {
+    "abbrev" : "publicum",
+    "id" : 0,
+    "nameAbbrev" : "Abies-c.",
+    "nameLong" : "Abies Canadensis"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 1,
+    "nameAbbrev" : "Abies-n.",
+    "nameLong" : "Abies Nigra"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 2,
+    "nameAbbrev" : "Abrot.",
+    "nameLong" : "Abrotanum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 3,
+    "nameAbbrev" : "Absin.",
+    "nameLong" : "Absinthium"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 4,
+    "nameAbbrev" : "Acal.",
+    "nameLong" : "Acalypha Indica"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 5,
+    "nameAbbrev" : "Acet-ac.",
+    "nameLong" : "Aceticum Acidum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 6,
+    "nameAbbrev" : "Acon-c.",
+    "nameLong" : "Aconitum Cammarum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 7,
+    "nameAbbrev" : "Acon-f.",
+    "nameLong" : "Aconitum Ferox"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 8,
+    "nameAbbrev" : "Acon-l.",
+    "nameLong" : "Aconitum Lycoctonum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 9,
+    "nameAbbrev" : "Acon.",
+    "nameLong" : "Aconitum Napellus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 10,
+    "nameAbbrev" : "Act-sp.",
+    "nameLong" : "Actaea Spicata"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 11,
+    "nameAbbrev" : "Aesc-g.",
+    "nameLong" : "Aesculus Glabra"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 12,
+    "nameAbbrev" : "Aesc.",
+    "nameLong" : "Aesculus Hippocastanum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 13,
+    "nameAbbrev" : "Aether",
+    "nameLong" : "Aether"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 14,
+    "nameAbbrev" : "Aeth.",
+    "nameLong" : "Aethusa Cynapium"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 15,
+    "nameAbbrev" : "Agar-em.",
+    "nameLong" : "Agaricus Emeticus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 16,
+    "nameAbbrev" : "Agar.",
+    "nameLong" : "Agaricus Muscarius"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 17,
+    "nameAbbrev" : "Agar-ph.",
+    "nameLong" : "Agaricus Phalloides"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 18,
+    "nameAbbrev" : "Agn.",
+    "nameLong" : "Agnus Castus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 19,
+    "nameAbbrev" : "Ail.",
+    "nameLong" : "Ailanthus Glandulosa"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 20,
+    "nameAbbrev" : "Alco.",
+    "nameLong" : "Alcoholus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 21,
+    "nameAbbrev" : "Alco-s.",
+    "nameLong" : "Alcoholus Sulphuris, Carboneum Sulphuricum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 22,
+    "nameAbbrev" : "Alet.",
+    "nameLong" : "Aletris Farinosa"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 23,
+    "nameAbbrev" : "All-c.",
+    "nameLong" : "Allium Cepa"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 24,
+    "nameAbbrev" : "All-s.",
+    "nameLong" : "Allium Sativum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 25,
+    "nameAbbrev" : "Aloe",
+    "nameLong" : "Aloe Socotrina"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 26,
+    "nameAbbrev" : "Alst-c.",
+    "nameLong" : "Alstonia Constricta"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 27,
+    "nameAbbrev" : "Alumn.",
+    "nameLong" : "Alumen"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 28,
+    "nameAbbrev" : "Alum.",
+    "nameLong" : "Alumina"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 29,
+    "nameAbbrev" : "Alum-met.",
+    "nameLong" : "Aluminium Metallicum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 30,
+    "nameAbbrev" : "Alum-sil.",
+    "nameLong" : "Aluminium Silicicum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 31,
+    "nameAbbrev" : "Ambr.",
+    "nameLong" : "Ambra Grisea"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 32,
+    "nameAbbrev" : "Ammc.",
+    "nameLong" : "Ammoniacum Gummi"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 33,
+    "nameAbbrev" : "Am-be.",
+    "nameLong" : "Ammonium Benzoicum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 34,
+    "nameAbbrev" : "Am-br.",
+    "nameLong" : "Ammonium Bromatum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 35,
+    "nameAbbrev" : "Am-c.",
+    "nameLong" : "Ammonium Carbonicum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 36,
+    "nameAbbrev" : "Am-caust.",
+    "nameLong" : "Ammonium Causticum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 37,
+    "nameAbbrev" : "Am-m.",
+    "nameLong" : "Ammonium Muriaticum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 38,
+    "nameAbbrev" : "Amph.",
+    "nameLong" : "Amphisbaena Vermicularis"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 39,
+    "nameAbbrev" : "Amyg-am.",
+    "nameLong" : "Amygdalus Amarae"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 40,
+    "nameAbbrev" : "Amyg-p.",
+    "nameLong" : "Amygdalus Persica"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 41,
+    "nameAbbrev" : "Aml-n.",
+    "nameLong" : "Amylenum Nitrosum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 42,
+    "nameAbbrev" : "Anac-oc.",
+    "nameLong" : "Anacardium Occidentale"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 43,
+    "nameAbbrev" : "Anac.",
+    "nameLong" : "Anacardium Orientale"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 44,
+    "nameAbbrev" : "Anag.",
+    "nameLong" : "Anagallis Arvensis"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 45,
+    "nameAbbrev" : "Anan.",
+    "nameLong" : "Anantherum Muricatum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 46,
+    "nameAbbrev" : "Ango.",
+    "nameLong" : "Angophora Lanceolata"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 47,
+    "nameAbbrev" : "Ang.",
+    "nameLong" : "Angustura Vera"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 48,
+    "nameAbbrev" : "Anil.",
+    "nameLong" : "Anilinum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 49,
+    "nameAbbrev" : "Anis.",
+    "nameLong" : "Anisum Stellatum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 50,
+    "nameAbbrev" : "Anth.",
+    "nameLong" : "Anthemis Nobilis"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 51,
+    "nameAbbrev" : "Anthr.",
+    "nameLong" : "Anthracinum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 52,
+    "nameAbbrev" : "Anthro.",
+    "nameLong" : "Anthrakokali"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 53,
+    "nameAbbrev" : "Ant-ar.",
+    "nameLong" : "Antimonium Arsenicosum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 54,
+    "nameAbbrev" : "Ant-c.",
+    "nameLong" : "Antimonium Crudum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 55,
+    "nameAbbrev" : "Ant-m.",
+    "nameLong" : "Antimonium Muriaticum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 56,
+    "nameAbbrev" : "Ant-o.",
+    "nameLong" : "Antimonium Oxydatum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 57,
+    "nameAbbrev" : "Ant-s.",
+    "nameLong" : "Antimonium Sulphuratum Auratum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 58,
+    "nameAbbrev" : "Ant-t.",
+    "nameLong" : "Antimonium Tartaricum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 59,
+    "nameAbbrev" : "Aphis.",
+    "nameLong" : "Aphis Chenopodii Glauci"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 60,
+    "nameAbbrev" : "Apis",
+    "nameLong" : "Apis Mellifera"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 61,
+    "nameAbbrev" : "Ap-g.",
+    "nameLong" : "Apium Graveolens"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 62,
+    "nameAbbrev" : "Apoc-a.",
+    "nameLong" : "Apocynum Androsaemifolium"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 63,
+    "nameAbbrev" : "Apoc.",
+    "nameLong" : "Apocynum Cannabinum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 64,
+    "nameAbbrev" : "Apom.",
+    "nameLong" : "Apomorphinum Hydrochloricum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 65,
+    "nameAbbrev" : "Aral.",
+    "nameLong" : "Aralia Racemosa"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 66,
+    "nameAbbrev" : "Aran.",
+    "nameLong" : "Aranea Diadema"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 67,
+    "nameAbbrev" : "Aran-s.",
+    "nameLong" : "Aranea Scinencia"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 68,
+    "nameAbbrev" : "Arg-cy.",
+    "nameLong" : "Argentum Cyanatum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 69,
+    "nameAbbrev" : "Arg.",
+    "nameLong" : "Argentum Metallicum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 70,
+    "nameAbbrev" : "Arg-m.",
+    "nameLong" : "Argentum Muriaticum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 71,
+    "nameAbbrev" : "Arg-n.",
+    "nameLong" : "Argentum Nitricum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 72,
+    "nameAbbrev" : "Arn.",
+    "nameLong" : "Arnica Montana"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 73,
+    "nameAbbrev" : "Ars.",
+    "nameLong" : "Arsenicum Album"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 74,
+    "nameAbbrev" : "Ars-h.",
+    "nameLong" : "Arsenicum Hydrogenisatum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 75,
+    "nameAbbrev" : "Ars-i.",
+    "nameLong" : "Arsenicum Iodatum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 76,
+    "nameAbbrev" : "Ars-met.",
+    "nameLong" : "Arsenicum Metallicum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 77,
+    "nameAbbrev" : "Ars-n.",
+    "nameLong" : "Arsenicum Nitricum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 78,
+    "nameAbbrev" : "Ars-s-f.",
+    "nameLong" : "Arsenicum Sulphuratum Flavum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 79,
+    "nameAbbrev" : "Ars-s-r.",
+    "nameLong" : "Arsenicum Sulphuratum Rubrum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 80,
+    "nameAbbrev" : "Art-v.",
+    "nameLong" : "Artemisia Vulgaris"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 81,
+    "nameAbbrev" : "Arum-d.",
+    "nameLong" : "Arum Dracontium"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 82,
+    "nameAbbrev" : "Arum-i.",
+    "nameLong" : "Arum Italicum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 83,
+    "nameAbbrev" : "Arum-m.",
+    "nameLong" : "Arum Maculatum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 84,
+    "nameAbbrev" : "Arum-t.",
+    "nameLong" : "Arum Triphyllum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 85,
+    "nameAbbrev" : "Arund.",
+    "nameLong" : "Arundo Donax"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 86,
+    "nameAbbrev" : "Asaf.",
+    "nameLong" : "Asa Foetida"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 87,
+    "nameAbbrev" : "Asar.",
+    "nameLong" : "Asarum Officinale"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 88,
+    "nameAbbrev" : "Asc-c.",
+    "nameLong" : "Asclepias Cornuti"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 89,
+    "nameAbbrev" : "Asc-t.",
+    "nameLong" : "Asclepias Tuberosa"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 90,
+    "nameAbbrev" : "Asim.",
+    "nameLong" : "Asimina Triloba"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 91,
+    "nameAbbrev" : "Aspar.",
+    "nameLong" : "Asparagus Officinalis"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 92,
+    "nameAbbrev" : "Astac.",
+    "nameLong" : "Astacus Fluviatilis"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 93,
+    "nameAbbrev" : "Aster.",
+    "nameLong" : "Asterias Rubens"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 94,
+    "nameAbbrev" : "Atro.",
+    "nameLong" : "Atropinum Purum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 95,
+    "nameAbbrev" : "Aur-ar.",
+    "nameLong" : "Aurum Arsenicum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 96,
+    "nameAbbrev" : "Aur-i.",
+    "nameLong" : "Aurum Iodatum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 97,
+    "nameAbbrev" : "Aur.",
+    "nameLong" : "Aurum Metallicum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 98,
+    "nameAbbrev" : "Aur-m.",
+    "nameLong" : "Aurum Muriaticum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 99,
+    "nameAbbrev" : "Aur-m-n.",
+    "nameLong" : "Aurum Muriaticum Natronatum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 100,
+    "nameAbbrev" : "Aur-s.",
+    "nameLong" : "Aurum Sulphuratum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 101,
+    "nameAbbrev" : "Bad.",
+    "nameLong" : "Badiaga"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 102,
+    "nameAbbrev" : "Bals-p.",
+    "nameLong" : "Balsamum Peruvianum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 103,
+    "nameAbbrev" : "Bapt.",
+    "nameLong" : "Baptisia Tinctoria"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 104,
+    "nameAbbrev" : "Bart.",
+    "nameLong" : "Bartfelder Aqua"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 105,
+    "nameAbbrev" : "Bar-acet.",
+    "nameLong" : "Baryta Acetica"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 106,
+    "nameAbbrev" : "Bar-c.",
+    "nameLong" : "Baryta Carbonica"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 107,
+    "nameAbbrev" : "Bar-i.",
+    "nameLong" : "Baryta Iodata"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 108,
+    "nameAbbrev" : "Bar-m.",
+    "nameLong" : "Baryta Muriatica"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 109,
+    "nameAbbrev" : "Bell.",
+    "nameLong" : "Belladonna"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 110,
+    "nameAbbrev" : "Bell-p.",
+    "nameLong" : "Bellis Perennis"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 111,
+    "nameAbbrev" : "Benz-ac.",
+    "nameLong" : "Benzoicum Acidum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 112,
+    "nameAbbrev" : "Benz.",
+    "nameLong" : "Benzolum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 113,
+    "nameAbbrev" : "Berb.",
+    "nameLong" : "Berberis Vulgaris"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 114,
+    "nameAbbrev" : "Bism-ox.",
+    "nameLong" : "Bismuthum Oxydatum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 115,
+    "nameAbbrev" : "Blatta",
+    "nameLong" : "Blatta Orientalis"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 116,
+    "nameAbbrev" : "Bol.",
+    "nameLong" : "Boletus Laricis"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 117,
+    "nameAbbrev" : "Bor.",
+    "nameLong" : "Borax Veneta"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 118,
+    "nameAbbrev" : "Bor-ac.",
+    "nameLong" : "Boricum Acidum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 119,
+    "nameAbbrev" : "Both-l.",
+    "nameLong" : "Bothrops Lanceolatus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 120,
+    "nameAbbrev" : "Bov.",
+    "nameLong" : "Bovista Lycoperdon"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 121,
+    "nameAbbrev" : "Brach.",
+    "nameLong" : "Brachyglottis Repanda"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 122,
+    "nameAbbrev" : "Brom.",
+    "nameLong" : "Bromum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 123,
+    "nameAbbrev" : "Bruc.",
+    "nameLong" : "Brucea Antidysenterica"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 124,
+    "nameAbbrev" : "Bry.",
+    "nameLong" : "Bryonia Alba"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 125,
+    "nameAbbrev" : "Bufo",
+    "nameLong" : "Bufo Rana"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 126,
+    "nameAbbrev" : "Bufo-s.",
+    "nameLong" : "Bufo Sahytiensis"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 127,
+    "nameAbbrev" : "Cact.",
+    "nameLong" : "Cactus Grandiflorus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 128,
+    "nameAbbrev" : "Cadm-s.",
+    "nameLong" : "Cadmium Sulphuratum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 129,
+    "nameAbbrev" : "Cahin.",
+    "nameLong" : "Cainca"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 130,
+    "nameAbbrev" : "Caj.",
+    "nameLong" : "Cajuputum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 131,
+    "nameAbbrev" : "Calad.",
+    "nameLong" : "Caladium Seguinum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 132,
+    "nameAbbrev" : "Calc-acet.",
+    "nameLong" : "Calcarea Acetica"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 133,
+    "nameAbbrev" : "Calc-ar.",
+    "nameLong" : "Calcarea Arsenicosa"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 134,
+    "nameAbbrev" : "Calc.",
+    "nameLong" : "Calcarea Carbonica"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 135,
+    "nameAbbrev" : "Calc-caust.",
+    "nameLong" : "Calcarea Caustica"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 136,
+    "nameAbbrev" : "Calc-f.",
+    "nameLong" : "Calcarea Fluorica"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 137,
+    "nameAbbrev" : "Calc-i.",
+    "nameLong" : "Calcarea Iodata"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 138,
+    "nameAbbrev" : "Calc-p.",
+    "nameLong" : "Calcarea Phosphorica"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 139,
+    "nameAbbrev" : "Calc-sil.",
+    "nameLong" : "Calcarea Silicata"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 140,
+    "nameAbbrev" : "Calc-s.",
+    "nameLong" : "Calcarea Sulphurica"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 141,
+    "nameAbbrev" : "Calen.",
+    "nameLong" : "Calendula Officinalis"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 142,
+    "nameAbbrev" : "Calli.",
+    "nameLong" : "Calliandra Houstoni"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 143,
+    "nameAbbrev" : "Calo.",
+    "nameLong" : "Calotropis Gigantea"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 144,
+    "nameAbbrev" : "Camph.",
+    "nameLong" : "Camphora Officinalis"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 145,
+    "nameAbbrev" : "Canch.",
+    "nameLong" : "Canchalagua"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 146,
+    "nameAbbrev" : "Cann-i.",
+    "nameLong" : "Cannabis Indica"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 147,
+    "nameAbbrev" : "Cann-s.",
+    "nameLong" : "Cannabis Sativa"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 148,
+    "nameAbbrev" : "Canth.",
+    "nameLong" : "Cantharis Vesicatoria"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 149,
+    "nameAbbrev" : "Caps.",
+    "nameLong" : "Capsicum Annuum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 150,
+    "nameAbbrev" : "Carb-an.",
+    "nameLong" : "Carbo Animalis"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 151,
+    "nameAbbrev" : "Carb-v.",
+    "nameLong" : "Carbo Vegetabilis"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 152,
+    "nameAbbrev" : "Carb-ac.",
+    "nameLong" : "Carbolicum Acidum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 153,
+    "nameAbbrev" : "Carbn-h.",
+    "nameLong" : "Carboneum Hydrogenisatum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 154,
+    "nameAbbrev" : "Carbn-o.",
+    "nameLong" : "Carboneum Oxygenisatum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 155,
+    "nameAbbrev" : "Card-b.",
+    "nameLong" : "Carduus Benedictus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 156,
+    "nameAbbrev" : "Card-m.",
+    "nameLong" : "Carduus Marianus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 157,
+    "nameAbbrev" : "Carl.",
+    "nameLong" : "Carlsbad Aqua"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 158,
+    "nameAbbrev" : "Casc.",
+    "nameLong" : "Cascarilla"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 159,
+    "nameAbbrev" : "Casta-v.",
+    "nameLong" : "Castanea Vesca"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 160,
+    "nameAbbrev" : "Cast-eq.",
+    "nameLong" : "Castor Equi"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 161,
+    "nameAbbrev" : "Cast.",
+    "nameLong" : "Castoreum Canadense"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 162,
+    "nameAbbrev" : "Caul.",
+    "nameLong" : "Caulophyllum Thalictroides"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 163,
+    "nameAbbrev" : "Caust.",
+    "nameLong" : "Causticum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 164,
+    "nameAbbrev" : "Cean.",
+    "nameLong" : "Ceanothus Americanus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 165,
+    "nameAbbrev" : "Cedr.",
+    "nameLong" : "Cedron"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 166,
+    "nameAbbrev" : "Cench.",
+    "nameLong" : "Cenchris Contortrix"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 167,
+    "nameAbbrev" : "Cent.",
+    "nameLong" : "Centaurea Tagana"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 168,
+    "nameAbbrev" : "Cere-b.",
+    "nameLong" : "Cereus Bonplandii"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 169,
+    "nameAbbrev" : "Cere-s.",
+    "nameLong" : "Cereus Serpentinus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 170,
+    "nameAbbrev" : "Cham.",
+    "nameLong" : "Chamomilla"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 171,
+    "nameAbbrev" : "Chel.",
+    "nameLong" : "Chelidonium Majus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 172,
+    "nameAbbrev" : "Chen-a.",
+    "nameLong" : "Chenopodium Ambrosioides & Var. Anthelminticum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 173,
+    "nameAbbrev" : "Chen-v.",
+    "nameLong" : "Chenopodium Vulvaria"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 174,
+    "nameAbbrev" : "Chim-m.",
+    "nameLong" : "Chimaphila Maculata"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 175,
+    "nameAbbrev" : "Chim.",
+    "nameLong" : "Chimaphila Umbellata"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 176,
+    "nameAbbrev" : "Chin-b.",
+    "nameLong" : "China Boliviana"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 177,
+    "nameAbbrev" : "Chin.",
+    "nameLong" : "China Officinalis"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 178,
+    "nameAbbrev" : "Chin-ar.",
+    "nameLong" : "Chininum Arsenicosum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 179,
+    "nameAbbrev" : "Chin-s.",
+    "nameLong" : "Chininum Sulphuricum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 180,
+    "nameAbbrev" : "Chion.",
+    "nameLong" : "Chionanthus Virginica"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 181,
+    "nameAbbrev" : "Chlol.",
+    "nameLong" : "Chloralum Hydratum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 182,
+    "nameAbbrev" : "Chlf.",
+    "nameLong" : "Chloroformum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 183,
+    "nameAbbrev" : "Chlor.",
+    "nameLong" : "Chlorum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 184,
+    "nameAbbrev" : "Chol.",
+    "nameLong" : "Cholesterinum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 185,
+    "nameAbbrev" : "Chr-ac.",
+    "nameLong" : "Chromicum Acidum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 186,
+    "nameAbbrev" : "Chr-o.",
+    "nameLong" : "Chromium Oxydatum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 187,
+    "nameAbbrev" : "Cic.",
+    "nameLong" : "Cicuta Virosa"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 188,
+    "nameAbbrev" : "Cimx.",
+    "nameLong" : "Cimex Lectularius"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 189,
+    "nameAbbrev" : "Cimic.",
+    "nameLong" : "Cimicifuga Racemosa"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 190,
+    "nameAbbrev" : "Cina",
+    "nameLong" : "Cina Maritima"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 191,
+    "nameAbbrev" : "Cinch.",
+    "nameLong" : "Cinchoninum Sulphuricum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 192,
+    "nameAbbrev" : "Cinnb.",
+    "nameLong" : "Cinnabaris"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 193,
+    "nameAbbrev" : "Cinnam.",
+    "nameLong" : "Cinnamomum Zeylanicum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 194,
+    "nameAbbrev" : "Cist.",
+    "nameLong" : "Cistus Canadensis"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 195,
+    "nameAbbrev" : "Cit-ac.",
+    "nameLong" : "Citricum Acidum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 196,
+    "nameAbbrev" : "Cit-a.",
+    "nameLong" : "Citrus Aurantium L., Vulgaris, Bitter Orange"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 197,
+    "nameAbbrev" : "Clem.",
+    "nameLong" : "Clematis Erecta"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 198,
+    "nameAbbrev" : "Cob.",
+    "nameLong" : "Cobaltum Metallicum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 199,
+    "nameAbbrev" : "Coca",
+    "nameLong" : "Coca"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 200,
+    "nameAbbrev" : "Cocain.",
+    "nameLong" : "Cocainum Hydrochloricum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 201,
+    "nameAbbrev" : "Cocci-s.",
+    "nameLong" : "Coccinella Septempunctata"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 202,
+    "nameAbbrev" : "Cocc.",
+    "nameLong" : "Cocculus Indicus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 203,
+    "nameAbbrev" : "Coc-c.",
+    "nameLong" : "Coccus Cacti"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 204,
+    "nameAbbrev" : "Coch.",
+    "nameLong" : "Cochlearia Armoracia"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 205,
+    "nameAbbrev" : "Cod.",
+    "nameLong" : "Codeinum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 206,
+    "nameAbbrev" : "Coff.",
+    "nameLong" : "Coffea Cruda"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 207,
+    "nameAbbrev" : "Coff-t.",
+    "nameLong" : "Coffea Tosta"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 208,
+    "nameAbbrev" : "Colch.",
+    "nameLong" : "Colchicum Autumnale"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 209,
+    "nameAbbrev" : "Coll.",
+    "nameLong" : "Collinsonia Canadensis"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 210,
+    "nameAbbrev" : "Coloc.",
+    "nameLong" : "Colocynthis"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 211,
+    "nameAbbrev" : "Colos.",
+    "nameLong" : "Colostrum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 212,
+    "nameAbbrev" : "Com.",
+    "nameLong" : "Comocladia Dentata"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 213,
+    "nameAbbrev" : "Con.",
+    "nameLong" : "Conium Maculatum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 214,
+    "nameAbbrev" : "Conv.",
+    "nameLong" : "Convallaria Majalis"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 215,
+    "nameAbbrev" : "Convo-d.",
+    "nameLong" : "Convolvulus Duartinus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 216,
+    "nameAbbrev" : "Cop.",
+    "nameLong" : "Copaiva Officinalis"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 217,
+    "nameAbbrev" : "Cor-r.",
+    "nameLong" : "Corallium Rubrum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 218,
+    "nameAbbrev" : "Cori-r.",
+    "nameLong" : "Coriaria Ruscifolia"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 219,
+    "nameAbbrev" : "Corn.",
+    "nameLong" : "Cornus Circinata"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 220,
+    "nameAbbrev" : "Corn-f.",
+    "nameLong" : "Cornus Florida"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 221,
+    "nameAbbrev" : "Corn-s.",
+    "nameLong" : "Cornus Sericea"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 222,
+    "nameAbbrev" : "Cot.",
+    "nameLong" : "Cotyledon Umbilicus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 223,
+    "nameAbbrev" : "Croc.",
+    "nameLong" : "Crocus Sativus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 224,
+    "nameAbbrev" : "Crot-c.",
+    "nameLong" : "Crotalus Cascavella"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 225,
+    "nameAbbrev" : "Crot-h.",
+    "nameLong" : "Crotalus Horridus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 226,
+    "nameAbbrev" : "Croto-t.",
+    "nameLong" : "Croton Tiglium"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 227,
+    "nameAbbrev" : "Cub.",
+    "nameLong" : "Cubeba Officinalis"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 228,
+    "nameAbbrev" : "Culx.",
+    "nameLong" : "Culex Musca"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 229,
+    "nameAbbrev" : "Cund.",
+    "nameLong" : "Cundurango"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 230,
+    "nameAbbrev" : "Cupr-acet.",
+    "nameLong" : "Cuprum Aceticum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 231,
+    "nameAbbrev" : "Cupr-ar.",
+    "nameLong" : "Cuprum Arsenicosum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 232,
+    "nameAbbrev" : "Cupr.",
+    "nameLong" : "Cuprum Metallicum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 233,
+    "nameAbbrev" : "Cupr-n.",
+    "nameLong" : "Cuprum Nitricum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 234,
+    "nameAbbrev" : "Cupr-s.",
+    "nameLong" : "Cuprum Sulphuricum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 235,
+    "nameAbbrev" : "Cur.",
+    "nameLong" : "Curare"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 236,
+    "nameAbbrev" : "Cycl.",
+    "nameLong" : "Cyclamen Europaeum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 237,
+    "nameAbbrev" : "Cypr.",
+    "nameLong" : "Cypripedium Pubescens"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 238,
+    "nameAbbrev" : "Daph.",
+    "nameLong" : "Daphne Indica"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 239,
+    "nameAbbrev" : "Der.",
+    "nameLong" : "Derris Pinnata"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 240,
+    "nameAbbrev" : "Dig.",
+    "nameLong" : "Digitalis Purpurea"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 241,
+    "nameAbbrev" : "Dios.",
+    "nameLong" : "Dioscorea Villosa"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 242,
+    "nameAbbrev" : "Dirc.",
+    "nameLong" : "Dirca Palustris"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 243,
+    "nameAbbrev" : "Dol.",
+    "nameLong" : "Dolichos Pruriens"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 244,
+    "nameAbbrev" : "Dor.",
+    "nameLong" : "Doryphora Decemlineata"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 245,
+    "nameAbbrev" : "Dros.",
+    "nameLong" : "Drosera Rotundifolia"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 246,
+    "nameAbbrev" : "Dubin.",
+    "nameLong" : "Duboisinum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 247,
+    "nameAbbrev" : "Dulc.",
+    "nameLong" : "Dulcamara"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 248,
+    "nameAbbrev" : "Echi.",
+    "nameLong" : "Echinacea Angustifolia"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 249,
+    "nameAbbrev" : "Elaps",
+    "nameLong" : "Elaps Corallinus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 250,
+    "nameAbbrev" : "Elat.",
+    "nameLong" : "Elaterium"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 251,
+    "nameAbbrev" : "Epig.",
+    "nameLong" : "Epigea Repens"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 252,
+    "nameAbbrev" : "Equis.",
+    "nameLong" : "Equisetum Hyemale"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 253,
+    "nameAbbrev" : "Erech.",
+    "nameLong" : "Erechthites Hieracifolia"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 254,
+    "nameAbbrev" : "Erig.",
+    "nameLong" : "Erigeron Canadense"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 255,
+    "nameAbbrev" : "Ery-a.",
+    "nameLong" : "Eryngium Aquaticum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 256,
+    "nameAbbrev" : "Eucal.",
+    "nameLong" : "Eucalyptus Globulus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 257,
+    "nameAbbrev" : "Eug.",
+    "nameLong" : "Eugenia Jambos"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 258,
+    "nameAbbrev" : "Euon.",
+    "nameLong" : "Euonymus Europaea"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 259,
+    "nameAbbrev" : "Eup-per.",
+    "nameLong" : "Eupatorium Perfoliatum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 260,
+    "nameAbbrev" : "Eup-pur.",
+    "nameLong" : "Eupatorium Purpureum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 261,
+    "nameAbbrev" : "Euph.",
+    "nameLong" : "Euphorbium Officinarum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 262,
+    "nameAbbrev" : "Euphr.",
+    "nameLong" : "Euphrasia Officinalis"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 263,
+    "nameAbbrev" : "Eupi.",
+    "nameLong" : "Eupionum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 264,
+    "nameAbbrev" : "Fago.",
+    "nameLong" : "Fagopyrum Esculentum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 265,
+    "nameAbbrev" : "Ferr-acet.",
+    "nameLong" : "Ferrum Aceticum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 266,
+    "nameAbbrev" : "Ferr-ar.",
+    "nameLong" : "Ferrum Arsenicosum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 267,
+    "nameAbbrev" : "Ferr-i.",
+    "nameLong" : "Ferrum Iodatum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 268,
+    "nameAbbrev" : "Ferr-ma.",
+    "nameLong" : "Ferrum Magneticum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 269,
+    "nameAbbrev" : "Ferr.",
+    "nameLong" : "Ferrum Metallicum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 270,
+    "nameAbbrev" : "Ferr-m.",
+    "nameLong" : "Ferrum Muriaticum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 271,
+    "nameAbbrev" : "Ferr-p.",
+    "nameLong" : "Ferrum Phosphoricum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 272,
+    "nameAbbrev" : "Ferr-pic.",
+    "nameLong" : "Ferrum Picricum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 273,
+    "nameAbbrev" : "Ferr-s.",
+    "nameLong" : "Ferrum Sulphuricum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 274,
+    "nameAbbrev" : "Fil.",
+    "nameLong" : "Filix Mas"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 275,
+    "nameAbbrev" : "Fl-ac.",
+    "nameLong" : "Fluoricum Acidum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 276,
+    "nameAbbrev" : "Form.",
+    "nameLong" : "Formica Rufa"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 277,
+    "nameAbbrev" : "Frag.",
+    "nameLong" : "Fragaria Vesca"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 278,
+    "nameAbbrev" : "Gad.",
+    "nameLong" : "Gadus Morrhua"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 279,
+    "nameAbbrev" : "Gall-ac.",
+    "nameLong" : "Gallicum Acidum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 280,
+    "nameAbbrev" : "Gamb.",
+    "nameLong" : "Gambogia"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 281,
+    "nameAbbrev" : "Gels.",
+    "nameLong" : "Gelsemium Sempervirens"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 282,
+    "nameAbbrev" : "Genist.",
+    "nameLong" : "Genista Tinctoria"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 283,
+    "nameAbbrev" : "Gent-c.",
+    "nameLong" : "Gentiana Cruciata"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 284,
+    "nameAbbrev" : "Gent-l.",
+    "nameLong" : "Gentiana Lutea"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 285,
+    "nameAbbrev" : "Ger.",
+    "nameLong" : "Geranium Maculatum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 286,
+    "nameAbbrev" : "Get.",
+    "nameLong" : "Gettysburg Aqua"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 287,
+    "nameAbbrev" : "Gins.",
+    "nameLong" : "Ginseng Quinquefolium"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 288,
+    "nameAbbrev" : "Glon.",
+    "nameLong" : "Glonoinum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 289,
+    "nameAbbrev" : "Gnaph.",
+    "nameLong" : "Gnaphalium Polycephalum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 290,
+    "nameAbbrev" : "Goss.",
+    "nameLong" : "Gossypium Herbaceum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 291,
+    "nameAbbrev" : "Gran.",
+    "nameLong" : "Granatum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 292,
+    "nameAbbrev" : "Graph.",
+    "nameLong" : "Graphites"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 293,
+    "nameAbbrev" : "Grat.",
+    "nameLong" : "Gratiola Officinalis"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 294,
+    "nameAbbrev" : "Grin.",
+    "nameLong" : "Grindelia Robusta"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 295,
+    "nameAbbrev" : "Guai.",
+    "nameLong" : "Guajacum Officinale"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 296,
+    "nameAbbrev" : "Guano",
+    "nameLong" : "Guano Australis"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 297,
+    "nameAbbrev" : "Guare.",
+    "nameLong" : "Guarea Trichiloides"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 298,
+    "nameAbbrev" : "Gymn.",
+    "nameLong" : "Gymnocladus Canadensis"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 299,
+    "nameAbbrev" : "Haem.",
+    "nameLong" : "Haematoxylon Campechianum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 300,
+    "nameAbbrev" : "Ham.",
+    "nameLong" : "Hamamelis Virginiana"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 301,
+    "nameAbbrev" : "Hedeo.",
+    "nameLong" : "Hedeoma Pulegioides"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 302,
+    "nameAbbrev" : "Hell.",
+    "nameLong" : "Helleborus Niger"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 303,
+    "nameAbbrev" : "Helo.",
+    "nameLong" : "Heloderma-h. + -s. (old abbr.)"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 304,
+    "nameAbbrev" : "Helon.",
+    "nameLong" : "Helonias Dioica"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 305,
+    "nameAbbrev" : "Hep.",
+    "nameLong" : "Hepar Sulphur"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 306,
+    "nameAbbrev" : "Hipp.",
+    "nameLong" : "Hippomanes"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 307,
+    "nameAbbrev" : "Hippoz.",
+    "nameLong" : "Hippozaeninum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 308,
+    "nameAbbrev" : "Hom.",
+    "nameLong" : "Homarus Gammarus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 309,
+    "nameAbbrev" : "Hura",
+    "nameLong" : "Hura Crepitans, Brasiliensis"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 310,
+    "nameAbbrev" : "Hydrang.",
+    "nameLong" : "Hydrangea Arborescens"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 311,
+    "nameAbbrev" : "Hydr.",
+    "nameLong" : "Hydrastis Canadensis"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 312,
+    "nameAbbrev" : "Hydrc.",
+    "nameLong" : "Hydrocotyle Asiatica"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 313,
+    "nameAbbrev" : "Hydr-ac.",
+    "nameLong" : "Hydrocyanicum Acidum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 314,
+    "nameAbbrev" : "Hyos.",
+    "nameLong" : "Hyoscyamus Niger"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 315,
+    "nameAbbrev" : "Hyper.",
+    "nameLong" : "Hypericum Perforatum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 316,
+    "nameAbbrev" : "Iber.",
+    "nameLong" : "Iberis Amara"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 317,
+    "nameAbbrev" : "Ictod.",
+    "nameLong" : "Ictodes Foetida"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 318,
+    "nameAbbrev" : "Ign.",
+    "nameLong" : "Ignatia Amara"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 319,
+    "nameAbbrev" : "Indg.",
+    "nameLong" : "Indigo Tinctoria"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 320,
+    "nameAbbrev" : "Ind.",
+    "nameLong" : "Indium Metallicum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 321,
+    "nameAbbrev" : "Ingluv.",
+    "nameLong" : "Ingluvin"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 322,
+    "nameAbbrev" : "Inul.",
+    "nameLong" : "Inula Helenium"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 323,
+    "nameAbbrev" : "Iod.",
+    "nameLong" : "Iodium"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 324,
+    "nameAbbrev" : "Iodof.",
+    "nameLong" : "Iodoformium"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 325,
+    "nameAbbrev" : "Ip.",
+    "nameLong" : "Ipecacuanha"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 326,
+    "nameAbbrev" : "Ipom.",
+    "nameLong" : "Ipomoea Purpurea"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 327,
+    "nameAbbrev" : "Irid.",
+    "nameLong" : "Iridium Metallicum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 328,
+    "nameAbbrev" : "Iris-fl.",
+    "nameLong" : "Iris Florentina"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 329,
+    "nameAbbrev" : "Iris-foe.",
+    "nameLong" : "Iris Foetidissima"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 330,
+    "nameAbbrev" : "Iris",
+    "nameLong" : "Iris Versicolor"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 331,
+    "nameAbbrev" : "Jab.",
+    "nameLong" : "Jaborandi"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 332,
+    "nameAbbrev" : "Jac-c.",
+    "nameLong" : "Jacaranda Caroba"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 333,
+    "nameAbbrev" : "Jac.",
+    "nameLong" : "Jacaranda Gualandai"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 334,
+    "nameAbbrev" : "Jal.",
+    "nameLong" : "Jalapa"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 335,
+    "nameAbbrev" : "Jatr.",
+    "nameLong" : "Jatropha Curcas"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 336,
+    "nameAbbrev" : "Jug-c.",
+    "nameLong" : "Juglans Cinerea"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 337,
+    "nameAbbrev" : "Jug-r.",
+    "nameLong" : "Juglans Regia"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 338,
+    "nameAbbrev" : "Junc.",
+    "nameLong" : "Juncus Effusus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 339,
+    "nameAbbrev" : "Juni-v.",
+    "nameLong" : "Juniperus Virginiana"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 340,
+    "nameAbbrev" : "Kali-acet.",
+    "nameLong" : "Kalium Aceticum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 341,
+    "nameAbbrev" : "Kali-ar.",
+    "nameLong" : "Kalium Arsenicosum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 342,
+    "nameAbbrev" : "Kali-bi.",
+    "nameLong" : "Kalium Bichromicum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 343,
+    "nameAbbrev" : "Kali-br.",
+    "nameLong" : "Kalium Bromatum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 344,
+    "nameAbbrev" : "Kali-c.",
+    "nameLong" : "Kalium Carbonicum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 345,
+    "nameAbbrev" : "Kali-chl.",
+    "nameLong" : "Kalium Chloricum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 346,
+    "nameAbbrev" : "Kali-cy.",
+    "nameLong" : "Kalium Cyanatum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 347,
+    "nameAbbrev" : "Kali-fcy.",
+    "nameLong" : "Kalium Ferrocyanatum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 348,
+    "nameAbbrev" : "Kali-i.",
+    "nameLong" : "Kalium Iodatum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 349,
+    "nameAbbrev" : "Kali-m.",
+    "nameLong" : "Kalium Muriaticum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 350,
+    "nameAbbrev" : "Kali-n.",
+    "nameLong" : "Kalium Nitricum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 351,
+    "nameAbbrev" : "Kali-ox.",
+    "nameLong" : "Kalium Oxalicum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 352,
+    "nameAbbrev" : "Kali-ma.",
+    "nameLong" : "Kalium Permanganatum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 353,
+    "nameAbbrev" : "Kali-p.",
+    "nameLong" : "Kalium Phosphoricum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 354,
+    "nameAbbrev" : "Kali-s.",
+    "nameLong" : "Kalium Sulphuricum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 355,
+    "nameAbbrev" : "Kalm.",
+    "nameLong" : "Kalmia Latifolia"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 356,
+    "nameAbbrev" : "Kaol.",
+    "nameLong" : "Kaolinum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 357,
+    "nameAbbrev" : "Kiss.",
+    "nameLong" : "Kissingen Aqua"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 358,
+    "nameAbbrev" : "Kreos.",
+    "nameLong" : "Kreosotum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 359,
+    "nameAbbrev" : "Lac-c.",
+    "nameLong" : "Lac Caninum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 360,
+    "nameAbbrev" : "Lac-f.",
+    "nameLong" : "Lac Felinum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 361,
+    "nameAbbrev" : "Lac-d.",
+    "nameLong" : "Lac Vaccinum Defloratum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 362,
+    "nameAbbrev" : "Lach.",
+    "nameLong" : "Lachesis Muta"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 363,
+    "nameAbbrev" : "Lachn.",
+    "nameLong" : "Lachnanthes Tinctoria"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 364,
+    "nameAbbrev" : "Lac-ac.",
+    "nameLong" : "Lacticum Acidum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 365,
+    "nameAbbrev" : "Lact.",
+    "nameLong" : "Lactuca Virosa"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 366,
+    "nameAbbrev" : "Lam.",
+    "nameLong" : "Lamium Album"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 367,
+    "nameAbbrev" : "Lap-a.",
+    "nameLong" : "Lapis Albus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 368,
+    "nameAbbrev" : "Lappa",
+    "nameLong" : "Lappa Arctium"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 369,
+    "nameAbbrev" : "Lath.",
+    "nameLong" : "Lathyrus Sativus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 370,
+    "nameAbbrev" : "Lat-m.",
+    "nameLong" : "Latrodectus Mactans"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 371,
+    "nameAbbrev" : "Laur.",
+    "nameLong" : "Laurocerasus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 372,
+    "nameAbbrev" : "Lava-h.",
+    "nameLong" : "Lava Hekla"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 373,
+    "nameAbbrev" : "Lec.",
+    "nameLong" : "Lecithinum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 374,
+    "nameAbbrev" : "Led.",
+    "nameLong" : "Ledum Palustre"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 375,
+    "nameAbbrev" : "Lem-m.",
+    "nameLong" : "Lemna Minor"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 376,
+    "nameAbbrev" : "Lepi.",
+    "nameLong" : "Lepidium Bonariense"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 377,
+    "nameAbbrev" : "Lept.",
+    "nameLong" : "Leptandra Virginica"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 378,
+    "nameAbbrev" : "Lil-t.",
+    "nameLong" : "Lilium Tigrinum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 379,
+    "nameAbbrev" : "Linu-c.",
+    "nameLong" : "Linum Catharticum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 380,
+    "nameAbbrev" : "Lith-c.",
+    "nameLong" : "Lithium Carbonicum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 381,
+    "nameAbbrev" : "Lith-m.",
+    "nameLong" : "Lithium Muriaticum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 382,
+    "nameAbbrev" : "Lob-c.",
+    "nameLong" : "Lobelia Cardinalis"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 383,
+    "nameAbbrev" : "Lob.",
+    "nameLong" : "Lobelia Inflata"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 384,
+    "nameAbbrev" : "Lob-s.",
+    "nameLong" : "Lobelia Syphilitica"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 385,
+    "nameAbbrev" : "Lup.",
+    "nameLong" : "Lupulus Humulus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 386,
+    "nameAbbrev" : "Lycpr.",
+    "nameLong" : "Lycopersicon Esculentum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 387,
+    "nameAbbrev" : "Lyc.",
+    "nameLong" : "Lycopodium Clavatum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 388,
+    "nameAbbrev" : "Lycps.",
+    "nameLong" : "Lycopus Virginicus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 389,
+    "nameAbbrev" : "Lyss.",
+    "nameLong" : "Lyssinum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 390,
+    "nameAbbrev" : "Mag-c.",
+    "nameLong" : "Magnesium Carbonicum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 391,
+    "nameAbbrev" : "Mag-m.",
+    "nameLong" : "Magnesium Muriaticum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 392,
+    "nameAbbrev" : "Mag-p.",
+    "nameLong" : "Magnesium Phosphoricum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 393,
+    "nameAbbrev" : "Mag-s.",
+    "nameLong" : "Magnesium Sulphuricum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 394,
+    "nameAbbrev" : "M-arct.",
+    "nameLong" : "Magnetis Polus Arcticus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 395,
+    "nameAbbrev" : "M-aust.",
+    "nameLong" : "Magnetis Polus Australis"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 396,
+    "nameAbbrev" : "Maland.",
+    "nameLong" : "Malandrinum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 397,
+    "nameAbbrev" : "Malar.",
+    "nameLong" : "Malaria Nosode"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 398,
+    "nameAbbrev" : "Manc.",
+    "nameLong" : "Mancinella"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 399,
+    "nameAbbrev" : "Mang-m.",
+    "nameLong" : "Manganum Muriaticum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 400,
+    "nameAbbrev" : "Mang.",
+    "nameLong" : "Manganum-act. + -c. (old abbr.)"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 401,
+    "nameAbbrev" : "Med.",
+    "nameLong" : "Medorrhinum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 402,
+    "nameAbbrev" : "Meli.",
+    "nameLong" : "Melilotus Officinalis"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 403,
+    "nameAbbrev" : "Menis.",
+    "nameLong" : "Menispermum Canadense"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 404,
+    "nameAbbrev" : "Menth.",
+    "nameLong" : "Mentha Piperita"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 405,
+    "nameAbbrev" : "Meny.",
+    "nameLong" : "Menyanthes Trifoliata"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 406,
+    "nameAbbrev" : "Meph.",
+    "nameLong" : "Mephitis Putorius"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 407,
+    "nameAbbrev" : "Merl.",
+    "nameLong" : "Mercurialis Perennis"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 408,
+    "nameAbbrev" : "Merc-acet.",
+    "nameLong" : "Mercurius Aceticus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 409,
+    "nameAbbrev" : "Merc-c.",
+    "nameLong" : "Mercurius Corrosivus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 410,
+    "nameAbbrev" : "Merc-cy.",
+    "nameLong" : "Mercurius Cyanatus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 411,
+    "nameAbbrev" : "Merc-d.",
+    "nameLong" : "Mercurius Dulcis"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 412,
+    "nameAbbrev" : "Merc-i-f.",
+    "nameLong" : "Mercurius Iodatus Flavus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 413,
+    "nameAbbrev" : "Merc-i-r.",
+    "nameLong" : "Mercurius Iodatus Ruber"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 414,
+    "nameAbbrev" : "Merc-n.",
+    "nameLong" : "Mercurius Nitricus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 415,
+    "nameAbbrev" : "Merc-pr-r.",
+    "nameLong" : "Mercurius Praecipitatus Ruber"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 416,
+    "nameAbbrev" : "Merc.",
+    "nameLong" : "Mercurius Solubilis"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 417,
+    "nameAbbrev" : "Merc-s.",
+    "nameLong" : "Mercurius Sulphuricus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 418,
+    "nameAbbrev" : "Mez.",
+    "nameLong" : "Mezereum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 419,
+    "nameAbbrev" : "Mill.",
+    "nameLong" : "Millefolium Herba"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 420,
+    "nameAbbrev" : "Mit.",
+    "nameLong" : "Mitchella Repens"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 421,
+    "nameAbbrev" : "Morph.",
+    "nameLong" : "Morphinum And Salts (old abbr.)"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 422,
+    "nameAbbrev" : "Mosch.",
+    "nameLong" : "Moschus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 423,
+    "nameAbbrev" : "Murx.",
+    "nameLong" : "Murex Purpurea"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 424,
+    "nameAbbrev" : "Mur-ac.",
+    "nameLong" : "Muriaticum Acidum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 425,
+    "nameAbbrev" : "Mygal.",
+    "nameLong" : "Mygale Lasiodora"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 426,
+    "nameAbbrev" : "Myos.",
+    "nameLong" : "Myosotis Symphytifolia"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 427,
+    "nameAbbrev" : "Myric.",
+    "nameLong" : "Myrica Cerifera"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 428,
+    "nameAbbrev" : "Myris.",
+    "nameLong" : "Myristica Sebifera"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 429,
+    "nameAbbrev" : "Myrt-c.",
+    "nameLong" : "Myrtus Communis"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 430,
+    "nameAbbrev" : "Naja",
+    "nameLong" : "Naja Tripudians"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 431,
+    "nameAbbrev" : "Naphtin.",
+    "nameLong" : "Naphthalinum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 432,
+    "nameAbbrev" : "Narcot.",
+    "nameLong" : "Narcotinum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 433,
+    "nameAbbrev" : "Nat-acet.",
+    "nameLong" : "Natrium Aceticum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 434,
+    "nameAbbrev" : "Nat-ar.",
+    "nameLong" : "Natrium Arsenicosum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 435,
+    "nameAbbrev" : "Nat-c.",
+    "nameLong" : "Natrium Carbonicum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 436,
+    "nameAbbrev" : "Nat-hchls.",
+    "nameLong" : "Natrium Hypochlorosum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 437,
+    "nameAbbrev" : "Nat-m.",
+    "nameLong" : "Natrium Muriaticum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 438,
+    "nameAbbrev" : "Nat-n.",
+    "nameLong" : "Natrium Nitricum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 439,
+    "nameAbbrev" : "Nat-p.",
+    "nameLong" : "Natrium Phosphoricum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 440,
+    "nameAbbrev" : "Nat-s.",
+    "nameLong" : "Natrium Sulphuricum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 441,
+    "nameAbbrev" : "Nicc.",
+    "nameLong" : "Niccolum Metallicum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 442,
+    "nameAbbrev" : "Nicc-s.",
+    "nameLong" : "Niccolum Sulphuricum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 443,
+    "nameAbbrev" : "Nit-s-d.",
+    "nameLong" : "Nitri Spiritus Dulcis"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 444,
+    "nameAbbrev" : "Nit-ac.",
+    "nameLong" : "Nitricum Acidum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 445,
+    "nameAbbrev" : "Nitrob.",
+    "nameLong" : "Nitrobenzolum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 446,
+    "nameAbbrev" : "Nitro-o.",
+    "nameLong" : "Nitrogenium Oxygenatum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 447,
+    "nameAbbrev" : "Nit-m-ac.",
+    "nameLong" : "Nitromuriaticum Acidum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 448,
+    "nameAbbrev" : "Nuph.",
+    "nameLong" : "Nuphar Luteum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 449,
+    "nameAbbrev" : "Nux-m.",
+    "nameLong" : "Nux Moschata"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 450,
+    "nameAbbrev" : "Nux-v.",
+    "nameLong" : "Nux Vomica"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 451,
+    "nameAbbrev" : "Nym.",
+    "nameLong" : "Nymphaea Odorata"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 452,
+    "nameAbbrev" : "Oci.",
+    "nameLong" : "Ocimum Canum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 453,
+    "nameAbbrev" : "Oena.",
+    "nameLong" : "Oenanthe Crocata"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 454,
+    "nameAbbrev" : "Olnd.",
+    "nameLong" : "Oleander"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 455,
+    "nameAbbrev" : "Ol-an.",
+    "nameLong" : "Oleum Animale Aethereum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 456,
+    "nameAbbrev" : "Ol-j.",
+    "nameLong" : "Oleum Jecoris Aselli"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 457,
+    "nameAbbrev" : "Onos.",
+    "nameLong" : "Onosmodium Virginianum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 458,
+    "nameAbbrev" : "Op.",
+    "nameLong" : "Opium"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 459,
+    "nameAbbrev" : "Orig.",
+    "nameLong" : "Origanum Majorana"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 460,
+    "nameAbbrev" : "Osm.",
+    "nameLong" : "Osmium Met. + -ac. (old abbr.)"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 461,
+    "nameAbbrev" : "Ov.",
+    "nameLong" : "Ovininum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 462,
+    "nameAbbrev" : "Ox-ac.",
+    "nameLong" : "Oxalicum Acidum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 463,
+    "nameAbbrev" : "Oxyt.",
+    "nameLong" : "Oxytropis Lamberti"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 464,
+    "nameAbbrev" : "Ozone",
+    "nameLong" : "Ozonum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 465,
+    "nameAbbrev" : "Paeon.",
+    "nameLong" : "Paeonia Officinalis"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 466,
+    "nameAbbrev" : "Pall.",
+    "nameLong" : "Palladium Metallicum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 467,
+    "nameAbbrev" : "Pareir.",
+    "nameLong" : "Pareira Brava"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 468,
+    "nameAbbrev" : "Par.",
+    "nameLong" : "Paris Quadrifolia"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 469,
+    "nameAbbrev" : "Paull-p.",
+    "nameLong" : "Paullinia Pinnata"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 470,
+    "nameAbbrev" : "Ped.",
+    "nameLong" : "Pediculus Capitis"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 471,
+    "nameAbbrev" : "Pen.",
+    "nameLong" : "Penthorum Sedoides"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 472,
+    "nameAbbrev" : "Peti.",
+    "nameLong" : "Petiveria Tetandra"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 473,
+    "nameAbbrev" : "Petr.",
+    "nameLong" : "Petroleum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 474,
+    "nameAbbrev" : "Petros.",
+    "nameLong" : "Petroselinum Sativum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 475,
+    "nameAbbrev" : "Phal.",
+    "nameLong" : "Phallus Impudicus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 476,
+    "nameAbbrev" : "Phel.",
+    "nameLong" : "Phellandrium Aquaticum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 477,
+    "nameAbbrev" : "Ph-ac.",
+    "nameLong" : "Phosphoricum Acidum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 478,
+    "nameAbbrev" : "Phos.",
+    "nameLong" : "Phosphorus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 479,
+    "nameAbbrev" : "Phys.",
+    "nameLong" : "Physostigma Venenosum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 480,
+    "nameAbbrev" : "Phyt.",
+    "nameLong" : "Phytolacca Decandra"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 481,
+    "nameAbbrev" : "Pic-ac.",
+    "nameLong" : "Picricum Acidum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 482,
+    "nameAbbrev" : "Pin-s.",
+    "nameLong" : "Pinus Silvestris"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 483,
+    "nameAbbrev" : "Pip-m.",
+    "nameLong" : "Piper Methysticum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 484,
+    "nameAbbrev" : "Pip-n.",
+    "nameLong" : "Piper Nigrum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 485,
+    "nameAbbrev" : "Plan.",
+    "nameLong" : "Plantago Major"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 486,
+    "nameAbbrev" : "Plat.",
+    "nameLong" : "Platinum Metallicum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 487,
+    "nameAbbrev" : "Plat-m.",
+    "nameLong" : "Platinum Muriaticum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 488,
+    "nameAbbrev" : "Plect.",
+    "nameLong" : "Plectranthus Fruticosus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 489,
+    "nameAbbrev" : "Plumbg.",
+    "nameLong" : "Plumbago Littoralis"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 490,
+    "nameAbbrev" : "Plb.",
+    "nameLong" : "Plumbum Metallicum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 491,
+    "nameAbbrev" : "Podo.",
+    "nameLong" : "Podophyllum Peltatum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 492,
+    "nameAbbrev" : "Polyg.",
+    "nameLong" : "Polygonum Hydropiperoides"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 493,
+    "nameAbbrev" : "Pop.",
+    "nameLong" : "Populus Tremuloides"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 494,
+    "nameAbbrev" : "Prun-p.",
+    "nameLong" : "Prunus Padus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 495,
+    "nameAbbrev" : "Prun.",
+    "nameLong" : "Prunus Spinosa"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 496,
+    "nameAbbrev" : "Psor.",
+    "nameLong" : "Psorinum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 497,
+    "nameAbbrev" : "Ptel.",
+    "nameLong" : "Ptelea Trifoliata"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 498,
+    "nameAbbrev" : "Pulx.",
+    "nameLong" : "Pulex Irritans"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 499,
+    "nameAbbrev" : "Puls-n.",
+    "nameLong" : "Pulsatilla Nuttaliana"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 500,
+    "nameAbbrev" : "Puls.",
+    "nameLong" : "Pulsatilla Pratensis"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 501,
+    "nameAbbrev" : "Pyrog.",
+    "nameLong" : "Pyrogenium"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 502,
+    "nameAbbrev" : "Pyrus",
+    "nameLong" : "Pyrus Americana"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 503,
+    "nameAbbrev" : "Rad-br.",
+    "nameLong" : "Radium Bromatum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 504,
+    "nameAbbrev" : "Ran-a.",
+    "nameLong" : "Ranunculus Acris"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 505,
+    "nameAbbrev" : "Ran-b.",
+    "nameLong" : "Ranunculus Bulbosus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 506,
+    "nameAbbrev" : "Ran-s.",
+    "nameLong" : "Ranunculus Sceleratus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 507,
+    "nameAbbrev" : "Raph.",
+    "nameLong" : "Raphanus Sativus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 508,
+    "nameAbbrev" : "Rat.",
+    "nameLong" : "Ratanhia Peruviana"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 509,
+    "nameAbbrev" : "Rheum",
+    "nameLong" : "Rheum Palmatum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 510,
+    "nameAbbrev" : "Rhod.",
+    "nameLong" : "Rhododendron Chrysanthum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 511,
+    "nameAbbrev" : "Rhus-a.",
+    "nameLong" : "Rhus Aromatica"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 512,
+    "nameAbbrev" : "Rhus-g.",
+    "nameLong" : "Rhus Glabra"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 513,
+    "nameAbbrev" : "Rhus-r.",
+    "nameLong" : "Rhus Radicans"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 514,
+    "nameAbbrev" : "Rhus-t.",
+    "nameLong" : "Rhus Toxicodendron"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 515,
+    "nameAbbrev" : "Rhus-v.",
+    "nameLong" : "Rhus Venenata"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 516,
+    "nameAbbrev" : "Rob.",
+    "nameLong" : "Robinia Pseudacacia"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 517,
+    "nameAbbrev" : "Rumx.",
+    "nameLong" : "Rumex Crispus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 518,
+    "nameAbbrev" : "Ruta",
+    "nameLong" : "Ruta Graveolens"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 519,
+    "nameAbbrev" : "Sabad.",
+    "nameLong" : "Sabadilla"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 520,
+    "nameAbbrev" : "Sabal",
+    "nameLong" : "Sabal Serrulata"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 521,
+    "nameAbbrev" : "Sabin.",
+    "nameLong" : "Sabina"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 522,
+    "nameAbbrev" : "Sac-alb.",
+    "nameLong" : "Saccharum Album"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 523,
+    "nameAbbrev" : "Sac-l.",
+    "nameLong" : "Saccharum Lactis"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 524,
+    "nameAbbrev" : "Salam.",
+    "nameLong" : "Salamandra Maculata"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 525,
+    "nameAbbrev" : "Sal-ac.",
+    "nameLong" : "Salicylicum Acidum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 526,
+    "nameAbbrev" : "Salx-n.",
+    "nameLong" : "Salix Nigra"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 527,
+    "nameAbbrev" : "Samb.",
+    "nameLong" : "Sambucus Nigra"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 528,
+    "nameAbbrev" : "Sang.",
+    "nameLong" : "Sanguinaria Canadensis"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 529,
+    "nameAbbrev" : "Sanguin-n.",
+    "nameLong" : "Sanguinarinum Nitricum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 530,
+    "nameAbbrev" : "Sanic.",
+    "nameLong" : "Sanicula Aqua"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 531,
+    "nameAbbrev" : "Sant.",
+    "nameLong" : "Santoninum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 532,
+    "nameAbbrev" : "Sarr.",
+    "nameLong" : "Sarracenia Purpurea"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 533,
+    "nameAbbrev" : "Sars.",
+    "nameLong" : "Sarsaparilla Officinalis"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 534,
+    "nameAbbrev" : "Scut.",
+    "nameLong" : "Scutellaria Lateriflora"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 535,
+    "nameAbbrev" : "Sec.",
+    "nameLong" : "Secale Cornutum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 536,
+    "nameAbbrev" : "Sel.",
+    "nameLong" : "Selenium Metallicum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 537,
+    "nameAbbrev" : "Senec.",
+    "nameLong" : "Senecio Aureus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 538,
+    "nameAbbrev" : "Seneg.",
+    "nameLong" : "Senega"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 539,
+    "nameAbbrev" : "Senn.",
+    "nameLong" : "Senna"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 540,
+    "nameAbbrev" : "Sep.",
+    "nameLong" : "Sepia Officinalis"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 541,
+    "nameAbbrev" : "Serp.",
+    "nameLong" : "Serpentaria Aristolochia"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 542,
+    "nameAbbrev" : "Sil.",
+    "nameLong" : "Silicea Terra"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 543,
+    "nameAbbrev" : "Sin-a.",
+    "nameLong" : "Sinapis Alba"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 544,
+    "nameAbbrev" : "Sin-n.",
+    "nameLong" : "Sinapis Nigra"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 545,
+    "nameAbbrev" : "Sol-m.",
+    "nameLong" : "Solanum Mammosum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 546,
+    "nameAbbrev" : "Sol-n.",
+    "nameLong" : "Solanum Nigrum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 547,
+    "nameAbbrev" : "Sol-t-ae.",
+    "nameLong" : "Solanum Tuberosum Aegrotans"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 548,
+    "nameAbbrev" : "Solid.",
+    "nameLong" : "Solidago Virgaurea"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 549,
+    "nameAbbrev" : "Spig.",
+    "nameLong" : "Spigelia Anthelmia"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 550,
+    "nameAbbrev" : "Spig-m.",
+    "nameLong" : "Spigelia Marylandica"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 551,
+    "nameAbbrev" : "Spira.",
+    "nameLong" : "Spiranthes Autumnalis"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 552,
+    "nameAbbrev" : "Spong.",
+    "nameLong" : "Spongia Tosta"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 553,
+    "nameAbbrev" : "Squil.",
+    "nameLong" : "Squilla Maritima"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 554,
+    "nameAbbrev" : "Stann.",
+    "nameLong" : "Stannum Metallicum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 555,
+    "nameAbbrev" : "Staph.",
+    "nameLong" : "Staphysagria"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 556,
+    "nameAbbrev" : "Stel.",
+    "nameLong" : "Stellaria Media"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 557,
+    "nameAbbrev" : "Stict.",
+    "nameLong" : "Sticta Pulmonaria"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 558,
+    "nameAbbrev" : "Still.",
+    "nameLong" : "Stillingia Sylvatica"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 559,
+    "nameAbbrev" : "Stram.",
+    "nameLong" : "Stramonium"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 560,
+    "nameAbbrev" : "Stront-c.",
+    "nameLong" : "Strontium Carbonicum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 561,
+    "nameAbbrev" : "Stroph.",
+    "nameLong" : "Strophanthus Hispidus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 562,
+    "nameAbbrev" : "Stry.",
+    "nameLong" : "Strychninum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 563,
+    "nameAbbrev" : "Sulph.",
+    "nameLong" : "Sulphur"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 564,
+    "nameAbbrev" : "Sul-i.",
+    "nameLong" : "Sulphur Iodatum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 565,
+    "nameAbbrev" : "Sul-ac.",
+    "nameLong" : "Sulphuricum Acidum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 566,
+    "nameAbbrev" : "Sumb.",
+    "nameLong" : "Sumbulus Moschatus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 567,
+    "nameAbbrev" : "Sym-r.",
+    "nameLong" : "Symphoricarpus Racemosus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 568,
+    "nameAbbrev" : "Symph.",
+    "nameLong" : "Symphytum Officinale"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 569,
+    "nameAbbrev" : "Syph.",
+    "nameLong" : "Syphilinum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 570,
+    "nameAbbrev" : "Tab.",
+    "nameLong" : "Tabacum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 571,
+    "nameAbbrev" : "Tanac.",
+    "nameLong" : "Tanacetum Vulgare"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 572,
+    "nameAbbrev" : "Tarax.",
+    "nameLong" : "Taraxacum Officinale"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 573,
+    "nameAbbrev" : "Tarent-c.",
+    "nameLong" : "Tarentula Cubensis"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 574,
+    "nameAbbrev" : "Tarent.",
+    "nameLong" : "Tarentula Hispanica"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 575,
+    "nameAbbrev" : "Tart-ac.",
+    "nameLong" : "Tartaricum Acidum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 576,
+    "nameAbbrev" : "Tax.",
+    "nameLong" : "Taxus Baccata"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 577,
+    "nameAbbrev" : "Tell.",
+    "nameLong" : "Tellurium"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 578,
+    "nameAbbrev" : "Tep.",
+    "nameLong" : "Teplitz Aqua"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 579,
+    "nameAbbrev" : "Ter.",
+    "nameLong" : "Terebinthiniae Oleum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 580,
+    "nameAbbrev" : "Teucr.",
+    "nameLong" : "Teucrium Marum Verum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 581,
+    "nameAbbrev" : "Thal.",
+    "nameLong" : "Thallium Met. + -act. (old abbr.)"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 582,
+    "nameAbbrev" : "Thea",
+    "nameLong" : "Thea Chinensis"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 583,
+    "nameAbbrev" : "Ther.",
+    "nameLong" : "Theridion Curassavicum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 584,
+    "nameAbbrev" : "Thlaspi",
+    "nameLong" : "Thlaspi Bursa Pastoris"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 585,
+    "nameAbbrev" : "Thuj.",
+    "nameLong" : "Thuja Occidentalis"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 586,
+    "nameAbbrev" : "Til.",
+    "nameLong" : "Tilia Europaea"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 587,
+    "nameAbbrev" : "Tong.",
+    "nameLong" : "Tongo Odorata"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 588,
+    "nameAbbrev" : "Trif-p.",
+    "nameLong" : "Trifolium Pratense"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 589,
+    "nameAbbrev" : "Tril.",
+    "nameLong" : "Trillium Pendulum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 590,
+    "nameAbbrev" : "Trio.",
+    "nameLong" : "Triosteum Perfoliatum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 591,
+    "nameAbbrev" : "Trom.",
+    "nameLong" : "Trombidium Muscae Domesticae"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 592,
+    "nameAbbrev" : "Tub.",
+    "nameLong" : "Tuberculinum Bovinum Kent"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 593,
+    "nameAbbrev" : "Tus-p.",
+    "nameLong" : "Tussilago Petasites"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 594,
+    "nameAbbrev" : "Upa.",
+    "nameLong" : "Upas Tiente"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 595,
+    "nameAbbrev" : "Uran-n.",
+    "nameLong" : "Uranium Nitricum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 596,
+    "nameAbbrev" : "Urt-u.",
+    "nameLong" : "Urtica Urens"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 597,
+    "nameAbbrev" : "Ust.",
+    "nameLong" : "Ustilago Maydis"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 598,
+    "nameAbbrev" : "Uva",
+    "nameLong" : "Uva Ursi"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 599,
+    "nameAbbrev" : "Vac.",
+    "nameLong" : "Vaccininum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 600,
+    "nameAbbrev" : "Valer.",
+    "nameLong" : "Valeriana Officinalis"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 601,
+    "nameAbbrev" : "Vario.",
+    "nameLong" : "Variolinum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 602,
+    "nameAbbrev" : "Verat.",
+    "nameLong" : "Veratrum Album"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 603,
+    "nameAbbrev" : "Verat-v.",
+    "nameLong" : "Veratrum Viride"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 604,
+    "nameAbbrev" : "Verb.",
+    "nameLong" : "Verbascum Thapsus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 605,
+    "nameAbbrev" : "Vesp.",
+    "nameLong" : "Vespa Crabro"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 606,
+    "nameAbbrev" : "Vib.",
+    "nameLong" : "Viburnum Opulus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 607,
+    "nameAbbrev" : "Vinc.",
+    "nameLong" : "Vinca Minor"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 608,
+    "nameAbbrev" : "Viol-o.",
+    "nameLong" : "Viola Odorata"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 609,
+    "nameAbbrev" : "Viol-t.",
+    "nameLong" : "Viola Tricolor"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 610,
+    "nameAbbrev" : "Vip.",
+    "nameLong" : "Vipera Berus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 611,
+    "nameAbbrev" : "Visc.",
+    "nameLong" : "Viscum Album"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 612,
+    "nameAbbrev" : "Wies.",
+    "nameLong" : "Wiesbaden Aqua"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 613,
+    "nameAbbrev" : "Wild.",
+    "nameLong" : "Wildbad Aqua"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 614,
+    "nameAbbrev" : "Wye.",
+    "nameLong" : "Wyethia Helenoides"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 615,
+    "nameAbbrev" : "Xan.",
+    "nameLong" : "Xantoxylum Fraxineum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 616,
+    "nameAbbrev" : "Yuc.",
+    "nameLong" : "Yucca Filamentosa"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 617,
+    "nameAbbrev" : "Zinc-acet.",
+    "nameLong" : "Zincum Aceticum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 618,
+    "nameAbbrev" : "Zinc.",
+    "nameLong" : "Zincum Metallicum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 619,
+    "nameAbbrev" : "Zinc-m.",
+    "nameLong" : "Zincum Muriaticum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 620,
+    "nameAbbrev" : "Zinc-o.",
+    "nameLong" : "Zincum Oxydatum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 621,
+    "nameAbbrev" : "Zinc-s.",
+    "nameLong" : "Zincum Sulphuricum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 622,
+    "nameAbbrev" : "Zing.",
+    "nameLong" : "Zingiber Officinale"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 623,
+    "nameAbbrev" : "Ziz.",
+    "nameLong" : "Zizia Aurea"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 624,
+    "nameAbbrev" : "Adon.",
+    "nameLong" : "Adonis Vernalis"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 625,
+    "nameAbbrev" : "Ambro.",
+    "nameLong" : "Ambrosia Artemisiaefolia"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 626,
+    "nameAbbrev" : "Am-i.",
+    "nameLong" : "Ammonium Iodatum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 627,
+    "nameAbbrev" : "Am-p.",
+    "nameLong" : "Ammonium Phosphoricum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 628,
+    "nameAbbrev" : "Atro-s.",
+    "nameLong" : "Atropinum Sulphuricum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 629,
+    "nameAbbrev" : "Aur-t-n.",
+    "nameLong" : "Aurum Thiosulphuricum Natronatum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 630,
+    "nameAbbrev" : "Aven.",
+    "nameLong" : "Avena Sativa"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 631,
+    "nameAbbrev" : "Bism.",
+    "nameLong" : "Bismuthum-sn. (+ -o.) (old abbr.)"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 632,
+    "nameAbbrev" : "Cadm-br.",
+    "nameLong" : "Cadmium Bromatum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 633,
+    "nameAbbrev" : "Calc-hp.",
+    "nameLong" : "Calcarea Hypophosphorosa"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 634,
+    "nameAbbrev" : "Calc-pic.",
+    "nameLong" : "Calcarea Picrica"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 635,
+    "nameAbbrev" : "Carbn-chl.",
+    "nameLong" : "Carboneum Chloratum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 636,
+    "nameAbbrev" : "Crat.",
+    "nameLong" : "Crataegus Oxyacantha"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 637,
+    "nameAbbrev" : "Cryp.",
+    "nameLong" : "Cryptopinum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 638,
+    "nameAbbrev" : "Cupre-aust.",
+    "nameLong" : "Cupressus Australis"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 639,
+    "nameAbbrev" : "Cupr-o.",
+    "nameLong" : "Cuprum Oxydatum Nigrum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 640,
+    "nameAbbrev" : "Cupr-phos.",
+    "nameLong" : "Cuprum Phosphoricum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 641,
+    "nameAbbrev" : "Dict.",
+    "nameLong" : "Dictamnus Albus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 642,
+    "nameAbbrev" : "Diph.",
+    "nameLong" : "Diphtherinum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 643,
+    "nameAbbrev" : "Form-ac.",
+    "nameLong" : "Formicicum Acidum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 644,
+    "nameAbbrev" : "Frax.",
+    "nameLong" : "Fraxinus Americanus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 645,
+    "nameAbbrev" : "Fuc.",
+    "nameLong" : "Fucus Vesiculosus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 646,
+    "nameAbbrev" : "Helio.",
+    "nameLong" : "Heliotropium Peruvianum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 647,
+    "nameAbbrev" : "Ichth.",
+    "nameLong" : "Ichthyolum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 648,
+    "nameAbbrev" : "Irid-m.",
+    "nameLong" : "Iridium Muriaticum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 649,
+    "nameAbbrev" : "Just.",
+    "nameLong" : "Justicia Adhatoda"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 650,
+    "nameAbbrev" : "Kali-o.",
+    "nameLong" : "Kalium Oxydatum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 651,
+    "nameAbbrev" : "Lol.",
+    "nameLong" : "Lolium Temulentum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 652,
+    "nameAbbrev" : "Mag-nit.",
+    "nameLong" : "Magnesium Nitricum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 653,
+    "nameAbbrev" : "M-art.",
+    "nameLong" : "Magnetis Poli Ambo"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 654,
+    "nameAbbrev" : "Meli-a.",
+    "nameLong" : "Melilotus Alba"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 655,
+    "nameAbbrev" : "Merc-aur.",
+    "nameLong" : "Mercurius Auratus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 656,
+    "nameAbbrev" : "Orni.",
+    "nameLong" : "Ornithogalum Umbellatum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 657,
+    "nameAbbrev" : "Orob-r.",
+    "nameLong" : "Orobanche Ramosa, Epiphegus Spec."
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 658,
+    "nameAbbrev" : "Per.",
+    "nameLong" : "Pertussinum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 659,
+    "nameAbbrev" : "Physala-p.",
+    "nameLong" : "Physalia Pelagica"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 660,
+    "nameAbbrev" : "Piloc.",
+    "nameLong" : "Pilocarpinum + Salts (old abbr.)"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 661,
+    "nameAbbrev" : "Pimp.",
+    "nameLong" : "Pimpinella Saxifraga"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 662,
+    "nameAbbrev" : "Pix.",
+    "nameLong" : "Pix Liquida"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 663,
+    "nameAbbrev" : "Polyg-s.",
+    "nameLong" : "Polygonum Sagittatum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 664,
+    "nameAbbrev" : "Pop-c.",
+    "nameLong" : "Populus Candicans"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 665,
+    "nameAbbrev" : "Rham-cal.",
+    "nameLong" : "Rhamnus Californica"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 666,
+    "nameAbbrev" : "Scorp.",
+    "nameLong" : "Scorpio Europaeus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 667,
+    "nameAbbrev" : "Scroph-n.",
+    "nameLong" : "Scrophularia Nodosa"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 668,
+    "nameAbbrev" : "Sol",
+    "nameLong" : "Sol"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 669,
+    "nameAbbrev" : "Spirae.",
+    "nameLong" : "Spiraea Ulmaria"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 670,
+    "nameAbbrev" : "Stann-i.",
+    "nameLong" : "Stannum Iodatum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 671,
+    "nameAbbrev" : "Sulfon.",
+    "nameLong" : "Sulfonalum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 672,
+    "nameAbbrev" : "Teucr-s.",
+    "nameLong" : "Teucrium Scorodonia"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 673,
+    "nameAbbrev" : "Thyr.",
+    "nameLong" : "Thyreoidinum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 674,
+    "nameAbbrev" : "Uran-mur.",
+    "nameLong" : "Uranium Muriaticum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 675,
+    "nameAbbrev" : "Usn.",
+    "nameLong" : "Usnea Barbata"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 676,
+    "nameAbbrev" : "Vanad.",
+    "nameLong" : "Vanadium Metallicum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 677,
+    "nameAbbrev" : "Zinc-cy.",
+    "nameLong" : "Zincum Cyanatum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 678,
+    "nameAbbrev" : "Zinc-p.",
+    "nameLong" : "Zincum Phosphoricum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 679,
+    "nameAbbrev" : "Zinc-pic.",
+    "nameLong" : "Zincum Picricum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 680,
+    "nameAbbrev" : "Zinc-val.",
+    "nameLong" : "Zincum Valerianicum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 681,
+    "nameAbbrev" : "AIDS",
+    "nameLong" : "AIDS Nosode"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 682,
+    "nameAbbrev" : "Agath-a.",
+    "nameLong" : "Agathis Australis"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 683,
+    "nameAbbrev" : "Clad-r.",
+    "nameLong" : "Cladonia Rangiferina"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 684,
+    "nameAbbrev" : "Cygnus-b.",
+    "nameLong" : "Cygnus Bewickii"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 685,
+    "nameAbbrev" : "Dream.",
+    "nameLong" : "Dreaming Potency"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 686,
+    "nameAbbrev" : "Falco-p.",
+    "nameLong" : "Falco Peregrinus Disciplinatus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 687,
+    "nameAbbrev" : "Herin.",
+    "nameLong" : "Heroinum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 688,
+    "nameAbbrev" : "Lava-f.",
+    "nameLong" : "Lava Flagstaff"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 689,
+    "nameAbbrev" : "LSD.",
+    "nameLong" : "LSD (Lysergic Acid Diethylamide)"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 690,
+    "nameAbbrev" : "Posit.",
+    "nameLong" : "Positronum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 691,
+    "nameAbbrev" : "Salx-f.",
+    "nameLong" : "Salix Fragilis"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 692,
+    "nameAbbrev" : "Saroth-s.",
+    "nameLong" : "Sarothamnus Scoparius"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 693,
+    "nameAbbrev" : "Ser-ang.",
+    "nameLong" : "Serum Anguillae"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 694,
+    "nameAbbrev" : "Aconin.",
+    "nameLong" : "Aconitinum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 695,
+    "nameAbbrev" : "Euon-a.",
+    "nameLong" : "Euonymus Atropurpurea"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 696,
+    "nameAbbrev" : "Part-h.",
+    "nameLong" : "Parthenium Hysterophorus"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 697,
+    "nameAbbrev" : "Alf.",
+    "nameLong" : "Alfalfa"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 698,
+    "nameAbbrev" : "Glyc.",
+    "nameLong" : "Glycerinum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 699,
+    "nameAbbrev" : "Spart.",
+    "nameLong" : "Spartheinum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 700,
+    "nameAbbrev" : "Adren.",
+    "nameLong" : "Adrenalinum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 701,
+    "nameAbbrev" : "Pitu-gl.",
+    "nameLong" : "Pituitaria Glandula"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 702,
+    "nameAbbrev" : "Acetan.",
+    "nameLong" : "Acetanilidum"
+  },
+  {
+    "abbrev" : "publicum",
+    "id" : 703,
+    "nameAbbrev" : "Sapin.",
+    "nameLong" : "Saponinum"
+  }
+]

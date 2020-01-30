@@ -3,6 +3,7 @@ OOREP NEWS
 
 v0.3.0  under development
 
+- Added repertories publicum and kent-de to repository
 - Removed third-party JavaScript-libraries from repository due to (potential)
   licensing issues (need to be downloaded and pre-installed before build now)
 
