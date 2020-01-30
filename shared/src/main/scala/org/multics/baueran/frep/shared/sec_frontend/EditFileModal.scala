@@ -1,6 +1,6 @@
 package org.multics.baueran.frep.shared.sec_frontend
 
-import fr.hmil.roshttp.HttpRequest
+import fr.hmil.roshttp.{HttpRequest, Method}
 import fr.hmil.roshttp.body.{MultiPartBody, PlainTextBody}
 import fr.hmil.roshttp.response.SimpleHttpResponse
 import io.circe.parser.parse
@@ -128,10 +128,12 @@ object EditFileModal {
             button(`type`:="button", cls:="btn btn-primary", data.dismiss:="modal",
               onclick:= { (event: Event) =>
                 HttpRequest(s"${serverUrl()}/${apiPrefix()}/del_case")
+                  .withMethod(Method.DELETE)
                   .withHeader("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
-                  .post(MultiPartBody(
+                  .withBody(MultiPartBody(
                     "caseId"     -> PlainTextBody(currentlySelectedCaseId.now.toString()),
                     "memberId"   -> PlainTextBody(currentlyActiveMemberId.toString())))
+                  .send()
 
                 // If the deleted case is currently opened, update current view by basically removing that case.
                 if (Case.descr.isDefined && (Case.descr.get.id == currentlySelectedCaseId.now) && (Case.descr.get.member_id == currentlyActiveMemberId)) {
@@ -188,7 +190,7 @@ object EditFileModal {
                       case (fileName, fileId) if fileId.forall(_.isDigit) =>
                         HttpRequest(s"${serverUrl()}/${apiPrefix()}/update_file_description")
                           .withHeader("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
-                          .post(MultiPartBody(
+                          .put(MultiPartBody(
                             "filedescr" -> PlainTextBody($("#fileDescrEditFileModal").`val`().toString().trim()),
                             "fileId"    -> PlainTextBody(fileId)))
                       case _ => ;

@@ -15,14 +15,16 @@ GET     /favicon.ico                       controllers.Assets.at(path="/public/h
 +nocsrf
 POST   	/api/login                         org.multics.baueran.frep.backend.controllers.Post.login
 POST   	/api/save_case                     org.multics.baueran.frep.backend.controllers.Post.saveCaze
-POST   	/api/update_case_description       org.multics.baueran.frep.backend.controllers.Post.updateCaseDescription
-POST   	/api/del_case                      org.multics.baueran.frep.backend.controllers.Post.delCaze
 POST   	/api/save_file                     org.multics.baueran.frep.backend.controllers.Post.saveFile
-POST   	/api/del_file_and_cases            org.multics.baueran.frep.backend.controllers.Post.delFileAndCases
-POST   	/api/update_file_description       org.multics.baueran.frep.backend.controllers.Post.updateFileDescription
 POST    /api/add_caserubrics_to_case       org.multics.baueran.frep.backend.controllers.Post.addCaseRubricsToCaze
-POST    /api/del_caserubrics_from_case     org.multics.baueran.frep.backend.controllers.Post.delCaseRubricsFromCaze
-POST    /api/update_caserubrics_weights    org.multics.baueran.frep.backend.controllers.Post.updateCaseRubricsWeights
+
+PUT     /api/update_caserubrics_weights    org.multics.baueran.frep.backend.controllers.Put.updateCaseRubricsWeights
+PUT   	/api/update_file_description       org.multics.baueran.frep.backend.controllers.Put.updateFileDescription
+PUT   	/api/update_case_description       org.multics.baueran.frep.backend.controllers.Put.updateCaseDescription
+
+DELETE  /api/del_caserubrics_from_case     org.multics.baueran.frep.backend.controllers.Delete.delCaseRubricsFromCaze
+DELETE  /api/del_case                      org.multics.baueran.frep.backend.controllers.Delete.delCaze
+DELETE 	/api/del_file_and_cases            org.multics.baueran.frep.backend.controllers.Delete.delFileAndCases
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file                      controllers.Assets.versioned(path="/public", file: Asset)

@@ -1,6 +1,6 @@
 package org.multics.baueran.frep.shared.sec_frontend
 
-import fr.hmil.roshttp.HttpRequest
+import fr.hmil.roshttp.{HttpRequest, Method}
 import fr.hmil.roshttp.body.{MultiPartBody, PlainTextBody}
 import monix.execution.Scheduler.Implicits.global
 import org.multics.baueran.frep.shared.Defs.CookieFields
@@ -19,10 +19,12 @@ object OpenFileModal extends FileModal {
     getCookieData(dom.document.cookie, CookieFields.id.toString) match {
       case Some(memberId) => {
         HttpRequest(s"${serverUrl()}/${apiPrefix()}/del_file_and_cases")
+          .withMethod(Method.DELETE)
           .withHeader("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
-          .post(MultiPartBody(
+          .withBody(MultiPartBody(
             "memberId" -> PlainTextBody(memberId.toString()),
             "fileId" -> PlainTextBody(selected_file_id.now.getOrElse(-1).toString)))
+          .send()
           .onComplete({ case _ =>
             FileModalCallbacks.updateMemberFiles(memberId.toInt)
           })

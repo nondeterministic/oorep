@@ -2,7 +2,7 @@ package org.multics.baueran.frep.shared.frontend
 
 import org.scalajs.dom
 import dom.Event
-import fr.hmil.roshttp.HttpRequest
+import fr.hmil.roshttp.{HttpRequest, Method}
 import fr.hmil.roshttp.body.{MultiPartBody, PlainTextBody}
 import monix.execution.Scheduler.Implicits.global
 
@@ -116,18 +116,20 @@ object Case {
             val diff = prevCase.get.isSupersetOf(descr.get)
 
             HttpRequest(s"${serverUrl()}/${apiPrefix()}/del_caserubrics_from_case")
+              .withMethod(Method.DELETE)
               .withHeader("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
-              .post(MultiPartBody(
+              .withBody(MultiPartBody(
                 "memberID" -> PlainTextBody(memberId.toString),
                 "caseID" -> PlainTextBody(descr.get.id.toString),
                 "caserubrics" -> PlainTextBody(diff.asJson.toString)))
+              .send()
           }
           else if (descr.get.isEqualExceptWeights(prevCase.get).length > 0) { // Update weights only in DB
             val diff = prevCase.get.isEqualExceptWeights(descr.get) // These are the user-changed ones, which we'll need to update in the DB, too.
 
             HttpRequest(s"${serverUrl()}/${apiPrefix()}/update_caserubrics_weights")
               .withHeader("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
-              .post(MultiPartBody(
+              .put(MultiPartBody(
                 "memberID" -> PlainTextBody(memberId.toString),
                 "caseID" -> PlainTextBody(descr.get.id.toString),
                 "caserubrics" -> PlainTextBody(diff.asJson.toString)))
@@ -135,7 +137,7 @@ object Case {
           else if (descr.get.description != prevCase.get.description) {
             HttpRequest(s"${serverUrl()}/${apiPrefix()}/update_case_description")
               .withHeader("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
-              .post(MultiPartBody(
+              .put(MultiPartBody(
                 "memberID" -> PlainTextBody(memberId.toString),
                 "caseID" -> PlainTextBody(descr.get.id.toString),
                 "casedescription" -> PlainTextBody(descr.get.description)))
@@ -155,10 +157,12 @@ object Case {
       if (cRubrics.size == 0) {
         if (descr != None && descr.get.id != 0)
           HttpRequest(s"${serverUrl()}/${apiPrefix()}/del_case")
+            .withMethod(Method.DELETE)
             .withHeader("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
-            .post(MultiPartBody(
+            .withBody(MultiPartBody(
               "caseId" -> PlainTextBody(descr.get.id.toString()),
               "memberId" -> PlainTextBody(memberId.toString())))
+            .send()
 
         dom.document.getElementById("caseDescrId").asInstanceOf[HTMLInputElement].removeAttribute("readonly")
         descr = None

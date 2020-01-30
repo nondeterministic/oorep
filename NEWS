@@ -3,6 +3,7 @@ OOREP NEWS
 
 v0.3.0  under development
 
+- Pulled out some REST Post-requests to Put and Delete to be more compliant
 - Added repertories publicum and kent-de to repository
 - Removed third-party JavaScript-libraries from repository due to (potential)
   licensing issues (need to be downloaded and pre-installed before build now)
