@@ -1,6 +1,11 @@
 OOREP NEWS
 =-=-=-=-=-
 
+v0.3.0  under development
+
+- Removed third-party JavaScript-libraries from repository due to (potential)
+  licensing issues (need to be downloaded and pre-installed before build now)
+
 v0.2.1  Wed 29 Jan 2020 09:17:11 PM CET [tag: v0.2.1]
 
 - Removed superfluous REST-API calls to available_reps

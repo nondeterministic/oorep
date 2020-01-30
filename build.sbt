@@ -107,7 +107,7 @@ lazy val commonSettings = Seq(
   scalaVersion := myScalaVersion,
   organization := "org.multics.baueran.frep",
   maintainer := "baueran@gmail.com",
-  version := "0.2.1"
+  version := "0.3.0"
 )
 
 // loads the frontend project at sbt startup
