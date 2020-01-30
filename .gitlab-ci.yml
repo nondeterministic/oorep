@@ -7,6 +7,10 @@ variables:
   OOREP_DBUSER_PASS: test
   OOREP_APPLICATION_SECRET: test
   OOREP_REP_PATH: /
+  POSTGRES_DB: oorep
+  POSTGRES_USER: oorep_user
+  POSTGRES_PASSWORD: test
+  PGPASSWORD: test
 
 before_script:
   # Install SBT
