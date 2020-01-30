@@ -402,7 +402,7 @@ object Repertorise {
       }
 
     // Update available repertories only in the beginning.  (TODO: Added this if later on. Not sure if update shouldn't be done all the time like before...)
-    if (selectedRepertory.length() == 0)
+    if (selectedRepertory.length() == 0 || $("#repSelectionDropDown").contents().length == 0)
       updateAvailableRepertories()
 
     // If initial page, then vertically center search form

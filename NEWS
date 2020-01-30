@@ -3,6 +3,7 @@ OOREP NEWS
 
 v0.3.0  under development
 
+- Bug fix: available_reps wasn't called when drop-down was empty
 - Pulled out some REST Post-requests to Put and Delete to be more compliant
 - Added repertories publicum and kent-de to repository
 - Removed third-party JavaScript-libraries from repository due to (potential)
