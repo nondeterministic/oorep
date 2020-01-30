@@ -12,7 +12,7 @@ latest updates.
 
 ## How to get the source code running
 
-Prerequisites:
+### Prerequisites
 
 * Java SDK (for best results, use JDK 8.  (In particular, I've had build
   problems with JDK 12 - broken String class.))
@@ -31,9 +31,28 @@ need to define the following environment variables:
 Check `backend/conf/application.conf` for their respective use, and make other
 adjustments as you see fit there.
 
-When you're content with your setup, OOREP, a Play-application, can be run
-like any other using `run` or `compile`.  If all went well, the result should
-then be available at http://localhost:9000/.
+### Recommended external libraries
+
+It is strongly recommended to also download the following external JavaScript
+libraries and fonts:
+
+* [bootstrap](https://getbootstrap.com/) (tested with v4.1.3)
+* [jquery](https://jquery.com/) (tested with v3.3.1)
+* [popper](https://popper.js.org/) (tested with v1.15.0)
+* [notify.js](https://github.com/jpillora/notifyjs) (tested with v.0.4.2)
+* [Open Iconic font](https://useiconic.com/open)
+
+For your convenience, an archived package with the respective versions 
+is available [here](http://pspace.org/a/third-party.tar.gz).  It should
+be unpacked and then placed inside `backend/public/html` within the main
+OOREP directory.
+
+### Compiling
+
+When you're content with your setup, OOREP, a
+[Play](https://www.playframework.com/)-application, can be run like any
+other using `run` or `compile`.  If all went well, the result should then be
+available at http://localhost:9000/.
 
 You can also build a distribution package of OOREP by first executing `compile`
 and then `dist`, which will build an executable, 
