@@ -24,7 +24,8 @@ need to define the following environment variables:
 
 * `$OOREP_APPLICATION_SECRET`: application-specific password you need to see
   if you run the server using `https` instead of `http`
-* `$OOREP_USER_PASS`: password used by the DB-user
+* `$OOREP_DBHOST`: hostname of DB-server (e.g., localhost)
+* `$OOREP_DBUSER_PASS`: password used by the DB-user
 * `$OOREP_REP_PATH`: directory in the local file system, where the repertory
   raw data is located
 
