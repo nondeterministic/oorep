@@ -42,7 +42,7 @@ object Disclaimer {
           """)
       ),
       br,
-      div(style:="margin-top: 1cm;",
+      div(style:="margin-top: 0.5cm;",
         a(cls:="underline", style:="color:white;", href:=serverUrl(), "Home"),
         " | ",
         a(cls:="underline", style:="color:white;", href:="#", onclick:= { () => loadAndScroll("impressum.html") }, "Impressum"),
@@ -50,6 +50,12 @@ object Disclaimer {
         a(cls:="underline", style:="color:white;", href:="#", onclick:= { () => loadAndScroll("contact.html") }, "Contact"),
         " | ",
         a(cls:="underline", style:="color:white;", href:="#", onclick:= { () => loadAndScroll("cookies.html") }, "Privacy policy"),
+      ),
+      br,
+      div(style:="margin-top: 0.5cm; font-size:12px;",
+        p(style:="text-align:justify;",
+          "Copyright ", raw("&copy;"), " 2020 Andreas Bauer. All rights reserved."
+        )
       )
     )
   }
