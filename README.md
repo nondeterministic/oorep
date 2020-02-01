@@ -30,7 +30,8 @@ need to define the following environment variables:
   raw data is located
 
 Check `backend/conf/application.conf` for their respective use, and make other
-adjustments as you see fit there.
+adjustments as you see fit there.  Also be sure these variables are set before
+attempting to execute the OOREP code.
 
 ### Recommended external libraries
 
@@ -51,9 +52,10 @@ OOREP directory.
 ### Compiling
 
 When you're content with your setup, OOREP, a
-[Play](https://www.playframework.com/)-application, can be run like any
-other using `run` or `compile`.  If all went well, the result should then be
-available at http://localhost:9000/.
+[Play](https://www.playframework.com/)-application written in Scala, can be run
+like any other using `run` or `compile`.  Be sure, the database is started and
+available before though. If all went well, the result should then be available
+at http://localhost:9000/.
 
 You can also build a distribution package of OOREP by first executing `compile`
 and then `dist`, which will build an executable, 
