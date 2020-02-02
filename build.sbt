@@ -15,11 +15,6 @@ val notifyjsVersion    = "0.1.1"
 
 resolvers in ThisBuild += Resolver.bintrayRepo("hmil", "maven")
 
-// I think, this one has no effect, and we remove pid file in Dockerfile anyway. CHECK & KILL!
-// javaOptions in Universal ++= Seq(
-//  "-Dpidfile.path=/dev/null"
-// )
-
 lazy val backend = (project in file("backend")).settings(commonSettings).settings(
   scalaJSProjects := Seq(frontend, sec_frontend),
   pipelineStages in Assets := Seq(scalaJSPipeline),
@@ -102,6 +97,11 @@ lazy val shared = crossProject(JSPlatform, JVMPlatform)
 
 lazy val sharedJvm = shared.jvm
 lazy val sharedJs = shared.js
+
+// This works only if you also do `export SBT_OPTS="-Dconfig.file=backend/conf/application.conf"`
+// prior to running sbt!
+// val restConfig = ConfigFactory.load()
+// val oorepVersion = restConfig.getString("oorep_version")
 
 lazy val commonSettings = Seq(
   scalaVersion := myScalaVersion,

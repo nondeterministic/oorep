@@ -1,4 +1,5 @@
 function oorepLoadIntoContentDiv(path) {
-  $('#content').load(path);
-  window.scrollTo(0, 0);
+  $('#content').load(path, function() {
+    window.scrollTo(0, 0);
+  });
 }
