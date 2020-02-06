@@ -84,7 +84,7 @@ object Main {
                         $("#content").empty()
                         js.eval("$('#cookiePopup').modal('hide');")
                         loadAndScroll("datenschutz.html")
-                      }, "Datenschutzrichtline"),
+                      }, "Datenschutzerklärung"),
                     " gelesen und verstanden haben und einverstanden mit der Vewendung der übertragenen Cookies sind."),
                   p("The basic functionality of this web site depends on the use of cookies. By clicking the accept button, you acknowledge that you have read and understand our ",
                     a(href:="#",
