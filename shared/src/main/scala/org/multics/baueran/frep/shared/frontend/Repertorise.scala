@@ -251,13 +251,23 @@ object Repertorise {
             case Left(_) => println("Parsing of lookup failed (is it JSON?).")
           }
         }
-        case error: Failure[SimpleHttpResponse] => {
+        case _: Failure[SimpleHttpResponse] => {
+          val searchTerms = new SearchTerms(symptom)
+          val longPosTerms = searchTerms.positive.map(_.replace("*", "")).filter(_.length() > 6)
+          // val longNegTerms = searchTerms.negative.map(_.replace("*", "")).filter(_.length() > 6)
+
+          val errorMessage = s"Try a different repertory, or searching for '" + {
+            if (longPosTerms.length > 0)
+              longPosTerms.map(t => t.take(5) + "*").mkString(", ")
+            else
+              searchTerms.positive.map(_.replace("*", "")).map(_ + "*").mkString(", ")
+          } + "'."
+
           $("body").css("cursor", "default")
           $("#resultStatus").empty()
           $("#resultStatus").append(
             div(cls:="alert alert-danger", role:="alert",
-              b("No results returned for '" + symptom + "'. " +
-                "Either symptom not in repertory or server error.")).render)
+              b(s"No results returned for '$symptom'. " + errorMessage)).render)
         }
       })
   }

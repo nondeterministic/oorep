@@ -38,6 +38,27 @@ class BetterCaseRubric(val cr: CaseRubric) {
 
 }
 
+class SearchTerms(val symptom: String) {
+  // Extract cleaned-up search string from raw input search string, if user supplied "rep:".
+  // Otherwise, raw input search string is used.
+  private def getSymptomString(submittedSymptomString: String): String = {
+    if (symptom.contains("rep:"))
+      symptom.replaceAll("""rep:([\w\-_]+)""", "")
+    else
+      symptom
+  }
+
+  private val searchStrings = getSymptomString(symptom)
+    .trim                                                    // Remove trailing spaces
+    .replaceAll(" +", " ")                              // Remove double spaces
+    .replaceAll("[^A-Za-z0-9 äÄÜüÖöß\\-*]", "")         // Remove all but alphanum-, wildcard-, minus-symbols
+    .split(" ")                                              // Get list of search strings
+
+  // Positive and negative search terms
+  def positive = searchStrings.filter(!_.startsWith("-")).toList
+  def negative = searchStrings.filter(_.startsWith("-")).map(_.substring(1)).toList
+}
+
 class MyDate(isoDateString: String) {
   def this() {
     this(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()))

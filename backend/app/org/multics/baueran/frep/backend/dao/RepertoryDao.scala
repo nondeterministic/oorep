@@ -1,5 +1,6 @@
 package org.multics.baueran.frep.backend.dao
 
+import org.multics.baueran.frep.shared
 import org.multics.baueran.frep.shared._
 import org.multics.baueran.frep.backend.db
 import Defs.maxNumberOfResults
@@ -122,26 +123,10 @@ class RepertoryDao(dbContext: db.db.DBContext) {
         abbrevFromMenu
     }
 
-    // Extract cleaned-up search string from raw input search string, if user supplied "rep:".
-    // Otherwise, raw input search string is used.
-    def getSymptomString(submittedSymptomString: String): String = {
-      if (symptom.contains("rep:"))
-        symptom.replaceAll("""rep:([\w\-_]+)""", "")
-      else
-        symptom
-    }
-
+    val searchTerms = new SearchTerms(symptom)
     val abbrev = getAbbrev(abbrevFromMenu, symptom)
-    val searchStrings = getSymptomString(symptom)
-      .trim                                                    // Remove trailing spaces
-      .replaceAll(" +", " ")                              // Remove double spaces
-      .replaceAll("[^A-Za-z0-9 äÄÜüÖöß\\-*]", "")         // Remove all but alphanum-, wildcard-, minus-symbols
-      .split(" ")                                              // Get list of search strings
 
-    val posSearchTerms = searchStrings.filter(!_.startsWith("-")).toList
-    val negSearchTerms = searchStrings.filter(_.startsWith("-")).map(_.substring(1)).toList
-
-    if (posSearchTerms.length == 0) {
+    if (searchTerms.positive.length == 0) {
       Logger.warn(s"INFO: Search for `$symptom' aborted: no positive search terms.")
       return List()
     }
@@ -149,7 +134,7 @@ class RepertoryDao(dbContext: db.db.DBContext) {
     // TODO: use of approximateSearchTerm is an oversimplification to narrow down the first
     // DB-lookup, which otherwise would return ALWAYS the entire repertory.
     // It is also very brittle with the Umlauts...
-    val approximateSearchTerm = "%" + posSearchTerms.head.replaceAll("[^A-Za-z0-9 äÄÜüÖöß\\-]", "").toLowerCase + "%"
+    val approximateSearchTerm = "%" + searchTerms.positive.head.replaceAll("[^A-Za-z0-9 äÄÜüÖöß\\-]", "").toLowerCase + "%"
 
     val tmpResults =
       run(
@@ -163,7 +148,7 @@ class RepertoryDao(dbContext: db.db.DBContext) {
                   rubric.path.getOrElse("").toLowerCase.like(lift(approximateSearchTerm)))
             )
         }
-      ).filter(_.isMatchFor(posSearchTerms, negSearchTerms))
+      ).filter(_.isMatchFor(searchTerms.positive, searchTerms.negative))
         .sortBy(_.fullPath)
         .take(maxNumberOfResults)
 
