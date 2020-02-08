@@ -1,7 +1,7 @@
 OOREP NEWS
 =-=-=-=-=-
 
-v0.3.1  under development
+v0.3.1  Sat 08 Feb 2020 11:07:33 AM CET
 
 - An attempt at more helpful error messages when repertory lookup failed
 - Changed default for remedy display: formatted as opposed to explicit weights
