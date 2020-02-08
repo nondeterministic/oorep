@@ -3,7 +3,11 @@ OOREP NEWS
 
 v0.3.1  under development
 
+- An attempt at more helpful error messages when repertory lookup failed
+- Changed default for remedy display: formatted as opposed to explicit weights
 - Bug fix: if initial case was too large, it couldn't be added to a file
+- Bug fix: if a search was unsuccessful, a subsequent search would not remove
+  the error message, if the results were the same as the last successful search
 
 v0.3.0  Sun 02 Feb 2020 01:17:05 PM CET
 

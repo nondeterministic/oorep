@@ -49,10 +49,11 @@ class SearchTerms(val symptom: String) {
   }
 
   private val searchStrings = getSymptomString(symptom)
-    .trim                                                    // Remove trailing spaces
+    .trim                                                                    // Remove trailing spaces
     .replaceAll(" +", " ")                              // Remove double spaces
     .replaceAll("[^A-Za-z0-9 äÄÜüÖöß\\-*]", "")         // Remove all but alphanum-, wildcard-, minus-symbols
-    .split(" ")                                              // Get list of search strings
+    .split(" ")                                                      // Get list of search strings
+    .filter(_.length > 0)
 
   // Positive and negative search terms
   def positive = searchStrings.filter(!_.startsWith("-")).toList

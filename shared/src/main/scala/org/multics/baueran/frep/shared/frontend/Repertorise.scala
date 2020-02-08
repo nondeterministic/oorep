@@ -25,7 +25,7 @@ object Repertorise {
   private var symptomQuery = ""
   private var selectedRepertory = ""
   private val remedyFilter = Var("")
-  private val remedyFormat = Var(RemedyFormat.NotFormatted)
+  private val remedyFormat = Var(RemedyFormat.Formatted)
   val results: Var[List[CaseRubric]] = Var(List())
 
   remedyFilter.triggerLater(if (results.now.size > 0) showResults())
@@ -192,6 +192,13 @@ object Repertorise {
   }
 
   // ------------------------------------------------------------------------------------------------------------------
+  private def onSymptomLinkClicked(symptom: String) = {
+    remedyFilter() = ""
+    prevQuery = symptom
+    doLookup(prevQuery)
+  }
+
+  // ------------------------------------------------------------------------------------------------------------------
   private def onSymptomEntered(event: Event) = {
     event.stopPropagation()
     remedyFilter() = ""
@@ -240,6 +247,8 @@ object Repertorise {
               cursor.as[List[CaseRubric]] match {
                 case Right(newResults) => {
                   symptomQuery = symptom
+
+                  results() = List.empty
                   results() = newResults
 
                   if (Case.size() > 0)
@@ -254,20 +263,31 @@ object Repertorise {
         case _: Failure[SimpleHttpResponse] => {
           val searchTerms = new SearchTerms(symptom)
           val longPosTerms = searchTerms.positive.map(_.replace("*", "")).filter(_.length() > 6)
-          // val longNegTerms = searchTerms.negative.map(_.replace("*", "")).filter(_.length() > 6)
+          val longNegTerms = searchTerms.negative
 
-          val errorMessage = s"Try a different repertory, or searching for '" + {
+          val tmpErrorMessage1 = s"Try a different repertory; or use wild-card search as in '"
+          val tmpErrorMessage2 = {
             if (longPosTerms.length > 0)
               longPosTerms.map(t => t.take(5) + "*").mkString(", ")
             else
               searchTerms.positive.map(_.replace("*", "")).map(_ + "*").mkString(", ")
-          } + "'."
+          } + {
+            if (longNegTerms.length > 0)
+              ", " + longNegTerms.map("-" + _).mkString(", ")
+            else
+              ""
+          }
 
           $("body").css("cursor", "default")
           $("#resultStatus").empty()
           $("#resultStatus").append(
             div(cls:="alert alert-danger", role:="alert",
-              b(s"No results returned for '$symptom'. " + errorMessage)).render)
+              b(s"No results returned for '$symptom'. ",
+                tmpErrorMessage1,
+                a(href:="#", onclick:={ (_: Event) => onSymptomLinkClicked(tmpErrorMessage2) }, tmpErrorMessage2),
+                "'."
+              )
+            ).render)
         }
       })
   }
