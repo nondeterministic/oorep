@@ -15,7 +15,7 @@ import fr.hmil.roshttp.HttpRequest
 import fr.hmil.roshttp.response.SimpleHttpResponse
 import monix.execution.Scheduler.Implicits.global
 import org.multics.baueran.frep.shared._
-import org.multics.baueran.frep.shared.Defs.CookieFields
+import org.multics.baueran.frep.shared.Defs.{ CookieFields, maxNumberOfResults }
 import org.multics.baueran.frep.shared.sec_frontend.FileModalCallbacks.updateMemberFiles
 import scalatags.JsDom
 
@@ -162,6 +162,45 @@ object Repertorise {
       )
     }
 
+    // Display potentially useful hint, when max. number of search results was returned.
+    // TODO: in the future, we want pagination when too many results have occurred, because the below is inefficient and not as user-friendly.
+    if (results.now.size >= maxNumberOfResults) {
+      val fullPathWords = results.now.map(cr => cr.rubric.fullPath.split("[, ]+").filter(_.length > 0).map(_.trim())).flatten
+      val pathWords = results.now.map(cr => cr.rubric.path.getOrElse("").split("[, ]+").filter(_.length > 0).map(_.trim())).flatten
+      val textWords = results.now.map(cr => cr.rubric.textt.getOrElse("").split("[, ]+").filter(_.length > 0).map(_.trim())).flatten
+
+      // Yields a sequence like [ ("pain", 130), ("abdomen", 50), ... ]
+      val sortedResultOccurrences =
+        (pathWords ::: textWords ::: fullPathWords).sortWith(_ > _)
+          .groupBy(identity).mapValues(_.size)
+          .toSeq.sortWith(_._2 > _._2)
+
+      // Filter out all those results, which were actually desired via positive search terms entered by the user
+      val searchTerms = new SearchTerms(prevQuery)
+      val filteredSortedResultOccurrences = sortedResultOccurrences.filter{ case (t, _) =>
+        val posTerms = searchTerms.positive
+        !(posTerms.exists(pt => searchTerms.isWordInX(pt, Some(t))))
+        // !(posTerms.contains(t))
+      }
+
+      // If there are some left after filtering, suggest to user to exclude top-most result from a next search.
+      if (filteredSortedResultOccurrences.length > 2) {
+        val newSearchTerms = searchTerms.positive.mkString(", ") + {
+          if (searchTerms.negative.length > 0)
+            ", " + searchTerms.negative.map("-" + _).mkString(", ")
+          else ""
+        } + s", -${filteredSortedResultOccurrences.head._1.toLowerCase}*"
+
+        $("#resultStatus").append(
+          div(cls:="alert alert-warning", role:="alert",
+            b(s"Max. number of displayable results. Maybe try narrowing your search using '-', like '",
+              a(href:="#", onclick:={ (_: Event) => onSymptomLinkClicked(newSearchTerms) }, newSearchTerms),
+              "'."
+            )
+          ).render)
+      }
+    }
+
     if (remedyFilter.now.length == 0)
       results.now.foreach(result => $("#resultsTBody").append(resultRow(result).render))
     else
@@ -265,7 +304,7 @@ object Repertorise {
           val longPosTerms = searchTerms.positive.map(_.replace("*", "")).filter(_.length() > 6)
           val longNegTerms = searchTerms.negative
 
-          val tmpErrorMessage1 = s"Try a different repertory; or use wild-card search as in '"
+          val tmpErrorMessage1 = s"Try a different repertory; or use wild-card search, like '"
           val tmpErrorMessage2 = {
             if (longPosTerms.length > 0)
               longPosTerms.map(t => t.take(5) + "*").mkString(", ")
@@ -410,7 +449,7 @@ object Repertorise {
                     onclick := { (event: Event) =>
                       onSymptomListRedoPressed(event)
                     },
-                    span(cls := "oi oi-action-redo", title := "Clear", aria.hidden := "true")),
+                    span(cls := "oi oi-action-redo", title := "Find again", aria.hidden := "true")),
                   button(cls := "btn", style := "width: 70px;", `type` := "button",
                     onclick := { (event: Event) =>
                       onSymptomListCleared(event)

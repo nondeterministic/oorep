@@ -148,7 +148,7 @@ class RepertoryDao(dbContext: db.db.DBContext) {
                   rubric.path.getOrElse("").toLowerCase.like(lift(approximateSearchTerm)))
             )
         }
-      ).filter(_.isMatchFor(searchTerms.positive, searchTerms.negative))
+      ).filter(_.isMatchFor(searchTerms))
         .sortBy(_.fullPath)
         .take(maxNumberOfResults)
 

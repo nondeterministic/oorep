@@ -58,6 +58,40 @@ class SearchTerms(val symptom: String) {
   // Positive and negative search terms
   def positive = searchStrings.filter(!_.startsWith("-")).toList
   def negative = searchStrings.filter(_.startsWith("-")).map(_.substring(1)).toList
+
+  /**
+    * Looks for a word, word, within some other text passage, x, where
+    * x is usually either the content of fullPath, path or ttext of an
+    * element of Rubric (but could be any other text as well).
+    */
+  def isWordInX(word: String, x: Option[String], caseSensitive: Boolean = false): Boolean = {
+    x match {
+      case None => false
+      case Some(x) => {
+        var wordMod = word
+        var xMod = x
+
+        if (!caseSensitive) {
+          wordMod = word.toLowerCase
+          xMod = x.toLowerCase
+        }
+
+        val searchSpace = xMod.replaceAll("[^A-Za-z0-9 äüößÄÖÜ\\-]", "").split(" ")
+
+        if (wordMod.contains("*")) {
+          // If there's no * at beginning of search term, add ^, so that "urin*" doesn't
+          // match "during" (unless you want to, in which case you'd write "*urin*").
+          if (!wordMod.startsWith("*"))
+            wordMod = "^" + wordMod
+
+          val searchPattern = wordMod.replaceAll("\\*", ".*").r
+          searchSpace.filter(searchPattern.findFirstMatchIn(_).isDefined).length > 0
+        }
+        else
+          searchSpace.contains(wordMod)
+      }
+    }
+  }
 }
 
 class MyDate(isoDateString: String) {

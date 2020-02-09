@@ -1,6 +1,13 @@
 OOREP NEWS
 =-=-=-=-=-
 
+v0.3.2  under development
+
+- Fix labelling of "redo search button" at top of screen
+- Remove deprecated method of Repertory() as it was no longer used
+- An attempt at helpful message when lookup yields too many results
+- Fix Facebook-preview picture
+
 v0.3.1  Sat 08 Feb 2020 11:07:33 AM CET
 
 - An attempt at more helpful error messages when repertory lookup failed

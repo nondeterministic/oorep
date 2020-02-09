@@ -196,62 +196,29 @@ case class Rubric(abbrev: String, id: Int, mother: Option[Int], isMother: Option
   }
 
   /**
-   * Looks for a word, word, within some other text passage, x, where
-	 * x is usually either fullPath, path or text of Rubric.
-   */
-  private def isWordInX(word: String, x: Option[String], caseSensitive: Boolean = false): Boolean = {
-    x match {
-      case None => false
-      case Some(x) => {
-        var wordMod = word
-        var xMod = x
-
-        if (!caseSensitive) {
-          wordMod = word.toLowerCase
-          xMod = x.toLowerCase
-        }
-
-        val searchSpace = xMod.replaceAll("[^A-Za-z0-9 äüößÄÖÜ\\-]", "").split(" ")
-
-        if (wordMod.contains("*")) {
-          // If there's no * at beginning of search term, add ^, so that "urin*" doesn't
-          // match "during" (unless you want to, in which case you'd write "*urin*").
-          if (!wordMod.startsWith("*"))
-            wordMod = "^" + wordMod
-
-          val searchPattern = wordMod.replaceAll("\\*", ".*").r
-          searchSpace.filter(searchPattern.findFirstMatchIn(_).isDefined).length > 0
-        }
-        else
-          searchSpace.contains(wordMod)
-      }
-    }
-  }
-
-  /**
    * Checks if rubric matches all words in posStrings, so long as it doesn't match a word in negStrings.
    */
-  def isMatchFor(posStrings: List[String], negStrings: List[String], caseSensitive: Boolean = false): Boolean = {
-    def isWordInText(word: String, caseSensitive: Boolean) = isWordInX(word, textt, caseSensitive)
-    def isWordInPath(word: String, caseSensitive: Boolean) = isWordInX(word, path, caseSensitive)
-    def isWordInFullPath(word: String, caseSensitive: Boolean) = isWordInX(word, Some(fullPath), caseSensitive)
+  def isMatchFor(searchTerms: SearchTerms, caseSensitive: Boolean = false): Boolean = {
+    def isWordInText(word: String, caseSensitive: Boolean) = searchTerms.isWordInX(word, textt, caseSensitive)
+    def isWordInPath(word: String, caseSensitive: Boolean) = searchTerms.isWordInX(word, path, caseSensitive)
+    def isWordInFullPath(word: String, caseSensitive: Boolean) = searchTerms.isWordInX(word, Some(fullPath), caseSensitive)
 
-    if (posStrings.length == 0)
+    if (searchTerms.positive.length == 0)
       return false
 
-    val isPosMatch = posStrings.map(word => 
+    val isPosMatch = searchTerms.positive.map(word =>
       isWordInText(word, caseSensitive) || isWordInPath(word, caseSensitive) || isWordInFullPath(word, caseSensitive))
       .foldLeft(true) { (x, y) => x && y }
 
-    if (negStrings.length > 0 && isPosMatch) {
-      negStrings.map(word => 
+    if (searchTerms.negative.length > 0 && isPosMatch) {
+      searchTerms.negative.map(word =>
         !isWordInText(word, caseSensitive) && !isWordInPath(word, caseSensitive) && !isWordInFullPath(word, caseSensitive))
           .foldLeft(true) { (x, y) => x && y }
     }
     else
       isPosMatch
   }
-  
+
 }
 
 object Rubric {
@@ -266,7 +233,7 @@ case class Repertory(val info: Info, val chapters: Seq[Chapter], val remedies: S
                 val chapterRemedies: Seq[ChapterRemedy], val rubrics: Seq[Rubric],
                 val rubricRemedies: Seq[RubricRemedy]) 
 {
-
+  /*
   @deprecated("Use RepertoryDao.lookupSymptom() instead.","24-02-2019")
   def findRubrics(enteredSearchString: String, caseSensitive: Boolean = false): Seq[Rubric] = {
     val searchStrings = enteredSearchString
@@ -279,5 +246,5 @@ case class Repertory(val info: Info, val chapters: Seq[Chapter], val remedies: S
     val negSearchTerms = searchStrings.filter(_.startsWith("-")).map(_.substring(1)).toList
     rubrics.filter(_.isMatchFor(posSearchTerms, negSearchTerms, caseSensitive))
   }
-
+  */
 }
