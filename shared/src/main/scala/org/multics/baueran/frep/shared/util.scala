@@ -54,6 +54,7 @@ class SearchTerms(val symptom: String) {
     .replaceAll("[^A-Za-z0-9 äÄÜüÖöß\\-*]", "")         // Remove all but alphanum-, wildcard-, minus-symbols
     .split(" ")                                                      // Get list of search strings
     .filter(_.length > 0)
+    .distinct
 
   // Positive and negative search terms
   def positive = searchStrings.filter(!_.startsWith("-")).toList

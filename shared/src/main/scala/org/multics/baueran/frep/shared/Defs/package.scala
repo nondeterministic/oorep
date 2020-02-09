@@ -11,6 +11,8 @@ package object Defs {
     }
   }
   def maxNumberOfResults = 130
+  def maxLengthOfSymptoms = 200
+  def maxNumberOfSymptoms = 20
 
   // Do not rename csrfCookie unless you know what you're doing!
   object CookieFields extends Enumeration {

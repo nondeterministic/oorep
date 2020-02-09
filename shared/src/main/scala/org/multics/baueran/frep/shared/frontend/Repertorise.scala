@@ -15,7 +15,7 @@ import fr.hmil.roshttp.HttpRequest
 import fr.hmil.roshttp.response.SimpleHttpResponse
 import monix.execution.Scheduler.Implicits.global
 import org.multics.baueran.frep.shared._
-import org.multics.baueran.frep.shared.Defs.{ CookieFields, maxNumberOfResults }
+import org.multics.baueran.frep.shared.Defs.{ CookieFields, maxNumberOfResults, maxLengthOfSymptoms, maxNumberOfSymptoms }
 import org.multics.baueran.frep.shared.sec_frontend.FileModalCallbacks.updateMemberFiles
 import scalatags.JsDom
 
@@ -189,7 +189,7 @@ object Repertorise {
           if (searchTerms.negative.length > 0)
             ", " + searchTerms.negative.map("-" + _).mkString(", ")
           else ""
-        } + s", -${filteredSortedResultOccurrences.head._1.toLowerCase}*"
+        } + s", -${filteredSortedResultOccurrences.head._1.toLowerCase.take(6)}*"
 
         $("#resultStatus").append(
           div(cls:="alert alert-warning", role:="alert",
@@ -272,6 +272,14 @@ object Repertorise {
       return
     }
 
+    if (symptom.length() >= maxLengthOfSymptoms) {
+      $("#resultStatus").empty()
+      $("#resultStatus").append(
+        div(cls := "alert alert-danger", role := "alert",
+          b(s"Input must not exceed $maxLengthOfSymptoms characters in length.")).render)
+      return
+    }
+
     $("body").css("cursor", "wait")
 
     HttpRequest(s"${serverUrl()}/${apiPrefix()}/lookup")
@@ -303,6 +311,15 @@ object Repertorise {
           val searchTerms = new SearchTerms(symptom)
           val longPosTerms = searchTerms.positive.map(_.replace("*", "")).filter(_.length() > 6)
           val longNegTerms = searchTerms.negative
+
+          if (searchTerms.negative.length + searchTerms.positive.length >= maxNumberOfSymptoms) {
+            $("body").css("cursor", "default")
+            $("#resultStatus").empty()
+            $("#resultStatus").append(
+              div(cls:="alert alert-danger", role:="alert",
+                b(s"You cannot enter more than ${maxNumberOfSymptoms} symptoms.")).render)
+            return
+          }
 
           val tmpErrorMessage1 = s"Try a different repertory; or use wild-card search, like '"
           val tmpErrorMessage2 = {

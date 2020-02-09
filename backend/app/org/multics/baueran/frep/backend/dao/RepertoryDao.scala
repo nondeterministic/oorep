@@ -3,7 +3,7 @@ package org.multics.baueran.frep.backend.dao
 import org.multics.baueran.frep.shared
 import org.multics.baueran.frep.shared._
 import org.multics.baueran.frep.backend.db
-import Defs.maxNumberOfResults
+import Defs.{ maxNumberOfResults, maxNumberOfSymptoms }
 import play.api.Logger
 
 import scala.collection.mutable.ArrayBuffer
@@ -128,6 +128,10 @@ class RepertoryDao(dbContext: db.db.DBContext) {
 
     if (searchTerms.positive.length == 0) {
       Logger.warn(s"INFO: Search for `$symptom' aborted: no positive search terms.")
+      return List()
+    }
+    else if (searchTerms.positive.length + searchTerms.negative.length >= maxNumberOfSymptoms) {
+      Logger.error(s"ERROR: Cannot enter more than $maxNumberOfSymptoms symptoms.")
       return List()
     }
 

@@ -140,22 +140,6 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     }
   }
 
-// TODO: If noone's missing this, delete!
-//
-//  def availableCasesForFile(fileId: String) = Action { request: Request[AnyContent] =>
-//    isUserAuthenticated(request) match {
-//      case Left(err) =>
-//        Logger.error(err)
-//        BadRequest(views.html.defaultpages.badRequest("GET", request.uri, err))
-//      case Right(_) => {
-//        Ok(fileDao
-//          .getCasesFromFile(fileId)
-//          .asJson
-//          .toString())
-//      }
-//    }
-//  }
-
   /**
    * Returns basically a list of pairs with single entries like
    *
@@ -200,18 +184,24 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
   }
 
   def repertorise(repertoryAbbrev: String, symptom: String) = Action { request: Request[AnyContent] =>
-    val dao = new RepertoryDao(dbContext)
-    val results: List[CaseRubric] = dao.lookupSymptom(repertoryAbbrev, symptom)
-
-    if (results.size == 0) {
-      val errStr = s"Get: repertorise(${repertoryAbbrev}, ${symptom}): no results found"
+    if (symptom.length >= maxLengthOfSymptoms) {
+      val errStr = s"Get: input exceeded max length of ${maxLengthOfSymptoms}."
       Logger.warn(errStr)
       BadRequest(views.html.defaultpages.badRequest("GET", request.uri, errStr))
     }
     else {
-      Logger.debug(s"Get: repertorise(${repertoryAbbrev}, ${symptom}): #results: ${results.size}.")
-      Ok(results.take(maxNumberOfResults).asJson.toString())
+      val dao = new RepertoryDao(dbContext)
+      val results: List[CaseRubric] = dao.lookupSymptom(repertoryAbbrev, symptom)
+
+      if (results.size == 0) {
+        val errStr = s"Get: repertorise(${repertoryAbbrev}, ${symptom}): no results found"
+        Logger.warn(errStr)
+        BadRequest(views.html.defaultpages.badRequest("GET", request.uri, errStr))
+      }
+      else {
+        Logger.debug(s"Get: repertorise(${repertoryAbbrev}, ${symptom}): #results: ${results.size}.")
+        Ok(results.take(maxNumberOfResults).asJson.toString())
+      }
     }
   }
-
 }
