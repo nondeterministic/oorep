@@ -177,11 +177,12 @@ object Repertorise {
 
       // Filter out all those results, which were actually desired via positive search terms entered by the user
       val searchTerms = new SearchTerms(prevQuery)
-      val filteredSortedResultOccurrences = sortedResultOccurrences.filter{ case (t, _) =>
-        val posTerms = searchTerms.positive
-        !(posTerms.exists(pt => searchTerms.isWordInX(pt, Some(t))))
-        // !(posTerms.contains(t))
-      }
+      val posTerms = searchTerms.positive
+      val filteredSortedResultOccurrences =
+        sortedResultOccurrences
+          .filter{ case (t, _) =>
+            t.length() > 3 && !(posTerms.exists(pt => searchTerms.isWordInX(pt, Some(t))))
+          }
 
       // If there are some left after filtering, suggest to user to exclude top-most result from a next search.
       if (filteredSortedResultOccurrences.length > 2) {

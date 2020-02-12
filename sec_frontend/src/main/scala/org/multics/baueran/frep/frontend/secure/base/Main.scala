@@ -14,6 +14,7 @@ import scalatags.JsDom.all._
 import scala.util.{Failure, Success}
 import org.multics.baueran.frep.shared._
 import frontend.{Case, Disclaimer, Repertorise}
+import Defs.deleteCookies
 import sec_frontend.{AddToFileModal, EditFileModal, FileModalCallbacks, NewFileModal, OpenFileModal, RepertoryModal}
 
 @JSExportTopLevel("MainSecure")
@@ -53,11 +54,14 @@ object Main {
               $("#nav_bar").empty()
               $("#content").empty()
               $("#content_bottom").empty()
-              $("#content").append(p(s"Not authorized. Go to ", a(href:=serverUrl(), "main page"), " instead!").render)
+              $("#content").append(p(s"Not authenticated or cookie expired. Go to ", a(href:=serverUrl(), "main page"), " instead!",
+                br, "(If all else fails, try deleting all oorep cookies from your browser.)").render)
           }
         }
-        case error: Failure[SimpleHttpResponse] => {
-          $("#content").append(p(s"Not authorized. Go to ", a(href:=serverUrl(), "main page"), " instead!").render)
+        case _: Failure[SimpleHttpResponse] => {
+          deleteCookies()
+          $("#content").append(p(s"Not authenticated or cookie expired. Go to ", a(href:=serverUrl(), "main page"), " instead!",
+            br, "(If all else fails, try deleting all oorep cookies from your browser.)").render)
         }
       })
 

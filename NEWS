@@ -3,14 +3,16 @@ OOREP NEWS
 
 v0.3.2  under development
 
-- Fix labelling of "redo search button" at top of screen
+- Logout user automatically if stale cookie was detected (as it may
+  happen, if the user logged in from two different machines without
+  logging out in between)
 - Remove deprecated method of Repertory() as it was no longer used
 - An attempt at helpful message when lookup yields too many results
 - Limit enterable search terms to at most 20 and length of 200 characters
 - Fix labelling of "redo search button" at top of page 
 - Fix Facebook-preview picture
 
-v0.3.1  Sat 08 Feb 2020 11:07:33 AM CET
+v0.3.1  Sat 08 Feb 2020 11:07:33 AM CET [tag: v0.3.1]
 
 - An attempt at more helpful error messages when repertory lookup failed
 - Changed default for remedy display: formatted as opposed to explicit weights
@@ -18,7 +20,7 @@ v0.3.1  Sat 08 Feb 2020 11:07:33 AM CET
 - Bug fix: if a search was unsuccessful, a subsequent search would not remove
   the error message, if the results were the same as the last successful search
 
-v0.3.0  Sun 02 Feb 2020 01:17:05 PM CET
+v0.3.0  Sun 02 Feb 2020 01:17:05 PM CET [tag: v0.3.0]
 
 - Bug fix: available_reps wasn't called when drop-down was empty
 - Pulled out some REST Post-requests to Put and Delete to be more compliant
@@ -31,7 +33,7 @@ v0.2.1  Wed 29 Jan 2020 09:17:11 PM CET [tag: v0.2.1]
 - Removed superfluous REST-API calls to available_reps
 - Minor fixes and improvements:
   - Add www.oorep.com to application.conf
-  - Insert date into privacy policies (January 27, 2020)
+  - Insert date into privacy policies
 
 v0.2.0  Sat Jan 25 13:25:04 2020 +0100  [tag: v0.2.0]
 

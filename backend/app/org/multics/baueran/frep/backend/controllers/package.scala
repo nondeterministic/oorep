@@ -109,8 +109,8 @@ package object controllers {
     * Check if user has received a cookie after authentication (but do not check authorization here! This is not
     * a login method or the like!  Look inside Post.scala for how login is done, AFTER which a cookie is stored.)
     *
-    * This cookie needs to contain a matching member ID and salt, so that a user cannot easily access the data of
-    * a member with a different ID.  This method checks that this match is present and abuse prevented.
+    * This cookie needs to contain a matching member ID and salt (and lately also cookie creation date!), so
+    * that a user cannot access protected parts of the site.
     *
     * @param request
     * @return true, if the user who triggered the call of this function has a cookie with the corresponding salt value
@@ -121,14 +121,14 @@ package object controllers {
     getRequestCookies(request) match {
       case Nil => Left(errorMsg)
       case cookies =>
-        (getCookieValue(cookies, CookieFields.id.toString), getCookieValue(cookies, CookieFields.salt.toString)) match {
-          case (Some(memberIdStr), Some(cookieSalt)) if (memberIdStr.forall(_.isDigit)) =>
+        (getCookieValue(cookies, CookieFields.creationDate.toString), getCookieValue(cookies, CookieFields.id.toString), getCookieValue(cookies, CookieFields.salt.toString)) match {
+          case (creationDate, Some(memberIdStr), Some(cookieSalt)) if (memberIdStr.forall(_.isDigit)) =>
             val cookieMemberId = memberIdStr.toInt
             memberDao.get(cookieMemberId) match {
               case List(storedMember) =>
                 storedMember.hash.split(":") match {
                   case Array(_, storedSalt, _) =>
-                    if (storedSalt == cookieSalt && storedMember.member_id == cookieMemberId)
+                    if (storedSalt == cookieSalt && storedMember.member_id == cookieMemberId && creationDate == storedMember.lastseen)
                       Right(true)
                     else
                       Left(errorMsg)
