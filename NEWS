@@ -3,6 +3,8 @@ OOREP NEWS
 
 v0.3.2  under development
 
+- Don't suggest very short or non-alphanumeric short terms in helpful
+  messages when none or too many results are found
 - Logout user automatically if stale cookie was detected (as it may
   happen, if the user logged in from two different machines without
   logging out in between)

@@ -171,7 +171,7 @@ object Repertorise {
 
       // Yields a sequence like [ ("pain", 130), ("abdomen", 50), ... ]
       val sortedResultOccurrences =
-        (pathWords ::: textWords ::: fullPathWords).sortWith(_ > _)
+        (pathWords ::: textWords ::: fullPathWords).map(_.replaceAll("[^A-Za-z0-9]", "")).sortWith(_ > _)
           .groupBy(identity).mapValues(_.size)
           .toSeq.sortWith(_._2 > _._2)
 
