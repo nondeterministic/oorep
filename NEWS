@@ -1,7 +1,7 @@
 OOREP NEWS
 =-=-=-=-=-
 
-v0.3.2  under development
+v0.3.2  Sun 16 Feb 2020 09:02:50 AM CET [tag: v0.3.2]
 
 - Don't suggest very short or non-alphanumeric short terms in helpful
   messages when none or too many results are found
