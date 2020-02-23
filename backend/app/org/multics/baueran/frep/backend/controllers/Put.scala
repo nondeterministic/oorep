@@ -9,7 +9,7 @@ import backend.db.db.DBContext
 
 class Put @Inject()(cc: ControllerComponents, dbContext: DBContext) extends AbstractController(cc) with ServerUrl {
 
-  def updateCaseRubricsWeights() = Action { request: Request[AnyContent] =>
+  def updateCaseRubricsUserDefinedValues() = Action { request: Request[AnyContent] =>
     isUserAuthenticated(request) match {
       case Right(_) => {
         val requestData = request.body.asMultipartFormData.get.dataParts
@@ -20,30 +20,30 @@ class Put @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
               case (memberId, caseID, Some(caseRubrics)) =>
                 isUserAuthorized(request, memberId) match {
                   case Left(err) =>
-                    Logger.error(s"Post: delCaseRubricsFromCaze() failed: not authorised: $err")
+                    Logger.error(s"Put: updateCaseRubricsUserDefinedValues() failed: not authorised: $err")
                     Unauthorized(views.html.defaultpages.unauthorized())
                   case Right(_) =>
-                    if (cazeDao.updateCaseRubricsWeights(caseID, caseRubrics) > 0) {
-                      Logger.debug(s"Post: updateCaseRubricsWeights(): success")
+                    if (cazeDao.updateCaseRubricsUserDefinedValues(caseID, caseRubrics) > 0) {
+                      Logger.debug(s"Put: updateCaseRubricsUserDefinedValues(): success")
                       Ok
                     }
                     else {
-                      Logger.error(s"Post: updateCaseRubricsWeights(): failed")
-                      BadRequest(views.html.defaultpages.badRequest("POST", request.uri, "updateCaseRubricsWeights() failed"))
+                      Logger.error(s"Put: updateCaseRubricsUserDefinedValues(): failed")
+                      BadRequest(views.html.defaultpages.badRequest("PUT", request.uri, "updateCaseRubricsUserDefinedValues() failed"))
                     }
                 }
               case _ =>
-                Logger.error(s"Post: updateCaseRubricsWeights() failed: type conversion error which should never have happened")
-                BadRequest(views.html.defaultpages.badRequest("POST", request.uri, "updateCaseRubricsWeights() failed: type conversion error which should never have happened"))
+                Logger.error(s"Put: updateCaseRubricsUserDefinedValues() failed: type conversion error which should never have happened")
+                BadRequest(views.html.defaultpages.badRequest("PUT", request.uri, "updateCaseRubricsUserDefinedValues() failed: type conversion error which should never have happened"))
             }
           case _ => {
-            Logger.error(s"Post: updateCaseRubricsWeights() failed: no or the wrong form data received.")
-            BadRequest(views.html.defaultpages.badRequest("POST", request.uri, "updateCaseRubricsWeights() failed: no or the wrong form data received."))
+            Logger.error(s"Put: updateCaseRubricsUserDefinedValues() failed: no or the wrong form data received.")
+            BadRequest(views.html.defaultpages.badRequest("PUT", request.uri, "updateCaseRubricsUserDefinedValues() failed: no or the wrong form data received."))
           }
         }
       }
       case Left(err) =>
-        BadRequest(views.html.defaultpages.badRequest("POST", request.uri, "updateCaseRubricsWeights() failed: " + err))
+        BadRequest(views.html.defaultpages.badRequest("PUT", request.uri, "updateCaseRubricsUserDefinedValues() failed: " + err))
     }
   }
 
@@ -56,21 +56,21 @@ class Put @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
           case (Seq(memberIdStr), Seq(cazeIDStr), Seq(casedescription)) if (cazeIDStr.forall(_.isDigit) && (memberIdStr.forall(_.isDigit))) =>
             isUserAuthorized(request, memberIdStr.toInt) match {
               case Left(err) =>
-                Logger.error(s"Post: updateCaseDescription() failed: not authorised: $err")
+                Logger.error(s"Put: updateCaseDescription() failed: not authorised: $err")
                 Unauthorized(views.html.defaultpages.unauthorized())
               case Right(_) =>
                 if (cazeDao.updateCaseDescription(cazeIDStr.toInt, casedescription) > 0) {
-                  Logger.debug(s"Post: updateCaseDescription(): success")
+                  Logger.debug(s"Put: updateCaseDescription(): success")
                   Ok
                 }
                 else {
-                  Logger.error(s"Post: updateCaseDescription(): failed")
-                  BadRequest(views.html.defaultpages.badRequest("POST", request.uri, "updateCaseDescription() failed"))
+                  Logger.error(s"Put: updateCaseDescription(): failed")
+                  BadRequest(views.html.defaultpages.badRequest("PUT", request.uri, "updateCaseDescription() failed"))
                 }
             }
         }
       }
-      case Left(err) => BadRequest(views.html.defaultpages.badRequest("POST", request.uri, "updateCaseDescription() failed: " + err))
+      case Left(err) => BadRequest(views.html.defaultpages.badRequest("PUT", request.uri, "updateCaseDescription() failed: " + err))
     }
   }
 
@@ -86,21 +86,21 @@ class Put @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
                 val memberId = tmpFile.member_id
                 isUserAuthorized(request, memberId) match {
                   case Left(err) =>
-                    Logger.error(s"Post: updateFileDescription() failed: not authorised: $err")
+                    Logger.error(s"Put: updateFileDescription() failed: not authorised: $err")
                     Unauthorized(views.html.defaultpages.unauthorized())
                   case Right(_) =>
                     fileDao.changeDescription(fileId.toInt, filedescr)
                     Ok
                 }
               case _ =>
-                BadRequest(views.html.defaultpages.badRequest("POST", request.uri, "updateFileDescription() failed"))
+                BadRequest(views.html.defaultpages.badRequest("PUT", request.uri, "updateFileDescription() failed"))
             }
           case _ =>
-            BadRequest(views.html.defaultpages.badRequest("POST", request.uri, "updateFileDescription() failed"))
+            BadRequest(views.html.defaultpages.badRequest("PUT", request.uri, "updateFileDescription() failed"))
         }
       }
       case Left(err) =>
-        BadRequest(views.html.defaultpages.badRequest("POST", request.uri, "updateFileDescription() failed: " + err))
+        BadRequest(views.html.defaultpages.badRequest("PUT", request.uri, "updateFileDescription() failed: " + err))
     }
   }
 

@@ -1,6 +1,11 @@
 OOREP NEWS
 =-=-=-=-=-
 
+v0.4.0  under development
+
+- Added possibility to attach simple text labels to case rubrics
+- Repertorisation view now supports sorting
+
 v0.3.2  Sun 16 Feb 2020 09:02:50 AM CET [tag: v0.3.2]
 
 - Don't suggest very short or non-alphanumeric short terms in helpful

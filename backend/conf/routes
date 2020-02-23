@@ -18,7 +18,7 @@ POST   	/api/save_case                     org.multics.baueran.frep.backend.cont
 POST   	/api/save_file                     org.multics.baueran.frep.backend.controllers.Post.saveFile
 POST    /api/add_caserubrics_to_case       org.multics.baueran.frep.backend.controllers.Post.addCaseRubricsToCaze
 
-PUT     /api/update_caserubrics_weights    org.multics.baueran.frep.backend.controllers.Put.updateCaseRubricsWeights
+PUT     /api/update_caserubrics_userdef    org.multics.baueran.frep.backend.controllers.Put.updateCaseRubricsUserDefinedValues
 PUT   	/api/update_file_description       org.multics.baueran.frep.backend.controllers.Put.updateFileDescription
 PUT   	/api/update_case_description       org.multics.baueran.frep.backend.controllers.Put.updateCaseDescription
 

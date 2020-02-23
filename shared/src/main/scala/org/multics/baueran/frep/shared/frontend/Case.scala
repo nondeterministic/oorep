@@ -15,6 +15,7 @@ import io.circe.syntax._
 
 import scala.scalajs.js
 import scala.collection.mutable
+import mutable.ListBuffer
 import rx.{Rx, Var}
 import rx.Ctx.Owner.Unsafe._
 import scalatags.rx.all._
@@ -34,6 +35,18 @@ object Case {
   var cRubrics: List[CaseRubric] = List()
   private val remedyScores = mutable.HashMap[String,Integer]()
   private var prevCase: Option[shared.Caze] = None
+
+  object SortCaseBy extends Enumeration {
+    type SortCaseBy = Value
+    val Weight = Value("Weight")
+    val Abbrev = Value("Abbrev")
+    val Label = Value("Label")
+    val Path = Value("Path")
+  }
+  import SortCaseBy._
+  private var sortCaseBy = Abbrev
+  private var sortReverse = Var(false)
+  sortReverse.triggerLater(updateCaseViewAndDataStructures())
 
   // This is not really necessary for proper functioning, but when deleting a case/file which is currently shown,
   // the user could, by pressing add or remove again, mess up the database as we're trying to write to a file/case,
@@ -124,10 +137,10 @@ object Case {
                 "caserubrics" -> PlainTextBody(diff.asJson.toString)))
               .send()
           }
-          else if (descr.get.isEqualExceptWeights(prevCase.get).length > 0) { // Update weights only in DB
-            val diff = prevCase.get.isEqualExceptWeights(descr.get) // These are the user-changed ones, which we'll need to update in the DB, too.
+          else if (descr.get.isEqualExceptUserDefinedValues(prevCase.get).length > 0) { // Update user defined case rubric values only in DB
+            val diff = prevCase.get.isEqualExceptUserDefinedValues(descr.get) // These are the user-changed ones, which we'll need to update in the DB, too.
 
-            HttpRequest(s"${serverUrl()}/${apiPrefix()}/update_caserubrics_weights")
+            HttpRequest(s"${serverUrl()}/${apiPrefix()}/update_caserubrics_userdef")
               .withHeader("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
               .put(MultiPartBody(
                 "memberID" -> PlainTextBody(memberId.toString),
@@ -180,28 +193,52 @@ object Case {
     else
       prevCase = None
 
+    // Only draw labels and weights, if user is actually using them
+    val caseUsesLabels = cRubrics.filter(_.rubricLabel != None).length > 0
+    val caseUsesWeights = cRubrics.filter(_.rubricWeight != 1).length > 0
+
     // Redraw table header
     $("#analysisTHead").empty()
-    $("#analysisTHead").append(th(attr("scope"):="col", "W.").render)
-    $("#analysisTHead").append(th(attr("scope"):="col", "Rep.").render)
-    $("#analysisTHead").append(th(attr("scope"):="col", "Symptom").render)
+    if (caseUsesWeights)
+      $("#analysisTHead").append(th(attr("scope"):="col", a(href:="#caseSectionOfPage", cls:="underline", style:="color:black;", onclick:={ (event: Event) => sortCaseBy = Weight; sortReverse() = !sortReverse.now }, "W.")).render)
+    $("#analysisTHead").append(th(attr("scope"):="col", a(href:="#caseSectionOfPage", cls:="underline", style:="color:black;", onclick:={ (event: Event) => sortCaseBy = Abbrev; sortReverse() = !sortReverse.now }, "Rep.")).render)
+    if (caseUsesLabels)
+      $("#analysisTHead").append(th(attr("scope"):="col", a(href:="#caseSectionOfPage", cls:="underline", style:="color:black;", onclick:={ (event: Event) => sortCaseBy = Label; sortReverse() = !sortReverse.now }, "L.")).render)
+    $("#analysisTHead").append(th(attr("scope"):="col", a(href:="#caseSectionOfPage", cls:="underline", style:="color:black;", onclick:={ (event: Event) => sortCaseBy = Path; sortReverse() = !sortReverse.now }, "Symptom")).render)
     remedyScores.toList.sortWith(_._2 > _._2).map(_._1).foreach(abbrev =>
       $("#analysisTHead").append(th(attr("scope") := "col", div(cls:="vertical-text", style:="width: 30px;",
         s"${abbrev} (${remedyScores.get(abbrev).get})")).render))
 
+    // Redraw table body
     implicit def stringToString(s: String) = new BetterString(s) // For 'shorten'.
 
-    // Redraw table body
     $("#analysisTBody").empty()
-    for (cr <- cRubrics.filter(_.rubricWeight > 0).sortBy(cr => cr.repertoryAbbrev + cr.rubric.fullPath)) {
+    for (cr <- cRubrics.filter(_.rubricWeight > 0)
+      .sortBy(cr => {
+        if (sortCaseBy == Weight)
+          cr.rubricWeight + cr.rubricLabel.getOrElse("") + cr.repertoryAbbrev + cr.rubric.fullPath
+        else if (sortCaseBy == Path)
+          cr.rubric.fullPath
+        else if (sortCaseBy == Abbrev)
+          cr.repertoryAbbrev + cr.rubricLabel.getOrElse("") + cr.rubric.fullPath
+        else
+          cr.rubricLabel.getOrElse("") + cr.repertoryAbbrev + cr.rubric.fullPath
+      })(if (sortReverse.now) Ordering[String].reverse else Ordering[String].key))
+    {
       val trId = cr.rubric.fullPath.replaceAll("[^A-Za-z0-9]", "") + "_" + cr.repertoryAbbrev
 
+      // Construct table row entries
+      var tableRowEntries = new ListBuffer[JsDom.TypedTag[dom.html.TableCell]]()
+      if (caseUsesWeights)
+        tableRowEntries += td(cr.rubricWeight.toString())
+      tableRowEntries += td(cr.repertoryAbbrev)
+      if (caseUsesLabels)
+        tableRowEntries += td(cr.rubricLabel.getOrElse("").toString())
+      tableRowEntries += td(style:="white-space: nowrap;", cr.rubric.fullPath.shorten)
+
+      // Add table row
       $("#analysisTBody").append(
-        tr(scalatags.JsDom.attrs.id := trId,
-          td(cr.rubricWeight.toString()),
-          td(cr.repertoryAbbrev),
-          td(style:="white-space: nowrap;", cr.rubric.fullPath.shorten)
-        ).render)
+        tr(scalatags.JsDom.attrs.id := trId, tableRowEntries).render)
 
       remedyScores.toList.sortWith(_._2 > _._2).map(_._1) foreach (abbrev => {
         if (cr.rubricWeight > 0 && cr.containsRemedyAbbrev(abbrev))
@@ -362,13 +399,16 @@ object Case {
           crub.getFormattedRemedies()
 
       // The weight label on the drop-down button, which needs to change automatically on new user choice
-      // val weight = Var(crub.rubricWeight.toString())
       val weight = Var(crub.rubricWeight)
       val printWeight = Rx { weight().toString() }
 
+      // Same for label
+      val label = Var(crub.rubricLabel)
+      val printLabel = Rx { label().getOrElse("") }
+
       tr(scalatags.JsDom.attrs.id := "crub_" + crub.rubric.id + crub.repertoryAbbrev,
         td(
-          button(`type` := "button", cls := "btn dropdown-toggle btn-sm", style := "width: 45px;", data.toggle := "dropdown", printWeight),
+          button(`type` := "button", cls := "btn dropdown-toggle btn-sm", style := "width:45px;", data.toggle := "dropdown", printWeight),
           div(cls := "dropdown-menu",
             a(cls := "dropdown-item", href := "#caseSectionOfPage", onclick := { (event: Event) => crub.rubricWeight = 0; weight() = 0; updateCaseViewAndDataStructures() }, "0 (ignore)"),
             a(cls := "dropdown-item", href := "#caseSectionOfPage", onclick := { (event: Event) => crub.rubricWeight = 1; weight() = 1; updateCaseViewAndDataStructures() }, "1 (normal)"),
@@ -378,6 +418,38 @@ object Case {
           )
         ),
         td(crub.repertoryAbbrev),
+        td(
+          button(`type`:="button", cls:="btn dropdown-toggle btn-sm", style:="width:45px;", data.toggle:="dropdown", printLabel),
+          div(cls := "dropdown-menu", style:="max-height:250px; overflow-y:auto;",
+            a(cls := "dropdown-item", href := "#caseSectionOfPage", onclick := { (event: Event) => crub.rubricLabel = None; label() = None; updateCaseViewAndDataStructures() }, "none"),
+            a(cls := "dropdown-item", href := "#caseSectionOfPage", onclick := { (event: Event) => crub.rubricLabel = Some("A"); label() = Some("A"); updateCaseViewAndDataStructures() }, "A"),
+            a(cls := "dropdown-item", href := "#caseSectionOfPage", onclick := { (event: Event) => crub.rubricLabel = Some("B"); label() = Some("B"); updateCaseViewAndDataStructures() }, "B"),
+            a(cls := "dropdown-item", href := "#caseSectionOfPage", onclick := { (event: Event) => crub.rubricLabel = Some("C"); label() = Some("C"); updateCaseViewAndDataStructures() }, "C"),
+            a(cls := "dropdown-item", href := "#caseSectionOfPage", onclick := { (event: Event) => crub.rubricLabel = Some("D"); label() = Some("D"); updateCaseViewAndDataStructures() }, "D"),
+            a(cls := "dropdown-item", href := "#caseSectionOfPage", onclick := { (event: Event) => crub.rubricLabel = Some("E"); label() = Some("E"); updateCaseViewAndDataStructures() }, "E"),
+            a(cls := "dropdown-item", href := "#caseSectionOfPage", onclick := { (event: Event) => crub.rubricLabel = Some("F"); label() = Some("F"); updateCaseViewAndDataStructures() }, "F"),
+            a(cls := "dropdown-item", href := "#caseSectionOfPage", onclick := { (event: Event) => crub.rubricLabel = Some("G"); label() = Some("G"); updateCaseViewAndDataStructures() }, "G"),
+            a(cls := "dropdown-item", href := "#caseSectionOfPage", onclick := { (event: Event) => crub.rubricLabel = Some("H"); label() = Some("H"); updateCaseViewAndDataStructures() }, "H"),
+            a(cls := "dropdown-item", href := "#caseSectionOfPage", onclick := { (event: Event) => crub.rubricLabel = Some("I"); label() = Some("I"); updateCaseViewAndDataStructures() }, "I"),
+            a(cls := "dropdown-item", href := "#caseSectionOfPage", onclick := { (event: Event) => crub.rubricLabel = Some("J"); label() = Some("J"); updateCaseViewAndDataStructures() }, "J"),
+            a(cls := "dropdown-item", href := "#caseSectionOfPage", onclick := { (event: Event) => crub.rubricLabel = Some("K"); label() = Some("K"); updateCaseViewAndDataStructures() }, "K"),
+            a(cls := "dropdown-item", href := "#caseSectionOfPage", onclick := { (event: Event) => crub.rubricLabel = Some("L"); label() = Some("L"); updateCaseViewAndDataStructures() }, "L"),
+            a(cls := "dropdown-item", href := "#caseSectionOfPage", onclick := { (event: Event) => crub.rubricLabel = Some("M"); label() = Some("M"); updateCaseViewAndDataStructures() }, "M"),
+            a(cls := "dropdown-item", href := "#caseSectionOfPage", onclick := { (event: Event) => crub.rubricLabel = Some("N"); label() = Some("N"); updateCaseViewAndDataStructures() }, "N"),
+            a(cls := "dropdown-item", href := "#caseSectionOfPage", onclick := { (event: Event) => crub.rubricLabel = Some("O"); label() = Some("O"); updateCaseViewAndDataStructures() }, "O"),
+            a(cls := "dropdown-item", href := "#caseSectionOfPage", onclick := { (event: Event) => crub.rubricLabel = Some("P"); label() = Some("P"); updateCaseViewAndDataStructures() }, "P"),
+            a(cls := "dropdown-item", href := "#caseSectionOfPage", onclick := { (event: Event) => crub.rubricLabel = Some("Q"); label() = Some("Q"); updateCaseViewAndDataStructures() }, "Q"),
+            a(cls := "dropdown-item", href := "#caseSectionOfPage", onclick := { (event: Event) => crub.rubricLabel = Some("R"); label() = Some("R"); updateCaseViewAndDataStructures() }, "R"),
+            a(cls := "dropdown-item", href := "#caseSectionOfPage", onclick := { (event: Event) => crub.rubricLabel = Some("S"); label() = Some("S"); updateCaseViewAndDataStructures() }, "S"),
+            a(cls := "dropdown-item", href := "#caseSectionOfPage", onclick := { (event: Event) => crub.rubricLabel = Some("T"); label() = Some("T"); updateCaseViewAndDataStructures() }, "T"),
+            a(cls := "dropdown-item", href := "#caseSectionOfPage", onclick := { (event: Event) => crub.rubricLabel = Some("U"); label() = Some("U"); updateCaseViewAndDataStructures() }, "U"),
+            a(cls := "dropdown-item", href := "#caseSectionOfPage", onclick := { (event: Event) => crub.rubricLabel = Some("V"); label() = Some("V"); updateCaseViewAndDataStructures() }, "V"),
+            a(cls := "dropdown-item", href := "#caseSectionOfPage", onclick := { (event: Event) => crub.rubricLabel = Some("W"); label() = Some("W"); updateCaseViewAndDataStructures() }, "W"),
+            a(cls := "dropdown-item", href := "#caseSectionOfPage", onclick := { (event: Event) => crub.rubricLabel = Some("X"); label() = Some("X"); updateCaseViewAndDataStructures() }, "X"),
+            a(cls := "dropdown-item", href := "#caseSectionOfPage", onclick := { (event: Event) => crub.rubricLabel = Some("Y"); label() = Some("Y"); updateCaseViewAndDataStructures() }, "Y"),
+            a(cls := "dropdown-item", href := "#caseSectionOfPage", onclick := { (event: Event) => crub.rubricLabel = Some("Z"); label() = Some("Z"); updateCaseViewAndDataStructures() }, "Z")
+          )
+        ),
         td(crub.rubric.fullPath),
         td(remedies.take(remedies.size - 1).map(l => span(l, ", ")) ::: List(remedies.last)),
         td(cls := "text-right",
@@ -491,6 +563,7 @@ object Case {
           thead(cls:="thead-dark", scalatags.JsDom.attrs.id:="caseTHead",
             th(attr("scope"):="col", "Weight"),
             th(attr("scope"):="col", "Rep."),
+            th(attr("scope"):="col", "Label"),
             th(attr("scope"):="col", "Symptom"),
             th(attr("scope"):="col",
               a(scalatags.JsDom.attrs.id:="caseSectionOfPage",

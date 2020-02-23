@@ -7,7 +7,8 @@ case class CazeResult(id: Int,
                       member_id: Int,
                       abbrev: String,
                       rubricId: Int,
-                      weight: Int)
+                      weight: Int,
+                      label: Option[String])
 {
   def canEqual(a: Any) = a.isInstanceOf[CazeResult]
 
@@ -18,14 +19,15 @@ case class CazeResult(id: Int,
         that.member_id == member_id &&
         that.abbrev == abbrev &&
         that.rubricId == rubricId &&
-        that.weight == weight
+        that.weight == weight &&
+        that.label.getOrElse("") == label.getOrElse("")
       case _ => false
     }
   }
 
   override def hashCode: Int = {
     val prime = 31
-    (prime * abbrev.hashCode + member_id + rubricId + weight) * prime
+    (prime * abbrev.hashCode + member_id + rubricId + weight + label.getOrElse("23231").hashCode) * prime
   }
 
 }

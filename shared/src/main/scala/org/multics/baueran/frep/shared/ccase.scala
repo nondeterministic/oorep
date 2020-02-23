@@ -66,13 +66,14 @@ object WeightedRemedy {
 case class CaseRubric(rubric: Rubric,
                       repertoryAbbrev: String,
                       var rubricWeight: Int,
+                      var rubricLabel: Option[String],
                       weightedRemedies: List[WeightedRemedy])
 {
-  object WeightHandling extends Enumeration {
-    type WeightHandling = Value
+  object VarHandling extends Enumeration {
+    type VarHandling = Value
     val Equal, NotEqual, Ignore = Value
   }
-  import WeightHandling._
+  import VarHandling._
 
   def canEqual(a: Any) = a.isInstanceOf[CaseRubric]
 
@@ -88,14 +89,16 @@ case class CaseRubric(rubric: Rubric,
       0
   }
 
-  private def checkEquality(handlingOfWeight: WeightHandling, that: Any): Boolean = {
+  private def checkEquality(handlingOfVars: VarHandling, that: Any): Boolean = {
     that match {
       case that: CaseRubric =>
         this.canEqual(that) &&
           that.repertoryAbbrev == this.repertoryAbbrev &&
-          (handlingOfWeight match {
-            case Equal => s"${that.rubricWeight}".toLong == s"${this.rubricWeight}".toLong
-            case NotEqual => s"${that.rubricWeight}".toLong != s"${this.rubricWeight}".toLong
+          (handlingOfVars match {
+            case Equal => s"${that.rubricWeight}".toLong == s"${this.rubricWeight}".toLong  &&
+              that.rubricLabel.getOrElse("").toLowerCase.reverse == this.rubricLabel.getOrElse("").toLowerCase.reverse
+            case NotEqual => s"${that.rubricWeight}".toLong != s"${this.rubricWeight}".toLong  ||
+              that.rubricLabel.getOrElse("").toLowerCase.reverse != this.rubricLabel.getOrElse("").toLowerCase.reverse
             case _ => true
           }) &&
           that.rubric == this.rubric &&

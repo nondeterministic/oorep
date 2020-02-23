@@ -57,13 +57,11 @@ case class Caze(id: Int,
   }
 
   /**
-    * Returns a non-empty list of case rubrics that have different weights in *that* when compared to *this*' results.
-    *
-    * Returns an empty list otherwise (i.e., they could be equal or completely different in more ways than just weight).
-    *
+    * @return a non-empty list of case rubrics that have different weights or labels in *that* when compared to *this*' results.
+    *    Return an empty list otherwise (i.e., they could be equal or completely different in more ways than just weight or label).
     */
 
-  def isEqualExceptWeights(that: Caze): List[CaseRubric] = {
+  def isEqualExceptUserDefinedValues(that: Caze): List[CaseRubric] = {
     if (that.member_id == member_id && that.results.length == results.length && that.header == header && that.description == description) {
       val unequalCRubricPairs =
         results

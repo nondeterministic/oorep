@@ -281,24 +281,27 @@ class CazeDao(dbContext: db.db.DBContext) {
   }
 
   /**
+    * User defined currently label and weight.  The rest is static from repertories.
+    *
     * @return Number of updated case results
     */
 
-  def updateCaseRubricsWeights(caseId: Int, caseRubrics: List[CaseRubric]): Int = {
+  def updateCaseRubricsUserDefinedValues(caseId: Int, caseRubrics: List[CaseRubric]): Int = {
     val cResultDao = new CazeResultDao(dbContext)
     val caseResults = cResultDao.getCaseResults(caseId, caseRubrics)
 
     caseResults.map { case caseResult =>
         caseRubrics.filter(cr => cr.rubric.id == caseResult.rubricId && cr.rubric.abbrev == caseResult.abbrev) match {
           case caseRubric :: Nil =>
-            if (caseRubric.rubricWeight != caseResult.weight)
-              cResultDao.setWeight(caseResult.id, caseRubric.rubricWeight).toInt
-            else {
-              Logger.warn(s"CazeDao: UPDATECASERUBRICSWEIGHTS($caseId, #${caseRubrics.length}): skipping a case as weights are equal: ${caseRubric.rubricWeight}")
+            if (caseRubric.rubricWeight != caseResult.weight || caseRubric.rubricLabel.getOrElse("").reverse.reverse != caseResult.label.getOrElse("").reverse.reverse) {
+              cResultDao.setWeight(caseResult.id, caseRubric.rubricWeight).toInt +
+                cResultDao.setLabel(caseResult.id, caseRubric.rubricLabel).toInt
+            } else {
+              Logger.warn(s"CazeDao: UPDATECASERUBRICSUSERDEFINEDVALUES($caseId, #${caseRubrics.length}): skipping a case as weights and label are the same.")
               0
             }
           case _ =>
-            Logger.warn(s"CazeDao: UPDATECASERUBRICSWEIGHTS($caseId, #${caseRubrics.length}) failed.")
+            Logger.warn(s"CazeDao: UPDATECASERUBRICSUSERDEFINEDVALUES($caseId, #${caseRubrics.length}) failed: ${caseResults.mkString(", ")}.")
             0
         }
     }.foldLeft(0)(_ + _)

@@ -88,13 +88,6 @@ class RepertoryDao(dbContext: db.db.DBContext) {
     run(insert)
   }
 
-//  def getRubric(r: Rubric) = {
-//    val get = quote(query[Rubric].filter(rubric =>
-//      rubric.abbrev == lift(r.abbrev) && rubric.id == lift(r.id)
-//    ))
-//    run(get)
-//  }
-
   def getRubric(abbrev: String, id: Int) = {
     val get = quote(query[Rubric].filter(rubric =>
       rubric.abbrev == lift(abbrev) && rubric.id == lift(id)
@@ -176,25 +169,9 @@ class RepertoryDao(dbContext: db.db.DBContext) {
     results
       .map { case (rubric, _, _) => rubric }
       .distinct
-      .map { rubric => CaseRubric(rubric, abbrev, 1, getWeightedRemedies(rubric)) }
+      .map { rubric => CaseRubric(rubric, abbrev, 1, None, getWeightedRemedies(rubric)) }
       .sortBy { _.rubric.fullPath }
   }
-
-//  def getRemediesForRubric(rubric: Rubric): Seq[(Remedy, Int)] = {
-//    var result: ArrayBuffer[(Remedy, Int)] = new ArrayBuffer[(Remedy,Int)]
-//    val filter = quote { query[RubricRemedy].filter(rr => rr.rubricId == lift(rubric.id) && rr.abbrev == lift(rubric.abbrev)) }
-//    val remedyIdWeightTuples: Seq[(Int, Int)] = run(filter).map(rr => (rr.remedyId, rr.weight))
-//
-//    remedyIdWeightTuples.foreach { case (rid, rweight) =>
-//      val allRemedies = quote { query[Remedy].filter(r => r.abbrev == lift(rubric.abbrev)) }
-//      run(allRemedies).find(_.id == rid) match {
-//        case Some(remedy) => result += ((remedy, rweight))
-//        case None => Logger.warn("WARNING: RepertoryDao.getRemediesForRubric: No remedy found.")
-//      }
-//    }
-//
-//    result
-//  }
 
   def getRemediesForRubric(rubric: Rubric): List[WeightedRemedy] = { // Seq[(Remedy, Int)] = {
     var result: ArrayBuffer[(Remedy, Int)] = new ArrayBuffer[(Remedy,Int)]

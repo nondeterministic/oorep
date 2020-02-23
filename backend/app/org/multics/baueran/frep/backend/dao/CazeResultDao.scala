@@ -11,7 +11,7 @@ class CazeResultDao(dbContext: db.db.DBContext) {
 
   // The id of -1 is obviously bogus, and insert() needs to ignore it and let the DB count it up!
   private def cazeToCazeResults(c: Caze): List[CazeResult] = {
-    c.results.map(cr => CazeResult(-1, c.member_id, cr.rubric.abbrev, cr.rubric.id, cr.rubricWeight))
+    c.results.map(cr => CazeResult(-1, c.member_id, cr.rubric.abbrev, cr.rubric.id, cr.rubricWeight, cr.rubricLabel))
   }
 
   // Do not insert id, it is a serial number!
@@ -21,7 +21,8 @@ class CazeResultDao(dbContext: db.db.DBContext) {
         _.weight -> lift(c.weight),
         _.rubricId -> lift(c.rubricId),
         _.abbrev -> lift(c.abbrev),
-        _.member_id -> lift(c.member_id)
+        _.member_id -> lift(c.member_id),
+        _.label -> lift(c.label)
       ).returningGenerated(_.id)
     }
     val result = run(insert)
@@ -48,7 +49,7 @@ class CazeResultDao(dbContext: db.db.DBContext) {
 
   def insert(memberId: Int, crs: List[CaseRubric]): List[Int] = {
     Logger.debug(s"CazeResultDao: INSERT($memberId, #${crs.length}): inserting case rubrics.")
-    crs.map(cr => CazeResult(-1, memberId, cr.rubric.abbrev, cr.rubric.id, cr.rubricWeight))
+    crs.map(cr => CazeResult(-1, memberId, cr.rubric.abbrev, cr.rubric.id, cr.rubricWeight, cr.rubricLabel))
       .map(insert(_))
   }
 
@@ -73,6 +74,14 @@ class CazeResultDao(dbContext: db.db.DBContext) {
     run(quote(query[CazeResult]
       .filter(_.id == lift(id))
       .update(_.weight -> lift(weight)))
+    )
+  }
+
+  def setLabel(id: Int, label: Option[String]) = {
+    Logger.debug(s"CazeResultDao: SETLABEL($id, ${label.toString}) called")
+    run(quote(query[CazeResult]
+      .filter(_.id == lift(id))
+      .update(_.label -> lift(label)))
     )
   }
 
@@ -107,7 +116,12 @@ class CazeResultDao(dbContext: db.db.DBContext) {
     }
 
     val caseRubrics = dbResults.map { case (_, rubricRemedy, rubric, caseResult) =>
-      CaseRubric(rubric, rubric.abbrev, s"${caseResult.weight}".toInt, weightedRemedies.get(caseResult).getOrElse(List.empty))
+      CaseRubric(rubric, rubric.abbrev, s"${caseResult.weight}".toInt,
+        { caseResult.label match {
+          case Some(l) => Some(l.reverse.reverse)
+          case _ => None
+        }},
+        weightedRemedies.get(caseResult).getOrElse(List.empty))
     }.distinct
 
     caseRubrics
