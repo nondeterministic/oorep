@@ -3,7 +3,10 @@ OOREP NEWS
 
 v0.4.0  under development
 
-- Added possibility to attach simple text labels to case rubrics
+- Empty rubrics are now added to the search results (but cannot be added
+  to a case, of course)
+- Added possibility to attach simple single-character labels to case rubrics
+  (so that different forms of repertorisation can be applied)
 - Repertorisation view now supports sorting
 
 v0.3.2  Sun 16 Feb 2020 09:02:50 AM CET [tag: v0.3.2]

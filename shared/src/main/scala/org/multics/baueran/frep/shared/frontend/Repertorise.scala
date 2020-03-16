@@ -81,23 +81,30 @@ object Repertorise {
         else
           result.getFormattedRemedies()
 
-      tr(
-        td(result.rubric.fullPath, style:="min-width:400px;"),
-        td(remedies.take(remedies.size - 1).map(l => span(l, ", ")) ::: List(remedies.last)),
-        td(cls := "text-right",
-          button(cls:="btn btn-sm", `type`:="button", id:=("button_" + result.repertoryAbbrev + "_" + result.rubric.id),
-            style:="vertical-align: middle; display: inline-block",
-            (if (Case.cRubrics.filter(_.equalsIgnoreWeight(result)).size > 0) attr("disabled") := "disabled" else ""),
-            onclick:={ (event: Event) => {
-              event.stopPropagation()
-              Case.addRepertoryLookup(result)
-              Case.updateCaseViewAndDataStructures()
-              $("#button_" + result.repertoryAbbrev + "_" + result.rubric.id).attr("disabled", 1)
-              showCase()
-            }
-            }, "Add")
+      if (remedies.size > 0)
+        tr(
+          td(result.rubric.fullPath, style:="min-width:400px;"),
+          td(remedies.take(remedies.size - 1).map(l => span(l, ", ")) ::: List(remedies.last)),
+          td(cls := "text-right",
+            button(cls := "btn btn-sm", `type` := "button", id := ("button_" + result.repertoryAbbrev + "_" + result.rubric.id),
+              style := "vertical-align: middle; display: inline-block",
+              (if (Case.cRubrics.filter(_.equalsIgnoreWeight(result)).size > 0) attr("disabled") := "disabled" else ""),
+              onclick := { (event: Event) => {
+                event.stopPropagation()
+                Case.addRepertoryLookup(result)
+                Case.updateCaseViewAndDataStructures()
+                $("#button_" + result.repertoryAbbrev + "_" + result.rubric.id).attr("disabled", 1)
+                showCase()
+              }
+              }, "Add")
+          )
         )
-      )
+      else
+        tr(
+          td(result.rubric.fullPath, style := "min-width:400px;"),
+          td(),
+          td()
+        )
     }
 
     resetContentView()

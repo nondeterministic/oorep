@@ -76,10 +76,10 @@ object Repertory {
           val cursor = json.hcursor
           cursor.as[List[Remedy]] match {
             case Right(content) => content
-            case Left(_) => println("Remedies parsing of JSON failed: wrong data?"); List()
+            case Left(_) => println(s"Remedies parsing of JSON failed: $abbrev wrong data?"); List()
           }
         }
-        case Left(_) => println("Remedies parsing failed: no JSON-input?"); List()
+        case Left(_) => println(s"Remedies parsing failed: $abbrev no JSON-input?"); List()
       }
     }
 
@@ -91,10 +91,10 @@ object Repertory {
           val cursor = json.hcursor
           cursor.as[List[Rubric]] match {
             case Right(content) => content
-            case Left(_) => println("Rubrics parsing of JSON failed: wrong data?"); List()
+            case Left(_) => println(s"Rubrics parsing of JSON failed: $abbrev wrong data?"); List()
           }
         }
-        case Left(_) => println("Rubrics parsing failed: no JSON-input?"); List()
+        case Left(_) => println(s"Rubrics parsing failed: $abbrev no JSON-input?"); List()
       }
     }
 
@@ -106,10 +106,10 @@ object Repertory {
           val cursor = json.hcursor
           cursor.as[Info] match {
             case Right(content) => Some(content)
-            case Left(_) => println("Info parsing of JSON failed: wrong data?"); None
+            case Left(_) => println(s"Info parsing of JSON failed: $abbrev wrong data?"); None
           }
         }
-        case Left(_) => println("Info parsing failed: no JSON-input?"); None
+        case Left(_) => println(s"Info parsing failed: $abbrev no JSON-input?"); None
       }
     }
 
@@ -121,10 +121,10 @@ object Repertory {
           val cursor = json.hcursor
           cursor.as[List[ChapterRemedy]] match {
             case Right(content) => content
-            case Left(_) => println("ChapterRemedies parsing of JSON failed: wrong data?"); List()
+            case Left(_) => println(s"ChapterRemedies parsing of JSON failed: $abbrev wrong data?"); List()
           }
         }
-        case Left(_) => println("ChapterRemedies parsing failed: no JSON-input?"); List()
+        case Left(_) => println(s"ChapterRemedies parsing failed: $abbrev no JSON-input?"); List()
       }
     }
 
@@ -136,10 +136,10 @@ object Repertory {
           val cursor = json.hcursor
           cursor.as[List[Chapter]] match {
             case Right(content) => content
-            case Left(_) => println("Chapters parsing of JSON failed: wrong data?"); List()
+            case Left(_) => println(s"Chapters parsing of JSON failed: $abbrev wrong data?"); List()
           }
         }
-        case Left(_) => println("Chapters parsing failed: no JSON-input?"); List()
+        case Left(_) => println(s"Chapters parsing failed: $abbrev no JSON-input?"); List()
       }
     }
 
@@ -151,10 +151,10 @@ object Repertory {
           val cursor = json.hcursor
           cursor.as[List[RubricRemedy]] match {
             case Right(content) => content
-            case Left(_) => println("RubricRemedies parsing of JSON failed: wrong data?"); List()
+            case Left(_) => println(s"RubricRemedies parsing of JSON failed: $abbrev wrong data?"); List()
           }
         }
-        case Left(_) => println("RubricRemedies parsing failed: no JSON-input?"); List()
+        case Left(_) => println(s"RubricRemedies parsing failed: $abbrev no JSON-input?"); List()
       }
     }
 

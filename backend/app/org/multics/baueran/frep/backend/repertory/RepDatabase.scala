@@ -70,31 +70,43 @@ object RepDatabase {
       if (dao.getInfo(repInfo.abbrev).size == 0) {
         Logger.debug("Inserting info into DB for " + repInfo.abbrev + ".")
         dao.insert(repInfo)
+      } else {
+        Logger.debug("NOT inserting info into DB for " + repInfo.abbrev + ".")
       }
 
       if (repertory.chapters.size > 0 && dao.getChapter(repertory.chapters.last.id).size == 0) {
         Logger.debug("Inserting chapters into DB for " + repertory.info.abbrev + ".")
         repertory.chapters.foreach(dao.insert(_))
+      } else {
+        Logger.debug("NOT inserting chapters into DB for " + repertory.info.abbrev + ".")
       }
 
       if (repertory.rubricRemedies.size > 0 && dao.getRubricRemedy(repertory.rubricRemedies.last).size == 0) {
         Logger.debug("Inserting rubric remedies into DB for " + repertory.info.abbrev + ".")
         repertory.rubricRemedies.foreach(dao.insert(_))
+      } else {
+        Logger.debug("NOT inserting rubric remedies into DB for " + repertory.info.abbrev + ".")
       }
 
       if (repertory.remedies.size > 0 && dao.getRemedy(repertory.remedies.last.abbrev, repertory.remedies.last.id).size == 0) {
         Logger.debug("Inserting remedies into DB for " + repertory.info.abbrev + ".")
         repertory.remedies.foreach(dao.insert(_))
+      } else {
+        Logger.debug("NOT inserting remedies into DB for " + repertory.info.abbrev + ".")
       }
 
       if (repertory.chapterRemedies.size > 0 && dao.getChapterRemedy(repertory.chapterRemedies.last).size == 0) {
         Logger.debug("Inserting chapter remedies into DB for " + repertory.info.abbrev + ".")
         repertory.chapterRemedies.foreach(dao.insert(_))
+      } else {
+        Logger.debug("NOT inserting chapter remedies into DB for " + repertory.info.abbrev + ".")
       }
 
       if (repertory.rubrics.size > 0 && dao.getRubric(repertory.rubrics.last.abbrev, repertory.rubrics.last.id).size == 0) {
         Logger.debug("Inserting rubrics into DB for " + repertory.info.abbrev + ".")
         repertory.rubrics.foreach(dao.insert(_))
+      } else {
+        Logger.debug("NOT inserting rubrics into DB for " + repertory.info.abbrev + ".")
       }
 
     })

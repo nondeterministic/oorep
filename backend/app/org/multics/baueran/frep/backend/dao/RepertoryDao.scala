@@ -133,7 +133,7 @@ class RepertoryDao(dbContext: db.db.DBContext) {
     // It is also very brittle with the Umlauts...
     val approximateSearchTerm = "%" + searchTerms.positive.head.replaceAll("[^A-Za-z0-9 äÄÜüÖöß\\-]", "").toLowerCase + "%"
 
-    val tmpResults =
+    val tmpRubrics =
       run(
         quote {
           query[Rubric]
@@ -149,28 +149,33 @@ class RepertoryDao(dbContext: db.db.DBContext) {
         .sortBy(_.fullPath)
         .take(maxNumberOfResults)
 
-    val results =
-      run(
+    val tmpRubricRemedies =
+      run (
         quote {
-          for {
-            rubrics <- query[Rubric].filter(rubric => rubric.abbrev == lift(abbrev) && liftQuery(tmpResults.map(_.id)).contains(rubric.id))
-            remedies <- query[Remedy].join(remedy => remedy.abbrev == rubrics.abbrev)
-            rr <- query[RubricRemedy].join(r => r.remedyId == remedies.id && r.rubricId == rubrics.id && r.abbrev == rubrics.abbrev)
-          } yield (rubrics, remedies, rr)
+          query[RubricRemedy]
+            .filter(rr =>
+              liftQuery(tmpRubrics.map(_.id)).contains(rr.rubricId) && rr.abbrev == lift(abbrev)
+            )
+        }
+      )
+
+    val tmpRemedies =
+      run (
+        quote {
+          query[Remedy]
+            .filter(r =>
+              liftQuery(tmpRubricRemedies.map(_.remedyId)).contains(r.id) && r.abbrev == lift(abbrev)
+            )
         }
       )
 
     def getWeightedRemedies(rubric: Rubric) = {
-      results
-        .filter(_._1 == rubric)
-        .map { case (_, rem, rr) => WeightedRemedy(rem, rr.weight) }
+      tmpRubricRemedies.filter(_.rubricId == rubric.id).map(rr => WeightedRemedy(tmpRemedies.filter(_.id == rr.remedyId).head, rr.weight))
     }
 
-    results
-      .map { case (rubric, _, _) => rubric }
-      .distinct
-      .map { rubric => CaseRubric(rubric, abbrev, 1, None, getWeightedRemedies(rubric)) }
-      .sortBy { _.rubric.fullPath }
+    val caseRubrics = tmpRubrics.map(rubric => CaseRubric(rubric, abbrev, 1, None, getWeightedRemedies(rubric)))
+    Logger.info(s"${caseRubrics.size} case rubrics")
+    caseRubrics.distinct// .filter(_.weightedRemedies.length > 0) // TODO: Remove, and then deal with empty rubrics!
   }
 
   def getRemediesForRubric(rubric: Rubric): List[WeightedRemedy] = { // Seq[(Remedy, Int)] = {
