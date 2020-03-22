@@ -15,9 +15,9 @@ object Disclaimer {
 
   def toHTML() = {
     div(cls:="jumbotron jumbo-dark horizontal-center", id:="content_bottom", style:="position: relative;",
-      a(href:="https://gitlab.com/nondeterministic/oorep",
-        // img(style:="position: absolute; top: 0; right: 0; border: 0;", src:="https://s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png", alt:="Fork me on GitHub")
-        img(style:="position: absolute; top: 0; right: 0; border: 0;", src:=s"${serverUrl()}/assets/html/img/forkme_right_red.png", alt:="Fork me on GitLab")
+      a(href:="https://github.com/nondeterministic/oorep",
+        img(style:="position: absolute; top: 0; right: 0; border: 0;", src:="https://s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png", alt:="Fork me on GitHub")
+        // img(style:="position: absolute; top: 0; right: 0; border: 0;", src:=s"${serverUrl()}/assets/html/img/forkme_right_red.png", alt:="Fork me on GitLab")
       ),
       br,
       div(style:="font-size:12px; max-width:700px;",
