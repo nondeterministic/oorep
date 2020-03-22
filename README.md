@@ -1,7 +1,7 @@
 # OOREP
 
 OOREP is an acronym for open online repertory for homeopathy.  That is, it lets
-users look up categories in homeopathic repertories.  This GitLab repository
+users look up categories in homeopathic repertories.  This git repository
 consists of its (mainly) ScalaJS source code.  A running version of it, however,
 can also be found at https://www.oorep.com/.
 
