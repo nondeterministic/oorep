@@ -45,6 +45,8 @@ object Disclaimer {
       div(style:="margin-top: 0.5cm;",
         a(cls:="underline", style:="color:white;", href:=serverUrl(), "Home"),
         " | ",
+        a(cls:="underline", style:="color:white;", href:="https://twitter.com/OOREP1", "News"),
+        " | ",
         a(cls:="underline", style:="color:white;", href:="#", onclick:= { () => loadAndScroll("impressum.html") }, "Impressum"),
         " | ",
         a(cls:="underline", style:="color:white;", href:="#", onclick:= { () => loadAndScroll("contact.html") }, "Contact"),
