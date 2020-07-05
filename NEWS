@@ -8,6 +8,7 @@ v0.4.0  under development
 - Added possibility to attach simple single-character labels to case rubrics
   (so that different forms of repertorisation can be applied)
 - Repertorisation view now supports sorting
+- Files are now displayed sorted in modal dialogs
 
 v0.3.2  Sun 16 Feb 2020 09:02:50 AM CET [tag: v0.3.2]
 
