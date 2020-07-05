@@ -28,7 +28,7 @@ object About {
              layperson I have found it difficult, if not impossible, to get access to a good electronic repertorisation.
              Most homeopathic softwares are very expensive and intended to be used by people who make money by using them.
              For those of us who don't (or don't yet), like hobbyists or students, the access to these kinds of programs used to be very slim.
-             With OOREP I intend to improve this sitation somewhat.  So I hope it is useful to others, too.
+             With OOREP I intend to improve this situation somewhat.  So I hope it is useful to others, too.
                 """)
             )
           ),

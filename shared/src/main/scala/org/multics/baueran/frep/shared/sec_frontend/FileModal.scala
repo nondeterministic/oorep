@@ -20,6 +20,10 @@ abstract class FileModal {
 
   def empty() = files() = List()
 
-  def appendItem(listItem: Anchor) = Rx { files() = listItem :: files.now }
+  def appendItem(listItem: Anchor) = Rx {
+    files() =
+      (listItem :: files.now)
+        .sortBy(anchor => anchor.text)
+  }
 
 }
