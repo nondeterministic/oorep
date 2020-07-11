@@ -7,14 +7,15 @@ import java.io.File
 import scala.collection.mutable
 import scala.io.Source
 import io.circe.parser._
-import play.api.Logger
 import org.multics.baueran.frep.backend.dao.RepertoryDao
 import org.multics.baueran.frep.backend.db.db.DBContext
+import org.multics.baueran.frep.backend.repertory.Repertory
 
 object RepDatabase {
   private var repertories = mutable.HashMap[String, Repertory]()
   private var availableRepertoriesAbbrevs = mutable.HashSet[String]()
   private var dao: RepertoryDao = null
+  private val Logger = play.api.Logger(this.getClass)
 
   /**
     * Needs to be called FIRST! It makes sure, the DB is ready

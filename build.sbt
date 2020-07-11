@@ -1,19 +1,24 @@
 import sbt.Keys.libraryDependencies
-import sbtcrossproject.{CrossType, crossProject}
 
-val myScalaVersion     = "2.12.9"
-val scalaTestVersion   = "3.1.0"
-val scalaJsDomVersion  = "0.9.7"
-val scalaTagsVersion   = "0.7.0"
-val scalatagsrxVersion = "0.4.0"
-val scalaJQueryVersion = "1.2"
-val circeVersion       = "0.11.1"
-val rosHttpVersion     = "2.2.4"
-val quillVersion       = "3.4.3"
+val myScalaVersion     = "2.13.1"
+val scalaTestVersion   = "5.1.0"
+val scalaJsDomVersion  = "1.0.0"
+val scalaTagsVersion   = "0.8.6"
+val scalatagsrxVersion = "0.5.0-4-6ff9f05-SNAPSHOT"
+val scalaJQueryVersion = "2.0"
+val circeVersion       = "0.13.0"
+val rosHttpVersion     = "3.0.0"
+val quillVersion       = "3.5.2"
 val pgDriverVersion    = "42.2.5"
-val notifyjsVersion    = "0.1.1"
+val notifyjsVersion    = "0.2.0"
+val scriptsVersion     = "1.1.4"
 
-resolvers in ThisBuild += Resolver.bintrayRepo("hmil", "maven")
+resolvers in ThisBuild += "hmil" at "https://dl.bintray.com/hmil/maven"
+// resolvers in ThisBuild += Resolver.bintrayRepo("hmil", "maven")
+
+useJCenter := true
+
+scalaVersion in ThisBuild := myScalaVersion
 
 lazy val backend = (project in file("backend")).settings(commonSettings).settings(
   scalaJSProjects := Seq(frontend, sec_frontend),
@@ -23,7 +28,7 @@ lazy val backend = (project in file("backend")).settings(commonSettings).setting
   compile in Compile := ((compile in Compile) dependsOn scalaJSPipeline).value,
   isDevMode in scalaJSPipeline := false,
   libraryDependencies ++= Seq(
-    "com.vmunier" %% "scalajs-scripts" % "1.1.2",
+    "com.vmunier" %% "scalajs-scripts" % scriptsVersion,
     jdbc,
     evolutions,
     "org.postgresql" % "postgresql" % pgDriverVersion,
@@ -54,7 +59,7 @@ lazy val frontend = (project in file("frontend")).settings(commonSettings).setti
     "fr.hmil" %%% "roshttp" % rosHttpVersion,
     "com.timushev" %%% "scalatags-rx" % scalatagsrxVersion
   ),
-).enablePlugins(ScalaJSPlugin, ScalaJSWeb)
+).enablePlugins(JSDependenciesPlugin, ScalaJSPlugin, ScalaJSWeb)
  .dependsOn(sharedJs)
 
 lazy val sec_frontend = (project in file("sec_frontend")).settings(commonSettings).settings(
@@ -71,12 +76,13 @@ lazy val sec_frontend = (project in file("sec_frontend")).settings(commonSetting
     "fr.hmil" %%% "roshttp" % rosHttpVersion, 
     "com.timushev" %%% "scalatags-rx" % scalatagsrxVersion
   ),
-).enablePlugins(ScalaJSPlugin, ScalaJSWeb)
+).enablePlugins(JSDependenciesPlugin, ScalaJSPlugin, ScalaJSWeb)
  .dependsOn(sharedJs)
 
 lazy val shared = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
   .in(file("shared"))
+  .jsConfigure(_.enablePlugins(JSDependenciesPlugin))
   .settings(
     libraryDependencies ++= Seq(
       "io.circe" %% "circe-core" % circeVersion,
@@ -91,9 +97,11 @@ lazy val shared = crossProject(JSPlatform, JVMPlatform)
       "com.github.nondeterministic" %%% "scalajs-notifyjs" % notifyjsVersion,
       guice,
       specs2 % Test
-    )
+    ),
+    jsDependencies += "org.webjars" % "jquery"   % "2.2.4" / "2.2.4/jquery.js",
+    jsDependencies += "org.webjars" % "notifyjs" % "0.4.2" / "0.4.2/notify.js",
   )
-  .enablePlugins(ScalaJSPlugin, ScalaJSWeb)
+  .enablePlugins(JSDependenciesPlugin, ScalaJSPlugin, ScalaJSWeb)
 
 lazy val sharedJvm = shared.jvm
 lazy val sharedJs = shared.js
@@ -107,7 +115,7 @@ lazy val commonSettings = Seq(
   scalaVersion := myScalaVersion,
   organization := "org.multics.baueran.frep",
   maintainer := "baueran@gmail.com",
-  version := "0.4.0"
+  version := "0.5.0"
 )
 
 // loads the frontend project at sbt startup

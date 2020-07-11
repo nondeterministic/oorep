@@ -2,7 +2,6 @@ package org.multics.baueran.frep.backend.controllers
 
 import javax.inject._
 import play.api.mvc._
-import play.api.Logger
 import io.circe.syntax._
 import org.multics.baueran.frep.backend.dao.{CazeDao, FileDao, RepertoryDao}
 import org.multics.baueran.frep.backend.repertory._
@@ -21,6 +20,8 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
   cazeDao = new CazeDao(dbContext)
   fileDao = new FileDao(dbContext)
   memberDao = new MemberDao(dbContext)
+
+  private val Logger = play.api.Logger(this.getClass)
 
   RepDatabase.setup(dbContext)
 
@@ -52,13 +53,13 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
           case _ =>
             val errStr = s"Get: authenticate(): User cannot be authenticated."
             Logger.error(errStr)
-            BadRequest(views.html.defaultpages.badRequest("GET", request.uri, errStr))
+            BadRequest(errStr)
         }
       }
       case _ =>
         val errStr = s"Get: authenticate(): User not in database."
         Logger.error(errStr)
-        BadRequest(views.html.defaultpages.badRequest("GET", request.uri, errStr))
+        BadRequest(errStr)
     }
   }
 
@@ -79,12 +80,12 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
       case Left(err) =>
         val errStr = "Get: availableFiles(): availableFiles() failed: " + err
         Logger.error(errStr)
-        BadRequest(views.html.defaultpages.badRequest("GET", request.uri, errStr))
+        BadRequest(errStr)
       case Right(_) =>
         isUserAuthorized(request, memberId) match {
           case Left(err) =>
             Logger.error(s"Get: availableFiles() failed: not authorised: $err")
-            Unauthorized(views.html.defaultpages.unauthorized())
+            Unauthorized
           case Right(_) =>
             val dbFiles = fileDao.getDbFilesForMember(memberId)
             Ok(dbFiles.map(dbFile => (dbFile.id, dbFile.header)).asJson.toString)
@@ -96,21 +97,21 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     isUserAuthenticated(request) match {
       case Left(err) =>
         Logger.error(err)
-        BadRequest(views.html.defaultpages.badRequest("GET", request.uri, err))
+        BadRequest(err)
       case Right(_) => {
         fileDao.getFIle(fileId.toInt) match {
           case file :: Nil =>
             isUserAuthorized(request, file.member_id) match {
               case Left(err) =>
                 Logger.error(s"Get: getFile() failed: not authorised: $err")
-                Unauthorized(views.html.defaultpages.unauthorized())
+                Unauthorized
               case Right(_) =>
                 Ok(file.asJson.toString())
             }
           case _ =>
             val errStr = "Get: getFile() returned nothing"
             Logger.error(errStr)
-            BadRequest(views.html.defaultpages.badRequest("GET", request.uri, errStr))
+            BadRequest(errStr)
         }
       }
     }
@@ -125,18 +126,18 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
             isUserAuthorized(request, caze.member_id) match {
               case Left(err) =>
                 Logger.error(s"Get: getCase() failed: not authorised: $err")
-                Unauthorized(views.html.defaultpages.unauthorized())
+                Unauthorized
               case Right(_) =>
                 Ok(caze.asJson.toString())
             }
           case _ =>
             val errStr = "Get: getCase() failed: DB returned nothing."
             Logger.error(errStr)
-            BadRequest(views.html.defaultpages.badRequest("GET", request.uri, errStr))
+            BadRequest(errStr)
         }
       }
       case _ =>
-        BadRequest(views.html.defaultpages.badRequest("GET", request.uri, "getCase() failed"))
+        BadRequest("getCase() failed")
     }
   }
 
@@ -166,20 +167,20 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
           isUserAuthorized(request, files.head.member_id) match {
             case Left(err) =>
               Logger.error(s"Get: fileOverview() failed: not authorised: $err")
-              Unauthorized(views.html.defaultpages.unauthorized())
+              Unauthorized
             case Right(_) =>
               Ok(results.asJson.toString())
           }
         }
         else
-          BadRequest(views.html.defaultpages.badRequest("GET", request.uri, s"fileOverview($fileId) failed: no files found."))
+          BadRequest(s"fileOverview($fileId) failed: no files found.")
       case Left(err) =>
         Logger.error(err)
-        BadRequest(views.html.defaultpages.badRequest("GET", request.uri, err))
+        BadRequest(err)
       case _ =>
         val err = "Get: fileOverview failed."
         Logger.error(err)
-        BadRequest(views.html.defaultpages.badRequest("GET", request.uri, err))
+        BadRequest(err)
     }
   }
 
@@ -187,7 +188,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     if (symptom.length >= maxLengthOfSymptoms) {
       val errStr = s"Get: input exceeded max length of ${maxLengthOfSymptoms}."
       Logger.warn(errStr)
-      BadRequest(views.html.defaultpages.badRequest("GET", request.uri, errStr))
+      BadRequest(errStr)
     }
     else {
       val dao = new RepertoryDao(dbContext)
@@ -196,7 +197,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
       if (results.size == 0) {
         val errStr = s"Get: repertorise(${repertoryAbbrev}, ${symptom}): no results found"
         Logger.warn(errStr)
-        BadRequest(views.html.defaultpages.badRequest("GET", request.uri, errStr))
+        BadRequest(errStr)
       }
       else {
         Logger.debug(s"Get: repertorise(${repertoryAbbrev}, ${symptom}): #results: ${results.size}.")

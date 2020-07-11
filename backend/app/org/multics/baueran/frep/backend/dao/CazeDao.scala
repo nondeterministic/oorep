@@ -3,12 +3,14 @@ package org.multics.baueran.frep.backend.dao
 import org.multics.baueran.frep._
 import backend.db
 import shared.{BetterString, CaseRubric, Caze}
-import play.api.Logger
+import io.getquill.Update
+import io.getquill.ActionReturning
 
 class CazeDao(dbContext: db.db.DBContext) {
 
   import dbContext._
 
+  private val Logger = play.api.Logger(this.getClass)
   private val tableCaze = quote { querySchema[Caze]("Caze", _.date -> "date_") }
 
   def insert(c: Caze): Int = {

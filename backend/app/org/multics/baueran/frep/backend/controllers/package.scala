@@ -9,13 +9,13 @@ import org.multics.baueran.frep.shared.Member
 import javax.crypto.spec.PBEKeySpec
 import javax.crypto.SecretKeyFactory
 import java.security.SecureRandom
-import play.api.Logger
 
 package object controllers {
 
   var memberDao: MemberDao = _
   var cazeDao: CazeDao = _
   var fileDao: FileDao = _
+  private val Logger = play.api.Logger(this.getClass)
 
   /**
     * Returns empty list if request does not contain valid cookies that are useful for authentication
@@ -38,9 +38,7 @@ package object controllers {
     val skf = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1")
     val hash = skf.generateSecret(spec).getEncoded()
 
-    iterations + ":" +
-      java.util.Base64.getEncoder.encodeToString(salt) + ":" +
-      java.util.Base64.getEncoder.encodeToString(hash)
+    s"${iterations}:${java.util.Base64.getEncoder.encodeToString(salt)}:${java.util.Base64.getEncoder.encodeToString(hash)}"
   }
 
   /**

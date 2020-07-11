@@ -2,13 +2,14 @@ package org.multics.baueran.frep.backend.dao
 
 import org.multics.baueran.frep._
 import backend.db
+import io.getquill.Update
 import shared.{Caze, FIle, dbFile}
-import play.api.Logger
 
 class FileDao(dbContext: db.db.DBContext) {
 
   import dbContext._
 
+  private val Logger = play.api.Logger(this.getClass)
   private val tableFile = quote {
     querySchema[dbFile]("File", _.date -> "date_")
   }

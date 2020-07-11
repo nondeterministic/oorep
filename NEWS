@@ -1,6 +1,11 @@
 OOREP NEWS
 =-=-=-=-=-
 
+v0.5.0  Sun 02 Aug 2020 11:10:51 AM CEST [tag: v0.5.0]
+
+- Upgraded program to ScalaJS 1.1 and Play 2.8 (and other dependencies
+  accordingly)
+
 v0.4.0  Sun 02 Aug 2020 10:22:18 AM CEST [tag: v0.4.0]
 
 - Empty rubrics are now added to the search results (but cannot be added
@@ -8,7 +13,7 @@ v0.4.0  Sun 02 Aug 2020 10:22:18 AM CEST [tag: v0.4.0]
 - Added possibility to attach simple single-character labels to case rubrics
   (so that different forms of repertorisation can be applied)
 - Repertorisation view now supports sorting
-- Files are now displayed sorted in modal dialogs
+- Modal dialogs now display files sorted
 
 v0.3.2  Sun 16 Feb 2020 09:02:50 AM CET [tag: v0.3.2]
 

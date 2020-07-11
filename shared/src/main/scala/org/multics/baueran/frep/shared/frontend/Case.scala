@@ -238,7 +238,7 @@ object Case {
 
       // Add table row
       $("#analysisTBody").append(
-        tr(scalatags.JsDom.attrs.id := trId, tableRowEntries).render)
+        tr(scalatags.JsDom.attrs.id := trId, tableRowEntries.toList).render)
 
       remedyScores.toList.sortWith(_._2 > _._2).map(_._1) foreach (abbrev => {
         if (cr.rubricWeight > 0 && cr.containsRemedyAbbrev(abbrev))

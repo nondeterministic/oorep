@@ -59,21 +59,16 @@ package object FileModalCallbacks {
       })
     }
 
-    def updateMemberFiles(response: Any): Unit = {
-      response match {
-        case response: Success[SimpleHttpResponse] => {
-          parse(response.get.body) match {
-            case Right(json) => {
-              val cursor = json.hcursor
-              cursor.as[List[(Int, String)]] match {
-                case Right(fileIdHeaderTuples) => fileHeadersAddToModals(fileIdHeaderTuples)
-                case Left(t) => println(s"ERROR: updateMemberFiles: decoding of available files failed: $t")
-              }
-            }
-            case Left(_) => println("ERROR: updateMemberFiles: parsing of available files failed (is it JSON?).")
+    def updateMemberFiles(response: String): Unit = {
+      parse(response) match {
+        case Right(json) => {
+          val cursor = json.hcursor
+          cursor.as[List[(Int, String)]] match {
+            case Right(fileIdHeaderTuples) => fileHeadersAddToModals(fileIdHeaderTuples)
+            case Left(t) => println(s"ERROR: updateMemberFiles: decoding of available files failed: $t")
           }
         }
-        case _: Any => println("ERROR: updateMemberFiles: received Failure response likely due a stale cookie, which has now been deleted.")
+        case Left(_) => println("ERROR: updateMemberFiles: parsing of available files failed (is it JSON?).")
       }
     }
 
@@ -91,7 +86,12 @@ package object FileModalCallbacks {
           dom.window.location.replace(serverUrl())
           println(s"ERROR: updateMemberFiles: IOException occurred: There was a network issue, perhaps try again: ${e.getMessage}")
       }
-      .onComplete((r: Any) => updateMemberFiles(r))
+      .onComplete({
+        case r:Success[SimpleHttpResponse] =>
+          updateMemberFiles(r.get.body)
+        case _ =>
+          println("ERROR: updateMemberFiles: received Failure response likely due a stale cookie, which has now been deleted.")
+      })
 
   }
 

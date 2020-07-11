@@ -3,11 +3,12 @@ package org.multics.baueran.frep.backend.dao
 import scala.collection.mutable.HashMap
 import org.multics.baueran.frep.backend.db
 import org.multics.baueran.frep.shared.{CaseRubric, Caze, CazeResult, Remedy, Rubric, RubricRemedy, WeightedRemedy}
-import play.api.Logger
 
 class CazeResultDao(dbContext: db.db.DBContext) {
 
   import dbContext._
+
+  private val Logger = play.api.Logger(this.getClass)
 
   // The id of -1 is obviously bogus, and insert() needs to ignore it and let the DB count it up!
   private def cazeToCazeResults(c: Caze): List[CazeResult] = {

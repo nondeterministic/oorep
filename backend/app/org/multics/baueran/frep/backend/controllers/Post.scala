@@ -2,13 +2,14 @@ package org.multics.baueran.frep.backend.controllers
 
 import javax.inject._
 import play.api.mvc._
-import play.api.Logger
 import org.multics.baueran.frep._
 import shared.Defs._
 import shared.{CaseRubric, Caze, FIle, MyDate}
 import backend.db.db.DBContext
 
 class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends AbstractController(cc) with ServerUrl {
+
+  private val Logger = play.api.Logger(this.getClass)
 
   def login() = Action { implicit request =>
     val inputEmail: String = request.body.asFormUrlEncoded.get("inputEmail").head
@@ -37,10 +38,12 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
                 Cookie(CookieFields.creationDate.toString, cookieCreationDate.toString(), httpOnly = false)
               )
           case _ =>
-            BadRequest(views.html.defaultpages.badRequest("POST", request.uri, errorMessage))
+            BadRequest(errorMessage)
+            // BadRequest(views.html.defaultpages.badRequest("POST", request.uri, errorMessage))
         }
       case None =>
-        BadRequest(views.html.defaultpages.badRequest("POST", request.uri, errorMessage))
+        BadRequest(<p>Hello!</p>)
+        // BadRequest(views.html.defaultpages.badRequest("POST", request.uri, errorMessage))
     }
   }
 
@@ -62,7 +65,7 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
                 isUserAuthorized(request, caze.member_id) match {
                   case Left(err) =>
                     Logger.error(s"Post: saveCaze() failed: not authorised: $err")
-                    Unauthorized(views.html.defaultpages.unauthorized())
+                    Unauthorized // (views.html.defaultpages.unauthorized())
                   case Right(_) =>
                     if (newCaseId < 0)
                       newCaseId = cazeDao.insert(caze)
@@ -70,17 +73,22 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
                     if (fileDao.addCaseIdToFile(newCaseId, fileId.toInt))
                       Ok(newCaseId.toString)
                     else
-                      BadRequest(views.html.defaultpages.badRequest("POST", request.uri, s"saveCaze() failed: failed to add case with new ID ${newCaseId} (old case id: ${caze.id}) to file with ID ${fileId}."))
+                      BadRequest(<p>Hello!</p>)
+                      // BadRequest(views.html.defaultpages.badRequest("POST", request.uri, s"saveCaze() failed: failed to add case with new ID ${newCaseId} (old case id: ${caze.id}) to file with ID ${fileId}."))
                 }
               case None =>
-                BadRequest(views.html.defaultpages.badRequest("POST", request.uri, "saveCaze() failed: decoding of caze failed. Json wrong? " + cazeJson))
+                BadRequest(<p>Hello!</p>)
+                // BadRequest(views.html.defaultpages.badRequest("POST", request.uri, "saveCaze() failed: decoding of caze failed. Json wrong? " + cazeJson))
             }
           }
-          case _ => BadRequest(views.html.defaultpages.badRequest("POST", request.uri, "saveCaze() failed: no data received in request: " + requestData))
+          case _ =>
+            BadRequest(<p>Hello!</p>)
+            // BadRequest(views.html.defaultpages.badRequest("POST", request.uri, "saveCaze() failed: no data received in request: " + requestData))
         }
       }
       case Left(err) =>
-        BadRequest(views.html.defaultpages.badRequest("POST", request.uri, "saveCaze() failed: not authorised: " + err))
+        BadRequest(<p>Hello!</p>)
+        // BadRequest(views.html.defaultpages.badRequest("POST", request.uri, "saveCaze() failed: not authorised: " + err))
     }
   }
 
@@ -96,7 +104,7 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
                 isUserAuthorized(request, memberId) match {
                   case Left(err) =>
                     Logger.error(s"Post: addRubricsToCaze() failed: not authorised: $err")
-                    Unauthorized(views.html.defaultpages.unauthorized())
+                    Unauthorized // (views.html.defaultpages.unauthorized())
                   case Right(_) =>
                     if (cazeDao.addCaseRubrics(caseID, caseRubrics).length > 0) {
                       Logger.debug(s"Post: addCaseRubricsToCaze(): success")
@@ -104,20 +112,25 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
                     }
                     else {
                       Logger.error(s"Post: addCaseRubricsToCaze() failed")
-                      BadRequest(views.html.defaultpages.badRequest("POST", request.uri, "addCaseRubrics() failed"))
+                      BadRequest(<p>Hello!</p>)
+                      //BadRequest(views.html.defaultpages.badRequest("POST", request.uri, "addCaseRubrics() failed"))
                     }
                 }
               case _ =>
                 Logger.error(s"Post: addCaseRubricsToCaze() failed: type conversion error which should never have happened")
-                BadRequest(views.html.defaultpages.badRequest("POST", request.uri, "addCaseRubricsToCaze() failed: type conversion error which should never have happened"))
+                BadRequest(<p>Hello!</p>)
+                // BadRequest(views.html.defaultpages.badRequest("POST", request.uri, "addCaseRubricsToCaze() failed: type conversion error which should never have happened"))
             }
           case _ => {
             Logger.error(s"Post: addCaseRubricsToCaze() failed: no or the wrong form data received.")
-            BadRequest(views.html.defaultpages.badRequest("POST", request.uri, "addCaseRubricsToCaze() failed: no or the wrong form data received."))
+            BadRequest(<p>Hello!</p>)
+            // BadRequest(views.html.defaultpages.badRequest("POST", request.uri, "addCaseRubricsToCaze() failed: no or the wrong form data received."))
           }
         }
       }
-      case Left(err) => BadRequest(views.html.defaultpages.badRequest("POST", request.uri, "addCaseRubrics() failed: " + err))
+      case Left(err) =>
+        BadRequest(<p>Hello!</p>)
+        // BadRequest(views.html.defaultpages.badRequest("POST", request.uri, "addCaseRubrics() failed: " + err))
     }
   }
 
@@ -129,16 +142,18 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
             isUserAuthorized(request, file.member_id) match {
               case Left(err) =>
                 Logger.error(s"Post: saveFile() failed: not authorised: $err")
-                Unauthorized(views.html.defaultpages.unauthorized())
+                Unauthorized // (views.html.defaultpages.unauthorized())
               case Right(_) =>
                 Ok(fileDao.insert(file).toString())
             }
           case None =>
-            BadRequest(views.html.defaultpages.badRequest("POST", request.uri, "saveFile() failed: saving of file failed. Json wrong? " + request.body.asText.get))
+            BadRequest(<p>Hello!</p>)
+            // BadRequest(views.html.defaultpages.badRequest("POST", request.uri, "saveFile() failed: saving of file failed. Json wrong? " + request.body.asText.get))
         }
       }
       case Left(err) =>
-        BadRequest(views.html.defaultpages.badRequest("POST", request.uri, "saveFile() failed: " + err))
+        BadRequest(<p>Hello!</p>)
+        // BadRequest(views.html.defaultpages.badRequest("POST", request.uri, "saveFile() failed: " + err))
     }
   }
 

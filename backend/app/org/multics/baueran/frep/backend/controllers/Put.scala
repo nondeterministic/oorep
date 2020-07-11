@@ -2,14 +2,16 @@ package org.multics.baueran.frep.backend.controllers
 
 import javax.inject._
 import play.api.mvc._
-import play.api.Logger
 import org.multics.baueran.frep._
 import shared.CaseRubric
 import backend.db.db.DBContext
+import play.api.http.HttpEntity
 
 class Put @Inject()(cc: ControllerComponents, dbContext: DBContext) extends AbstractController(cc) with ServerUrl {
 
-  def updateCaseRubricsUserDefinedValues() = Action { request: Request[AnyContent] =>
+  private val Logger = play.api.Logger(this.getClass)
+
+  def updateCaseRubricsUserDefinedValues() = Action { implicit request: Request[AnyContent] =>
     isUserAuthenticated(request) match {
       case Right(_) => {
         val requestData = request.body.asMultipartFormData.get.dataParts
@@ -20,6 +22,10 @@ class Put @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
               case (memberId, caseID, Some(caseRubrics)) =>
                 isUserAuthorized(request, memberId) match {
                   case Left(err) =>
+//                    Result(
+//                      header = ResponseHeader(200, Map.empty),
+//                      body = Unauthorized(views.html.defaultpages.unauthorized).body // HttpEntity.Strict(, Some("text/plain"))
+//                    )
                     Logger.error(s"Put: updateCaseRubricsUserDefinedValues() failed: not authorised: $err")
                     Unauthorized(views.html.defaultpages.unauthorized())
                   case Right(_) =>

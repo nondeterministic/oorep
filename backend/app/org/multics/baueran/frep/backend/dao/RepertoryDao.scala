@@ -4,7 +4,6 @@ import org.multics.baueran.frep.shared
 import org.multics.baueran.frep.shared._
 import org.multics.baueran.frep.backend.db
 import Defs.{ maxNumberOfResults, maxNumberOfSymptoms }
-import play.api.Logger
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -12,6 +11,7 @@ class RepertoryDao(dbContext: db.db.DBContext) {
 
   import dbContext._
 
+  private val Logger = play.api.Logger(this.getClass)
   private val tableInfo    = quote { querySchema[Info]("Info", _.abbrev -> "abbrev") }
   private val tableChapter = quote { querySchema[Chapter]("Chapter", _.text -> "textt") }
 
