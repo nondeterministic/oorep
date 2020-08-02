@@ -20,9 +20,9 @@ before_script:
 
 build:
   script:
-    - sbt compile
-    - sbt dist
+    - sbt ++2.13.1 compile
+    - sbt ++2.13.1 dist
 
 test:
   script:
-    - sbt test
+    - sbt ++2.13.1 test
