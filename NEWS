@@ -1,7 +1,7 @@
 OOREP NEWS
 =-=-=-=-=-
 
-v0.4.0  under development
+v0.4.0  Sun 02 Aug 2020 10:22:18 AM CEST [tag: v0.4.0]
 
 - Empty rubrics are now added to the search results (but cannot be added
   to a case, of course)
