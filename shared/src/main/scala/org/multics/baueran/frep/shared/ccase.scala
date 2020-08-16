@@ -159,3 +159,12 @@ object CaseRubric {
     }
   }
 }
+
+/**
+  * This class is merely used/necessary in order to transmit lookup results of a repertory
+  */
+case class ResultsCaseRubrics(totalNumberOfResults: Int, totalNumberOfPages: Int, currPage: Int, results: List[CaseRubric])
+object ResultsCaseRubrics {
+  implicit val encoder: Encoder[ResultsCaseRubrics] = deriveEncoder[ResultsCaseRubrics]
+  implicit val decoder: Decoder[ResultsCaseRubrics] = deriveDecoder[ResultsCaseRubrics]
+}

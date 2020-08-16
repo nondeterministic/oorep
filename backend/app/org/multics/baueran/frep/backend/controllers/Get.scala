@@ -1,8 +1,9 @@
 package org.multics.baueran.frep.backend.controllers
 
 import javax.inject._
-import play.api.mvc._
 import io.circe.syntax._
+import akka.stream.scaladsl.Source
+import play.api.mvc._
 import org.multics.baueran.frep.backend.dao.{CazeDao, FileDao, RepertoryDao}
 import org.multics.baueran.frep.backend.repertory._
 import org.multics.baueran.frep.shared._
@@ -63,13 +64,28 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     }
   }
 
+  def availableRemedies() = Action { request: Request[AnyContent] =>
+    val dao = new RepertoryDao(dbContext)
+
+    if (getRequestCookies(request) == List.empty)
+      Ok(dao.getAllAvailableRemedies()
+        .filter{ case (_,r,_) => r == RepAccess.Default || r == RepAccess.Public }
+        .map{ case (abbrev, access, remedyAbbrevs) => (abbrev, access.toString, remedyAbbrevs) }
+        .asJson.toString())
+    else
+      Ok(dao.getAllAvailableRemedies()
+        .filter{ case (_,r,_) => r != RepAccess.Protected }
+        .map{ case (abbrev, access, remedyAbbrevs) => (abbrev, access.toString, remedyAbbrevs) }
+        .asJson.toString())
+  }
+
   def availableReps() = Action { request: Request[AnyContent] =>
     val dao = new RepertoryDao(dbContext)
 
     if (getRequestCookies(request) == List.empty)
       Ok(dao.getAllAvailableRepertoryInfos().filter(r => r.access == RepAccess.Default || r.access == RepAccess.Public).asJson.toString())
     else
-      Ok(dao.getAllAvailableRepertoryInfos().asJson.toString())
+      Ok(dao.getAllAvailableRepertoryInfos().filter(_.access != RepAccess.Protected).asJson.toString())
   }
 
   /**
@@ -184,25 +200,32 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     }
   }
 
-  def repertorise(repertoryAbbrev: String, symptom: String) = Action { request: Request[AnyContent] =>
-    if (symptom.length >= maxLengthOfSymptoms) {
+  /**
+    * The server response of this method streamed/chunked and ends with "<EOF>" string.
+    * Read the method's comments, to see why.  Also, you need special client code for
+    * receiving a stream/chunks.
+    *
+    * @param repertoryAbbrev
+    * @param symptom
+    * @return
+    */
+  def repertorise(repertoryAbbrev: String, symptom: String, page: Int, remedyString: String, minWeight: Int) = Action { request: Request[AnyContent] =>
+    if (symptom.trim.length >= maxLengthOfSymptoms) {
       val errStr = s"Get: input exceeded max length of ${maxLengthOfSymptoms}."
       Logger.warn(errStr)
       BadRequest(errStr)
     }
     else {
       val dao = new RepertoryDao(dbContext)
-      val results: List[CaseRubric] = dao.lookupSymptom(repertoryAbbrev, symptom)
-
-      if (results.size == 0) {
-        val errStr = s"Get: repertorise(${repertoryAbbrev}, ${symptom}): no results found"
-        Logger.warn(errStr)
-        BadRequest(errStr)
-      }
-      else {
-        Logger.debug(s"Get: repertorise(${repertoryAbbrev}, ${symptom}): #results: ${results.size}.")
-        Ok(results.take(maxNumberOfResults).asJson.toString())
+      dao.queryRepertory(repertoryAbbrev.trim, symptom.trim, page, remedyString.trim, minWeight) match {
+        case Some(ResultsCaseRubrics(totalNumberOfResults, totalNumberOfPages, page, results)) if (totalNumberOfPages > 0) =>
+          Ok(ResultsCaseRubrics(totalNumberOfResults, totalNumberOfPages, page, results).asJson.toString())
+        case _ =>
+          val errStr = s"Get: repertorise(${repertoryAbbrev}, ${symptom}): no results found"
+          Logger.warn(errStr)
+          BadRequest(errStr)
       }
     }
   }
+
 }

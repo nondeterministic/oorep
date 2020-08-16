@@ -1,5 +1,6 @@
 package org.multics.baueran.frep.shared
 
+import org.multics.baueran.frep.shared.Defs.SpecialLookupParams
 import scalatags.JsDom.all._
 import scala.scalajs.js
 import java.text.SimpleDateFormat
@@ -39,13 +40,15 @@ class BetterCaseRubric(val cr: CaseRubric) {
 }
 
 class SearchTerms(val symptom: String) {
-  // Extract cleaned-up search string from raw input search string, if user supplied "rep:".
-  // Otherwise, raw input search string is used.
+
+  // Extract a cleaned-up string from raw input search string, if user supplied "rep:..."
+  // Otherwise, if no such special terms were entered, raw input search string is used/returned.
   private def getSymptomString(submittedSymptomString: String): String = {
-    if (symptom.contains("rep:"))
-      symptom.replaceAll("""rep:([\w\-_]+)""", "")
-    else
-      symptom
+    for (term <- SpecialLookupParams.values)
+      if (submittedSymptomString.contains(s"${term}:"))
+        return getSymptomString(submittedSymptomString.replaceAll(term + """:([\w\-_]+)""", ""))
+
+    submittedSymptomString
   }
 
   private val searchStrings = getSymptomString(symptom)

@@ -564,7 +564,7 @@ object Case {
             th(attr("scope"):="col", "Weight"),
             th(attr("scope"):="col", "Rep."),
             th(attr("scope"):="col", "Label"),
-            th(attr("scope"):="col", "Symptom"),
+            th(attr("scope"):="col", "Rubric"),
             th(attr("scope"):="col",
               a(scalatags.JsDom.attrs.id:="caseSectionOfPage",
                 cls:="underline", href:="#caseSectionOfPage", style:="color:white;",

@@ -1,13 +1,38 @@
 OOREP NEWS
 =-=-=-=-=-
 
-v0.5.0  Sun 02 Aug 2020 11:10:51 AM CEST [tag: v0.5.0]
+v0.6.0  under development
+------------------------------------------------------
+- Main features (that made API change necessary):
+  - Search can now be restricted to a specific remedy and/or a minimal
+    remedy weight
+  - Pagination of search results to show ALL rubrics of a search (as
+    opposed to only the first 130 as before)
 
+- Minor improvements and changes:
+  - Removed atama-repertory as it was merely a subset of publicum and
+    kent
+  - Reduced number of displayable rubrics per page from 130 to 100
+    (which is OK, since we have pagination now - no rubric is lost!)
+  - Multiple occurrences of rubrics on top of results page are now
+    collapsable
+  - "High number of search results"-dialog is now disposable
+  - Replaced the rather useless "clear search terms"-button with
+    "Advanced search parameters"-button
+
+- Bug fixes:
+  - Some existing rubrics of repertories publicum, bogboen and kent-de
+    wouldn't show up in results earlier
+  - Various minor corrections in the presentation of results and
+    suggestions of alternative search terms
+
+v0.5.0  Sun 02 Aug 2020 11:10:51 AM CEST [tag: v0.5.0]
+------------------------------------------------------
 - Upgraded program to ScalaJS 1.1 and Play 2.8 (and other dependencies
   accordingly)
 
 v0.4.0  Sun 02 Aug 2020 10:22:18 AM CEST [tag: v0.4.0]
-
+------------------------------------------------------
 - Empty rubrics are now added to the search results (but cannot be added
   to a case, of course)
 - Added possibility to attach simple single-character labels to case rubrics
@@ -16,7 +41,7 @@ v0.4.0  Sun 02 Aug 2020 10:22:18 AM CEST [tag: v0.4.0]
 - Modal dialogs now display files sorted
 
 v0.3.2  Sun 16 Feb 2020 09:02:50 AM CET [tag: v0.3.2]
-
+-----------------------------------------------------
 - Don't suggest very short or non-alphanumeric short terms in helpful
   messages when none or too many results are found
 - Logout user automatically if stale cookie was detected (as it may
@@ -29,7 +54,7 @@ v0.3.2  Sun 16 Feb 2020 09:02:50 AM CET [tag: v0.3.2]
 - Fix Facebook-preview picture
 
 v0.3.1  Sat 08 Feb 2020 11:07:33 AM CET [tag: v0.3.1]
-
+-----------------------------------------------------
 - An attempt at more helpful error messages when repertory lookup failed
 - Changed default for remedy display: formatted as opposed to explicit weights
 - Bug fix: if initial case was too large, it couldn't be added to a file
@@ -37,7 +62,7 @@ v0.3.1  Sat 08 Feb 2020 11:07:33 AM CET [tag: v0.3.1]
   the error message, if the results were the same as the last successful search
 
 v0.3.0  Sun 02 Feb 2020 01:17:05 PM CET [tag: v0.3.0]
-
+-----------------------------------------------------
 - Bug fix: available_reps wasn't called when drop-down was empty
 - Pulled out some REST Post-requests to Put and Delete to be more compliant
 - Added repertories publicum and kent-de to repository
@@ -45,18 +70,18 @@ v0.3.0  Sun 02 Feb 2020 01:17:05 PM CET [tag: v0.3.0]
   licensing issues (need to be downloaded and pre-installed before build now)
 
 v0.2.1  Wed 29 Jan 2020 09:17:11 PM CET [tag: v0.2.1]
-
+-----------------------------------------------------
 - Removed superfluous REST-API calls to available_reps
 - Minor fixes and improvements:
   - Add www.oorep.com to application.conf
   - Insert date into privacy policies
 
 v0.2.0  Sat Jan 25 13:25:04 2020 +0100  [tag: v0.2.0]
-
+-----------------------------------------------------
 - Check authorisation for authenticated users in API calls
 - All REST-API calls now have a preceeding /api/ in their paths
 - Improved error pages on BadRequest-errors from API calls
 
 v0.1.1  Thu Jan 9 20:12:59 2020 +0100  [tag: v0.1.1]
-
+----------------------------------------------------
 - Initial version that was uploaeded to oorep.pspace.org

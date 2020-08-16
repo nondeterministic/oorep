@@ -17,6 +17,8 @@ object RepDatabase {
   private var dao: RepertoryDao = null
   private val Logger = play.api.Logger(this.getClass)
 
+  // TODO: Is needed? implicit def repertoryToRepertory(r: Repertory) = new IoRepertory(r)
+
   /**
     * Needs to be called FIRST! It makes sure, the DB is ready
     * and has all the repertory data available for future user

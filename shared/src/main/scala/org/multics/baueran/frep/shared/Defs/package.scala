@@ -4,6 +4,15 @@ import org.scalajs.dom
 
 package object Defs {
 
+  // TODO: We ended up only using rep. REMOVE rem AND min!
+  object SpecialLookupParams extends Enumeration {
+    type SpecialSearchParams = Value
+    val Remedy = Value("rem")
+    val Repertory = Value("rep")
+    val MinWeight = Value("min")
+  }
+  import SpecialLookupParams._
+
   def localRepPath() = {
     sys.env.get("OOREP_REP_PATH") match {
       case Some(path) => path
@@ -14,7 +23,7 @@ package object Defs {
     }
   }
 
-  def maxNumberOfResults = 130
+  def maxNumberOfResults = 100
   def maxLengthOfSymptoms = 200
   def maxNumberOfSymptoms = 20
 

@@ -13,8 +13,8 @@ val pgDriverVersion    = "42.2.5"
 val notifyjsVersion    = "0.2.0"
 val scriptsVersion     = "1.1.4"
 
-resolvers in ThisBuild += "hmil" at "https://dl.bintray.com/hmil/maven"
-// resolvers in ThisBuild += Resolver.bintrayRepo("hmil", "maven")
+// resolvers in ThisBuild += "hmil" at "https://dl.bintray.com/hmil/maven"
+resolvers in ThisBuild += Resolver.bintrayRepo("hmil", "maven")
 
 useJCenter := true
 
@@ -115,8 +115,16 @@ lazy val commonSettings = Seq(
   scalaVersion := myScalaVersion,
   organization := "org.multics.baueran.frep",
   maintainer := "baueran@gmail.com",
-  version := "0.5.0"
+  version := "0.6.0"
 )
+
+// TODO: This doesn't work, and I can't be bothered to get it to work.
+// It turns out Akka has default chunk size of 1MB whereas RosHttp only had 8192 bytes.
+//
+// https://discuss.lightbend.com/t/how-to-adjust-the-max-upload-chunk-size-in-play/2260
+// https://www.playframework.com/documentation/2.8.x/ConfigFile
+// import PlayKeys._
+// PlayKeys.devSettings += "akka.http.parsing.max-chunk-size" -> "8192 b"
 
 // loads the frontend project at sbt startup
 onLoad in Global := (onLoad in Global).value andThen {s: State => "project backend" :: s}

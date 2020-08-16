@@ -3,8 +3,9 @@
 
 GET     /                                  org.multics.baueran.frep.backend.controllers.Get.index
 GET		/api/authenticate                  org.multics.baueran.frep.backend.controllers.Get.authenticate
-GET		/api/lookup						   org.multics.baueran.frep.backend.controllers.Get.repertorise(repertory: String, symptom: String)
+GET		/api/lookup						   org.multics.baueran.frep.backend.controllers.Get.repertorise(repertory: String, symptom: String, page: Int, remedyString: String, minWeight: Int)
 GET     /api/available_reps                org.multics.baueran.frep.backend.controllers.Get.availableReps
+GET     /api/available_remedies            org.multics.baueran.frep.backend.controllers.Get.availableRemedies
 GET     /api/available_files               org.multics.baueran.frep.backend.controllers.Get.availableFiles(memberId: Int)
 GET     /api/file_overview                 org.multics.baueran.frep.backend.controllers.Get.fileOverview(fileId: String)
 GET     /api/file                          org.multics.baueran.frep.backend.controllers.Get.getFile(fileId: String)
