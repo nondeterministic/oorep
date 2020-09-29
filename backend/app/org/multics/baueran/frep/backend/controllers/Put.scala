@@ -5,7 +5,6 @@ import play.api.mvc._
 import org.multics.baueran.frep._
 import shared.CaseRubric
 import backend.db.db.DBContext
-import play.api.http.HttpEntity
 
 class Put @Inject()(cc: ControllerComponents, dbContext: DBContext) extends AbstractController(cc) with ServerUrl {
 
@@ -22,10 +21,6 @@ class Put @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
               case (memberId, caseID, Some(caseRubrics)) =>
                 isUserAuthorized(request, memberId) match {
                   case Left(err) =>
-//                    Result(
-//                      header = ResponseHeader(200, Map.empty),
-//                      body = Unauthorized(views.html.defaultpages.unauthorized).body // HttpEntity.Strict(, Some("text/plain"))
-//                    )
                     Logger.error(s"Put: updateCaseRubricsUserDefinedValues() failed: not authorised: $err")
                     Unauthorized(views.html.defaultpages.unauthorized())
                   case Right(_) =>

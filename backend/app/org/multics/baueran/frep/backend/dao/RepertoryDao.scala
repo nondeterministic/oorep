@@ -168,17 +168,23 @@ class RepertoryDao(dbContext: db.db.DBContext) {
     val abbrev = extractAbbrevFromInput(abbrevFromMenu, symptom)
     val remedyEntered = extractRemedyFromInput(abbrev, remedyString)
 
+    Logger.info(s"queryRepertory(abbrev: ${abbrev}, symptom: ${symptom}, page: ${page}, remedy: ${remedyString}, weight: ${minWeight}) called.")
+
     if (remedyString.length > 0 && remedyEntered == None) {
-      Logger.warn(s"INFO: Search for '$symptom' aborted: remedy ${remedyString} not found in repertory.")
+      Logger.error(s"ERROR: Search for '$symptom' aborted: remedy ${remedyString} not found in repertory.")
       return None
     }
 
     if (searchTerms.positive.length == 0 && remedyString.length == 0) {
-      Logger.warn(s"INFO: Search for '$symptom' aborted: no positive search terms or remedy entered.")
+      Logger.error(s"ERROR: Search for '$symptom' aborted: no positive search terms or remedy entered.")
       return None
     }
     else if (searchTerms.positive.length + searchTerms.negative.length >= maxNumberOfSymptoms) {
       Logger.error(s"ERROR: Cannot enter more than $maxNumberOfSymptoms symptoms.")
+      return None
+    }
+    else if (searchTerms.positive.length == 0 && searchTerms.negative.length > 0 && remedyEntered != None) {
+      Logger.error(s"ERROR: Cannot search with just negative search terms.")
       return None
     }
 
@@ -303,7 +309,7 @@ class RepertoryDao(dbContext: db.db.DBContext) {
     // Compute the to be returned results...
     val caseRubrics = tmpRubricsTruncated.map(rubric => CaseRubric(rubric, abbrev, 1, None, getWeightedRemedies(rubric)))
     val returnTotalNumberOfPages = math.ceil(tmpRubricsAll.size.toDouble / maxNumberOfResults.toDouble).toInt
-    Logger.info(s"lookup() will return ${tmpRubricsAll.size} case rubrics...")
+    Logger.info(s"queryRepertory(abbrev: ${abbrev}, symptom: ${symptom}, page: ${page}, remedy: ${remedyString}, weight: ${minWeight}) found ${tmpRubricsAll.size} case rubrics.")
     Some(ResultsCaseRubrics(tmpRubricsAll.size, returnTotalNumberOfPages, page, caseRubrics))
   }
 

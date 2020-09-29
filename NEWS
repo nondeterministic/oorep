@@ -3,11 +3,12 @@ OOREP NEWS
 
 v0.6.0  under development
 ------------------------------------------------------
-- Main features (that made API change necessary):
+- Main features (that made API and schema changes necessary):
   - Search can now be restricted to a specific remedy and/or a minimal
     remedy weight
   - Pagination of search results to show ALL rubrics of a search (as
     opposed to only the first 130 as before)
+  - Changed DB-type of file description from varchar(2048) to text
 
 - Minor improvements and changes:
   - Removed atama-repertory as it was merely a subset of publicum and
@@ -16,9 +17,9 @@ v0.6.0  under development
     (which is OK, since we have pagination now - no rubric is lost!)
   - Multiple occurrences of rubrics on top of results page are now
     collapsable
-  - "High number of search results"-dialog is now disposable
+  - "High number of search results"-alert is now disposable
   - Replaced the rather useless "clear search terms"-button with
-    "Advanced search parameters"-button
+    "Toggle advanced search parameters"-button
 
 - Bug fixes:
   - Some existing rubrics of repertories publicum, bogboen and kent-de

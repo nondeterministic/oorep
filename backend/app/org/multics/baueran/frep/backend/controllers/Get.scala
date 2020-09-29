@@ -221,7 +221,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
         case Some(ResultsCaseRubrics(totalNumberOfResults, totalNumberOfPages, page, results)) if (totalNumberOfPages > 0) =>
           Ok(ResultsCaseRubrics(totalNumberOfResults, totalNumberOfPages, page, results).asJson.toString())
         case _ =>
-          val errStr = s"Get: repertorise(${repertoryAbbrev}, ${symptom}): no results found"
+          val errStr = s"Get: repertorise(abbrev: ${repertoryAbbrev}, symptom: ${symptom}, page: ${page}, remedy: ${remedyString}, weight: ${minWeight}): no results found"
           Logger.warn(errStr)
           BadRequest(errStr)
       }

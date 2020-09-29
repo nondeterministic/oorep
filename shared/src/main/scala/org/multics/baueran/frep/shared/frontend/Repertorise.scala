@@ -590,6 +590,24 @@ object Repertorise {
             return
           }
 
+          if (searchTerms.positive.length == 0 && searchTerms.negative.length == 0 && remedyQuery != None) {
+            $("body").css("cursor", "default")
+            $("#resultStatus").empty()
+            $("#resultStatus").append(
+              div(cls:="alert alert-danger", role:="alert",
+                b(s"Remedy '${remedyQuery.get}' does not exist in this repertory.")).render)
+            return
+          }
+
+          if (searchTerms.positive.length == 0) {
+            $("body").css("cursor", "default")
+            $("#resultStatus").empty()
+            $("#resultStatus").append(
+              div(cls:="alert alert-danger", role:="alert",
+                b(s"No results. You must enter some symptoms to search for.")).render)
+            return
+          }
+
           val tmpErrorMessage1 = s"Perhaps try a different repertory; or use wild-card search, like '"
           val tmpErrorMessage2 = {
             if (longPosTerms.length > 0)
@@ -625,7 +643,9 @@ object Repertorise {
                   if (remedyMinWeight > 1)
                     fullErrorMessage += s" with min. weight >= ${remedyMinWeight}"
 
-                  fullErrorMessage += s". $tmpErrorMessage1"
+                  if (searchTerms.positive.length > 0)
+                    fullErrorMessage += s". $tmpErrorMessage1"
+
                   fullErrorMessage
                 },
                 a(href:="#", onclick:={ (_: Event) => onSymptomLinkClicked(tmpErrorMessage2) }, tmpErrorMessage2), "'."
