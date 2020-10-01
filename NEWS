@@ -1,7 +1,7 @@
 OOREP NEWS
 =-=-=-=-=-
 
-v0.6.0  under development
+v0.6.0  Thu 01 Oct 2020 07:57:26 PM CEST [tag: v0.6.0]
 ------------------------------------------------------
 - Main features (that made API and schema changes necessary):
   - Search can now be restricted to a specific remedy and/or a minimal
