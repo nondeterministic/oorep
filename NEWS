@@ -1,6 +1,12 @@
 OOREP NEWS
 =-=-=-=-=-
 
+v0.6.1  under development
+------------------------------------------------------
+- Introduced env-var OOREP_IMPORT_REPERTORIES to trigger import of raw
+  repertory data upon program start-up from JSON-files (to avoid accidental
+  deletion of repertory changes)
+
 v0.6.0  Thu 01 Oct 2020 07:57:26 PM CEST [tag: v0.6.0]
 ------------------------------------------------------
 - Main features (that made API and schema changes necessary):

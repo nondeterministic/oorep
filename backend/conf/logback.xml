@@ -24,18 +24,26 @@
     <appender-ref ref="STDOUT" />
   </appender>
 
-  <logger name="play" level="DEBUG" />
-  <logger name="application" level="DEBUG" />
+  <root level="INFO">
+    <appender-ref ref="ASYNCSTDOUT" />
+  </root>
+
+  <logger name="play" level="DEBUG">
+    <appender-ref ref="ASYNCSTDOUT" />
+  </logger>
+
+  <logger name="application" level="DEBUG">
+    <appender-ref ref="ASYNCSTDOUT" />
+  </logger>
+
+  <logger name="com.zaxxer.hikari.pool.PoolBase" level="ERROR"/>
+  <logger name="com.zaxxer.hikari.pool.HikariPool" level="ERROR"/>
+  <logger name="com.zaxxer.hikari.HikariDataSource" level="ERROR"/>
 
   <!-- Off these ones as they are annoying, and anyway we manage configuration ourselves -->
   <logger name="com.avaje.ebean.config.PropertyMapLoader" level="OFF" />
   <logger name="com.avaje.ebeaninternal.server.core.XmlConfigLoader" level="OFF" />
   <logger name="com.avaje.ebeaninternal.server.lib.BackgroundThread" level="OFF" />
   <logger name="com.gargoylesoftware.htmlunit.javascript" level="OFF" />
-
-  <root level="INFO">
-    <!--<appender-ref ref="ASYNCFILE" />-->
-    <appender-ref ref="ASYNCSTDOUT" />
-  </root>
 
 </configuration>
