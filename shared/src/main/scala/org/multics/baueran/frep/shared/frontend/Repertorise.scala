@@ -3,14 +3,14 @@ package org.multics.baueran.frep.shared.frontend
 import scalatags.JsDom.all._
 import org.scalajs.dom
 import dom.Event
-import dom.raw.{ HTMLInputElement, HTMLButtonElement, Node }
+import dom.raw.{HTMLButtonElement, HTMLInputElement, Node}
 import io.circe.parser.parse
 import rx.Var
 
 import scala.collection.mutable
 import scala.util.{Failure, Success}
 import org.querki.jquery._
-import fr.hmil.roshttp.{ BackendConfig, HttpRequest }
+import fr.hmil.roshttp.{BackendConfig, HttpRequest}
 import fr.hmil.roshttp.response.SimpleHttpResponse
 import monix.execution.Scheduler.Implicits.global
 import org.multics.baueran.frep.shared._
@@ -27,9 +27,49 @@ object Repertorise {
   private val selectedRepertory = Var("")
   private var showMaxSearchResultsAlert = true
   private var showMultiOccurrences = false
-  private val remedyFilter = Var("")
   private val remedyFormat = Var(RemedyFormat.Formatted)
   val repertorisationResults: Var[Option[ResultsCaseRubrics]] = Var(None)
+  private val resultRemedyStats: Var[List[ResultsRemedyStats]] = Var(List())
+
+  resultRemedyStats.triggerLater {
+    val multiRemedies = resultRemedyStats.now.sortBy(-_.count)
+
+    $("#collapseMultiOccurrences").empty()
+    if (multiRemedies.length > 1) {
+      $("#multiOccurrenceDiv").append(
+        span(id := "collapseMultiOccurrences", cls := s"collapse ${if (showMultiOccurrences) "show" else "hide"}",
+          "(Multi-occurrences of remedies in search: ",
+          multiRemedies
+            .take(multiRemedies.size - 1)
+            .map { case ResultsRemedyStats(nameabbrev, count, cumulativeWeight) => {
+              span(
+                (s"${count}x"),
+                a(href:="#", onclick:={ (event: Event) =>
+                  remedyQuery = Some(nameabbrev)
+                  doLookup(symptomQuery, None, remedyQuery, 1)
+                }, nameabbrev),
+                ("(" + cumulativeWeight + "), ")
+              )
+            }},
+          span(
+            (s"${multiRemedies.last.count}x"),
+            a(href:="#", onclick:={ (event: Event) =>
+              remedyQuery = Some(multiRemedies.last.nameabbrev)
+              doLookup(symptomQuery, None, remedyQuery, 1)
+            }, multiRemedies.last.nameabbrev),
+            ("(" + multiRemedies.last.cumulativeWeight + ")")
+          ),
+          ")").render
+      )
+    }
+    else {
+      $("#multiOccurrenceDiv").append(
+        span(id := "collapseMultiOccurrences", cls := s"collapse ${if (showMultiOccurrences) "show" else "hide"}",
+          "(Multi-occurrences of remedies in search: None)").render)
+    }
+
+    println(s"Multi-occurrences found in search: ${multiRemedies.length}")
+  }
 
   selectedRepertory.triggerLater {
     if (dom.document.getElementById("remedyDataList") != null) {
@@ -43,10 +83,6 @@ object Repertorise {
     }
   }
 
-  remedyFilter.triggerLater(repertorisationResults.now match {
-    case Some(_) => showResults()
-    case None => ;
-  })
   repertorisationResults.triggerLater(repertorisationResults.now match {
     case Some(_) => showResults()
     case None => ;
@@ -73,35 +109,7 @@ object Repertorise {
       }
     }
 
-    // This method is just to display the remedy-summary at the top of the results table.
-    // It is not strictly necessary for displaying the results themselves.
-    def resultingRemedies() = {
-      val remedies = mutable.HashMap[Remedy, (Integer, Integer)]()
-
-      val resultRows = repertorisationResults.now match {
-        case Some(ResultsCaseRubrics(_, _, _, results)) => results
-        case None => List()
-      }
-
-      for (cr <- resultRows) {
-        for (WeightedRemedy(r,w) <- cr.weightedRemedies) {
-          if (remedies.contains(r)) {
-            val weight = remedies.get(r).get._1 + w
-            val occurrence = remedies.get(r).get._2 + 1
-            remedies.put(r, (weight, occurrence))
-          }
-          else
-            remedies.put(r, (w, 1))
-        }
-      }
-
-      remedies
-    }
-
-    val numberOfMultiOccurrences = resultingRemedies().filter(rr => rr._2._2 > 1).size
-
     def resultRow(result: CaseRubric) = {
-
       implicit def crToCR(cr: CaseRubric) = new BetterCaseRubric(cr)
 
       val remedies =
@@ -142,7 +150,7 @@ object Repertorise {
       case Some(ResultsCaseRubrics(totalNumberOfResults, totalNumberOfPages, currPage, results)) if (results.size > 0) => {
         $("#resultStatus").empty()
         $("#resultStatus").append(
-          div(cls := "alert alert-secondary", role := "alert",
+          div(scalatags.JsDom.attrs.id := "multiOccurrenceDiv", cls := "alert alert-secondary", role := "alert",
             button(`type`:="button", cls:="close", data.toggle:="collapse", data.target:="#collapseMultiOccurrences",
               onclick := { (_: Event) =>
                 val toggleButton =
@@ -162,7 +170,7 @@ object Repertorise {
               else
                 span(aria.hidden:="true", id:="collapseMultiOccurrencesButton", cls:="oi oi-chevron-bottom", style:="font-size: 14px;", title:="Show less")
             ),
-            b(a(href := "#", onclick := { (_: Event) => remedyFilter() = "" }, {
+            b({
               var searchStatsString = s"${totalNumberOfResults} rubrics for "
 
               if (symptomQuery.trim.length > 0) {
@@ -183,38 +191,7 @@ object Repertorise {
 
               searchStatsString += s". Showing page ${currPage + 1} of ${totalNumberOfPages}. "
               searchStatsString
-            })),
-            if (numberOfMultiOccurrences > 1) {
-              val relevantMultiRemedies = resultingRemedies().toList
-                .sortBy(-_._2._2)
-                .filter(rr => rr._2._2 > 1)
-
-              span(id := "collapseMultiOccurrences", cls := s"collapse ${if (showMultiOccurrences) "show" else "hide" }",
-                "(Multi-occurrences of remedies on current page: ",
-                relevantMultiRemedies
-                  .take(relevantMultiRemedies.size - 1)
-                  .map(rr => {
-                    span(
-                      (rr._2._2 + "x"),
-                      a(href := "#",
-                        onclick := { (event: Event) =>
-                          remedyFilter() = rr._1.nameAbbrev
-                        },
-                        rr._1.nameAbbrev),
-                      ("(" + rr._2._1 + "), "),
-                    )
-                  }),
-                span(
-                  (relevantMultiRemedies.last._2._2 + "x"),
-                  a(href := "#", onclick := { (event: Event) =>
-                    remedyFilter() = relevantMultiRemedies.last._1.nameAbbrev
-                  }, relevantMultiRemedies.last._1.nameAbbrev),
-                  ("(" + relevantMultiRemedies.last._2._1 + ")")),
-                ")")
-            }
-            else {
-              span(" ")
-            }
+            })
           ).render
         )
 
@@ -297,18 +274,10 @@ object Repertorise {
       case _ => ;
     }
 
-    if (remedyFilter.now.length == 0) {
-      repertorisationResults.now match {
-        case Some(ResultsCaseRubrics(_, _, _, results)) =>
-          results.foreach(result => $("#resultsTBody").append(resultRow(result).render))
-        case _ => ;
-      }
-    } else {
-      repertorisationResults.now match {
-        case Some(ResultsCaseRubrics(_, _, _, results)) =>
-          results.filter(_.containsRemedyAbbrev(remedyFilter.now)).foreach(result => $("#resultsTBody").append(resultRow(result).render))
-        case _ => ;
-      }
+    repertorisationResults.now match {
+      case Some(ResultsCaseRubrics(_, _, _, results)) =>
+        results.foreach(result => $("#resultsTBody").append(resultRow(result).render))
+      case _ => ;
     }
 
     Case.updateCaseHeaderView()
@@ -494,7 +463,6 @@ object Repertorise {
 
   // ------------------------------------------------------------------------------------------------------------------
   private def doLookup(symptom: String, pageOpt: Option[Int], remedyStringOpt: Option[String], minWeight: Int): Unit = {
-    remedyFilter() = ""
     val repertory = selectedRepertory.now
     val page = math.max(pageOpt.getOrElse(0), 0)
     val remedyString = remedyStringOpt.getOrElse("")
@@ -560,12 +528,22 @@ object Repertorise {
           parse(response.get.body) match {
             case Right(json) => {
               val cursor = json.hcursor
-              cursor.as[ResultsCaseRubrics] match {
-                case Right(ResultsCaseRubrics(totalNumberOfResults, totalNumberOfPages, currPage, newResults)) => {
+              cursor.as[(ResultsCaseRubrics, List[ResultsRemedyStats])] match {
+                case Right((ResultsCaseRubrics(totalNumberOfResults, totalNumberOfPages, currPage, newResults), remedyStats)) => {
                   symptomQuery = symptom
 
                   repertorisationResults() = None
                   repertorisationResults() = Some(ResultsCaseRubrics(totalNumberOfResults, totalNumberOfPages, currPage, newResults))
+
+                  // Trigger explicitly the building of the multi-occurrence-div,
+                  // which only gets the remedies from the backend on page 0.
+                  // So if another page is shown, we need recalc() to redraw, and
+                  // when user goes from, say, page 2 to 0, we also need redraw,
+                  // because then remedies also don't change!  So we simply do update
+                  // and ALWAYS redraw.
+                  if (remedyStats.length > 0)
+                    resultRemedyStats() = remedyStats
+                  resultRemedyStats.recalc()
 
                   if (Case.size() > 0)
                     showCase()

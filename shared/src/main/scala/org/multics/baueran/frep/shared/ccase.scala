@@ -168,3 +168,9 @@ object ResultsCaseRubrics {
   implicit val encoder: Encoder[ResultsCaseRubrics] = deriveEncoder[ResultsCaseRubrics]
   implicit val decoder: Decoder[ResultsCaseRubrics] = deriveDecoder[ResultsCaseRubrics]
 }
+
+case class ResultsRemedyStats(nameabbrev: String, count: Int, cumulativeWeight: Int)
+object ResultsRemedyStats {
+  implicit val encoder: Encoder[ResultsRemedyStats] = deriveEncoder[ResultsRemedyStats]
+  implicit val decoder: Decoder[ResultsRemedyStats] = deriveDecoder[ResultsRemedyStats]
+}

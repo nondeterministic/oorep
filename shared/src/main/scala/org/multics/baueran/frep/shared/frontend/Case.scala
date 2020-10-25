@@ -74,6 +74,15 @@ object Case {
   }
 
   // ------------------------------------------------------------------------------------------------------------------
+  // Return the full remedy name for nameabbrev from a list of caseRubrics
+  def getFullNameFromCasRubrics(remedies: List[Remedy], nameabbrev: String) = {
+    remedies.find(_.nameAbbrev == nameabbrev) match {
+      case Some(remedy) => Some(remedy.nameLong)
+      case None => None
+    }
+  }
+
+  // ------------------------------------------------------------------------------------------------------------------
   // Called from the outside.  Typically, an updateCaseViewAndDatastructures() follows such a call.
   def updateCurrOpenCaseId(caseId: Int) = {
     if (descr != None) {
@@ -89,8 +98,8 @@ object Case {
   }
 
   // ------------------------------------------------------------------------------------------------------------------
-  def updateCaseViewAndDataStructures() = {
-    def updateFileModalDataStructures() = {
+  def updateCaseViewAndDataStructures(): Unit = {
+    def updateFileModalDataStructures(): Unit = {
       val memberId = getCookieData(dom.document.cookie, CookieFields.id.toString) match {
         case Some(id) => updateMemberFiles(id.toInt); id.toInt
         case None => println("WARNING: updateFileModalDataStructures() failed. Could not get memberID from cookie."); -1
@@ -204,10 +213,13 @@ object Case {
     $("#analysisTHead").append(th(attr("scope"):="col", a(href:="#caseSectionOfPage", cls:="underline", style:="color:black;", onclick:={ (event: Event) => sortCaseBy = Abbrev; sortReverse() = !sortReverse.now }, "Rep.")).render)
     if (caseUsesLabels)
       $("#analysisTHead").append(th(attr("scope"):="col", a(href:="#caseSectionOfPage", cls:="underline", style:="color:black;", onclick:={ (event: Event) => sortCaseBy = Label; sortReverse() = !sortReverse.now }, "L.")).render)
-    $("#analysisTHead").append(th(attr("scope"):="col", a(href:="#caseSectionOfPage", cls:="underline", style:="color:black;", onclick:={ (event: Event) => sortCaseBy = Path; sortReverse() = !sortReverse.now }, "Symptom")).render)
-    remedyScores.toList.sortWith(_._2 > _._2).map(_._1).foreach(abbrev =>
-      $("#analysisTHead").append(th(attr("scope") := "col", div(cls:="vertical-text", style:="width: 30px;",
-        s"${abbrev} (${remedyScores.get(abbrev).get})")).render))
+    $("#analysisTHead").append(th(attr("scope"):="col", a(href:="#caseSectionOfPage", cls:="underline", style:="color:black;", onclick:={ (event: Event) => sortCaseBy = Path; sortReverse() = !sortReverse.now }, "Rubric")).render)
+    val allRemediesInCase = cRubrics.map(_.weightedRemedies.map(_.remedy)).flatten.distinct
+    remedyScores.toList.sortWith(_._2 > _._2).map(_._1).foreach(nameabbrev =>
+      $("#analysisTHead").append(th(attr("scope") := "col",
+        data.toggle:="tooltip", title:=s"${getFullNameFromCasRubrics(allRemediesInCase, nameabbrev).getOrElse("LOOK-UP-ERROR")}",
+        div(cls:="vertical-text", style:="width: 30px;",
+        s"${nameabbrev} (${remedyScores.get(nameabbrev).get})")).render))
 
     // Redraw table body
     implicit def stringToString(s: String) = new BetterString(s) // For 'shorten'.
@@ -301,7 +313,7 @@ object Case {
                 thead(scalatags.JsDom.attrs.id:="analysisTHead",
                   th(attr("scope"):="col", "W."),
                   th(attr("scope"):="col", "Rep."),
-                  th(attr("scope"):="col", "Symptom")
+                  th(attr("scope"):="col", "Rubric")
                 ),
                 tbody(scalatags.JsDom.attrs.id:="analysisTBody")
               )
@@ -483,7 +495,7 @@ object Case {
             updateCaseViewAndDataStructures()
 
             // TODO: Ugly work-around to activate tooltips as recommended by Bootstrap documentation. :-(
-            // TODO: Interestingly, it seems, it works without.  In fact, turning this on and then closing a HUGE analysis, slows down the browser dramatically!
+            // TODO: Interestingly, it seems, it works without.  In fact, turning this on and then closing a HUGE repertorisation, slows down the browser dramatically!
             // js.eval("""$('[data-toggle="tooltip"]').tooltip();""")
           }},
           "Repertorise")

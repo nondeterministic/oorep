@@ -20,8 +20,10 @@ class BetterCaseRubric(val cr: CaseRubric) {
           b(r.nameAbbrev)
         else if (w == 3)
           b(r.nameAbbrev.toUpperCase())
-        else if (w >= 4)
+        else if (w == 4)
           u(b(r.nameAbbrev.toUpperCase()))
+        else if (w >= 5)
+          b(style:="text-decoration-line: underline; text-decoration-style: double;", r.nameAbbrev.toUpperCase())
         else
           span(r.nameAbbrev)
     }

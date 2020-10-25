@@ -3,6 +3,7 @@ package org.multics.baueran.frep.backend.dao
 import org.multics.baueran.frep.shared._
 import org.multics.baueran.frep.backend.db
 import Defs.{SpecialLookupParams, maxNumberOfResults, maxNumberOfSymptoms}
+import scala.collection.mutable.ArrayBuffer
 
 class RepertoryDao(dbContext: db.db.DBContext) {
 
@@ -62,22 +63,13 @@ class RepertoryDao(dbContext: db.db.DBContext) {
     run(insert)
   }
 
-  def getRubricRemedy(rr: RubricRemedy) = {
+  def getRubricRemedy(rr: RubricRemedy): List[RubricRemedy] = {
     val get = quote(query[RubricRemedy].filter(rubricRemedy => {
       rubricRemedy.remedyId == lift(rr.remedyId) &&
         rubricRemedy.abbrev == lift(rr.abbrev) &&
         rubricRemedy.chapterId == lift(rr.chapterId) &&
         rubricRemedy.rubricId == lift(rr.rubricId)
     }))
-    run(get)
-  }
-
-  def getRubricRemedies(remedy: Remedy, minWeight: Int) = {
-    val get = quote(query[RubricRemedy]
-      .filter { rr =>
-        rr.abbrev == lift(remedy.abbrev) && rr.remedyId == lift(remedy.id) && rr.weight >= lift(minWeight)
-      }
-    )
     run(get)
   }
 
@@ -163,7 +155,7 @@ class RepertoryDao(dbContext: db.db.DBContext) {
     None
   }
 
-  def queryRepertory(abbrevFromMenu: String, symptom: String, page: Int, remedyString: String, minWeight: Int): Option[ResultsCaseRubrics] = {
+  def queryRepertory(abbrevFromMenu: String, symptom: String, page: Int, remedyString: String, minWeight: Int): Option[(ResultsCaseRubrics, List[ResultsRemedyStats])] = {
     val searchTerms = new SearchTerms(symptom)
     val abbrev = extractAbbrevFromInput(abbrevFromMenu, symptom)
     val remedyEntered = extractRemedyFromInput(abbrev, remedyString)
@@ -279,6 +271,33 @@ class RepertoryDao(dbContext: db.db.DBContext) {
       }
     }
 
+    val remedyStats = new ArrayBuffer[ResultsRemedyStats]()
+    if (page == 0) {
+      val sqlString =
+        "SELECT rem.nameabbrev, count(rem.nameabbrev), sum(rr.weight) from rubric as rub join rubricremedy as rr on " +
+          s"rub.id = rr.rubricid and rr.abbrev='${abbrev}' and rr.rubricid in (${tmpRubricsAll.map(_.id).mkString(",")}) join remedy as rem on " +
+          "rem.id=rr.remedyid and rem.abbrev=rub.abbrev and rub.abbrev=rr.abbrev " +
+          "group by rem.nameabbrev order by count desc;"
+      val conn = dbContext.dataSource.getConnection
+      try {
+        val statement = conn.createStatement()
+        val resultSet = statement.executeQuery(sqlString)
+        while (resultSet.next()) {
+          val nameabbrev = resultSet.getString("nameabbrev")
+          val count = resultSet.getInt("count")
+          val sum = resultSet.getInt("sum")
+          // Only add remedies which occur more than once in search result. Saves us filtering in the client.
+          if (count > 1)
+            remedyStats.append(ResultsRemedyStats(nameabbrev, count, sum))
+        }
+      } catch {
+        case e: Throwable => List()
+      } finally {
+        if (conn != null)
+          conn.close()
+      }
+    }
+
     val tmpRubricsTruncated =
       tmpRubricsAll
         .drop(page * maxNumberOfResults) // Start on page <page>, where each page is maxNumberOfResults long (so first page is obviously 0!!)
@@ -310,7 +329,7 @@ class RepertoryDao(dbContext: db.db.DBContext) {
     val caseRubrics = tmpRubricsTruncated.map(rubric => CaseRubric(rubric, abbrev, 1, None, getWeightedRemedies(rubric)))
     val returnTotalNumberOfPages = math.ceil(tmpRubricsAll.size.toDouble / maxNumberOfResults.toDouble).toInt
     Logger.info(s"queryRepertory(abbrev: ${abbrev}, symptom: ${symptom}, page: ${page}, remedy: ${remedyString}, weight: ${minWeight}) found ${tmpRubricsAll.size} case rubrics.")
-    Some(ResultsCaseRubrics(tmpRubricsAll.size, returnTotalNumberOfPages, page, caseRubrics))
+    Some((ResultsCaseRubrics(tmpRubricsAll.size, returnTotalNumberOfPages, page, caseRubrics), remedyStats.toList))
   }
 
   def insert(cr: CaseRubric) = {

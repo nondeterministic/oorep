@@ -3,6 +3,12 @@ OOREP NEWS
 
 v0.6.1  under development
 ------------------------------------------------------
+- Show multi-occurrences of remedies for entire search rather than for
+  current page only
+- Display full remedy names when hovering with mouse over remedy
+  abbreviations in the repertorisation view
+- Differentiate 5-valued from 4-valued remedies by double underlining
+  (cf. bogboen)
 - Introduced env-var OOREP_IMPORT_REPERTORIES to trigger import of raw
   repertory data upon program start-up from JSON-files (to avoid accidental
   deletion of repertory changes)
