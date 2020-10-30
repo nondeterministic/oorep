@@ -35,7 +35,7 @@ object Main {
     // Stuff to make the NavBar (dis)appear dynamically
     var navBarDark = false
     $(dom.window).scroll(() => {
-      if (Repertorise.repertorisationResults.now.size == 0) {
+      if (Repertorise._repertorisationResults.now.size == 0) {
         if ($(document).scrollTop() > 150) {
           if (!navBarDark) {
             $("#public_nav_bar").addClass("bg-dark navbar-dark shadow p-3 mb-5")

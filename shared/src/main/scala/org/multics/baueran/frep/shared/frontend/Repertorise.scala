@@ -9,7 +9,6 @@ import rx.Var
 
 import scala.collection.mutable
 import scala.util.{Failure, Success}
-import org.querki.jquery._
 import fr.hmil.roshttp.{BackendConfig, HttpRequest}
 import fr.hmil.roshttp.response.SimpleHttpResponse
 import monix.execution.Scheduler.Implicits.global
@@ -19,101 +18,106 @@ import org.multics.baueran.frep.shared.sec_frontend.FileModalCallbacks.updateMem
 
 object Repertorise {
 
-  private var prevQuery = ""
-  private var symptomQuery = ""
-  private var remedyQuery: Option[String] = None
-  private var remedyMinWeight = 1
-  private val repertoryRemedyMap = mutable.HashMap[String,List[String]]()
-  private val selectedRepertory = Var("")
-  private var showMaxSearchResultsAlert = true
-  private var showMultiOccurrences = false
-  private val remedyFormat = Var(RemedyFormat.Formatted)
-  val repertorisationResults: Var[Option[ResultsCaseRubrics]] = Var(None)
-  private val resultRemedyStats: Var[List[ResultsRemedyStats]] = Var(List())
+  private val _pageCache = new PageCache()
+  private val _repertoryRemedyMap = mutable.HashMap[String,List[String]]()
+  private val _selectedRepertory = Var("")
+  private var _showMaxSearchResultsAlert = true
+  private var _showMultiOccurrences = false
+  private val _remedyFormat = Var(RemedyFormat.Formatted)
+  val _repertorisationResults: Var[Option[ResultsCaseRubrics]] = Var(None)
+  private val _resultRemedyStats: Var[List[ResultsRemedyStats]] = Var(List())
 
-  resultRemedyStats.triggerLater {
-    val multiRemedies = resultRemedyStats.now.sortBy(-_.count)
+  // ------------------------------------------------------------------------------------------------------------------
+  private def redrawMultiOccurringRemedies(): Unit = {
+    val multiRemedies = _resultRemedyStats.now.sortBy(-_.count)
+    val multiOccurrenceDiv = dom.document.getElementById("multiOccurrenceDiv").asInstanceOf[dom.html.Element]
 
-    $("#collapseMultiOccurrences").empty()
-    if (multiRemedies.length > 1) {
-      $("#multiOccurrenceDiv").append(
-        span(id := "collapseMultiOccurrences", cls := s"collapse ${if (showMultiOccurrences) "show" else "hide"}",
-          "(Multi-occurrences of remedies in search: ",
-          multiRemedies
-            .take(multiRemedies.size - 1)
-            .map { case ResultsRemedyStats(nameabbrev, count, cumulativeWeight) => {
-              span(
-                (s"${count}x"),
-                a(href:="#", onclick:={ (event: Event) =>
-                  remedyQuery = Some(nameabbrev)
-                  doLookup(symptomQuery, None, remedyQuery, 1)
-                }, nameabbrev),
-                ("(" + cumulativeWeight + "), ")
-              )
-            }},
-          span(
-            (s"${multiRemedies.last.count}x"),
-            a(href:="#", onclick:={ (event: Event) =>
-              remedyQuery = Some(multiRemedies.last.nameabbrev)
-              doLookup(symptomQuery, None, remedyQuery, 1)
-            }, multiRemedies.last.nameabbrev),
-            ("(" + multiRemedies.last.cumulativeWeight + ")")
-          ),
-          ")").render
-      )
+    if (multiOccurrenceDiv != null) {
+      val collapseMultiOccurrences = dom.document.getElementById("collapseMultiOccurrences").asInstanceOf[dom.html.Element]
+      if (collapseMultiOccurrences != null)
+        multiOccurrenceDiv.removeChild(collapseMultiOccurrences)
+
+      if (multiRemedies.length > 1) {
+        multiOccurrenceDiv.appendChild(
+          span(id := "collapseMultiOccurrences", cls := s"collapse ${if (_showMultiOccurrences) "show" else "hide"}",
+            "(Multi-occurrences of remedies in search: ",
+            multiRemedies
+              .take(multiRemedies.size - 1)
+              .map { case ResultsRemedyStats(nameabbrev, count, cumulativeWeight) => {
+                span(
+                  (s"${count}x"),
+                  a(href := "#", onclick := { (event: Event) =>
+                    doLookup(_pageCache.latest.abbrev, _pageCache.latest.symptom, None, Some(nameabbrev), 1)
+                  }, nameabbrev),
+                  ("(" + cumulativeWeight + "), ")
+                )
+              }
+              },
+            span(
+              (s"${multiRemedies.last.count}x"),
+              a(href := "#", onclick := { (event: Event) =>
+                doLookup(_pageCache.latest.abbrev, _pageCache.latest.symptom, None, Some(multiRemedies.last.nameabbrev), 1)
+              }, multiRemedies.last.nameabbrev),
+              ("(" + multiRemedies.last.cumulativeWeight + ")")
+            ),
+            ")").render
+        )
+      }
+      else {
+        multiOccurrenceDiv.appendChild(
+          span(id := "collapseMultiOccurrences", cls := s"collapse ${if (_showMultiOccurrences) "show" else "hide"}",
+            "(Multi-occurrences of remedies in search: None)").render)
+      }
     }
-    else {
-      $("#multiOccurrenceDiv").append(
-        span(id := "collapseMultiOccurrences", cls := s"collapse ${if (showMultiOccurrences) "show" else "hide"}",
-          "(Multi-occurrences of remedies in search: None)").render)
-    }
-
-    println(s"Multi-occurrences found in search: ${multiRemedies.length}")
   }
 
-  selectedRepertory.triggerLater {
+  _resultRemedyStats.triggerLater {
+    redrawMultiOccurringRemedies()
+  }
+
+  _selectedRepertory.triggerLater {
     if (dom.document.getElementById("remedyDataList") != null) {
       val optionsDiv = dom.document.getElementById("remedyDataList").asInstanceOf[dom.html.Div]
 
       while (optionsDiv.childNodes.length > 0)
         optionsDiv.removeChild(optionsDiv.firstChild)
 
-      for (remedyAbbrev <- repertoryRemedyMap.get(selectedRepertory.now).getOrElse(List.empty).sorted)
+      for (remedyAbbrev <- _repertoryRemedyMap.get(_selectedRepertory.now).getOrElse(List.empty).sorted)
         optionsDiv.appendChild(option(value := s"$remedyAbbrev").render)
     }
   }
 
-  repertorisationResults.triggerLater(repertorisationResults.now match {
+  _repertorisationResults.triggerLater(_repertorisationResults.now match {
     case Some(_) => showResults()
     case None => ;
   })
-  remedyFormat.triggerLater(repertorisationResults.now match {
-    case Some(_) => showResults()
+  _remedyFormat.triggerLater(_repertorisationResults.now match {
+    case Some(_) => showResults(); redrawMultiOccurringRemedies()
     case None => ;
   })
 
   // ------------------------------------------------------------------------------------------------------------------
   // Render HTML for the results of a repertory lookup directly to page.
-  //
-  // containingRemedyAbbrev, if not empty, will lead to only those rows drawn, that contain remedy
-  // with abbrev. containingRemedyAbbrev.
   def showResults(): Unit = {
 
     def resetContentView() = {
-      $("#content").empty()
-      $("#content").append(apply().render)
+      val contentDiv = dom.document.getElementById("content").asInstanceOf[dom.html.Element]
+      contentDiv.innerHTML = ""
+      contentDiv.appendChild(apply().render)
 
       getCookieData(dom.document.cookie, CookieFields.id.toString) match {
         case Some(id) => updateMemberFiles(id.toInt)
         case None => ;
       }
+
+      updateAvailableRepertoriesAndRemedies()
     }
 
     def resultRow(result: CaseRubric) = {
       implicit def crToCR(cr: CaseRubric) = new BetterCaseRubric(cr)
 
       val remedies =
-        if (remedyFormat.now == RemedyFormat.NotFormatted)
+        if (_remedyFormat.now == RemedyFormat.NotFormatted)
           result.getRawRemedies()
         else
           result.getFormattedRemedies()
@@ -130,7 +134,7 @@ object Repertorise {
                 event.stopPropagation()
                 Case.addRepertoryLookup(result)
                 Case.updateCaseViewAndDataStructures()
-                $("#button_" + result.repertoryAbbrev + "_" + result.rubric.id).attr("disabled", 1)
+                dom.document.getElementById("button_" + result.repertoryAbbrev + "_" + result.rubric.id).asInstanceOf[HTMLButtonElement].setAttribute("disabled", "1")
                 showCase()
               }
               }, "Add")
@@ -146,10 +150,10 @@ object Repertorise {
 
     resetContentView()
 
-    repertorisationResults.now match {
+    _repertorisationResults.now match {
       case Some(ResultsCaseRubrics(totalNumberOfResults, totalNumberOfPages, currPage, results)) if (results.size > 0) => {
-        $("#resultStatus").empty()
-        $("#resultStatus").append(
+        dom.document.getElementById("resultStatus").innerHTML = ""
+        dom.document.getElementById("resultStatus").appendChild(
           div(scalatags.JsDom.attrs.id := "multiOccurrenceDiv", cls := "alert alert-secondary", role := "alert",
             button(`type`:="button", cls:="close", data.toggle:="collapse", data.target:="#collapseMultiOccurrences",
               onclick := { (_: Event) =>
@@ -158,14 +162,14 @@ object Repertorise {
                 if (toggleButton.getAttribute("class") == "oi oi-chevron-left") {
                   toggleButton.setAttribute("class", "oi oi-chevron-bottom")
                   toggleButton.setAttribute("title", "Show less")
-                  showMultiOccurrences = true
+                  _showMultiOccurrences = true
                 } else {
                   toggleButton.setAttribute("class", "oi oi-chevron-left")
                   toggleButton.setAttribute("title", "Show more...")
-                  showMultiOccurrences = false
+                  _showMultiOccurrences = false
                 }
               },
-              if (!showMultiOccurrences)
+              if (!_showMultiOccurrences)
                 span(aria.hidden:="true", id:="collapseMultiOccurrencesButton", cls:="oi oi-chevron-left", style:="font-size: 14px;", title:="Show more...")
               else
                 span(aria.hidden:="true", id:="collapseMultiOccurrencesButton", cls:="oi oi-chevron-bottom", style:="font-size: 14px;", title:="Show less")
@@ -173,21 +177,20 @@ object Repertorise {
             b({
               var searchStatsString = s"${totalNumberOfResults} rubrics for "
 
-              if (symptomQuery.trim.length > 0) {
-                searchStatsString += s"'${symptomQuery}' "
+              if (_pageCache.latest.symptom.trim.length > 0) {
+                searchStatsString += s"'${_pageCache.latest.symptom}' "
 
-                remedyQuery match {
+                _pageCache.latest.remedy match {
                   case None => ;
                   case Some(remedy) =>
                     searchStatsString += s"containing '${remedy}'"
                 }
               }
               else
-                searchStatsString += s"'${remedyQuery.getOrElse("")}'"
+                searchStatsString += s"'${_pageCache.latest.remedy}'"
 
-
-              if (remedyMinWeight > 1)
-                searchStatsString += s" with min. weight >= ${remedyMinWeight}"
+              if (_pageCache.latest.minWeight > 1)
+                searchStatsString += s" with min. weight >= ${_pageCache.latest.minWeight}"
 
               searchStatsString += s". Showing page ${currPage + 1} of ${totalNumberOfPages}. "
               searchStatsString
@@ -195,8 +198,8 @@ object Repertorise {
           ).render
         )
 
-        $("#resultDiv").empty()
-        $("#resultDiv").append(
+        dom.document.getElementById("resultDiv").innerHTML = ""
+        dom.document.getElementById("resultDiv").appendChild(
           div(cls := "table-responsive",
             table(cls := "table table-striped table-sm table-bordered",
               thead(cls := "thead-dark", scalatags.JsDom.attrs.id := "resultsTHead",
@@ -214,20 +217,24 @@ object Repertorise {
           ).render
         )
 
-        $("#paginationDiv").empty()
+        dom.document.getElementById("paginationDiv").innerHTML = ""
         if (totalNumberOfPages > 1) {
           val pg = new Paginator(totalNumberOfPages, currPage + 1, 5).getPagination()
           val htmlPg = new PaginatorHtml(pg)
-          $("#paginationDiv").append(htmlPg.toHtml(symptomQuery, currPage, remedyQuery, remedyMinWeight, doLookup).render)
+
+          dom.document.getElementById("paginationDiv")
+            .appendChild(
+              htmlPg.toHtml(_pageCache.latest.abbrev, _pageCache.latest.symptom, currPage, _pageCache.latest.remedy, _pageCache.latest.minWeight, doLookup)
+                .render)
         }
       }
       case _ => ;
     }
 
     // Display potentially useful hint, when max. number of search results was returned.
-    repertorisationResults.now match {
+    _repertorisationResults.now match {
       case Some(ResultsCaseRubrics(totalNumberOfResults, totalNumberOfPages, _, results))
-        if (showMaxSearchResultsAlert &&
+        if (_showMaxSearchResultsAlert &&
           (results.size >= maxNumberOfResults || totalNumberOfPages > 1)) =>
       {
         val fullPathWords = results.map(cr => cr.rubric.fullPath.split("[, ]+").filter(_.length > 0).map(_.trim())).flatten
@@ -241,7 +248,7 @@ object Repertorise {
             .toSeq.sortWith(_._2 > _._2)
 
         // Filter out all those results, which were actually desired via positive search terms entered by the user
-        val searchTerms = new SearchTerms(prevQuery)
+        val searchTerms = new SearchTerms(_pageCache.latest.symptom)
         val posTerms = searchTerms.positive
         val filteredSortedResultOccurrences =
           sortedResultOccurrences
@@ -257,9 +264,9 @@ object Repertorise {
             else ""
           } + s", -${filteredSortedResultOccurrences.head._1.toLowerCase.take(6)}*"
 
-          $("#resultStatus").append(
+          dom.document.getElementById("resultStatus").appendChild(
             div(cls := "alert alert-warning", role := "alert",
-              button(`type`:="button", cls:="close", data.dismiss:="alert",  onclick := { (_: Event) => showMaxSearchResultsAlert = false },
+              button(`type`:="button", cls:="close", data.dismiss:="alert",  onclick := { (_: Event) => _showMaxSearchResultsAlert = false },
                 span(aria.hidden:="true", raw("&times;"))),
               if (posTerms.length > 0)
                 b(s"High number of results. Maybe try narrowing your search using '-', like '",
@@ -274,9 +281,9 @@ object Repertorise {
       case _ => ;
     }
 
-    repertorisationResults.now match {
+    _repertorisationResults.now match {
       case Some(ResultsCaseRubrics(_, _, _, results)) =>
-        results.foreach(result => $("#resultsTBody").append(resultRow(result).render))
+        results.foreach(result => dom.document.getElementById("resultsTBody").appendChild(resultRow(result).render))
       case _ => ;
     }
 
@@ -285,10 +292,10 @@ object Repertorise {
 
   // ------------------------------------------------------------------------------------------------------------------
   def toggleRemedyFormat() = {
-    if (remedyFormat.now == RemedyFormat.NotFormatted)
-      remedyFormat() = RemedyFormat.Formatted
+    if (_remedyFormat.now == RemedyFormat.NotFormatted)
+      _remedyFormat() = RemedyFormat.Formatted
     else
-      remedyFormat() = RemedyFormat.NotFormatted
+      _remedyFormat() = RemedyFormat.NotFormatted
 
     if (Case.size() > 0)
       showCase()
@@ -299,54 +306,51 @@ object Repertorise {
   // ------------------------------------------------------------------------------------------------------------------
   private def showCase() = {
     Case.rmCaseDiv()
-    $("#caseDiv").append(Case.toHTML(remedyFormat.now).render)
+    dom.document.getElementById("caseDiv").appendChild(Case.toHTML(_remedyFormat.now).render)
     Case.updateCaseViewAndDataStructures()
     Case.updateCaseHeaderView()
   }
 
   // ------------------------------------------------------------------------------------------------------------------
   private def advancedSearchOptionsVisible() = {
-    dom.document.getElementById("advancedSearchControlsDiv").asInstanceOf[dom.html.Div].childNodes.length > 0
+    dom.document.getElementById("advancedSearchControlsDiv").childNodes.length > 0
   }
 
   // ------------------------------------------------------------------------------------------------------------------
   private def onSymptomLinkClicked(symptom: String) = {
-    prevQuery = symptom
-    remedyMinWeight = 1
-    remedyQuery = None
-    doLookup(prevQuery, None, remedyQuery, remedyMinWeight)
+    doLookup(_selectedRepertory.now, symptom, None, None, 1)
   }
 
   // ------------------------------------------------------------------------------------------------------------------
-  private def onSymptomEntered() = {
-    prevQuery = dom.document.getElementById("inputField").asInstanceOf[HTMLInputElement].value
-    remedyQuery = dom.document.getElementById("inputRemedy") match {
+  private def onSymptomEntered(): Unit = {
+    val remedyQuery = dom.document.getElementById("inputRemedy") match {
       case null => None
       case element => element.asInstanceOf[HTMLInputElement].value.trim match {
         case "" => None
         case otherwise => Some(otherwise)
       }
     }
-    remedyMinWeight = dom.document.getElementById("minWeightDropdown") match {
+    val remedyMinWeight = dom.document.getElementById("minWeightDropdown") match {
       case null => 1
       case element => element.asInstanceOf[HTMLButtonElement].textContent.trim match {
         case "" => 1
         case otherwise => otherwise.toInt
       }
     }
+    val symptom = dom.document.getElementById("inputField").asInstanceOf[HTMLInputElement].value
 
-    doLookup(prevQuery, None, remedyQuery, remedyMinWeight)
+    doLookup(_selectedRepertory.now, symptom, None, remedyQuery, remedyMinWeight)
   }
 
   // ------------------------------------------------------------------------------------------------------------------
   private def onSymptomListRedoPressed() = {
-    $("#inputField").value(prevQuery)
+    dom.document.getElementById("inputField").asInstanceOf[dom.html.Input].value = _pageCache.latest.symptom
 
     if (!advancedSearchOptionsVisible()) {
-      remedyQuery match {
+      _pageCache.latest.remedy match {
         case Some(_) => onShowAdvancedSearchOptionsMainView(true, false)
         case _ => {
-          if (remedyMinWeight > 1)
+          if (_pageCache.latest.minWeight > 1)
             onShowAdvancedSearchOptionsMainView(true, false)
         }
       }
@@ -378,7 +382,7 @@ object Repertorise {
           "Min. weight:"),
         div(cls:="col-sm-2",
           div(id:="weightDropDowns", cls:="dropdown show",
-            button(id:="minWeightDropdown", cls:="btn dropdown-toggle", `type`:="button", data.toggle:="dropdown", if (restorePreviousValues) remedyMinWeight.toString else "1"),
+            button(id:="minWeightDropdown", cls:="btn dropdown-toggle", `type`:="button", data.toggle:="dropdown", if (restorePreviousValues) _pageCache.latest.minWeight.toString else "1"),
             weightDropDownsDiv
           )
         )
@@ -386,10 +390,10 @@ object Repertorise {
 
     // Set remedy input string, if one was previously submitted, and redo-button was pressed
     if (restorePreviousValues) {
-      remedyQuery match {
+      _pageCache.latest.remedy match {
         case Some(remedyAbbrev) =>
           dom.document.getElementById("inputRemedy").asInstanceOf[dom.html.Input].value = remedyAbbrev
-        case _ => ;
+        case None => ;
       }
     }
 
@@ -399,7 +403,7 @@ object Repertorise {
     while (optionsDiv.childNodes.length > 0)
       optionsDiv.removeChild(optionsDiv.firstChild)
 
-    for (remedyAbbrev <- repertoryRemedyMap.get(selectedRepertory.now).getOrElse(List.empty).sorted)
+    for (remedyAbbrev <- _repertoryRemedyMap.get(_selectedRepertory.now).getOrElse(List.empty).sorted)
       optionsDiv.appendChild(option(value:=s"$remedyAbbrev").render)
 
     // Add possible weights for search (4 is only in Hering's)
@@ -462,30 +466,175 @@ object Repertorise {
   }
 
   // ------------------------------------------------------------------------------------------------------------------
-  private def doLookup(symptom: String, pageOpt: Option[Int], remedyStringOpt: Option[String], minWeight: Int): Unit = {
-    val repertory = selectedRepertory.now
+  private def doLookup(abbrev: String, symptom: String, pageOpt: Option[Int], remedyStringOpt: Option[String], minWeight: Int): Unit = {
     val page = math.max(pageOpt.getOrElse(0), 0)
     val remedyString = remedyStringOpt.getOrElse("")
 
-    if (repertory.length == 0) {
-      $("#resultStatus").empty()
-      $("#resultStatus").append(
+    def showRepertorisationResults(results: ResultsCaseRubrics, remedyStats: List[ResultsRemedyStats]): Unit = {
+      _pageCache.addPage(CachePage(abbrev, symptom, remedyStringOpt, minWeight, results, remedyStats))
+
+      _repertorisationResults() = None
+      _repertorisationResults.recalc()
+      _repertorisationResults() = Some(results)
+
+      _resultRemedyStats() = List.empty
+      _resultRemedyStats.recalc()
+      _resultRemedyStats() = remedyStats
+
+      if (Case.size() > 0)
+        showCase()
+
+      dom.document.body.style.cursor = "default"
+    }
+
+    def showRepertorisationResultsError(symptom: String, remedyString: String, minWeight: Int): Unit = {
+      val searchTerms = new SearchTerms(symptom)
+      val longPosTerms = searchTerms.positive.map(_.replace("*", "")).filter(_.length() > 6)
+      val longNegTerms = searchTerms.negative
+      val resultStatusDiv = dom.document.getElementById("resultStatus")
+
+      dom.document.body.style.cursor = "default"
+      resultStatusDiv.innerHTML = ""
+
+      if (searchTerms.negative.length + searchTerms.positive.length >= maxNumberOfSymptoms) {
+        resultStatusDiv.appendChild(
+          div(cls:="alert alert-danger", role:="alert",
+            b(s"You cannot enter more than ${maxNumberOfSymptoms} symptoms.")).render)
+        return
+      }
+
+      if (searchTerms.positive.length == 0 && searchTerms.negative.length == 0 && remedyString.length > 0) {
+        resultStatusDiv.appendChild(
+          div(cls:="alert alert-danger", role:="alert",
+            b(s"Remedy '${remedyString}' does not exist in this repertory (or min. weight too high).")).render)
+        return
+      }
+
+      if (searchTerms.positive.length == 0) {
+        resultStatusDiv.appendChild(
+          div(cls:="alert alert-danger", role:="alert",
+            b(s"No results. You must enter some symptoms to search for.")).render)
+        return
+      }
+
+      val tmpErrorMessage1 = s"Perhaps try a different repertory; or use wild-card search, like '"
+      val tmpErrorMessage2 = {
+        if (longPosTerms.length > 0)
+          longPosTerms.map(t => t.take(5) + "*").mkString(", ")
+        else
+          searchTerms.positive.map(_.replace("*", "")).map(_ + "*").mkString(", ")
+      } + {
+        if (longNegTerms.length > 0)
+          ", " + longNegTerms.map("-" + _).mkString(", ")
+        else
+          ""
+      }
+
+      resultStatusDiv.appendChild(
+        div(cls:="alert alert-danger", role:="alert",
+          b(
+            {
+              var fullErrorMessage = "No results returned for "
+              if (symptom.trim.length > 0) {
+                fullErrorMessage += s"'${symptom}' "
+
+                remedyString match {
+                  case "" => ;
+                  case remedy =>
+                    fullErrorMessage += s"containing '${remedy}'"
+                }
+              }
+              else
+                fullErrorMessage += s"'${remedyString}'"
+
+              if (minWeight > 1)
+                fullErrorMessage += s" with min. weight >= ${minWeight}"
+
+              if (searchTerms.positive.length > 0)
+                fullErrorMessage += s". $tmpErrorMessage1"
+
+              fullErrorMessage
+            },
+            a(href:="#", onclick:={ (_: Event) => onSymptomLinkClicked(tmpErrorMessage2) }, tmpErrorMessage2), "'."
+          )
+        ).render)
+    }
+
+    def getPageFromBackend(abbrev: String, symptom: String, remedyString: String, minWeight: Int, page: Int) = {
+      val cachedRemedies = _pageCache.getRemedies(abbrev, symptom, if (remedyString.length == 0) None else Some(remedyString), minWeight)
+      val getRemedies = if (cachedRemedies.length == 0) "1" else "0"
+
+      val req = HttpRequest(s"${serverUrl()}/${apiPrefix()}/lookup")
+      val serverResponseFuture = req
+        .withQueryParameters(
+          ("symptom", symptom),
+          ("repertory", abbrev),
+          ("page", page.toString),
+          ("remedyString", remedyString),
+          ("minWeight", minWeight.toString),
+          ("getRemedies", getRemedies)
+        )
+        .withBackendConfig(BackendConfig(
+          // 1 MB maxChunkSize; see also build.sbt where the same is set for the Akka backend!
+          // It only works, so long as server's chunks are not larger than maxChunkSize below,
+          // or if the reply fits well within one chunk and no second, third, etc. is sent at
+          // all.  An interesting test case is "schmerz*" in kent-de as this is the longest
+          // reply, I have found from the backend yet.  So, it used to crash on "schmerz*" in
+          // kent-de, if the chunk size was too small.
+          maxChunkSize = 1048576
+        ))
+        .send()
+        .onComplete({
+          case response: Success[SimpleHttpResponse] => {
+            parse(response.get.body) match {
+              case Right(json) => {
+                val cursor = json.hcursor
+                cursor.as[(ResultsCaseRubrics, List[ResultsRemedyStats])] match {
+                  case Right((rcr, remedyStats)) => {
+                    cachedRemedies match {
+                      case Nil => {
+                        if (getRemedies == "1")
+                          _resultRemedyStats() = remedyStats
+                        showRepertorisationResults(rcr, remedyStats)
+                      }
+                      case cachedRemedies =>
+                        showRepertorisationResults(rcr, cachedRemedies)
+                    }
+                  }
+                  case Left(err) =>
+                    println(s"Parsing of lookup as RepertoryLookup failed: $err")
+                }
+              }
+              case Left(err) =>
+                println(s"Parsing of lookup failed (is it JSON?): $err")
+            }
+          }
+          case _: Failure[SimpleHttpResponse] =>
+            showRepertorisationResultsError(symptom, remedyString, minWeight)
+        })
+    }
+
+    val resultStatusDiv = dom.document.getElementById("resultStatus")
+
+    if (abbrev.length == 0) {
+      resultStatusDiv.innerHTML = ""
+      resultStatusDiv.appendChild(
         div(cls:="alert alert-danger", role:="alert",
           b("No results. Make sure a repertory is selected.")).render)
       return
     }
 
     if (symptom.trim.replaceAll("[^A-Za-z0-9äüöÄÜÖß]", "").length == 0 && remedyString.length == 0) {
-      $("#resultStatus").empty()
-      $("#resultStatus").append(
+      resultStatusDiv.innerHTML = ""
+      resultStatusDiv.appendChild(
         div(cls:="alert alert-danger", role:="alert",
           b("No results. Enter some symptoms and/or a remedy.")).render)
       return
     }
 
     if (symptom.trim.replaceAll("[^A-Za-z0-9äüöÄÜÖß]", "").length <= 3 && remedyString.length == 0) {
-      $("#resultStatus").empty()
-      $("#resultStatus").append(
+      resultStatusDiv.innerHTML = ""
+      resultStatusDiv.appendChild(
         div(cls:="alert alert-danger", role:="alert",
           b("No results returned for '" + symptom + "'. " +
             "Make sure the symptom input is not too short or to enter a remedy.")).render)
@@ -493,144 +642,95 @@ object Repertorise {
     }
 
     if (symptom.length() >= maxLengthOfSymptoms) {
-      $("#resultStatus").empty()
-      $("#resultStatus").append(
+      resultStatusDiv.innerHTML = ""
+      resultStatusDiv.appendChild(
         div(cls := "alert alert-danger", role := "alert",
           b(s"Input must not exceed $maxLengthOfSymptoms characters in length.")).render)
       return
     }
 
-    $("body").css("cursor", "wait")
+    dom.document.body.style.cursor = "wait"
+    _pageCache.getPage(abbrev, symptom, if (remedyString.length == 0) None else Some(remedyString), minWeight, page) match {
+      case Some(cachedPage) =>
+        showRepertorisationResults(cachedPage.content, cachedPage.remedies)
+      case None =>
+        getPageFromBackend(abbrev, symptom, remedyString, minWeight, page)
+    }
 
-    // The server response is "chunked/streamed" (see Get.scala), so we can't just handle this with onComplete()!
-    val req = HttpRequest(s"${serverUrl()}/${apiPrefix()}/lookup")
-    val serverResponseFuture = req
-      .withQueryParameters(
-        ("symptom", symptom),
-        ("repertory", repertory),
-        ("page", page.toString),
-        ("remedyString", remedyString),
-        ("minWeight", minWeight.toString)
-      )
-      .withBackendConfig(BackendConfig(
-        // 1 MB maxChunkSize; see also build.sbt where the same is set for the Akka backend!
-        // It only works, so long as server's chunks are not larger than maxChunkSize below,
-        // or if the reply fits well within one chunk and no second, third, etc. is sent at
-        // all.  An interesting test case is "schmerz*" in kent-de as this is the longest
-        // reply, I have found from the backend yet.  So, it used to crash on "schmerz*" in
-        // kent-de, if the chunk size was too small.
-        maxChunkSize = 1048576
-      ))
-      .send()
-      .onComplete({
-        case response: Success[SimpleHttpResponse] => {
-          $("body").css("cursor", "default")
-          parse(response.get.body) match {
-            case Right(json) => {
-              val cursor = json.hcursor
-              cursor.as[(ResultsCaseRubrics, List[ResultsRemedyStats])] match {
-                case Right((ResultsCaseRubrics(totalNumberOfResults, totalNumberOfPages, currPage, newResults), remedyStats)) => {
-                  symptomQuery = symptom
+  }
 
-                  repertorisationResults() = None
-                  repertorisationResults() = Some(ResultsCaseRubrics(totalNumberOfResults, totalNumberOfPages, currPage, newResults))
+  // ------------------------------------------------------------------------------------------------------------------
+  private def updateAvailableRepertoriesAndRemedies() = {
+    if (_repertoryRemedyMap.size == 0) {
+      println("Updating repertory information from backend")
+      HttpRequest(s"${serverUrl()}/${apiPrefix()}/available_remedies")
+        .send()
+        .onComplete({
+          case response: Success[SimpleHttpResponse] => {
+            parse(response.get.body) match {
+              case Right(json) => {
+                val cursor = json.hcursor
+                cursor.as[List[(String, String, String)]] match {
+                  case Right(repertoryRemedies) => {
+                    // Update available repertories
+                    repertoryRemedies
+                      .map { case (repAbbrev, repAccess, _) => (repAbbrev, repAccess) }
+                      .distinct
+                      .sortBy(_._1)
+                      .foreach { case (repAbbrev, repAccess) => {
+                        dom.document.getElementById("repSelectionDropDown")
+                          .appendChild(a(cls := "dropdown-item", href := "#", data.value := repAbbrev,
+                            onclick := { (event: Event) =>
+                              _selectedRepertory() = repAbbrev
+                              dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[HTMLButtonElement].textContent = "Repertory: " + _selectedRepertory.now
+                            }, repAbbrev).render)
 
-                  // Trigger explicitly the building of the multi-occurrence-div,
-                  // which only gets the remedies from the backend on page 0.
-                  // So if another page is shown, we need recalc() to redraw, and
-                  // when user goes from, say, page 2 to 0, we also need redraw,
-                  // because then remedies also don't change!  So we simply do update
-                  // and ALWAYS redraw.
-                  if (remedyStats.length > 0)
-                    resultRemedyStats() = remedyStats
-                  resultRemedyStats.recalc()
+                        if (_selectedRepertory.now.length > 0)
+                          dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[HTMLButtonElement].textContent = "Repertory: " + _selectedRepertory.now
+                        else if (repAccess == RepAccess.Default.toString) {
+                          _selectedRepertory() = repAbbrev
+                          dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[HTMLButtonElement].textContent = "Repertory: " + _selectedRepertory.now
+                        }
+                      }
+                      }
 
-                  if (Case.size() > 0)
-                    showCase()
-                }
-                case Left(err) => println(s"Parsing of lookup as RepertoryLookup failed: $err")
-              }
-            }
-            case Left(err) => println(s"Parsing of lookup failed (is it JSON?): $err")
-          }
-        }
-        case _: Failure[SimpleHttpResponse] => {
-          val searchTerms = new SearchTerms(symptom)
-          val longPosTerms = searchTerms.positive.map(_.replace("*", "")).filter(_.length() > 6)
-          val longNegTerms = searchTerms.negative
-
-          if (searchTerms.negative.length + searchTerms.positive.length >= maxNumberOfSymptoms) {
-            $("body").css("cursor", "default")
-            $("#resultStatus").empty()
-            $("#resultStatus").append(
-              div(cls:="alert alert-danger", role:="alert",
-                b(s"You cannot enter more than ${maxNumberOfSymptoms} symptoms.")).render)
-            return
-          }
-
-          if (searchTerms.positive.length == 0 && searchTerms.negative.length == 0 && remedyQuery != None) {
-            $("body").css("cursor", "default")
-            $("#resultStatus").empty()
-            $("#resultStatus").append(
-              div(cls:="alert alert-danger", role:="alert",
-                b(s"Remedy '${remedyQuery.get}' does not exist in this repertory.")).render)
-            return
-          }
-
-          if (searchTerms.positive.length == 0) {
-            $("body").css("cursor", "default")
-            $("#resultStatus").empty()
-            $("#resultStatus").append(
-              div(cls:="alert alert-danger", role:="alert",
-                b(s"No results. You must enter some symptoms to search for.")).render)
-            return
-          }
-
-          val tmpErrorMessage1 = s"Perhaps try a different repertory; or use wild-card search, like '"
-          val tmpErrorMessage2 = {
-            if (longPosTerms.length > 0)
-              longPosTerms.map(t => t.take(5) + "*").mkString(", ")
-            else
-              searchTerms.positive.map(_.replace("*", "")).map(_ + "*").mkString(", ")
-          } + {
-            if (longNegTerms.length > 0)
-              ", " + longNegTerms.map("-" + _).mkString(", ")
-            else
-              ""
-          }
-
-          $("body").css("cursor", "default")
-          $("#resultStatus").empty()
-          $("#resultStatus").append(
-            div(cls:="alert alert-danger", role:="alert",
-              b(
-                {
-                  var fullErrorMessage = "No results returned for "
-                  if (symptom.trim.length > 0) {
-                    fullErrorMessage += s"'${symptom}' "
-
-                    remedyQuery match {
-                      case None => ;
-                      case Some(remedy) =>
-                        fullErrorMessage += s"containing '${remedy}'"
+                    // Update available remedies
+                    val repertoryNames = repertoryRemedies.map { case (repAbbrev, _, _) => (repAbbrev) }.distinct
+                    for (repertoryAbbrev <- repertoryNames) {
+                      _repertoryRemedyMap.addOne((repertoryAbbrev,
+                        repertoryRemedies
+                          .filter { case (repAbbrev, _, _) => repAbbrev == repertoryAbbrev }
+                          .map { case (_, _, remedyAbbrev) => remedyAbbrev }
+                      ))
                     }
                   }
-                  else
-                    fullErrorMessage += s"'${remedyQuery.getOrElse("")}'"
+                  case Left(t) => println("Parsing of available repertories failed: " + t)
+                }
+              }
+              case Left(_) => println("Parsing of available repertories failed (is it JSON?).")
+            }
+          }
+          case error: Failure[SimpleHttpResponse] => println("Available repertories failed: " + error.toString)
+        })
+    }
+    else {
+      println("Updating repertory information from RAM")
+      for ((repAbbrev, repAccess) <- _repertoryRemedyMap.toList.sortBy(_._1)) {
+        dom.document.getElementById("repSelectionDropDown")
+          .appendChild(a(cls := "dropdown-item", href := "#", data.value := repAbbrev,
+            onclick := { (event: Event) =>
+              _selectedRepertory() = repAbbrev
+              dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[HTMLButtonElement].textContent = "Repertory: " + _selectedRepertory.now
+            }, repAbbrev).render)
 
-                  if (remedyMinWeight > 1)
-                    fullErrorMessage += s" with min. weight >= ${remedyMinWeight}"
-
-                  if (searchTerms.positive.length > 0)
-                    fullErrorMessage += s". $tmpErrorMessage1"
-
-                  fullErrorMessage
-                },
-                a(href:="#", onclick:={ (_: Event) => onSymptomLinkClicked(tmpErrorMessage2) }, tmpErrorMessage2), "'."
-              )
-            ).render)
+        if (_selectedRepertory.now.length > 0)
+          dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[HTMLButtonElement].textContent = "Repertory: " + _selectedRepertory.now
+        else if (repAccess == RepAccess.Default.toString) {
+          _selectedRepertory() = repAbbrev
+          dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[HTMLButtonElement].textContent = "Repertory: " + _selectedRepertory.now
         }
-      })
+      }
+    }
   }
 
   // ------------------------------------------------------------------------------------------------------------------
@@ -646,60 +746,9 @@ object Repertorise {
         div(cls:="dropdown-menu", `id`:="repSelectionDropDown")
       )
 
-      def updateAvailableRepertoriesAndRemedies() = {
-        HttpRequest(s"${serverUrl()}/${apiPrefix()}/available_remedies")
-          .send()
-          .onComplete({
-            case response: Success[SimpleHttpResponse] => {
-              parse(response.get.body) match {
-                case Right(json) => {
-                  val cursor = json.hcursor
-                  cursor.as[List[(String, String, String)]] match {
-                    case Right(repertoryRemedies) => {
-                      // Update available repertories
-                      repertoryRemedies
-                        .map{ case (repAbbrev, repAccess, _) => (repAbbrev, repAccess) }
-                        .distinct
-                        .sortBy(_._1)
-                        .foreach{ case (repAbbrev, repAccess) => {
-                          $("#repSelectionDropDown")
-                            .append(a(cls:="dropdown-item", href:="#", data.value:=repAbbrev,
-                              onclick := { (event: Event) =>
-                                selectedRepertory() = repAbbrev
-                                $("#repSelectionDropDownButton").text("Repertory: " + selectedRepertory.now)
-                              }, repAbbrev).render)
-
-                          if (selectedRepertory.now.length > 0)
-                            $("#repSelectionDropDownButton").text("Repertory: " + selectedRepertory.now)
-                          else if (repAccess == RepAccess.Default.toString) {
-                            selectedRepertory() = repAbbrev
-                            $("#repSelectionDropDownButton").text("Repertory: " + selectedRepertory.now)
-                          }
-                        }}
-
-                      // Update available remedies
-                      val repertoryNames = repertoryRemedies.map{ case (repAbbrev, _, _) => (repAbbrev) }.distinct
-                      for (repertoryAbbrev <- repertoryNames) {
-                        repertoryRemedyMap.addOne((repertoryAbbrev,
-                          repertoryRemedies
-                            .filter{ case (repAbbrev, _, _) => repAbbrev == repertoryAbbrev }
-                            .map{ case (_, _, remedyAbbrev) => remedyAbbrev }
-                        ))
-                      }
-                    }
-                    case Left(t) => println("Parsing of available repertories failed: " + t)
-                  }
-                }
-                case Left(_) => println("Parsing of available repertories failed (is it JSON?).")
-              }
-            }
-            case error: Failure[SimpleHttpResponse] => println("Available repertories failed: " + error.toString)
-          })
-      }
-
     val myHTML =
       // Fresh page...
-      if (repertorisationResults.now == None && Case.size() == 0) {
+      if (_repertorisationResults.now == None && Case.size() == 0) {
         div(cls := "container-fluid",
           div(cls := "container-fluid text-center",
             div(cls:="col-sm-12 text-center", img(src:="img/logo_small.png")),
@@ -746,7 +795,7 @@ object Repertorise {
           div(cls := "container-fluid", id := "paginationDiv"),
           div(cls := "span12", id := "caseDiv", {
             if (Case.size() > 0)
-              Case.toHTML(remedyFormat.now)
+              Case.toHTML(_remedyFormat.now)
             else ""
           })
         )
@@ -801,25 +850,34 @@ object Repertorise {
           div(cls := "container-fluid", id := "paginationDiv"),
           div(cls := "span12", id := "caseDiv", {
             if (Case.size() > 0)
-              Case.toHTML(remedyFormat.now)
+              Case.toHTML(_remedyFormat.now)
             else ""
           })
         )
       }
 
-    // Update available repertories only in the beginning.  (TODO: Added this if later on. Not sure if update shouldn't be done all the time like before...)
-    if (selectedRepertory.now.length() == 0 || $("#repSelectionDropDown").contents().length == 0)
+    // Initially, update Repertory-Drop-Down and available remedies for each repertory
+    //
+    // TODO: This is a classical race condition on program start-up: updateAvailableRepertories()
+    // accesses dom-elements that don't exist until apply() returned! It works, however, because
+    // by the time those results come back from the backend, those dom-elements do exist.  It is,
+    // however, not nice and should be fixed one day!
+    if (_repertoryRemedyMap.size == 0)
       updateAvailableRepertoriesAndRemedies()
 
     // If initial page, then vertically center search form
-    if (repertorisationResults.now == None && Case.size() == 0) {
+    if (_repertorisationResults.now == None && Case.size() == 0) {
       div(cls := "introduction", div(cls := "vertical-align", myHTML))
     }
     // If there are already some search results, do without center and fix nav bar prior to rendering
     else {
       if (dom.document.getElementById("nav_bar_logo").innerHTML.length() == 0) {
-        $("#public_nav_bar").addClass("bg-dark navbar-dark shadow p-3 mb-5")
-        $("#nav_bar_logo").append(a(cls := "navbar-brand py-0", href := serverUrl(), h5(cls:="freetext", "OOREP")).render)
+        val navbar = dom.document.getElementById("public_nav_bar").asInstanceOf[dom.html.Element]
+
+        navbar.className = navbar.className + " bg-dark navbar-dark shadow p-3 mb-5"
+
+        dom.document.getElementById("nav_bar_logo")
+          .appendChild(a(cls := "navbar-brand py-0", href := serverUrl(), h5(cls:="freetext", "OOREP")).render)
       }
       div(style:="margin-top:100px;", myHTML)
     }

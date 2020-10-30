@@ -209,7 +209,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     * @param symptom
     * @return
     */
-  def repertorise(repertoryAbbrev: String, symptom: String, page: Int, remedyString: String, minWeight: Int) = Action { request: Request[AnyContent] =>
+  def repertorise(repertoryAbbrev: String, symptom: String, page: Int, remedyString: String, minWeight: Int, getRemedies: Int) = Action { request: Request[AnyContent] =>
     if (symptom.trim.length >= maxLengthOfSymptoms) {
       val errStr = s"Get: input exceeded max length of ${maxLengthOfSymptoms}."
       Logger.warn(errStr)
@@ -217,7 +217,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     }
     else {
       val dao = new RepertoryDao(dbContext)
-      dao.queryRepertory(repertoryAbbrev.trim, symptom.trim, page, remedyString.trim, minWeight) match {
+      dao.queryRepertory(repertoryAbbrev.trim, symptom.trim, page, remedyString.trim, minWeight, getRemedies != 0) match {
         case Some((ResultsCaseRubrics(totalNumberOfResults, totalNumberOfPages, page, results), remedyStats)) if (totalNumberOfPages > 0) =>
           Ok((ResultsCaseRubrics(totalNumberOfResults, totalNumberOfPages, page, results), remedyStats).asJson.toString())
         case _ =>

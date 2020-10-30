@@ -5,6 +5,8 @@ import org.multics.baueran.frep.backend.db
 import Defs.{SpecialLookupParams, maxNumberOfResults, maxNumberOfSymptoms}
 import scala.collection.mutable.ArrayBuffer
 
+import scala.collection.mutable.ArrayBuffer
+
 class RepertoryDao(dbContext: db.db.DBContext) {
 
   import dbContext._
@@ -155,12 +157,10 @@ class RepertoryDao(dbContext: db.db.DBContext) {
     None
   }
 
-  def queryRepertory(abbrevFromMenu: String, symptom: String, page: Int, remedyString: String, minWeight: Int): Option[(ResultsCaseRubrics, List[ResultsRemedyStats])] = {
+  def queryRepertory(abbrevFromMenu: String, symptom: String, page: Int, remedyString: String, minWeight: Int, getRemedies: Boolean): Option[(ResultsCaseRubrics, List[ResultsRemedyStats])] = {
     val searchTerms = new SearchTerms(symptom)
     val abbrev = extractAbbrevFromInput(abbrevFromMenu, symptom)
     val remedyEntered = extractRemedyFromInput(abbrev, remedyString)
-
-    Logger.info(s"queryRepertory(abbrev: ${abbrev}, symptom: ${symptom}, page: ${page}, remedy: ${remedyString}, weight: ${minWeight}) called.")
 
     if (remedyString.length > 0 && remedyEntered == None) {
       Logger.error(s"ERROR: Search for '$symptom' aborted: remedy ${remedyString} not found in repertory.")
@@ -272,7 +272,7 @@ class RepertoryDao(dbContext: db.db.DBContext) {
     }
 
     val remedyStats = new ArrayBuffer[ResultsRemedyStats]()
-    if (page == 0) {
+    if (getRemedies == true) {
       val sqlString =
         "SELECT rem.nameabbrev, count(rem.nameabbrev), sum(rr.weight) from rubric as rub join rubricremedy as rr on " +
           s"rub.id = rr.rubricid and rr.abbrev='${abbrev}' and rr.rubricid in (${tmpRubricsAll.map(_.id).mkString(",")}) join remedy as rem on " +
@@ -328,7 +328,7 @@ class RepertoryDao(dbContext: db.db.DBContext) {
     // Compute the to be returned results...
     val caseRubrics = tmpRubricsTruncated.map(rubric => CaseRubric(rubric, abbrev, 1, None, getWeightedRemedies(rubric)))
     val returnTotalNumberOfPages = math.ceil(tmpRubricsAll.size.toDouble / maxNumberOfResults.toDouble).toInt
-    Logger.info(s"queryRepertory(abbrev: ${abbrev}, symptom: ${symptom}, page: ${page}, remedy: ${remedyString}, weight: ${minWeight}) found ${tmpRubricsAll.size} case rubrics.")
+    Logger.info(s"queryRepertory(abbrev: ${abbrev}, symptom: ${symptom}, page: ${page}, remedy: ${remedyString}, weight: ${minWeight}, getRemedies: $getRemedies) found ${tmpRubricsAll.size} case rubrics.")
     Some((ResultsCaseRubrics(tmpRubricsAll.size, returnTotalNumberOfPages, page, caseRubrics), remedyStats.toList))
   }
 

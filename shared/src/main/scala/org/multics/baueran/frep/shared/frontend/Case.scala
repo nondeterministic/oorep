@@ -186,7 +186,8 @@ object Case {
               "memberId" -> PlainTextBody(memberId.toString())))
             .send()
 
-        dom.document.getElementById("caseDescrId").asInstanceOf[HTMLInputElement].removeAttribute("readonly")
+        if (dom.document.getElementById("caseDescrId") != null)
+          dom.document.getElementById("caseDescrId").asInstanceOf[HTMLInputElement].removeAttribute("readonly")
         descr = None
       }
     }
