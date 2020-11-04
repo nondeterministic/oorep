@@ -1,16 +1,16 @@
 OOREP NEWS
 =-=-=-=-=-
 
-v0.7.0  Wed 04 Nov 2020 04:38:26 PM CET [tag: v.0.7.0]
-------------------------------------------------------
+v0.7.0  Wed 04 Nov 2020 04:38:26 PM CET [tag: v0.7.0]
+-----------------------------------------------------
 - Introduce results page cache in client code to put less strain on the
   backend, and to speed up browsing back and forth through the search
   results
 - Remove a superfluous API call to available_remedies, when those are,
   in fact, already in the cache
 
-v0.6.1  Fri 30 Oct 2020 03:47:11 PM CET [tag: v.0.6.1]
-------------------------------------------------------
+v0.6.1  Fri 30 Oct 2020 03:47:11 PM CET [tag: v0.6.1]
+-----------------------------------------------------
 - Show multi-occurrences of remedies for entire search rather than for
   current page only
 - Display full remedy names when hovering with mouse over remedy

@@ -187,7 +187,7 @@ object Repertorise {
                 }
               }
               else
-                searchStatsString += s"'${_pageCache.latest.remedy}'"
+                searchStatsString += s"'${_pageCache.latest.remedy.getOrElse("")}'"
 
               if (_pageCache.latest.minWeight > 1)
                 searchStatsString += s" with min. weight >= ${_pageCache.latest.minWeight}"
