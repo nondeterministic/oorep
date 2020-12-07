@@ -2,7 +2,6 @@ package org.multics.baueran.frep.backend.controllers
 
 import javax.inject._
 import io.circe.syntax._
-import akka.stream.scaladsl.Source
 import play.api.mvc._
 import org.multics.baueran.frep.backend.dao.{CazeDao, FileDao, RepertoryDao}
 import org.multics.baueran.frep.backend.repertory._
@@ -10,7 +9,6 @@ import org.multics.baueran.frep.shared._
 import org.multics.baueran.frep.backend.dao.MemberDao
 import org.multics.baueran.frep.backend.db.db.DBContext
 import org.multics.baueran.frep.shared.Defs._
-import Defs.maxNumberOfResults
 
 /**
  * This controller creates an `Action` to handle HTTP requests to the application's home page.
@@ -34,8 +32,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
   }
 
   def acceptCookies() = Action { request: Request[AnyContent] =>
-    Redirect(serverUrl(request))
-        .withCookies(Cookie(CookieFields.cookiePopupAccepted.toString, "1", httpOnly = false))
+    Ok.withCookies(Cookie(CookieFields.cookiePopupAccepted.toString, "1", httpOnly = false))
   }
 
   /**
@@ -50,15 +47,15 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
       case Some(memberIdStr) => {
         isUserAuthenticated(request) match {
           case Right(_) =>
-            Ok(memberIdStr).withCookies(cookies.map({ c => Cookie(name = c.name, value = c.value, httpOnly = false) }):_*)
+            Ok(memberIdStr).withCookies(cookies.map({ c => Cookie(name = c.name, value = c.value, httpOnly = false) }): _*)
           case _ =>
-            val errStr = s"Get: authenticate(): User cannot be authenticated."
+            val errStr = s"Get: authenticate(): User ${memberIdStr} cannot be authenticated."
             Logger.error(errStr)
             BadRequest(errStr)
         }
       }
       case _ =>
-        val errStr = s"Get: authenticate(): User not in database."
+        val errStr = s"Get: authenticate(): User ${CookieFields.id.toString} not in database."
         Logger.error(errStr)
         BadRequest(errStr)
     }
@@ -69,13 +66,13 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
 
     if (getRequestCookies(request) == List.empty)
       Ok(dao.getAllAvailableRemedies()
-        .filter{ case (_,r,_) => r == RepAccess.Default || r == RepAccess.Public }
-        .map{ case (abbrev, access, remedyAbbrevs) => (abbrev, access.toString, remedyAbbrevs) }
+        .filter { case (_, r, _) => r == RepAccess.Default || r == RepAccess.Public }
+        .map { case (abbrev, access, remedyAbbrevs) => (abbrev, access.toString, remedyAbbrevs) }
         .asJson.toString())
     else
       Ok(dao.getAllAvailableRemedies()
-        .filter{ case (_,r,_) => r != RepAccess.Protected }
-        .map{ case (abbrev, access, remedyAbbrevs) => (abbrev, access.toString, remedyAbbrevs) }
+        .filter { case (_, r, _) => r != RepAccess.Protected }
+        .map { case (abbrev, access, remedyAbbrevs) => (abbrev, access.toString, remedyAbbrevs) }
         .asJson.toString())
   }
 
@@ -158,13 +155,13 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
   }
 
   /**
-   * Returns basically a list of pairs with single entries like
-   *
-   *   (file_description, Some(case_id), Some("[date] 'header'")),
-   *
-   * but JSON-encoded, of course.  (Descr, None, None) if no cases
-   * are associated.
-   */
+    * Returns basically a list of pairs with single entries like
+    *
+    * (file_description, Some(case_id), Some("[date] 'header'")),
+    *
+    * but JSON-encoded, of course.  (Descr, None, None) if no cases
+    * are associated.
+    */
   def fileOverview(fileId: String) = Action { request: Request[AnyContent] =>
     isUserAuthenticated(request) match {
       case Right(_) if (fileId.forall(_.isDigit)) =>
@@ -226,6 +223,17 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
           BadRequest(errStr)
       }
     }
+  }
+
+  def displayGetErrorPage(message: String) = Action { implicit request: Request[AnyContent] =>
+    BadRequest(views.html.defaultpages.badRequest("GET", request.uri, message))
+  }
+
+  def show(repertory: String, symptom: String, page: Int, remedyString: String, minWeight: Int) = Action { request: Request[AnyContent] =>
+    if (getRequestCookies(request) == List.empty)
+      Ok(views.html.index(repertory, symptom, page - 1, remedyString, minWeight, s"OOREP ${xml.Utility.escape("—")} open online homeopathic repertorisation"))
+    else
+      Ok(views.html.index_private(repertory, symptom, page - 1, remedyString, minWeight, s"OOREP ${xml.Utility.escape("—")} open online homeopathic repertorisation"))
   }
 
 }

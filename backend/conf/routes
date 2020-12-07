@@ -11,6 +11,8 @@ GET     /api/file_overview                 org.multics.baueran.frep.backend.cont
 GET     /api/file                          org.multics.baueran.frep.backend.controllers.Get.getFile(fileId: String)
 GET     /api/case                          org.multics.baueran.frep.backend.controllers.Get.getCase(memberId: Int, caseId: String)
 GET     /api/accept_cookies                org.multics.baueran.frep.backend.controllers.Get.acceptCookies
+GET     /api/displayErrorPage              org.multics.baueran.frep.backend.controllers.Get.displayGetErrorPage(message: String)
+GET     /show                              org.multics.baueran.frep.backend.controllers.Get.show(repertory: String, symptom: String, page: Int, remedyString: String, minWeight: Int)
 GET     /favicon.ico                       controllers.Assets.at(path="/public/html", file="favicon.ico")
 
 +nocsrf

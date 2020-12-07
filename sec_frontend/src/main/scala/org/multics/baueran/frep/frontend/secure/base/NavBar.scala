@@ -58,19 +58,19 @@ object NavBar {
   def apply(): TypedTag[org.scalajs.dom.html.Element] = {
     getRepertories()
 
-    nav(cls:="navbar py-0 fixed-top navbar-expand-sm navbar-light", id:="public_nav_bar", style:="height:60px; line-height:55px;",
+    nav(cls:="navbar py-0 py-md-0 fixed-top navbar-expand-sm navbar-light", id:="public_nav_bar",
       button(cls:="navbar-toggler", `type`:="button", data.toggle:="collapse", data.target:="#navbarToggler",
         span(cls:="navbar-toggler-icon")),
       div(id:="nav_bar_logo"),
       div(cls:="collapse navbar-collapse", id:="navbarToggler",
         div( // cls:="ml-auto",
           ul(cls:="navbar-nav",
-            li(cls:="navbar-item dropdown", a(cls:="nav-link dropdown-toggle", href:="#", data.toggle:="dropdown")("Repertories"),
+            li(cls:="navbar-item dropdown", a(cls:="nav-link dropdown-toggle py-0", href:="#", data.toggle:="dropdown")("Repertories"),
               div(cls:="dropdown-menu", id:="secNavBarRepertories")
             ),
             // li(cls:="navbar-item", a(cls:="nav-link", href:="", onclick:={ () => println("pressed1") })("Repertory")),
             // li(cls:="navbar-item", a(cls:="nav-link", href:="", onclick:={ () => println("pressed1") })("Materia Medica")),
-            li(cls:="navbar-item dropdown", a(cls:="nav-link dropdown-toggle", href:="#", data.toggle:="dropdown")("File"),
+            li(cls:="navbar-item dropdown", a(cls:="nav-link dropdown-toggle py-0", href:="#", data.toggle:="dropdown")("File"),
               div(cls:="dropdown-menu",
                 a(cls:="dropdown-item", href:="#", data.toggle:="modal", data.target:="#newFileModal")("New..."),
                 a(cls:="dropdown-item", href:="#", data.toggle:="modal", data.target:="#openFileModal")("Open...")
@@ -80,8 +80,8 @@ object NavBar {
         ),
         div(cls:="ml-auto",
           ul(cls:="navbar-nav",
-            li(cls:="navbar-item", a(cls:="nav-link", href:="#", onclick:={ () => println("pressed1") })("Settings")),
-            li(cls:="navbar-item", a(cls:="nav-link", href:="#", target:="_self",
+            li(cls:="navbar-item", a(cls:="nav-link py-0", href:="#", onclick:={ () => println("pressed1") })("Settings")),
+            li(cls:="navbar-item", a(cls:="nav-link py-0", href:="#", target:="_self",
               onclick:={ (e: Event) =>
                 e.stopPropagation()
                 deleteCookies()

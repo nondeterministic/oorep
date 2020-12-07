@@ -1,5 +1,6 @@
 package org.multics.baueran.frep.frontend.public.base
 
+import org.multics.baueran.frep.shared.frontend.serverUrl
 import scalatags.JsDom.TypedTag
 import scalatags.JsDom.all.{li, _}
 import scalatags.JsDom.tags2.nav
@@ -10,7 +11,7 @@ object Features {
       div(cls:="container",
         div(cls:="row h-100",
           div(cls:="col-md-auto",
-            img(style:="height:350px", cls:="image", src:="img/drops-of-water-578897_960_720.jpg")
+            img(style:="height:350px", cls:="image", src:=s"${serverUrl()}/assets/html/img/drops-of-water-578897_960_720.jpg")
           ),
           div(cls:="col my-auto",
             h3(style:="text-align:left;margin-bottom: 10px",

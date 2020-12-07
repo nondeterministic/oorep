@@ -17,7 +17,7 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
     val member = getRegisteredMemberForPasswordAndEmail(inputPassword, inputEmail)
     val errorMessage =
       s"User login failed. Go back to ${serverUrl(request)} and try again! " +
-        s"But after 3 failed attempts your IP is going to be blocked for at least 15 minutes."
+        s"But after 3 failed attempts your IP is going to be temporarily blocked."
 
     // TODO: Remove me!
     println("some random hash: " + getRandomHash(inputPassword))
@@ -42,8 +42,7 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
             // BadRequest(views.html.defaultpages.badRequest("POST", request.uri, errorMessage))
         }
       case None =>
-        BadRequest(<p>Hello!</p>)
-        // BadRequest(views.html.defaultpages.badRequest("POST", request.uri, errorMessage))
+        BadRequest(views.html.defaultpages.badRequest("POST", request.uri, errorMessage))
     }
   }
 

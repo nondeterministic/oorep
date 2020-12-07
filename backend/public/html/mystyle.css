@@ -120,3 +120,8 @@ a.underline:hover {
     padding: 1px !important;
     height: 110px;
 }
+
+.navbar-nav {
+    min-height: 55px;
+    line-height: 55px;
+}

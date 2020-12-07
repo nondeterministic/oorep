@@ -11,6 +11,9 @@
     <meta property="og:type" content="website" />
     <meta property="og:title" content="OOREP - open online homeopathic repertorisation" />
 
+    <meta name="description" content="Open-source homeopathic repertory that requires only a web browser to run." />
+    <meta name="keywords" content="oorep, repertory, homeopathy, repertorization" />
+
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="/assets/html/third-party/bootstrap-4.1.3/css/bootstrap.min.css">
     <script src="/assets/html/third-party/jquery-3.3.1.min.js"></script>
@@ -25,14 +28,11 @@
   </head>
   
   <body>
-    <!--<div style="width:100%; margin-bottom:100px;" id="nav_bar"></div>-->
-    <!--<div style="width:100%;" id="content"></div>-->
-    <!--<div style="width:100%;" id="content_bottom"></div>-->
-
-    <!-- Include Scala.js compiled code -->
-    <!--<script type="text/javascript" src="../../../sec_frontend/target/scala-2.12/frontend-jsdeps.js"></script>-->
-    <!--<script type="text/javascript" src="../../../sec_frontend/target/scala-2.12/frontend-fastopt.js"></script>-->
     <script type="text/javascript" charset="ISO-8859-1" src="/assets/sec_frontend-opt.js"></script>
-
+    <noscript>
+      <div class="alert alert-danger text-center" role="alert">
+        OOREP requires JavaScript. Turn it on in your browser and reload the page, please.
+      </div>
+    </noscript>
   </body>
 </html>

@@ -1,6 +1,21 @@
 OOREP NEWS
 =-=-=-=-=-
 
+v0.8.0  under development
+-----------------------------------------------------
+- Main features (that made API changes necessary):
+  - Repertorisation results can be shared via copy+paste of a link
+  - Site should look much better on smaller screen sizes
+
+- Minor improvements and changes:
+  - A loading spinner is presented if web site start up takes time
+  - A warning page is presented if JavaScript is not enabled
+  - Backend rejects API-calls with very short inputs (to prevent
+    data leeching)
+
+- Bug fixes:
+  - Redo button would not always show last remedy and last weight
+
 v0.7.0  Wed 04 Nov 2020 04:38:26 PM CET [tag: v0.7.0]
 -----------------------------------------------------
 - Introduce results page cache in client code to put less strain on the
@@ -31,8 +46,6 @@ v0.6.0  Thu 01 Oct 2020 07:57:26 PM CEST [tag: v0.6.0]
   - Changed DB-type of file description from varchar(2048) to text
 
 - Minor improvements and changes:
-  - Removed atama-repertory as it was merely a subset of publicum and
-    kent
   - Reduced number of displayable rubrics per page from 130 to 100
     (which is OK, since we have pagination now - no rubric is lost!)
   - Multiple occurrences of rubrics on top of results page are now

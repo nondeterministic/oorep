@@ -1,5 +1,6 @@
 package org.multics.baueran.frep.frontend.public.base
 
+import org.multics.baueran.frep.shared.frontend.serverUrl
 import scalatags.JsDom.TypedTag
 import scalatags.JsDom.all.{li, _}
 import scalatags.JsDom.tags2.nav
@@ -33,7 +34,7 @@ object About {
             )
           ),
           div(cls:="col",
-            img(style:="height:500px", src:="img/hahnemann_statue.png")
+            img(style:="height:500px", src:=s"${serverUrl()}/assets/html/img/hahnemann_statue.png")
           )
         )
       )

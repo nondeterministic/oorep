@@ -5,7 +5,9 @@ import org.scalajs.dom
 import dom.Event
 import dom.raw.{HTMLButtonElement, HTMLInputElement, Node}
 import io.circe.parser.parse
-import rx.Var
+import rx.{Rx, Var}
+import rx.Ctx.Owner.Unsafe._
+import scalatags.rx.all._
 
 import scala.collection.mutable
 import scala.util.{Failure, Success}
@@ -16,8 +18,38 @@ import org.multics.baueran.frep.shared._
 import org.multics.baueran.frep.shared.Defs.{CookieFields, maxLengthOfSymptoms, maxNumberOfResults, maxNumberOfSymptoms}
 import org.multics.baueran.frep.shared.sec_frontend.FileModalCallbacks.updateMemberFiles
 
+import scala.scalajs.js.annotation.JSExportTopLevel
+import scala.scalajs.js.annotation._
+import scala.scalajs.js.URIUtils._
+
+@JSExportTopLevel("Repertorise")
 object Repertorise {
 
+  private def shareResultsModal = {
+    div(cls:="modal fade", tabindex:="-1", role:="dialog", id:="shareResultsModal",
+      div(cls:="modal-dialog", role:="document",
+        div(cls:="modal-content",
+          div(cls:="modal-body",
+            form(
+              div(cls:="form-group",
+                button(`type`:="button", cls:="close", data.dismiss:="modal", aria.label:="Close", span(aria.hidden:="true", "\u00d7")),
+                label(`for`:="shareResultsModalLink", "To share the search results, copy and paste this link:"),
+                input(cls:="form-control", id:="shareResultsModalLink", readonly:=true, value:=Rx(_currResultShareLink()))
+              )
+            )
+          ),
+          div(cls:="modal-footer",
+            button(`type`:="button", cls:="btn btn-primary",
+              onclick:= { (event: Event) =>
+                dom.document.getElementById("shareResultsModalLink").asInstanceOf[dom.html.Input].select()
+                dom.document.execCommand("copy")
+              }, aria.label:="Copy to clipboard", "Copy to clipboard")
+          )
+        )
+      )
+    )
+  }
+  private val _currResultShareLink = Var(s"${serverUrl()}")
   private val _pageCache = new PageCache()
   private val _repertoryRemedyMap = mutable.HashMap[String,List[String]]()
   private val _selectedRepertory = Var("")
@@ -26,6 +58,15 @@ object Repertorise {
   private val _remedyFormat = Var(RemedyFormat.Formatted)
   val _repertorisationResults: Var[Option[ResultsCaseRubrics]] = Var(None)
   private val _resultRemedyStats: Var[List[ResultsRemedyStats]] = Var(List())
+  private var _loadingSpinner: Option[LoadingSpinner] = None
+  private var _disclaimer: Option[Disclaimer] = None
+  private val _cookiePopup = new CookiePopup("content")
+
+  // ------------------------------------------------------------------------------------------------------------------
+  def init(loadingSpinner: LoadingSpinner, disclaimer: Disclaimer) = {
+    _loadingSpinner = Some(loadingSpinner)
+    _disclaimer = Some(disclaimer)
+  }
 
   // ------------------------------------------------------------------------------------------------------------------
   private def redrawMultiOccurringRemedies(): Unit = {
@@ -40,7 +81,7 @@ object Repertorise {
       if (multiRemedies.length > 1) {
         multiOccurrenceDiv.appendChild(
           span(id := "collapseMultiOccurrences", cls := s"collapse ${if (_showMultiOccurrences) "show" else "hide"}",
-            "(Multi-occurrences of remedies in search: ",
+            "(Multi-occurrences of remedies in results: ",
             multiRemedies
               .take(multiRemedies.size - 1)
               .map { case ResultsRemedyStats(nameabbrev, count, cumulativeWeight) => {
@@ -66,7 +107,7 @@ object Repertorise {
       else {
         multiOccurrenceDiv.appendChild(
           span(id := "collapseMultiOccurrences", cls := s"collapse ${if (_showMultiOccurrences) "show" else "hide"}",
-            "(Multi-occurrences of remedies in search: None)").render)
+            "(Multi-occurrences of remedies in results: None)").render)
       }
     }
   }
@@ -124,7 +165,7 @@ object Repertorise {
 
       if (remedies.size > 0)
         tr(
-          td(result.rubric.fullPath, style:="min-width:400px;"),
+          td(result.rubric.fullPath, style:="width:35%;"),
           td(remedies.take(remedies.size - 1).map(l => span(l, ", ")) ::: List(remedies.last)),
           td(cls := "text-right",
             button(cls := "btn btn-sm", `type` := "button", id := ("button_" + result.repertoryAbbrev + "_" + result.rubric.id),
@@ -142,7 +183,7 @@ object Repertorise {
         )
       else
         tr(
-          td(result.rubric.fullPath, style := "min-width:400px;"),
+          td(result.rubric.fullPath, style := "width:35%;"),
           td(),
           td()
         )
@@ -192,10 +233,12 @@ object Repertorise {
               if (_pageCache.latest.minWeight > 1)
                 searchStatsString += s" with min. weight >= ${_pageCache.latest.minWeight}"
 
-              searchStatsString += s". Showing page ${currPage + 1} of ${totalNumberOfPages}. "
+              searchStatsString += s". Showing page ${currPage + 1} of ${totalNumberOfPages} ("
               searchStatsString
-            })
-          ).render
+            }),
+            a(href:="#", data.toggle:="modal", data.dismiss:="modal", data.target:="#shareResultsModal", b("share")),
+            b("). ")
+            ).render
         )
 
         dom.document.getElementById("resultDiv").innerHTML = ""
@@ -346,13 +389,11 @@ object Repertorise {
   private def onSymptomListRedoPressed() = {
     dom.document.getElementById("inputField").asInstanceOf[dom.html.Input].value = _pageCache.latest.symptom
 
-    if (!advancedSearchOptionsVisible()) {
-      _pageCache.latest.remedy match {
-        case Some(_) => onShowAdvancedSearchOptionsMainView(true, false)
-        case _ => {
-          if (_pageCache.latest.minWeight > 1)
-            onShowAdvancedSearchOptionsMainView(true, false)
-        }
+    _pageCache.latest.remedy match {
+      case Some(_) => onShowAdvancedSearchOptionsMainView(true, false)
+      case _ => {
+        if (_pageCache.latest.minWeight > 1)
+          onShowAdvancedSearchOptionsMainView(true, false)
       }
     }
 
@@ -360,33 +401,37 @@ object Repertorise {
   }
 
   // ------------------------------------------------------------------------------------------------------------------
-  private def onShowAdvancedSearchOptionsMainView(restorePreviousValues: Boolean, landingPageIsCurrentView: Boolean): Node = {
+  private def onShowAdvancedSearchOptionsMainView(restorePreviousValues: Boolean, landingPageIsCurrentView: Boolean): Unit = {
     val parentDiv = dom.document.getElementById("advancedSearchControlsDiv").asInstanceOf[dom.html.Div]
     val weightDropDownsDiv = div(id:="weightDropDownsDiv", cls:="dropdown-menu")
 
-    parentDiv.appendChild(
-      div(cls:="row", style:="margin-top:15px;",
-        div(cls:="col-md-auto my-auto",
-          "Remedy:"),
-        div(cls:="col",
-          input(cls:="form-control", `id`:="inputRemedy", list:="remedyDataList",
-            onkeydown := { (event: dom.KeyboardEvent) =>
-              if (event.keyCode == 13) {
-                event.stopPropagation()
-                onSymptomEntered()
-              }
-            }, `placeholder` := "Enter a remedy (for example: Sil.)"),
-          datalist(`id`:="remedyDataList")
-        ),
-        div(cls:="col-md-auto my-auto",
-          "Min. weight:"),
-        div(cls:="col-sm-2",
-          div(id:="weightDropDowns", cls:="dropdown show",
-            button(id:="minWeightDropdown", cls:="btn dropdown-toggle", `type`:="button", data.toggle:="dropdown", if (restorePreviousValues) _pageCache.latest.minWeight.toString else "1"),
-            weightDropDownsDiv
-          )
-        )
-      ).render)
+    dom.document.getElementById("advancedSearchControlsContent") match {
+      case null =>
+        parentDiv.appendChild(
+          div(id := "advancedSearchControlsContent", cls := "row", style := "margin-top:15px;",
+            div(cls := "col-md-auto my-auto",
+              "Remedy:"),
+            div(cls := "col",
+              input(cls := "form-control", `id` := "inputRemedy", list := "remedyDataList",
+                onkeydown := { (event: dom.KeyboardEvent) =>
+                  if (event.keyCode == 13) {
+                    event.stopPropagation()
+                    onSymptomEntered()
+                  }
+                }, `placeholder` := "Enter a remedy (for example: Sil.)"),
+              datalist(`id` := "remedyDataList")
+            ),
+            div(cls := "col-md-auto my-auto",
+              "Min. weight:"),
+            div(cls := "col-sm-2",
+              div(id := "weightDropDowns", cls := "dropdown show",
+                button(id := "minWeightDropdown", cls := "btn dropdown-toggle", `type` := "button", data.toggle := "dropdown", if (restorePreviousValues) _pageCache.latest.minWeight.toString else "1"),
+                weightDropDownsDiv
+              )
+            )
+          ).render)
+      case _ => ;
+    }
 
     // Set remedy input string, if one was previously submitted, and redo-button was pressed
     if (restorePreviousValues) {
@@ -416,25 +461,27 @@ object Repertorise {
       )
     }
 
-    // Add the find, advanced find options etc. buttons
-    val advancedButton = dom.document.getElementById("buttonMainViewAdvancedSearch").asInstanceOf[dom.html.Button]
-    val basicButton = {
-      if (landingPageIsCurrentView)
-        button(id:="buttonMainViewBasicSearch", cls:="btn", style:="width: 120px;", `type`:="button",
-          onclick := { (event: Event) =>
-            onHideAdvancedSearchOptionsMainView(event, landingPageIsCurrentView)
-          }, "Basic"
-        ).render
-      else
-        button(id:="buttonMainViewBasicSearch", cls:="btn", style := "width: 70px;margin-right:5px;", `type`:="button",
-          onclick := { (event: Event) =>
-            onHideAdvancedSearchOptionsMainView(event, landingPageIsCurrentView)
-          },
-          span(cls := "oi oi-cog", title := "Toggle options", aria.hidden := "true")
-        ).render
+    dom.document.getElementById("buttonMainViewAdvancedSearch") match {
+      case null => ;
+      case advancedButton =>
+        val basicButton = {
+          if (landingPageIsCurrentView)
+            button(id:="buttonMainViewBasicSearch", cls:="btn", style:="width: 120px;", `type`:="button",
+              onclick := { (event: Event) =>
+                onHideAdvancedSearchOptionsMainView(event, landingPageIsCurrentView)
+              }, "Basic"
+            ).render
+          else
+            button(id:="buttonMainViewBasicSearch", cls:="btn", style := "width: 70px;margin-right:5px;", `type`:="button",
+              onclick := { (event: Event) =>
+                onHideAdvancedSearchOptionsMainView(event, landingPageIsCurrentView)
+              },
+              span(cls := "oi oi-cog", title := "Toggle options", aria.hidden := "true")
+            ).render
+        }
+        val buttonDiv = dom.document.getElementById("mainViewSearchButtons").asInstanceOf[dom.html.Div]
+        buttonDiv.replaceChild(basicButton, advancedButton.asInstanceOf[dom.html.Button])
     }
-    val buttonDiv = dom.document.getElementById("mainViewSearchButtons").asInstanceOf[dom.html.Div]
-    buttonDiv.replaceChild(basicButton, advancedButton)
   }
 
   // ------------------------------------------------------------------------------------------------------------------
@@ -465,6 +512,17 @@ object Repertorise {
     buttonDiv.replaceChild(advancedButton, basicButton)
   }
 
+  @JSExport("doLookup")
+  def jsDoLookup(abbrev: String, symptom: String, page: Int, remedyString: String, minWeight: Int) = {
+    _selectedRepertory() = abbrev
+
+    doLookup(abbrev,
+      symptom,
+      if (page > 0) Some(page) else None,
+      if (remedyString.length > 0) Some(remedyString) else None,
+      if (minWeight > 0) minWeight else 1)
+  }
+
   // ------------------------------------------------------------------------------------------------------------------
   private def doLookup(abbrev: String, symptom: String, pageOpt: Option[Int], remedyStringOpt: Option[String], minWeight: Int): Unit = {
     val page = math.max(pageOpt.getOrElse(0), 0)
@@ -472,6 +530,10 @@ object Repertorise {
 
     def showRepertorisationResults(results: ResultsCaseRubrics, remedyStats: List[ResultsRemedyStats]): Unit = {
       _pageCache.addPage(CachePage(abbrev, symptom, remedyStringOpt, minWeight, results, remedyStats))
+
+      _currResultShareLink() = encodeURI(
+        s"${serverUrl()}/show?repertory=${abbrev}&symptom=${symptom}&page=${(pageOpt.getOrElse(0) + 1).toString}&remedyString=${remedyStringOpt.getOrElse("")}&minWeight=${minWeight.toString}"
+      )
 
       _repertorisationResults() = None
       _repertorisationResults.recalc()
@@ -610,53 +672,71 @@ object Repertorise {
             }
           }
           case _: Failure[SimpleHttpResponse] =>
-            showRepertorisationResultsError(symptom, remedyString, minWeight)
+            // If no results were found, either tell the user in the input screen,
+            // or, if search was invoked via static /show-link (i.e., there is no input screen), then display
+            // clean error page.
+            _loadingSpinner match {
+              case Some(spinner) if (spinner.isVisible()) =>
+                val errorMessage = s"ERROR: Lookup failed. Perhaps URL malformed, repertory does not exist or no results for given symptoms. " +
+                  s"SUGGESTED SOLUTION: Go directly to https://www.oorep.com/ instead and try again!"
+                dom.document.location.replace(s"${serverUrl()}/${apiPrefix()}/displayErrorPage?message=${encodeURI(errorMessage)}")
+              case _ =>
+                showRepertorisationResultsError(symptom, remedyString, minWeight)
+            }
         })
     }
 
-    val resultStatusDiv = dom.document.getElementById("resultStatus")
+    // TODO: Right now, we do additional error- and sanity checking only when the app wasn't called via /show direct link.
+    // That is, if the user uses a shared-link where the page is not yet built (i.e., where resultStatusDiv == null, we
+    // can't sensibly display the additional error messages. We rely on the backend not allow too wild imputs and fail2ban,
+    // of course.  (If we simply don't check for existence of said div here, then the app simply crashes upon wrong
+    // direct-/shared-links, which isn't nice.)
 
-    if (abbrev.length == 0) {
-      resultStatusDiv.innerHTML = ""
-      resultStatusDiv.appendChild(
-        div(cls:="alert alert-danger", role:="alert",
-          b("No results. Make sure a repertory is selected.")).render)
-      return
-    }
+    dom.document.getElementById("resultStatus") match {
+      case null => ;
+      case resultStatusDiv =>
+        if (abbrev.length == 0) {
+          resultStatusDiv.innerHTML = ""
+          resultStatusDiv.appendChild(
+            div(cls := "alert alert-danger", role := "alert",
+              b("No results. Make sure a repertory is selected.")).render)
+          return
+        }
 
-    if (symptom.trim.replaceAll("[^A-Za-z0-9äüöÄÜÖß]", "").length == 0 && remedyString.length == 0) {
-      resultStatusDiv.innerHTML = ""
-      resultStatusDiv.appendChild(
-        div(cls:="alert alert-danger", role:="alert",
-          b("No results. Enter some symptoms and/or a remedy.")).render)
-      return
-    }
+        if (symptom.trim.replaceAll("[^A-Za-z0-9äüöÄÜÖß]", "").length == 0 && remedyString.length == 0) {
+          resultStatusDiv.innerHTML = ""
+          resultStatusDiv.appendChild(
+            div(cls := "alert alert-danger", role := "alert",
+              b("No results. Enter some symptoms and/or a remedy.")).render)
+          return
+        }
 
-    if (symptom.trim.replaceAll("[^A-Za-z0-9äüöÄÜÖß]", "").length <= 3 && remedyString.length == 0) {
-      resultStatusDiv.innerHTML = ""
-      resultStatusDiv.appendChild(
-        div(cls:="alert alert-danger", role:="alert",
-          b("No results returned for '" + symptom + "'. " +
-            "Make sure the symptom input is not too short or to enter a remedy.")).render)
-      return
-    }
+        if (symptom.trim.replaceAll("[^A-Za-z0-9äüöÄÜÖß]", "").length <= 3 && remedyString.length == 0) {
+          resultStatusDiv.innerHTML = ""
+          resultStatusDiv.appendChild(
+            div(cls := "alert alert-danger", role := "alert",
+              b("No results returned for '" + symptom + "'. " +
+                "Make sure the symptom input is not too short or to enter a remedy.")).render)
+          return
+        }
 
-    if (symptom.length() >= maxLengthOfSymptoms) {
-      resultStatusDiv.innerHTML = ""
-      resultStatusDiv.appendChild(
-        div(cls := "alert alert-danger", role := "alert",
-          b(s"Input must not exceed $maxLengthOfSymptoms characters in length.")).render)
-      return
+        if (symptom.length() >= maxLengthOfSymptoms) {
+          resultStatusDiv.innerHTML = ""
+          resultStatusDiv.appendChild(
+            div(cls := "alert alert-danger", role := "alert",
+              b(s"Input must not exceed $maxLengthOfSymptoms characters in length.")).render)
+          return
+        }
     }
 
     dom.document.body.style.cursor = "wait"
+
     _pageCache.getPage(abbrev, symptom, if (remedyString.length == 0) None else Some(remedyString), minWeight, page) match {
       case Some(cachedPage) =>
         showRepertorisationResults(cachedPage.content, cachedPage.remedies)
       case None =>
         getPageFromBackend(abbrev, symptom, remedyString, minWeight, page)
     }
-
   }
 
   // ------------------------------------------------------------------------------------------------------------------
@@ -672,29 +752,33 @@ object Repertorise {
                 val cursor = json.hcursor
                 cursor.as[List[(String, String, String)]] match {
                   case Right(repertoryRemedies) => {
-                    // Update available repertories
-                    repertoryRemedies
-                      .map { case (repAbbrev, repAccess, _) => (repAbbrev, repAccess) }
-                      .distinct
-                      .sortBy(_._1)
-                      .foreach { case (repAbbrev, repAccess) => {
-                        dom.document.getElementById("repSelectionDropDown")
-                          .appendChild(a(cls := "dropdown-item", href := "#", data.value := repAbbrev,
-                            onclick := { (event: Event) =>
+
+                    // Update available repertories in repertory dropdown button
+                    if (dom.document.getElementById("repSelectionDropDown").childNodes.length == 0) {
+                      repertoryRemedies
+                        .map { case (repAbbrev, repAccess, _) => (repAbbrev, repAccess) }
+                        .distinct
+                        .sortBy(_._1)
+                        .foreach {
+                          case (repAbbrev, repAccess) => {
+                            dom.document.getElementById("repSelectionDropDown")
+                              .appendChild(a(cls := "dropdown-item", href := "#", data.value := repAbbrev,
+                                onclick := { (event: Event) =>
+                                  _selectedRepertory() = repAbbrev
+                                  dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[HTMLButtonElement].textContent = "Repertory: " + _selectedRepertory.now
+                                }, repAbbrev).render)
+
+                            if (_selectedRepertory.now.length > 0)
+                              dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[HTMLButtonElement].textContent = "Repertory: " + _selectedRepertory.now
+                            else if (repAccess == RepAccess.Default.toString) {
                               _selectedRepertory() = repAbbrev
                               dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[HTMLButtonElement].textContent = "Repertory: " + _selectedRepertory.now
-                            }, repAbbrev).render)
-
-                        if (_selectedRepertory.now.length > 0)
-                          dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[HTMLButtonElement].textContent = "Repertory: " + _selectedRepertory.now
-                        else if (repAccess == RepAccess.Default.toString) {
-                          _selectedRepertory() = repAbbrev
-                          dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[HTMLButtonElement].textContent = "Repertory: " + _selectedRepertory.now
+                            }
+                          }
                         }
-                      }
-                      }
+                    }
 
-                    // Update available remedies
+                    // Update available remedies for search field
                     val repertoryNames = repertoryRemedies.map { case (repAbbrev, _, _) => (repAbbrev) }.distinct
                     for (repertoryAbbrev <- repertoryNames) {
                       _repertoryRemedyMap.addOne((repertoryAbbrev,
@@ -735,8 +819,30 @@ object Repertorise {
 
   // ------------------------------------------------------------------------------------------------------------------
   def apply() = {
+    // Make sure, the navbar is visible at this stage
+    dom.document.getElementById("nav_bar") match {
+      case null => ;
+      case navBar => navBar.classList.remove("d-none")
+    }
+
+    // Make sure, the loading animation is gone at this stage
+    _loadingSpinner match {
+      case None => ;
+      case Some(spinner) => spinner.remove()
+    }
+
+    // Make sure, the disclaimer is shown at this stage
+    _disclaimer match {
+      case None => ;
+      case Some(disclaimer) => disclaimer.show()
+    }
+
+    // Request user acceptance for cookies at this stage, if it hasn't indicated acceptance, yet
+    _cookiePopup.add()
+
+    // From here downwards is the actual repertorisation view...
     val ulRepertorySelection =
-      div(cls:="dropdown col-sm-2",
+      div(cls:="dropdown col-md-2", style := "margin-top:20px;",
         button(`type`:="button",
           style:="overflow: hidden;",
           cls:="btn btn-block dropdown-toggle",
@@ -751,12 +857,12 @@ object Repertorise {
       if (_repertorisationResults.now == None && Case.size() == 0) {
         div(cls := "container-fluid",
           div(cls := "container-fluid text-center",
-            div(cls:="col-sm-12 text-center", img(src:="img/logo_small.png")),
-            div(cls := "row", style:="margin-top:20px;",
+            div(cls:="col-sm-12 text-center", img(src:=s"${serverUrl()}/assets/html/img/logo_small.png")),
+            div(cls := "row",
               div(cls := "col-sm-1"),
               div(cls := "row col-sm-10",
                 ulRepertorySelection,
-                div(cls := "col-sm-9",
+                div(cls := "col", style:="margin-top:20px;",
                   input(cls := "form-control", `id` := "inputField",
                     onkeydown := { (event: dom.KeyboardEvent) =>
                       if (event.keyCode == 13) {
@@ -803,12 +909,12 @@ object Repertorise {
       // Page with some results after search...
       else {
         div(cls := "container-fluid",
-          div(cls := "container-fluid text-center",
-            div(cls := "row", style := "margin-top:20px;",
-              div(cls := "col-sm-1"),
-              div(cls := "row col-sm-10",
+          shareResultsModal,
+          div(cls := "container-fluid",
+            div(cls := "row justify-content-md-center",
+              div(cls := "row col-lg-11 justify-content-md-center",
                 ulRepertorySelection,
-                div(cls := "col-sm-7",
+                div(cls := "col-md-7", style := "margin-top:20px;",
                   input(cls := "form-control", `id` := "inputField",
                     onkeydown := { (event: dom.KeyboardEvent) =>
                       if (event.keyCode == 13) {
@@ -821,7 +927,7 @@ object Repertorise {
                   // It will be (de-) populated on demand.
                   div(cls := "container-fluid", id:="advancedSearchControlsDiv")
                 ),
-                span(id:="mainViewSearchButtons",
+                div(id:="mainViewSearchButtons", cls:="col-md-auto text-center center-block", style:="margin-top:20px;",
                   button(cls := "btn btn-primary", style:="width: 80px; margin-right:5px;", `type` := "button",
                     onclick := { (event: Event) =>
                       event.stopPropagation()
@@ -841,8 +947,7 @@ object Repertorise {
                     },
                     span(cls := "oi oi-action-redo", title := "Find again", aria.hidden := "true"))
                 )
-              ),
-              div(cls := "col-sm-1")
+              )
             )
           ),
           div(cls := "container-fluid", style := "margin-top: 23px;", id := "resultStatus"),
@@ -877,9 +982,9 @@ object Repertorise {
         navbar.className = navbar.className + " bg-dark navbar-dark shadow p-3 mb-5"
 
         dom.document.getElementById("nav_bar_logo")
-          .appendChild(a(cls := "navbar-brand py-0", href := serverUrl(), h5(cls:="freetext", "OOREP")).render)
+          .appendChild(a(cls := "navbar-brand py-0", style:="margin-top:8px;", href := serverUrl(), h5(cls:="freetext", "OOREP")).render)
       }
-      div(style:="margin-top:100px;", myHTML)
+      div(style:="margin-top:80px;", myHTML)
     }
   }
 }

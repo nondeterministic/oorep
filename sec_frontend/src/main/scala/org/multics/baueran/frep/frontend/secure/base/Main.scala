@@ -13,36 +13,22 @@ import scalatags.JsDom.all._
 
 import scala.util.{Failure, Success}
 import org.multics.baueran.frep.shared._
-import frontend.{Case, Disclaimer, Repertorise}
+import frontend.{Case, Disclaimer, Repertorise, LoadingSpinner}
 import Defs.deleteCookies
 import sec_frontend.{AddToFileModal, EditFileModal, FileModalCallbacks, NewFileModal, OpenFileModal, RepertoryModal}
 
 @JSExportTopLevel("MainSecure")
 object Main {
 
-  def main(args: Array[String]): Unit = {
-    dom.document.body.appendChild(div(style:="width:100%;", id:="nav_bar").render)
-    dom.document.body.appendChild(div(style:="width:100%;", id:="content").render)
-    dom.document.body.appendChild(div(style:="width:100%;", id:="content_bottom").render)
+  private val loadingSpinner = new LoadingSpinner("content")
+  private val disclaimer = new Disclaimer("content_bottom", "content")
 
-    // No access without valid cookies!
+  private def authenticateAndPrepare(): Unit = {
     HttpRequest(s"${serverUrl()}/${apiPrefix()}/authenticate")
       .send()
       .onComplete({
         case response: Success[SimpleHttpResponse] => {
-          dom.document.body.appendChild(AddToFileModal().render)
-          dom.document.body.appendChild(OpenFileModal().render)
-          dom.document.body.appendChild(EditFileModal().render)
-          dom.document.body.appendChild(NewFileModal().render)
-          dom.document.body.appendChild(RepertoryModal().render)
-
-          dom.document.body.appendChild(Case.analysisModalDialogHTML().render)
-          dom.document.body.appendChild(Case.editDescrModalDialogHTML().render)
-
-          $("#nav_bar").empty()
-          $("#nav_bar").append(NavBar().render)
           $("#content").append(Repertorise().render)
-          $("#content_bottom").append(Disclaimer.toHTML().render)
 
           try {
             val memberId = response.get.body.toInt
@@ -55,24 +41,33 @@ object Main {
               $("#content").empty()
               $("#content_bottom").empty()
               $("#content").append(p(s"Not authenticated or cookie expired. Go to ", a(href:=serverUrl(), "main page"), " instead!",
-                br, "(If all else fails, try deleting all oorep cookies from your browser.)").render)
+                br, "(If all else fails, try deleting all OOREP cookies from your browser.)").render)
           }
         }
         case _: Failure[SimpleHttpResponse] => {
           deleteCookies()
+          loadingSpinner.remove()
           $("#content").append(p(s"Not authenticated or cookie expired. Go to ", a(href:=serverUrl(), "main page"), " instead!",
-            br, "(If all else fails, try deleting all oorep cookies from your browser.)").render)
+            br, "(If all else fails, try deleting all OOREP cookies from your browser.)").render)
         }
       })
+  }
 
-    // Stuff to make the NavBar (dis)appear dynamically
+  def main(args: Array[String]): Unit = {
+    Repertorise.init(loadingSpinner, disclaimer)
+
+    dom.document.body.appendChild(div(style := "width:100%;", id := "nav_bar").render)
+    dom.document.body.appendChild(div(style := "width:100%;", id := "content").render)
+    dom.document.body.appendChild(div(style := "width:100%;", id := "content_bottom").render)
+
+    // Stuff to make the NavBar (dis)appear dynamically in a reactive sense
     var navBarDark = false
     $(dom.window).scroll(() => {
       if (Repertorise._repertorisationResults.now.size == 0 && Case.size() == 0) {
         if ($(document).scrollTop() > 150) {
           if (!navBarDark) {
             $("#public_nav_bar").addClass("bg-dark navbar-dark shadow p-3 mb-5")
-            $("#nav_bar_logo").append(a(cls := "navbar-brand py-0", href := serverUrl(), h5(cls:="freetext", "OOREP")).render)
+            $("#nav_bar_logo").append(a(cls := "navbar-brand py-0", style:="margin-top:8px;", href := serverUrl(), h5(cls := "freetext", "OOREP")).render)
             navBarDark = true
           }
         }
@@ -83,6 +78,25 @@ object Main {
         }
       }
     })
+
+    loadingSpinner.add()
+
+    dom.document.body.appendChild(AddToFileModal().render)
+    dom.document.body.appendChild(OpenFileModal().render)
+    dom.document.body.appendChild(EditFileModal().render)
+    dom.document.body.appendChild(NewFileModal().render)
+    dom.document.body.appendChild(RepertoryModal().render)
+    dom.document.body.appendChild(Case.analysisModalDialogHTML().render)
+    dom.document.body.appendChild(Case.editDescrModalDialogHTML().render)
+
+    $("#nav_bar").empty()
+    $("#nav_bar").append(NavBar().render)
+    $("#nav_bar").addClass("d-none") // Hide navbar (Repertorise.scala will show it again)
+
+    disclaimer.add()
+
+    if (!dom.window.location.toString.contains("show"))
+      authenticateAndPrepare()
   }
 
 }

@@ -179,6 +179,10 @@ class RepertoryDao(dbContext: db.db.DBContext) {
       Logger.error(s"ERROR: Cannot search with just negative search terms.")
       return None
     }
+    else if (searchTerms.positive.filter(_.length > 2).length == 0 && remedyEntered == None) {
+      Logger.error(s"ERROR: Search term(s) too short.")
+      return None
+    }
 
     // Use of approximateSearchTerm is an oversimplification to narrow down the first
     // DB-lookup, which otherwise would return ALWAYS the entire repertory upon a symptom-search.

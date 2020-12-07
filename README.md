@@ -14,10 +14,10 @@ latest updates.
 
 ### Prerequisites
 
-* Java SDK (for best results, use JDK 8.  (In particular, I've had build
+* Java SDK (for best results, use JDK 8 or 11.  (In particular, I've had build
   problems with JDK 12 - broken String class.))
 * Scala Build Tool (SBT, tested with >= 1.3.0)
-* An SQL database (tested with PostgreSQL >= 10.0)
+* An SQL database (tested with PostgreSQL 10 and 11)
 
 Before executing SBT, the database needs to be up and running.  Also, you will
 need to define the following environment variables:
@@ -25,6 +25,7 @@ need to define the following environment variables:
 * `$OOREP_APPLICATION_SECRET`: application-specific password you need to see
   if you run the server using `https` instead of `http`
 * `$OOREP_DBHOST`: hostname of DB-server (e.g., localhost)
+* `$OOREP_DBPORT`: port of DB-server (usually 5432 with PostgreSQL)
 * `$OOREP_DBUSER_PASS`: password used by the DB-user
 * `$OOREP_REP_PATH`: directory in the local file system, where the repertory
   raw data is located
@@ -61,3 +62,17 @@ You can also build a distribution package of OOREP by first executing `compile`
 and then `dist`, which will build an executable, 
 `backend/target/universal/backend-x.y.z.zip`, which can also be used to run
 a stand-alone version of the application.
+
+### Runtime optimisations
+
+Some queries will be slow, if the database is not optimised. It is therefore
+advisable to add the following (and possibly other) indexes to OOREP's
+database:
+
+```
+create index on rubricremedy (abbrev, remedyid);
+create index on rubricremedy (abbrev, rubricid);
+create index on rubricremedy (abbrev, rubricid, remedyid);
+create index on remedy (abbrev, id);
+create index on rubric (abbrev, id);
+```

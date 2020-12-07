@@ -463,8 +463,8 @@ object Case {
             a(cls := "dropdown-item", href := "#caseSectionOfPage", onclick := { (event: Event) => crub.rubricLabel = Some("Z"); label() = Some("Z"); updateCaseViewAndDataStructures() }, "Z")
           )
         ),
-        td(crub.rubric.fullPath),
-        td(remedies.take(remedies.size - 1).map(l => span(l, ", ")) ::: List(remedies.last)),
+        td(style := "width:28%;", crub.rubric.fullPath),
+        td(cls:="d-none d-sm-table-cell", remedies.take(remedies.size - 1).map(l => span(l, ", ")) ::: List(remedies.last)),
         td(cls := "text-right",
           button(cls := "btn btn-sm", `type` := "button",
             scalatags.JsDom.attrs.id := ("rmBut_" + crub.rubric.id + crub.repertoryAbbrev),
@@ -578,7 +578,7 @@ object Case {
             th(attr("scope"):="col", "Rep."),
             th(attr("scope"):="col", "Label"),
             th(attr("scope"):="col", "Rubric"),
-            th(attr("scope"):="col",
+            th(cls:="d-none d-sm-table-cell", attr("scope"):="col",
               a(scalatags.JsDom.attrs.id:="caseSectionOfPage",
                 cls:="underline", href:="#caseSectionOfPage", style:="color:white;",
                 onclick:=((event: Event) => Repertorise.toggleRemedyFormat()),
