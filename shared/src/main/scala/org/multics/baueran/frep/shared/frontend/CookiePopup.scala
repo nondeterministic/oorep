@@ -35,55 +35,34 @@ class CookiePopup(parentId: String) {
     getCookieData(dom.document.cookie, CookieFields.cookiePopupAccepted.toString) match {
       case None =>
         val dialog =
-          div(cls:="modal fade modalless", data.backdrop:="static", data.keyboard:="false", tabindex:="-1", role:="dialog", id:="cookiePopup",
-            div(cls:="modal-dialog", role:="document", style:="min-width: 50%;",
-              div(cls:="modal-content",
-                div(cls:="modal-header",
-                  h5(cls:="modal-title", "Cookie-Einverständniserklärung / Agreement to use cookies")
-                ),
-                div(cls:="modal-body",
-                  p("Diese Website benötigt Cookies als technische Grundvoraussetzung. Durch Klicken des Annehmen-Buttons erklären Sie, dass sie unsere ",
-                    a(href:="#",
-                      onclick:= { () =>
-                        $(s"#${parentId}").empty()
-                        js.eval("$('#cookiePopup').modal('hide');")
-                        loadAndScroll("datenschutz.html")
-                      }, "Datenschutzerklärung"),
-                    " gelesen und verstanden haben und einverstanden mit der Vewendung der übertragenen Cookies sind."),
-                  p("The basic functionality of this web site depends on the use of cookies. By clicking the accept button, you acknowledge that you have read and understand our ",
-                    a(href:="#",
-                      onclick:= { () =>
-                        js.eval("$('#cookiePopup').modal('hide');")
-                        loadAndScroll("cookies.html")
-                      }, "privacy policy"),
-                    ", and consent to the use and transmission of cookies.")
-                ),
-                div(cls:="modal-footer",
-                  button(`type`:="button", cls:="btn btn-secondary", data.dismiss:="modal",
-                    onclick:= { (event: Event) =>
-                      event.stopPropagation()
-                      dom.window.location.assign("https://www.europarl.europa.eu/")
-                    }, "Ablehnen / Refuse"),
-                  button(`type`:="button", cls:="btn btn-primary", data.dismiss:="modal", data.toggle:="modal",
-                    onclick:= { (event: Event) =>
-                      event.stopPropagation()
-                      HttpRequest(s"${serverUrl()}/${apiPrefix()}/accept_cookies")
-                        .send()
-                        .onComplete({
-                          case _: Success[SimpleHttpResponse] =>
-                            js.eval("$('#cookiePopup').modal('hide');")
-                          case _ =>
-                            println("Error: Cookie popup not destroyed.")
-                        })
-                    }, "Annehmen / Accept"),
-                )
-              )
-            )
+
+          div(cls:="alert text-center cookiealert", role:="alert", id:="cookiePopup",
+            b("Do you like cookies? "),
+            "\uD83C\uDF6A We use cookies to ensure you get the best experience on our website. ",
+            a(href:="#",
+              onclick:= { () =>
+                $(s"#${parentId}").empty()
+                js.eval("$('#cookiePopup').modal('hide');")
+                loadAndScroll("cookies.html")
+              }, "Learn more"),
+            button(`type`:="button", cls:="btn btn-primary btn-sm acceptcookies",
+              onclick:= { (event: Event) =>
+                event.stopPropagation()
+                HttpRequest(s"${serverUrl()}/${apiPrefix()}/accept_cookies")
+                  .send()
+                  .onComplete({
+                    case _: Success[SimpleHttpResponse] =>
+                      $("#cookiePopup").removeClass("show")
+                      $("#cookiePopup").hide()
+                    case _ =>
+                      println("Error: Cookie popup not destroyed.")
+                  })
+              }, "I understand")
           )
 
         $("#body").empty()
         dom.document.body.appendChild(dialog.render)
-        js.eval("$('#cookiePopup').modal('show');")
+        $("#cookiePopup").addClass("show")
       case Some(_) =>
         println("Initial cookie already present. Not adding cookie popup to page.")
     }

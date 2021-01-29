@@ -857,7 +857,9 @@ object Repertorise {
       if (_repertorisationResults.now == None && Case.size() == 0) {
         div(cls := "container-fluid",
           div(cls := "container-fluid text-center",
-            div(cls:="col-sm-12 text-center", img(src:=s"${serverUrl()}/assets/html/img/logo_small.png")),
+            // The h1-tag here is apparently needed for SEO, cf.
+            // https://stackoverflow.com/questions/665037/replacing-h1-text-with-a-logo-image-best-method-for-seo-and-accessibility
+            h1(cls:="col-sm-12 text-center", img(src:=s"${serverUrl()}/assets/html/img/logo_small.png", alt:="OOREP - open online repertory of homeopathy")),
             div(cls := "row",
               div(cls := "col-sm-1"),
               div(cls := "row col-sm-10",

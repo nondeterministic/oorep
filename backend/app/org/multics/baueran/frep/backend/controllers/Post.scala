@@ -30,12 +30,16 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
             memberDao.setLastSeen(m.member_id, cookieCreationDate)
             memberDao.increaseLoginCounter(m.member_id)
 
-            Redirect(s"${serverUrl(request)}/assets/html/private/index.html")
+            // We no longer need to redirect to /assets/...private/index.html because the initial page redirect
+            // is taken care off properly inside Get.scala's index() function. So, after accepting the cookie,
+            // we can basically and simply reload the main site.
+            Redirect(s"${serverUrl(request)}")
               .withCookies(
                 Cookie(CookieFields.salt.toString, salt, httpOnly = false),
                 Cookie(CookieFields.id.toString, m.member_id.toString, httpOnly = false),
                 Cookie(CookieFields.email.toString, m.email, httpOnly = false),
-                Cookie(CookieFields.creationDate.toString, cookieCreationDate.toString(), httpOnly = false)
+                Cookie(CookieFields.creationDate.toString, cookieCreationDate.toString(), httpOnly = false),
+                Cookie(CookieFields.cookiePopupAccepted.toString, "1", httpOnly = false),
               )
           case _ =>
             BadRequest(errorMessage)

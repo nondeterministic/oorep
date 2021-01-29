@@ -1,6 +1,11 @@
 OOREP NEWS
 =-=-=-=-=-
 
+v0.8.1  Sun 31 Jan 2021 10:30:54 AM CET [tag: v0.8.1]
+-----------------------------------------------------
+- A less "in your face" cookie-consent dialog
+- Remove landing page (and other) time consuming redirects
+
 v0.8.0  Tue 26 Jan 2021 10:20:10 AM CET [tag: v0.8.0]
 -----------------------------------------------------
 - Main features (that made API changes necessary):

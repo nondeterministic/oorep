@@ -2,6 +2,7 @@
 # https://www.playframework.com/documentation/latest/ScalaRouting
 
 GET     /                                  org.multics.baueran.frep.backend.controllers.Get.index
+# GET     /                                  controllers.Assets.at(path="/public/html", file="index.html")
 GET		/api/authenticate                  org.multics.baueran.frep.backend.controllers.Get.authenticate
 GET		/api/lookup						   org.multics.baueran.frep.backend.controllers.Get.repertorise(repertory: String, symptom: String, page: Int, remedyString: String, minWeight: Int, getRemedies: Int)
 GET     /api/available_reps                org.multics.baueran.frep.backend.controllers.Get.availableReps

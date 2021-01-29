@@ -11,7 +11,7 @@ object Features {
       div(cls:="container",
         div(cls:="row h-100",
           div(cls:="col-md-auto",
-            img(style:="height:350px", cls:="image", src:=s"${serverUrl()}/assets/html/img/drops-of-water-578897_960_720.jpg")
+            img(style:="max-width:100%; height:350px;", cls:="image img-fluid", src:=s"${serverUrl()}/assets/html/img/drops-of-water-578897_960_720.jpg")
           ),
           div(cls:="col my-auto",
             h3(style:="text-align:left;margin-bottom: 10px",

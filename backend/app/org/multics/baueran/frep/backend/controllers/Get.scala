@@ -26,9 +26,9 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
 
   def index() = Action { request: Request[AnyContent] =>
     if (getRequestCookies(request) == List.empty)
-      Redirect(s"${serverUrl(request)}/assets/html/index.html")
+      Ok(views.html.index_landing.render)
     else
-      Redirect(s"${serverUrl(request)}/assets/html/private/index.html")
+      Ok(views.html.index_landing_private.render)
   }
 
   def acceptCookies() = Action { request: Request[AnyContent] =>

@@ -57,33 +57,32 @@
     </p>
     
     <p style="text-align:justify;">
-      <b>Cookie category 1: session cookie</b>; to be able to
-      differentiate the concurrently operating users and browsers from
-      one another.  Does not contain any personal data and can in
-      itself not be used to deduce the identity of the user.  This
-      category of a cookie can be suppressed by the user's browser,
-      but is required by the web site to provide the basic
-      functionality.  Hence, there is currently no possibility or
-      option to not transmit this category of a cookie.
+      <b>Cookie category 1: CSRF-protection cookie</b>; to protect the
+      web-site and its users from cross-site-request attacks. Does not
+      contain any personal data and can in itself not be used to deduce
+      the identity of the user. This category of a cookie can be
+      suppressed by the user's browser, but is required by the web site
+      to provide its basic functionality.  Hence, there is currently no
+      possibility or option to not transmit this category of a cookie.
     </p>
 
     <p style="text-align:justify;">
-      <b>Cookie category 2: security cookie (persistent)</b>; to
-      security-harden the web site, such that potential attackers are
-      barred from using the web site without the user's consent and
-      knowing. Does not contain any personal data and can in itself
-      not be used to deduce the identity of the user.  This category
-      of a cookie can be suppressed by the user's browser, but is
-      required by the web site to provide the basic functionality.
-      Hence, there is currently no possibility or option to not
-      transmit this category of a cookie.
+      <b>Cookie category 2: session cookie (persistent)</b>; to store
+      temporary information, such as date and time of last access to
+      site in order to distinguish between a regular user of the site
+      and, say, stale or illegal remote requests. Does not contain any
+      personal data and can in itself not be used to deduce the
+      identity of the user.  This category of a cookie can be
+      suppressed by the user's browser, but is required by the web
+      site to provide its basic functionality. This cookie will be
+      transmitted upon user consent in the cookie dialog.
     </p>
     
     <p style="text-align:justify;">
       <b>Cookie category 3: login cookie (persistent)</b>; will only
       be transmitted after the user has registered with this web site
-      and logged in using his personal username and password. This
-      category of a cookie contains the internal user ID, and,
+      and logged in using his or her personal username and password.
+      This category of a cookie contains the internal user ID, and,
       assuming access to the internal database, could then in theory
       be used to deduce the identity of the user.  However, there is
       active protection against this in place in terms of firewalls
@@ -194,7 +193,7 @@
     <h3 class="freetext">Change of our privacy policy</h3>
 
     <p style="text-align:justify;">
-      This privacy policy has been put online on January 27, 2020 and is currently valid.
+      This privacy policy has been put online on January 29, 2021 and is currently valid.
     </p>
 
     <p style="text-align:justify;">
@@ -207,7 +206,11 @@
   </div>
 
   <div class="col text-center">
-    <a href="#" onclick="oorepLoadIntoContentDiv('https://www.oorep.com/assets/html/datenschutz.html');"><img src="https://www.oorep.com/assets/html/img/germanflag.png" alt="Deutsche Version dieses Dokuments"></a>
+    <a href="#" onclick="oorepLoadIntoContentDiv('https://www.oorep.com/assets/html/datenschutz.html');">
+      <img src="https://www.oorep.com/assets/html/img/germanflag.png" alt="Deutsche Version dieses Dokuments">
+      <br>
+      Selbe Information auf deutsch
+    </a>
     <!--
     <a href="#" onclick="$('#content').load('/assets/html/datenschutz.html')"><img src="/assets/html/img/germanflag.png" alt="Deutsche Version dieses Dokuments"></a>
     -->

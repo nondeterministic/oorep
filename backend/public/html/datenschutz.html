@@ -61,44 +61,43 @@
     </p>
     
     <p style="text-align:justify;">
-      <b>Cookie-Kategorie 1: Sitzungs-Cookie</b>; um verschiedene,
-      gleichzeitig aufrufende Benutzer und Browser voneinander
-      unterscheiden zu können.  Enthält keinerlei persönliche Daten
-      und kann für sich alleine genommen nicht dazu verwendet werden,
-      auf die Identität des Benutzers zu schließen. Diese Kategorie
-      Cookie kann zwar technisch durch den Browser des Benutzers
-      abgelehnt oder unterdrückt werden, wird jedoch von der Webseite
-      benötigt, um die Basisfunktionalität sicherzustellen.  Die
-      Webseite bietet technisch keine Möglichkeit oder Einstellung,
-      diese Kategorie Cookie nicht zu übertragen.
+      <b>Cookie-Kategorie 1: CSRF-Protection-Cookie</b>; schützt Website
+      und seine Benutzer vor Cross-Site-Request-Angriffen. Enthält
+      keinerlei persönliche Daten und kann für sich alleine genommen
+      nicht dazu verwendet werden, auf die Identität des Benutzers zu
+      schließen. Diese Kategorie Cookie kann zwar technisch durch den
+      Browser des Benutzers abgelehnt oder unterdrückt werden, wird
+      jedoch von der Webseite benötigt, um die Basisfunktionalität
+      sicherzustellen.  Die Webseite bietet technisch keine Möglichkeit
+      oder Einstellung, diese Kategorie Cookie nicht zu übertragen.
     </p>
 
     <p style="text-align:justify;">
-      <b>Cookie-Kategorie 2: Sicherheits-Cookie (persistent)</b>; um
-      es potentiellen Angreifern zu erschweren, ohne explizite
-      Erlaubnis und Wissen des Benutzers die Webseite zu verwenden und
-      Daten mit ihr auszutauschen.  Enthält keinerlei persönliche
-      Daten und kann für sich alleine genommen nicht dazu verwendet
-      werden, auf die Identität des Benutzers zu schließen.  Diese
-      Kategorie Cookie kann zwar technisch durch den Browser des
-      Benutzers abgelehnt oder unterdrückt werden, wird jedoch - wie
-      Kategorie 1 auch - von der Webseite benötigt, um die
-      Basisfunktionalität sicherzustellen.  Die Webseite bietet
-      technisch keine Möglichkeit oder Einstellung, diese Kategorie
-      Cookie nicht zu übertragen.
+      <b>Cookie-Kategorie 2: Sitzungs-Cookie (persistent)</b>; um
+      temporäre Informationen wie z.B. die genaue Uhrzeit des letzten
+      Site-Zugriffs zu speichern, um reguläre Benutzerzugriffe von
+      alten oder gar illegalen Remote-Zugriffen unterscheiden zu
+      können. Enthält keinerlei persönliche Daten und kann für sich
+      alleine genommen nicht dazu verwendet werden, auf die Identität
+      des Benutzers zu schließen.  Diese Kategorie Cookie kann zwar
+      technisch durch den Browser des Benutzers abgelehnt oder
+      unterdrückt werden, wird jedoch - wie Kategorie 1 auch - von der
+      Webseite benötigt, um die Basisfunktionalität sicherzustellen.
+      Diese Art Cookie wird übertragen, sobald der initiale Cookie-Dialog
+      bestätigt wird.
     </p>
 
     <p style="text-align:justify;">
       <b>Cookie-Kategorie 3: Login-Cookie (persistent)</b>; wird erst
-      gesetzt, wenn der Benutzer sich bei der Webseite registriert und
-      danach ordentlich mit seinem Benutzernamen und Passwort
-      eingelogged hat.  Diese Kategorie Cookie enthält die interne
-      Benutzer-Kennung und kann somit, sofern man Direktzugriff auf
-      die Datenbank der Webseite bekäme, theoretisch verwendet werden,
-      um auf die Identität des Benutzers zu schließen.  Dies wird
-      aktiv verhindert durch den Einsatz von Firewalls und anderer
-      Sicherheitsmaßnahmen.  Dieser Cookie ist irrelevant bzw. wird
-      nicht übertragen, wenn Sie sich nicht mit Benutzername und
+      gesetzt, wenn die Benutzerin oder der Benutzer sich bei der
+      Webseite registriert und danach ordentlich mit ihrem oder seinem
+      Benutzernamen und Passwort eingelogged hat.  Diese Kategorie
+      Cookie enthält die interne Benutzer-Kennung und kann somit, sofern
+      man Direktzugriff auf die Datenbank der Webseite bekäme, theoretisch
+      verwendet werden, um auf die Identität des Benutzers zu schließen.
+      Dies wird aktiv verhindert durch den Einsatz von Firewalls und
+      anderer Sicherheitsmaßnahmen.  Dieser Cookie ist irrelevant bzw.
+      wird nicht übertragen, wenn Sie sich nicht mit Benutzername und
       Passwort bei der Webseite einloggen.  Die Basisfunktionalität
       der Webseite ist auch ohne diese Kategorie Cookie gegeben.
     </p>
@@ -207,7 +206,7 @@
     <h3 class="freetext">Aktualität und Änderung dieser Datenschutzerklärung</h3>
 
     <p style="text-align:justify;">
-      Diese Datenschutzerklärung ist aktuell gültig und hat den Stand 27. Januar 2020.
+      Diese Datenschutzerklärung ist aktuell gültig und hat den Stand 29. Januar 2021.
     </p>
 
     <p style="text-align:justify;">
@@ -222,7 +221,11 @@
   </div>
 
   <div class="col text-center">
-    <a href="#" onclick="oorepLoadIntoContentDiv('https://www.oorep.com/assets/html/cookies.html');"><img src="https://www.oorep.com/assets/html/img/englishflag.png" alt="English version of this document"></a>
+    <a href="#" onclick="oorepLoadIntoContentDiv('https://www.oorep.com/assets/html/cookies.html');">
+      <img src="https://www.oorep.com/assets/html/img/englishflag.png" alt="English version of this document">
+      <br>
+      Same information in English
+    </a>
     <!--
     <a href="#" onclick="$('#content').load('/assets/html/cookies.html')"><img src="/assets/html/img/englishflag.png" alt="English version of this document"></a>
     -->
