@@ -39,7 +39,7 @@ object NavBar {
                           onclick := { (e: Event) =>
                             RepertoryModal.info() = Some(info)
                           },
-                          data.target:="#repertoryInfoModal")(info.abbrev).render)
+                          data.target:="#repertoryInfoModal")(s"${info.abbrev} - ${info.displaytitle.getOrElse("")}").render)
                     })
                 }
                 case Left(err) =>

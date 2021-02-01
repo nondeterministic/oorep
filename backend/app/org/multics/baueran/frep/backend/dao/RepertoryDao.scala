@@ -3,9 +3,10 @@ package org.multics.baueran.frep.backend.dao
 import org.multics.baueran.frep.shared._
 import org.multics.baueran.frep.backend.db
 import Defs.{SpecialLookupParams, maxNumberOfResults, maxNumberOfSymptoms}
-import scala.collection.mutable.ArrayBuffer
+import io.getquill.Query
 
 import scala.collection.mutable.ArrayBuffer
+
 
 class RepertoryDao(dbContext: db.db.DBContext) {
 
@@ -29,25 +30,37 @@ class RepertoryDao(dbContext: db.db.DBContext) {
     run(insert)
   }
 
-  /**
-    * Returns list of triples [(abbrev, repertoryAccessLevel, remedyAbbrev)]
-    */
-  def getAllAvailableRemedies() = {
-    implicit val decodeRepAccess = MappedEncoding[String, RepAccess.RepAccess](RepAccess.withName(_))
-
-    run {
-      quote {
-        for {
-          info <- tableInfo
-          remedy <- query[Remedy] if (info.abbrev == remedy.abbrev)
-        } yield (info.abbrev, info.access, remedy.nameAbbrev)
-      }
+  def getAllAvailableRemediesForLoggedInUsers() = {
+    val rawQuery = quote {
+      infix"""SELECT nameabbrev, namelong, STRING_AGG(remedy.abbrev, ',') AS repertories FROM remedy JOIN info ON info.abbrev = remedy.abbrev AND (access !='Protected') GROUP BY (nameabbrev, namelong)"""
+        .as[Query[RemedyAndItsRepertories]]
     }
+    run(rawQuery)
   }
 
-  def getAllAvailableRepertoryInfos() = {
+  def getAllAvailableRemediesForAnonymousUsers() = {
+    val rawQuery = quote {
+      infix"""SELECT nameabbrev, namelong, STRING_AGG(remedy.abbrev, ',') AS repertories FROM remedy JOIN info ON info.abbrev = remedy.abbrev AND (access = 'Public' or access = 'Default') GROUP BY (nameabbrev, namelong)"""
+        .as[Query[RemedyAndItsRepertories]]
+    }
+    run(rawQuery)
+  }
+
+  private def getAllAvailableRepertoryInfos() = {
     implicit val decodeRepAccess = MappedEncoding[String, RepAccess.RepAccess](RepAccess.withName(_))
     run(quote(tableInfo.filter(_ => true)))
+  }
+
+  def getAllAvailableRepertoryInfosForAnonymousUsers() = {
+    implicit val decodeRepAccess = MappedEncoding[String, RepAccess.RepAccess](RepAccess.withName(_))
+    run(quote(tableInfo.filter(_ => true)))
+      .filter(rep => rep.access == RepAccess.Default || rep.access == RepAccess.Public)
+  }
+
+  def getAllAvailableRepertoryInfosForLoggedInUsers() = {
+    implicit val decodeRepAccess = MappedEncoding[String, RepAccess.RepAccess](RepAccess.withName(_))
+    run(quote(tableInfo.filter(_ => true)))
+      .filter(_.access != RepAccess.Protected)
   }
 
   def getChapter(chapterId: Int) = {
@@ -73,6 +86,12 @@ class RepertoryDao(dbContext: db.db.DBContext) {
         rubricRemedy.rubricId == lift(rr.rubricId)
     }))
     run(get)
+  }
+
+  def getNumberOfRubrics(abbrev: String) = {
+    val countSelect = quote { query[Rubric].filter(_.abbrev == lift(abbrev)).map(_.id) }
+    val numberOfRubrics = run(countSelect.size)
+    numberOfRubrics
   }
 
   def insert(r: Remedy) = {
@@ -191,115 +210,113 @@ class RepertoryDao(dbContext: db.db.DBContext) {
     else
       ""
 
-    val tmpRubricsAll = remedyEntered match {
-      // User has NOT provided a remedy in search to restrict it
-      case None => {
-        // Only when weight > 1, do we do a join with remedies.  Otherwise we also want empty rubrics,
-        // i.e., those that have no remedy and therefore no weights (which is the else-case of this
-        // if-statement).
-        if (minWeight > 1) {
-          // The following corresponds roughly to this (except for approx. search term):
-          //
-          //  select distinct rubric.abbrev, rubric.id, rubric.fullpath from rubric
-          //    inner join rubricremedy on rubric.abbrev='publicum' and rubric.fullpath like '%pain%'
-          //                               and rubricremedy.abbrev=rubric.abbrev and rubricremedy.weight=1 and rubricremedy.rubricid=rubric.id;
-          run {
-            quote {
-              for {
-                rubric <- query[Rubric]
-                rubricRemedy <- query[RubricRemedy] if {
-                  rubric.abbrev == lift(abbrev) &&
-                    rubric.abbrev == rubricRemedy.abbrev &&
-                    (rubric.fullPath.toLowerCase.like(lift(approximateSearchTerm)) ||
-                      rubric.textt.getOrElse("").toLowerCase.like(lift(approximateSearchTerm)) ||
-                      rubric.path.getOrElse("").toLowerCase.like(lift(approximateSearchTerm))) &&
-                    rubricRemedy.weight >= lift(minWeight) &&
-                    rubricRemedy.rubricId == rubric.id
-                }
-              } yield (rubric)
-            }.distinct.sortBy(_.fullPath)
-          }.filter(_.isMatchFor(searchTerms))
+    // We determine the total number of a rubric's rubrics, because small repertories will be presented in
+    // full, when the user sends a query - irrespective of the entered search term (cf. Tyler's cold repertory)
+    val totalNumberOfRepertoryRubrics = getNumberOfRubrics(abbrev).toInt
+
+    // We only do a proper lookup for big repertories. Small ones with less than 100 rubrics,
+    // will simply return ALL rubrics, whatever the user entered.  For big repertories, we then
+    // further distinguish the case whether a remedy was given to narrow search down, etc.
+    val tmpRubricsAll = if (totalNumberOfRepertoryRubrics > maxNumberOfResults) {
+      remedyEntered match {
+        // User has NOT provided a remedy in search to restrict it
+        case None => {
+          // Only when weight > 0, do we do a join with remedies.  Otherwise we also want empty rubrics,
+          // i.e., those that have no remedy and therefore no weights (which is the else-case of this
+          // if-statement).
+          if (minWeight > 0) {
+            // The following corresponds roughly to this (except for approx. search term):
+            //
+            //  select distinct rubric.abbrev, rubric.id, rubric.fullpath from rubric
+            //    inner join rubricremedy on rubric.abbrev='publicum' and rubric.fullpath like '%pain%'
+            //                               and rubricremedy.abbrev=rubric.abbrev and rubricremedy.weight=1 and rubricremedy.rubricid=rubric.id;
+            run {
+              quote {
+                for {
+                  rubric <- query[Rubric]
+                  rubricRemedy <- query[RubricRemedy] if {
+                    rubric.abbrev == lift(abbrev) &&
+                      rubric.abbrev == rubricRemedy.abbrev &&
+                      (rubric.fullPath.toLowerCase.like(lift(approximateSearchTerm)) ||
+                        rubric.textt.getOrElse("").toLowerCase.like(lift(approximateSearchTerm)) ||
+                        rubric.path.getOrElse("").toLowerCase.like(lift(approximateSearchTerm))) &&
+                      rubricRemedy.weight >= lift(minWeight) &&
+                      rubricRemedy.rubricId == rubric.id
+                  }
+                } yield (rubric)
+              }.distinct.sortBy(_.fullPath)
+            }.filter(_.isMatchFor(searchTerms))
+          }
+          else {
+            run {
+              quote {
+                query[Rubric]
+                  .filter(rubric =>
+                    rubric.abbrev == lift(abbrev) &&
+                      (rubric.fullPath.toLowerCase.like(lift(approximateSearchTerm)) ||
+                        rubric.textt.getOrElse("").toLowerCase.like(lift(approximateSearchTerm)) ||
+                        rubric.path.getOrElse("").toLowerCase.like(lift(approximateSearchTerm)))
+                  )
+              }
+            }.filter(_.isMatchFor(searchTerms))
+              .sortBy(_.fullPath)
+          }
         }
-        else {
-          run {
-            quote {
-              query[Rubric]
-                .filter(rubric =>
-                  rubric.abbrev == lift(abbrev) &&
-                    (rubric.fullPath.toLowerCase.like(lift(approximateSearchTerm)) ||
-                      rubric.textt.getOrElse("").toLowerCase.like(lift(approximateSearchTerm)) ||
-                      rubric.path.getOrElse("").toLowerCase.like(lift(approximateSearchTerm)))
-                )
+        // User has provided a remedy in search to restrict it
+        case Some(remedy) => {
+          if (searchTerms.positive.length > 0) {
+            run {
+              quote {
+                for {
+                  rubric <- query[Rubric]
+                  rubricRemedy <- query[RubricRemedy] if {
+                    rubric.abbrev == lift(abbrev) &&
+                      rubric.abbrev == rubricRemedy.abbrev &&
+                      (rubric.fullPath.toLowerCase.like(lift(approximateSearchTerm)) ||
+                        rubric.textt.getOrElse("").toLowerCase.like(lift(approximateSearchTerm)) ||
+                        rubric.path.getOrElse("").toLowerCase.like(lift(approximateSearchTerm))) &&
+                      rubricRemedy.weight >= lift(minWeight) &&
+                      rubricRemedy.rubricId == rubric.id &&
+                      rubricRemedy.remedyId == lift(remedy).id
+                  }
+                } yield (rubric)
+              }.distinct.sortBy(_.fullPath)
+            }.filter(_.isMatchFor(searchTerms))
+          }
+          else {
+            run {
+              quote {
+                for {
+                  rubric <- query[Rubric]
+                  rubricRemedy <- query[RubricRemedy] if {
+                    rubric.abbrev == lift(abbrev) &&
+                      rubric.abbrev == rubricRemedy.abbrev &&
+                      rubricRemedy.weight >= lift(minWeight) &&
+                      rubricRemedy.rubricId == rubric.id &&
+                      rubricRemedy.remedyId == lift(remedy).id
+                  }
+                } yield (rubric)
+              }.distinct.sortBy(_.fullPath)
             }
-          }.filter(_.isMatchFor(searchTerms))
-            .sortBy(_.fullPath)
-        }
-      }
-      // User has provided a remedy in search to restrict it
-      case Some(remedy) => {
-        if (searchTerms.positive.length > 0) {
-          run {
-            quote {
-              for {
-                rubric <- query[Rubric]
-                rubricRemedy <- query[RubricRemedy] if {
-                  rubric.abbrev == lift(abbrev) &&
-                    rubric.abbrev == rubricRemedy.abbrev &&
-                    (rubric.fullPath.toLowerCase.like(lift(approximateSearchTerm)) ||
-                      rubric.textt.getOrElse("").toLowerCase.like(lift(approximateSearchTerm)) ||
-                      rubric.path.getOrElse("").toLowerCase.like(lift(approximateSearchTerm))) &&
-                    rubricRemedy.weight >= lift(minWeight) &&
-                    rubricRemedy.rubricId == rubric.id &&
-                    rubricRemedy.remedyId == lift(remedy).id
-                }
-              } yield (rubric)
-            }.distinct.sortBy(_.fullPath)
-          }.filter(_.isMatchFor(searchTerms))
-        }
-        else {
-          run {
-            quote {
-              for {
-                rubric <- query[Rubric]
-                rubricRemedy <- query[RubricRemedy] if {
-                  rubric.abbrev == lift(abbrev) &&
-                    rubric.abbrev == rubricRemedy.abbrev &&
-                    rubricRemedy.weight >= lift(minWeight) &&
-                    rubricRemedy.rubricId == rubric.id &&
-                    rubricRemedy.remedyId == lift(remedy).id
-                }
-              } yield (rubric)
-            }.distinct.sortBy(_.fullPath)
           }
         }
       }
     }
+    else {
+      run(query[Rubric].filter(_.abbrev == lift(abbrev)))
+    }
 
     val remedyStats = new ArrayBuffer[ResultsRemedyStats]()
     if (getRemedies == true) {
-      val sqlString =
-        "SELECT rem.nameabbrev, count(rem.nameabbrev), sum(rr.weight) from rubric as rub join rubricremedy as rr on " +
-          s"rub.id = rr.rubricid and rr.abbrev='${abbrev}' and rr.rubricid in (${tmpRubricsAll.map(_.id).mkString(",")}) join remedy as rem on " +
-          "rem.id=rr.remedyid and rem.abbrev=rub.abbrev and rub.abbrev=rr.abbrev " +
-          "group by rem.nameabbrev order by count desc;"
-      val conn = dbContext.dataSource.getConnection
-      try {
-        val statement = conn.createStatement()
-        val resultSet = statement.executeQuery(sqlString)
-        while (resultSet.next()) {
-          val nameabbrev = resultSet.getString("nameabbrev")
-          val count = resultSet.getInt("count")
-          val sum = resultSet.getInt("sum")
-          // Only add remedies which occur more than once in search result. Saves us filtering in the client.
-          if (count > 1)
-            remedyStats.append(ResultsRemedyStats(nameabbrev, count, sum))
-        }
-      } catch {
-        case e: Throwable => List()
-      } finally {
-        if (conn != null)
-          conn.close()
+      val rawQuery = quote {
+        infix"""SELECT rem.nameabbrev, count(rem.nameabbrev), sum(rr.weight) AS cumulativeweight FROM rubric AS rub
+                 JOIN rubricremedy AS rr ON rub.id = rr.rubricid AND rr.abbrev='#${abbrev}' AND rr.rubricid IN (#${tmpRubricsAll.map(_.id).mkString(",")})
+                 JOIN remedy AS rem ON rem.id=rr.remedyid AND rem.abbrev=rub.abbrev AND rub.abbrev=rr.abbrev
+                 GROUP BY rem.nameabbrev ORDER BY count DESC"""
+            .as[Query[ResultsRemedyStats]]
       }
+      val result = run(rawQuery)
+      remedyStats.addAll(result)
     }
 
     val tmpRubricsTruncated =
@@ -333,7 +350,7 @@ class RepertoryDao(dbContext: db.db.DBContext) {
     val caseRubrics = tmpRubricsTruncated.map(rubric => CaseRubric(rubric, abbrev, 1, None, getWeightedRemedies(rubric)))
     val returnTotalNumberOfPages = math.ceil(tmpRubricsAll.size.toDouble / maxNumberOfResults.toDouble).toInt
     Logger.info(s"queryRepertory(abbrev: ${abbrev}, symptom: ${symptom}, page: ${page}, remedy: ${remedyString}, weight: ${minWeight}, getRemedies: $getRemedies) found ${tmpRubricsAll.size} case rubrics.")
-    Some((ResultsCaseRubrics(tmpRubricsAll.size, returnTotalNumberOfPages, page, caseRubrics), remedyStats.toList))
+    Some((ResultsCaseRubrics(totalNumberOfRepertoryRubrics, tmpRubricsAll.size, returnTotalNumberOfPages, page, caseRubrics), remedyStats.toList))
   }
 
   def insert(cr: CaseRubric) = {

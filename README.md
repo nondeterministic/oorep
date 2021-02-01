@@ -17,18 +17,21 @@ latest updates.
 * Java SDK (for best results, use JDK 8 or 11.  (In particular, I've had build
   problems with JDK 12 - broken String class.))
 * Scala Build Tool (SBT, tested with >= 1.3.0)
-* An SQL database (tested with PostgreSQL 10 and 11)
+* A PostgreSQL database server (tested with versions 10 and 11, but should work
+  with about any version)
 
-Before executing SBT, the database needs to be up and running.  Also, you will
-need to define the following environment variables:
+Before executing SBT, the database (which is provided here as an SQL dump) needs
+to be up and running.  Also, you will need to define the following environment
+variables:
 
+* `$OOREP_APPLICATION_HOST`: Usually something like `http://localhost:9000`
+  for development environments, or `https://www.oorep.com` for a production
+  environment (notice, no trailing slash).
 * `$OOREP_APPLICATION_SECRET`: application-specific password you need to see
   if you run the server using `https` instead of `http`
 * `$OOREP_DBHOST`: hostname of DB-server (e.g., localhost)
-* `$OOREP_DBPORT`: port of DB-server (usually 5432 with PostgreSQL)
+* `$OOREP_DBPORT`: port of DB-server (usually 5432)
 * `$OOREP_DBUSER_PASS`: password used by the DB-user
-* `$OOREP_REP_PATH`: directory in the local file system, where the repertory
-  raw data is located
 
 Check `backend/conf/application.conf` for their respective use, and make other
 adjustments as you see fit there.  Also be sure these variables are set before
@@ -54,18 +57,19 @@ OOREP directory.
 
 When you're content with your setup, OOREP, a
 [Play](https://www.playframework.com/)-application written in Scala, can be run
-like any other using `run` or `compile`.  Be sure, the database is started and
-available before though. If all went well, the result should then be available
-at http://localhost:9000/.
+like any other using SBT's targets `run` or `compile`.  Be sure, the database is
+started and available before though. If all went well, the result should then be
+available at http://localhost:9000/.
 
 You can also build a distribution package of OOREP by first executing `compile`
-and then `dist`, which will build an executable, 
-`backend/target/universal/backend-x.y.z.zip`, which can also be used to run
+and then `dist` in SBT, which will build an executable, 
+`backend/target/universal/backend-x.y.z.zip`, and which can also be used to run
 a stand-alone version of the application.
 
 ### Runtime optimisations
 
-Some queries will be slow, if the database is not optimised. It is therefore
+Some queries will be slow, if the database is not optimised. As this is
+work in progress, the following is a somewhat crude approximation: It is
 advisable to add the following (and possibly other) indexes to OOREP's
 database:
 

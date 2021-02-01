@@ -28,7 +28,7 @@ class CookiePopup(parentId: String) {
   def add() = {
 
     def loadAndScroll(file: String) = {
-      $(s"#${parentId}").load(s"${serverUrl()}/assets/html/$file")
+      $(s"#${parentId}").load(s"${serverUrl()}$file")
       js.eval("$('html, body').animate({ scrollTop: 0 }, 'fast');")
     }
 
@@ -43,7 +43,7 @@ class CookiePopup(parentId: String) {
               onclick:= { () =>
                 $(s"#${parentId}").empty()
                 js.eval("$('#cookiePopup').modal('hide');")
-                loadAndScroll("cookies.html")
+                loadAndScroll("/partial/cookies")
               }, "Learn more"),
             button(`type`:="button", cls:="btn btn-primary btn-sm acceptcookies",
               onclick:= { (event: Event) =>

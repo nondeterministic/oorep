@@ -54,6 +54,8 @@ object Main {
   }
 
   def main(args: Array[String]): Unit = {
+    $("#temporary_content").empty() // This is the static page which is shown when JS is disabled
+
     Repertorise.init(loadingSpinner, disclaimer)
 
     dom.document.body.appendChild(div(style := "width:100%;", id := "nav_bar").render)

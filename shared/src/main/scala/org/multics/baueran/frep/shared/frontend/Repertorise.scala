@@ -51,11 +51,13 @@ object Repertorise {
   }
   private val _currResultShareLink = Var(s"${serverUrl()}")
   private val _pageCache = new PageCache()
-  private val _repertoryRemedyMap = mutable.HashMap[String,List[String]]()
+  private val _repertories = mutable.ArrayBuffer[Info]()
+  private val _repertoryRemedyMap = mutable.HashMap[String,List[(String, String)]]()
   private val _selectedRepertory = Var("")
+  private var _defaultRepertory = ""
   private var _showMaxSearchResultsAlert = true
   private var _showMultiOccurrences = false
-  private val _remedyFormat = Var(RemedyFormat.Formatted)
+  private val _remedyFormat = Var(RemedyFormat.Abbreviated)
   val _repertorisationResults: Var[Option[ResultsCaseRubrics]] = Var(None)
   private val _resultRemedyStats: Var[List[ResultsRemedyStats]] = Var(List())
   private var _loadingSpinner: Option[LoadingSpinner] = None
@@ -88,7 +90,7 @@ object Repertorise {
                 span(
                   (s"${count}x"),
                   a(href := "#", onclick := { (event: Event) =>
-                    doLookup(_pageCache.latest.abbrev, _pageCache.latest.symptom, None, Some(nameabbrev), 1)
+                    doLookup(_pageCache.latest.abbrev, _pageCache.latest.symptom, None, Some(nameabbrev), 0)
                   }, nameabbrev),
                   ("(" + cumulativeWeight + "), ")
                 )
@@ -97,9 +99,9 @@ object Repertorise {
             span(
               (s"${multiRemedies.last.count}x"),
               a(href := "#", onclick := { (event: Event) =>
-                doLookup(_pageCache.latest.abbrev, _pageCache.latest.symptom, None, Some(multiRemedies.last.nameabbrev), 1)
+                doLookup(_pageCache.latest.abbrev, _pageCache.latest.symptom, None, Some(multiRemedies.last.nameabbrev), 0)
               }, multiRemedies.last.nameabbrev),
-              ("(" + multiRemedies.last.cumulativeWeight + ")")
+              ("(" + multiRemedies.last.cumulativeweight + ")")
             ),
             ")").render
         )
@@ -123,7 +125,7 @@ object Repertorise {
       while (optionsDiv.childNodes.length > 0)
         optionsDiv.removeChild(optionsDiv.firstChild)
 
-      for (remedyAbbrev <- _repertoryRemedyMap.get(_selectedRepertory.now).getOrElse(List.empty).sorted)
+      for (remedyAbbrev <- _repertoryRemedyMap.get(_selectedRepertory.now).getOrElse(List.empty).map { case (shortname, _) => shortname }.sorted)
         optionsDiv.appendChild(option(value := s"$remedyAbbrev").render)
     }
   }
@@ -157,11 +159,7 @@ object Repertorise {
     def resultRow(result: CaseRubric) = {
       implicit def crToCR(cr: CaseRubric) = new BetterCaseRubric(cr)
 
-      val remedies =
-        if (_remedyFormat.now == RemedyFormat.NotFormatted)
-          result.getRawRemedies()
-        else
-          result.getFormattedRemedies()
+      val remedies = result.getFormattedRemedyNames(_remedyFormat.now)
 
       if (remedies.size > 0)
         tr(
@@ -192,7 +190,7 @@ object Repertorise {
     resetContentView()
 
     _repertorisationResults.now match {
-      case Some(ResultsCaseRubrics(totalNumberOfResults, totalNumberOfPages, currPage, results)) if (results.size > 0) => {
+      case Some(ResultsCaseRubrics(_, totalNumberOfResults, totalNumberOfPages, currPage, results)) if (results.size > 0) => {
         dom.document.getElementById("resultStatus").innerHTML = ""
         dom.document.getElementById("resultStatus").appendChild(
           div(scalatags.JsDom.attrs.id := "multiOccurrenceDiv", cls := "alert alert-secondary", role := "alert",
@@ -230,7 +228,7 @@ object Repertorise {
               else
                 searchStatsString += s"'${_pageCache.latest.remedy.getOrElse("")}'"
 
-              if (_pageCache.latest.minWeight > 1)
+              if (_pageCache.latest.minWeight > 0)
                 searchStatsString += s" with min. weight >= ${_pageCache.latest.minWeight}"
 
               searchStatsString += s". Showing page ${currPage + 1} of ${totalNumberOfPages} ("
@@ -276,56 +274,65 @@ object Repertorise {
 
     // Display potentially useful hint, when max. number of search results was returned.
     _repertorisationResults.now match {
-      case Some(ResultsCaseRubrics(totalNumberOfResults, totalNumberOfPages, _, results))
-        if (_showMaxSearchResultsAlert &&
-          (results.size >= maxNumberOfResults || totalNumberOfPages > 1)) =>
-      {
-        val fullPathWords = results.map(cr => cr.rubric.fullPath.split("[, ]+").filter(_.length > 0).map(_.trim())).flatten
-        val pathWords = results.map(cr => cr.rubric.path.getOrElse("").split("[, ]+").filter(_.length > 0).map(_.trim())).flatten
-        val textWords = results.map(cr => cr.rubric.textt.getOrElse("").split("[, ]+").filter(_.length > 0).map(_.trim())).flatten
-
-        // Yields a sequence like [ ("pain", 130), ("abdomen", 50), ... ]
-        val sortedResultOccurrences =
-          (pathWords ::: textWords ::: fullPathWords).map(_.replaceAll("[^A-Za-z0-9äÄöÖüÜ]", "")).sortWith(_ > _)
-            .groupBy(identity).mapValues(_.size)
-            .toSeq.sortWith(_._2 > _._2)
-
-        // Filter out all those results, which were actually desired via positive search terms entered by the user
-        val searchTerms = new SearchTerms(_pageCache.latest.symptom)
-        val posTerms = searchTerms.positive
-        val filteredSortedResultOccurrences =
-          sortedResultOccurrences
-            .filter { case (t, _) =>
-              t.length() > 3 && !(posTerms.exists(pt => searchTerms.isWordInX(pt, Some(t))))
-            }
-
-        // If there are some left after filtering, suggest to user to exclude top-most result from a next search.
-        if (filteredSortedResultOccurrences.length > 2) {
-          val newSearchTerms = searchTerms.positive.mkString(", ") + {
-            if (searchTerms.negative.length > 0)
-              ", " + searchTerms.negative.map("-" + _).mkString(", ")
-            else ""
-          } + s", -${filteredSortedResultOccurrences.head._1.toLowerCase.take(6)}*"
-
+      case Some(ResultsCaseRubrics(totalNumberOfRepertoryRubrics, totalNumberOfResults, totalNumberOfPages, _, results)) => {
+        // If the total number of results matches the total number of available rubrics in a repertory, the user either entered "*"
+        // or, in fact, the repertory is a so called small repertory, which means, we show everything...
+        if (_showMaxSearchResultsAlert && totalNumberOfRepertoryRubrics == totalNumberOfResults) {
           dom.document.getElementById("resultStatus").appendChild(
-            div(cls := "alert alert-warning", role := "alert",
-              button(`type`:="button", cls:="close", data.dismiss:="alert",  onclick := { (_: Event) => _showMaxSearchResultsAlert = false },
-                span(aria.hidden:="true", raw("&times;"))),
-              if (posTerms.length > 0)
-                b(s"High number of results. Maybe try narrowing your search using '-', like '",
-                  a(href := "#", onclick := { (_: Event) => onSymptomLinkClicked(newSearchTerms) }, newSearchTerms),
-                  "'."
-                )
-              else
-                b(s"High number of results. Maybe try narrowing your search by also entering some symptoms.")
+            div(cls := "alert alert-success", role := "alert",
+              button(`type` := "button", cls := "close", data.dismiss := "alert", onclick := { (_: Event) => _showMaxSearchResultsAlert = false },
+                span(aria.hidden := "true", raw("&times;"))),
+                b(s"Showing ALL available rubrics, because this repertory only has ${totalNumberOfRepertoryRubrics.toString} rubrics in total.")
             ).render)
+        }
+        else if (_showMaxSearchResultsAlert && (results.size >= maxNumberOfResults || totalNumberOfPages > 1)) {
+          val fullPathWords = results.map(cr => cr.rubric.fullPath.split("[, ]+").filter(_.length > 0).map(_.trim())).flatten
+          val pathWords = results.map(cr => cr.rubric.path.getOrElse("").split("[, ]+").filter(_.length > 0).map(_.trim())).flatten
+          val textWords = results.map(cr => cr.rubric.textt.getOrElse("").split("[, ]+").filter(_.length > 0).map(_.trim())).flatten
+
+          // Yields a sequence like [ ("pain", 130), ("abdomen", 50), ... ]
+          val sortedResultOccurrences =
+            (pathWords ::: textWords ::: fullPathWords).map(_.replaceAll("[^A-Za-z0-9äÄöÖüÜ]", "")).sortWith(_ > _)
+              .groupBy(identity).mapValues(_.size)
+              .toSeq.sortWith(_._2 > _._2)
+
+          // Filter out all those results, which were actually desired via positive search terms entered by the user
+          val searchTerms = new SearchTerms(_pageCache.latest.symptom)
+          val posTerms = searchTerms.positive
+          val filteredSortedResultOccurrences =
+            sortedResultOccurrences
+              .filter { case (t, _) =>
+                t.length() > 3 && !(posTerms.exists(pt => searchTerms.isWordInX(pt, Some(t))))
+              }
+
+          // If there are some left after filtering, suggest to user to exclude top-most result from a next search.
+          if (filteredSortedResultOccurrences.length > 2) {
+            val newSearchTerms = searchTerms.positive.mkString(", ") + {
+              if (searchTerms.negative.length > 0)
+                ", " + searchTerms.negative.map("-" + _).mkString(", ")
+              else ""
+            } + s", -${filteredSortedResultOccurrences.head._1.toLowerCase.take(6)}*"
+
+            dom.document.getElementById("resultStatus").appendChild(
+              div(cls := "alert alert-warning", role := "alert",
+                button(`type` := "button", cls := "close", data.dismiss := "alert", onclick := { (_: Event) => _showMaxSearchResultsAlert = false },
+                  span(aria.hidden := "true", raw("&times;"))),
+                if (posTerms.length > 0)
+                  b(s"High number of results. Maybe try narrowing your search using '-', like '",
+                    a(href := "#", onclick := { (_: Event) => onSymptomLinkClicked(newSearchTerms) }, newSearchTerms),
+                    "'."
+                  )
+                else
+                  b(s"High number of results. Maybe try narrowing your search by also entering some symptoms.")
+              ).render)
+          }
         }
       }
       case _ => ;
     }
 
     _repertorisationResults.now match {
-      case Some(ResultsCaseRubrics(_, _, _, results)) =>
+      case Some(ResultsCaseRubrics(_, _, _, _, results)) =>
         results.foreach(result => dom.document.getElementById("resultsTBody").appendChild(resultRow(result).render))
       case _ => ;
     }
@@ -335,10 +342,10 @@ object Repertorise {
 
   // ------------------------------------------------------------------------------------------------------------------
   def toggleRemedyFormat() = {
-    if (_remedyFormat.now == RemedyFormat.NotFormatted)
-      _remedyFormat() = RemedyFormat.Formatted
+    if (_remedyFormat.now == RemedyFormat.Fullname)
+      _remedyFormat() = RemedyFormat.Abbreviated
     else
-      _remedyFormat() = RemedyFormat.NotFormatted
+      _remedyFormat() = RemedyFormat.Fullname
 
     if (Case.size() > 0)
       showCase()
@@ -361,7 +368,7 @@ object Repertorise {
 
   // ------------------------------------------------------------------------------------------------------------------
   private def onSymptomLinkClicked(symptom: String) = {
-    doLookup(_selectedRepertory.now, symptom, None, None, 1)
+    doLookup(_selectedRepertory.now, symptom, None, None, 0)
   }
 
   // ------------------------------------------------------------------------------------------------------------------
@@ -374,9 +381,9 @@ object Repertorise {
       }
     }
     val remedyMinWeight = dom.document.getElementById("minWeightDropdown") match {
-      case null => 1
+      case null => 0
       case element => element.asInstanceOf[HTMLButtonElement].textContent.trim match {
-        case "" => 1
+        case "" => 0
         case otherwise => otherwise.toInt
       }
     }
@@ -392,7 +399,7 @@ object Repertorise {
     _pageCache.latest.remedy match {
       case Some(_) => onShowAdvancedSearchOptionsMainView(true, false)
       case _ => {
-        if (_pageCache.latest.minWeight > 1)
+        if (_pageCache.latest.minWeight > 0)
           onShowAdvancedSearchOptionsMainView(true, false)
       }
     }
@@ -425,7 +432,7 @@ object Repertorise {
               "Min. weight:"),
             div(cls := "col-sm-2",
               div(id := "weightDropDowns", cls := "dropdown show",
-                button(id := "minWeightDropdown", cls := "btn dropdown-toggle", `type` := "button", data.toggle := "dropdown", if (restorePreviousValues) _pageCache.latest.minWeight.toString else "1"),
+                button(id := "minWeightDropdown", cls := "btn dropdown-toggle", `type` := "button", data.toggle := "dropdown", if (restorePreviousValues) _pageCache.latest.minWeight.toString else "0"),
                 weightDropDownsDiv
               )
             )
@@ -448,11 +455,11 @@ object Repertorise {
     while (optionsDiv.childNodes.length > 0)
       optionsDiv.removeChild(optionsDiv.firstChild)
 
-    for (remedyAbbrev <- _repertoryRemedyMap.get(_selectedRepertory.now).getOrElse(List.empty).sorted)
+    for (remedyAbbrev <- _repertoryRemedyMap.get(_selectedRepertory.now).getOrElse(List.empty).map { case (shortname, _) => shortname }.sorted)
       optionsDiv.appendChild(option(value:=s"$remedyAbbrev").render)
 
     // Add possible weights for search (4 is only in Hering's)
-    for (i <- 1 to 4) {
+    for (i <- 0 to 4) {
       dom.document.getElementById("weightDropDownsDiv").asInstanceOf[dom.html.Div].appendChild(
         a(cls:="dropdown-item", href:="#",
           onclick := { (_: Event) =>
@@ -520,7 +527,7 @@ object Repertorise {
       symptom,
       if (page > 0) Some(page) else None,
       if (remedyString.length > 0) Some(remedyString) else None,
-      if (minWeight > 0) minWeight else 1)
+      if (minWeight > 0) minWeight else 0)
   }
 
   // ------------------------------------------------------------------------------------------------------------------
@@ -609,7 +616,7 @@ object Repertorise {
               else
                 fullErrorMessage += s"'${remedyString}'"
 
-              if (minWeight > 1)
+              if (minWeight > 0)
                 fullErrorMessage += s" with min. weight >= ${minWeight}"
 
               if (searchTerms.positive.length > 0)
@@ -742,50 +749,58 @@ object Repertorise {
   // ------------------------------------------------------------------------------------------------------------------
   private def updateAvailableRepertoriesAndRemedies() = {
     if (_repertoryRemedyMap.size == 0) {
-      println("Updating repertory information from backend")
-      HttpRequest(s"${serverUrl()}/${apiPrefix()}/available_remedies")
+      println("INFO: Updating remedy and repertory information from backend")
+      HttpRequest(s"${serverUrl()}/${apiPrefix()}/available_rems_and_reps")
         .send()
         .onComplete({
           case response: Success[SimpleHttpResponse] => {
             parse(response.get.body) match {
               case Right(json) => {
                 val cursor = json.hcursor
-                cursor.as[List[(String, String, String)]] match {
-                  case Right(repertoryRemedies) => {
+                cursor.as[(List[RemedyAndItsRepertories], List[Info])] match {
+                  case Right((repertoryRemedies, repertoryInfo)) => {
+
+                    // Update list of available repertories
+                    _repertories.addAll(repertoryInfo)
+
+                    // Update the default repertory, if one was transmitted from backend (which should ALWAYS be the case)
+                    _repertories.toList.filter(_.access == RepAccess.Default) match {
+                      case rep :: Nil => _defaultRepertory = rep.abbrev
+                      case _ => println("WARNING: Not setting default repertory; none was transmitted")
+                    }
+
+                    // A huge map like [ ("bogsk" -> [ ("Caust.", "Causticum"), ("Ars.", "Arsenicum Album"), ... ]), ("publicum" -> ...), ... ]
+                    // TODO: This could be sped up further by iterating ONLY ONCE, and then using if-conditions to see which remedy needs to be added to which map element.
+                    // TODO: This should be used to display long remedy names instead of transmitting them for every new lookup of a symptom. Will be MUCH faster, I suspect.
+                    for (currRep <- _repertories) {
+                      val remedies = repertoryRemedies.collect {
+                        case RemedyAndItsRepertories(remedyAbbrev, remedyLong, repertoryAbbrevs) if repertoryAbbrevs.split(",").contains(currRep.abbrev) =>
+                          (remedyAbbrev, remedyLong)
+                      }
+                      _repertoryRemedyMap.put(currRep.abbrev, remedies)
+                    }
 
                     // Update available repertories in repertory dropdown button
                     if (dom.document.getElementById("repSelectionDropDown").childNodes.length == 0) {
-                      repertoryRemedies
-                        .map { case (repAbbrev, repAccess, _) => (repAbbrev, repAccess) }
-                        .distinct
-                        .sortBy(_._1)
+                      _repertories
+                        .sortBy(_.abbrev)
                         .foreach {
-                          case (repAbbrev, repAccess) => {
+                          case currRep => {
                             dom.document.getElementById("repSelectionDropDown")
-                              .appendChild(a(cls := "dropdown-item", href := "#", data.value := repAbbrev,
+                              .appendChild(a(cls := "dropdown-item", href := "#", data.value := currRep.abbrev,
                                 onclick := { (event: Event) =>
-                                  _selectedRepertory() = repAbbrev
+                                  _selectedRepertory() = currRep.abbrev
                                   dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[HTMLButtonElement].textContent = "Repertory: " + _selectedRepertory.now
-                                }, repAbbrev).render)
+                                }, s"${currRep.abbrev} - ${currRep.displaytitle.getOrElse("")}").render)
 
                             if (_selectedRepertory.now.length > 0)
                               dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[HTMLButtonElement].textContent = "Repertory: " + _selectedRepertory.now
-                            else if (repAccess == RepAccess.Default.toString) {
-                              _selectedRepertory() = repAbbrev
+                            else {
+                              _selectedRepertory() = _defaultRepertory
                               dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[HTMLButtonElement].textContent = "Repertory: " + _selectedRepertory.now
                             }
                           }
                         }
-                    }
-
-                    // Update available remedies for search field
-                    val repertoryNames = repertoryRemedies.map { case (repAbbrev, _, _) => (repAbbrev) }.distinct
-                    for (repertoryAbbrev <- repertoryNames) {
-                      _repertoryRemedyMap.addOne((repertoryAbbrev,
-                        repertoryRemedies
-                          .filter { case (repAbbrev, _, _) => repAbbrev == repertoryAbbrev }
-                          .map { case (_, _, remedyAbbrev) => remedyAbbrev }
-                      ))
                     }
                   }
                   case Left(t) => println("Parsing of available repertories failed: " + t)
@@ -798,19 +813,19 @@ object Repertorise {
         })
     }
     else {
-      println("Updating repertory information from RAM")
-      for ((repAbbrev, repAccess) <- _repertoryRemedyMap.toList.sortBy(_._1)) {
+      println("INFO: Updating repertory information from RAM")
+      for (currRep <- _repertories.toList.sortBy(_.abbrev)) {
         dom.document.getElementById("repSelectionDropDown")
-          .appendChild(a(cls := "dropdown-item", href := "#", data.value := repAbbrev,
+          .appendChild(a(cls := "dropdown-item", href := "#", data.value := currRep.abbrev,
             onclick := { (event: Event) =>
-              _selectedRepertory() = repAbbrev
+              _selectedRepertory() = currRep.abbrev
               dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[HTMLButtonElement].textContent = "Repertory: " + _selectedRepertory.now
-            }, repAbbrev).render)
+            }, s"${currRep.abbrev} - ${currRep.displaytitle.getOrElse("")}").render)
 
         if (_selectedRepertory.now.length > 0)
           dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[HTMLButtonElement].textContent = "Repertory: " + _selectedRepertory.now
-        else if (repAccess == RepAccess.Default.toString) {
-          _selectedRepertory() = repAbbrev
+        else {
+          _selectedRepertory() = _defaultRepertory
           dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[HTMLButtonElement].textContent = "Repertory: " + _selectedRepertory.now
         }
       }

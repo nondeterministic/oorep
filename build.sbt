@@ -115,7 +115,7 @@ lazy val commonSettings = Seq(
   scalaVersion := myScalaVersion,
   organization := "org.multics.baueran.frep",
   maintainer := "baueran@gmail.com",
-  version := "0.8.1"
+  version := "0.9.0"
 )
 
 // TODO: This doesn't work, and I can't be bothered to get it to work.

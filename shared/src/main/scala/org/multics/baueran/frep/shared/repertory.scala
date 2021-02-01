@@ -18,7 +18,7 @@ import RepAccess._
 case class Info(abbrev: String, title: String, languag: String,
                 authorLastName: Option[String], authorFirstName: Option[String],
                 yearr: Option[Int], publisher: Option[String], license: Option[String],
-                edition: Option[String], access: RepAccess)
+                edition: Option[String], access: RepAccess, displaytitle: Option[String])
 
 object Info {
   implicit val infoDecoder: Decoder[Info] = new Decoder[Info] {
@@ -54,6 +54,10 @@ object Info {
         case Right(access) => RepAccess.withName(access)
         case Left(_) => RepAccess.Private // In case of doubt: make it private!
       }
+      val displaytitle = c.downField("displaytitle").as[String] match {
+        case Right(displaytitle) => Some(displaytitle)
+        case Left(_) => None
+      }
 
       val result = Info(abbrev, title, language,
         authorLastName,
@@ -62,7 +66,8 @@ object Info {
         publisher,
         license,
         edition,
-        access)
+        access,
+        displaytitle)
       Right(result)
     }
   }
@@ -96,7 +101,11 @@ object Info {
         case Some(edition) => Json.fromString(edition)
         case None => Json.Null
       }),
-      ("access", Json.fromString(i.access.toString))
+      ("access", Json.fromString(i.access.toString)),
+      ("displaytitle", i.displaytitle match {
+        case Some(displaytitle) => Json.fromString(displaytitle)
+        case None => Json.Null
+      })
     )
   }
 }
@@ -232,3 +241,11 @@ object Rubric {
 case class Repertory(info: Info, chapters: Seq[Chapter], remedies: Seq[Remedy],
                      chapterRemedies: Seq[ChapterRemedy], rubrics: Seq[Rubric],
                      rubricRemedies: Seq[RubricRemedy])
+
+// ------------------------------------------------------------------------------------------------------------------
+case class RemedyAndItsRepertories(nameabbrev: String, namelong: String, repertories: String)
+
+object RemedyAndItsRepertories {
+  implicit val remedyRepDecoder: Decoder[RemedyAndItsRepertories] = deriveDecoder[RemedyAndItsRepertories]
+  implicit val remedyRepEncoder: Encoder[RemedyAndItsRepertories] = deriveEncoder[RemedyAndItsRepertories]
+}

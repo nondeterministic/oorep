@@ -40,6 +40,13 @@ html {
   margin: 0px;
 }
 
+h1.freetext {
+  margin-bottom: 25px;
+  margin-top: 50px;
+  font-weight: bold;
+  font-size: 2.0rem;
+}
+
 h2.freetext {
   margin-bottom: 25px;
   margin-top: 50px;

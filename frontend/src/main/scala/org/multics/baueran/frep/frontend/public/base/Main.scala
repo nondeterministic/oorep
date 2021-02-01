@@ -14,6 +14,8 @@ import org.multics.baueran.frep.shared.sec_frontend.RepertoryModal
 object Main {
 
   def main(args: Array[String]): Unit = {
+    $("#temporary_content").empty() // This is the static page which is shown when JS is disabled
+
     dom.document.body.appendChild(div(style:="width:100%;", id:="nav_bar").render)
     dom.document.body.appendChild(div(style:="width:100%;", id:="content").render)
     dom.document.body.appendChild(div(style:="width:100%;", id:="content_bottom").render)
@@ -50,12 +52,15 @@ object Main {
       $("#nav_bar").addClass("d-none") // Hide navbar (Repertorise.scala will show it again)
     }
     else {
+
       $("#nav_bar").empty()
       $("#nav_bar").append(NavBar().render)
 
       $("#content").append(Repertorise().render)
-      $("#content").append(About.toHTML().render)
-      $("#content").append(Features.toHTML().render)
+      $("#content").append(div(id:="content_about").render)
+      $("#content_about").load(s"${serverUrl()}/partial/about")
+      $("#content").append(div(id:="content_features").render)
+      $("#content_features").load(s"${serverUrl()}/partial/features")
     }
   }
 

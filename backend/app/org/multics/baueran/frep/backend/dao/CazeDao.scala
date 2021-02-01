@@ -3,12 +3,13 @@ package org.multics.baueran.frep.backend.dao
 import org.multics.baueran.frep._
 import backend.db
 import shared.{BetterString, CaseRubric, Caze}
-import io.getquill.Update
-import io.getquill.ActionReturning
+import io.getquill.{ActionReturning, Query, Update}
 
 class CazeDao(dbContext: db.db.DBContext) {
 
   import dbContext._
+
+  private case class RawCaze(id: Int, header: String, member_id: Int, date_ : String, description: String, results: List[Int])
 
   private val Logger = play.api.Logger(this.getClass)
   private val tableCaze = quote { querySchema[Caze]("Caze", _.date -> "date_") }
@@ -46,81 +47,30 @@ class CazeDao(dbContext: db.db.DBContext) {
   }
 
   /**
-    * Get caze from DB with ID id.
-    */
-
-  //  private def getRaw(id: Int): Either[String, (Int, String, Int, String, String, List[Int])] = {
-  //    Logger.debug("1")
-  //    transaction {
-  //      val rawQuery = quote {
-  //        (tmpId: Int) =>
-  //          infix"""(SELECT header, member_id, date_, description, results FROM caze WHERE id=$tmpId)"""
-  //            .as[Query[(String, Int, String, String, List[Int])]]
-  //      }
-  //      Logger.debug("2: " + id)
-  //      run(rawQuery(lift(id))) match {
-  //        case tmpResult :: Nil =>
-  //          Logger.debug("3")
-  //          Right((id, tmpResult._1, tmpResult._2, tmpResult._3, tmpResult._4, tmpResult._5))
-  //        case other =>
-  //          val errorMsg = s"CazeDao: get($id) failed: $other"
-  //          Logger.error(errorMsg)
-  //          Left(errorMsg)
-  //      }
-  //    }
-  //  }
-
-  /**
+    * Get cazes from DB with IDs ids.
+    *
     * @param ids List of case IDs
     * @return A list of raw (as in: as stored in the DB) cases, one for each ID.
     */
-
-  private def getRaw(ids: List[Int]): List[(Int, String, Int, String, String, List[Int])] = {
-    var returnValue: List[(Int, String, Int, String, String, List[Int])] = List()
-
-    if (ids.length == 0)
-      return returnValue
-
-    // TODO: This is super ugly!  But the above doesn't work.  I guess, because quill somehow KNOWS that results is not an array of case-rubrics...
-    val conn = dbContext.dataSource.getConnection
-
-    try {
-      val statement = conn.createStatement()
-      val sqlString = s"SELECT id, header, member_id, date_, description, results FROM caze WHERE id IN (${ids.mkString(", ")});"
-      val resultSet = statement.executeQuery(sqlString)
-
-      while (resultSet.next()) {
-        val results = resultSet.getArray("results").getArray.asInstanceOf[Array[Integer]].toList.map(_.toInt)
-
-        returnValue =
-          ((resultSet.getInt("id"), resultSet.getString("header"), resultSet.getInt("member_id"), resultSet.getString("date_"), resultSet.getString("description"), results)
-            :: returnValue)
-
-        Logger.debug(s"CazeDao: getRaw($ids) sets $returnValue as return value.")
-      }
-
-      statement.close()
-    } catch {
-      case e: Throwable =>
-        val errorMsg = s"CazeDao: getRaw($ids) failed: ${e.getStackTrace.map(_.toString).mkString("\n")}"
-        Logger.error(errorMsg)
-        returnValue = List()
-    } finally {
-      if (conn != null)
-        conn.close()
+  // TODO: Return not List of basic types, but List[RawCaze]!
+  private def getRaw(ids: List[Int]): List[RawCaze] = {
+    val rawQuery = quote {
+      // Notice the '#' in front for dynamic infix queries! It is, sort of, the alternative to lift(...).
+      infix"""SELECT id, header, member_id, date_, description, results FROM caze WHERE id IN (#${ids.mkString(", ")})"""
+        .as[Query[RawCaze]]
     }
 
-    returnValue
+    run(rawQuery)
   }
 
-  def getResultIds(id: Int) = getRaw(List(id)).map(_._6).flatten
+  def getResultIds(id: Int) = getRaw(List(id)).map(_.results).flatten
 
   def get(ids: List[Int]): List[Caze] = {
     val cResultDao = new CazeResultDao(dbContext)
 
     getRaw(ids) match {
       case Nil => List()
-      case rawCases => rawCases.map { case (id, header, memberId, date, descr, resultIds) =>
+      case rawCases => rawCases.map { case RawCaze(id, header, memberId, date, descr, resultIds) =>
         Caze(id, header, memberId, date, descr, cResultDao.get(resultIds)) }
     }
   }
@@ -129,7 +79,7 @@ class CazeDao(dbContext: db.db.DBContext) {
     val cResultDao = new CazeResultDao(dbContext)
 
     getRaw(List(id)) match {
-      case (cId, header, memberId, date, descr, resultIds) :: Nil =>
+      case RawCaze(cId, header, memberId, date, descr, resultIds) :: Nil =>
         Right(Caze(cId, header, memberId, date, descr, cResultDao.get(resultIds)))
       case _ =>
         val errorMsg = s"CazeDao: get($id) failed."
@@ -169,7 +119,7 @@ class CazeDao(dbContext: db.db.DBContext) {
     Logger.debug(s"CazeDao: DELETE($id): deleting associated case results.")
     getRaw(List(id)) match {
       case c :: Nil =>
-        c._6.map(crDao.delete(_))
+        c.results.map(crDao.delete(_))
 
         // Delete case itself
         Logger.debug(s"CazeDao: DELETE($id): deleting case itself.")
@@ -266,7 +216,7 @@ class CazeDao(dbContext: db.db.DBContext) {
     getRaw(List(caseId)) match {
       case caze :: Nil =>
         val deletedCaseResultIds = cResultDao.delCaseRubrics(caseId, caseRubrics)
-        val leftOverCaseResultIds: List[Int] = caze._6.toSet.filterNot(deletedCaseResultIds.toSet).asInstanceOf[Set[Int]].toList
+        val leftOverCaseResultIds: List[Int] = caze.results.toSet.filterNot(deletedCaseResultIds.toSet).asInstanceOf[Set[Int]].toList
         val rawQuery = quote {
           (id: Int, crs: List[Int]) =>
             infix"""UPDATE caze SET results=$crs WHERE id=$id"""

@@ -4,7 +4,6 @@ import javax.inject._
 import io.circe.syntax._
 import play.api.mvc._
 import org.multics.baueran.frep.backend.dao.{CazeDao, FileDao, RepertoryDao}
-import org.multics.baueran.frep.backend.repertory._
 import org.multics.baueran.frep.shared._
 import org.multics.baueran.frep.backend.dao.MemberDao
 import org.multics.baueran.frep.backend.db.db.DBContext
@@ -22,13 +21,36 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
 
   private val Logger = play.api.Logger(this.getClass)
 
-  RepDatabase.setup(dbContext)
-
   def index() = Action { request: Request[AnyContent] =>
     if (getRequestCookies(request) == List.empty)
       Ok(views.html.index_landing.render)
     else
       Ok(views.html.index_landing_private.render)
+  }
+
+  def serve_partial_html(page: String) = Action { request: Request[AnyContent] =>
+    page match {
+      case "about" => Ok(views.html.partial.about.render)
+      case "cookies" => Ok(views.html.partial.cookies.render("enabled"))
+      case "contact" => Ok(views.html.partial.contact.render)
+      case "datenschutz" => Ok(views.html.partial.datenschutz.render("enabled"))
+      case "disclaimer_text_only" => Ok(views.html.partial.disclaimer_text_only.render)
+      case "faq" => Ok(views.html.partial.faq.render)
+      case "features" => Ok(views.html.partial.features.render)
+      case "impressum" => Ok(views.html.partial.impressum.render)
+      case "pricing" => Ok(views.html.partial.pricing.render)
+      case _ => BadRequest
+    }
+  }
+
+  def serve_noscript_whole_html(page: String) = Action { request: Request[AnyContent] =>
+    page match {
+      case "contact" => Ok(views.html.contact_noscript.render)
+      case "cookies" => Ok(views.html.cookies_noscript.render)
+      case "datenschutz" => Ok(views.html.datenschutz_noscript.render)
+      case "impressum" => Ok(views.html.impressum_noscript.render)
+      case _ => BadRequest
+    }
   }
 
   def acceptCookies() = Action { request: Request[AnyContent] =>
@@ -61,28 +83,24 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     }
   }
 
-  def availableRemedies() = Action { request: Request[AnyContent] =>
+  def availableRemediesAndRepertories() = Action { request: Request[AnyContent] =>
     val dao = new RepertoryDao(dbContext)
 
     if (getRequestCookies(request) == List.empty)
-      Ok(dao.getAllAvailableRemedies()
-        .filter { case (_, r, _) => r == RepAccess.Default || r == RepAccess.Public }
-        .map { case (abbrev, access, remedyAbbrevs) => (abbrev, access.toString, remedyAbbrevs) }
-        .asJson.toString())
+      Ok((dao.getAllAvailableRemediesForAnonymousUsers(),
+        dao.getAllAvailableRepertoryInfosForAnonymousUsers()).asJson.toString())
     else
-      Ok(dao.getAllAvailableRemedies()
-        .filter { case (_, r, _) => r != RepAccess.Protected }
-        .map { case (abbrev, access, remedyAbbrevs) => (abbrev, access.toString, remedyAbbrevs) }
-        .asJson.toString())
+      Ok((dao.getAllAvailableRemediesForLoggedInUsers(),
+        dao.getAllAvailableRepertoryInfosForLoggedInUsers()).asJson.toString())
   }
 
   def availableReps() = Action { request: Request[AnyContent] =>
     val dao = new RepertoryDao(dbContext)
 
     if (getRequestCookies(request) == List.empty)
-      Ok(dao.getAllAvailableRepertoryInfos().filter(r => r.access == RepAccess.Default || r.access == RepAccess.Public).asJson.toString())
+      Ok(dao.getAllAvailableRepertoryInfosForAnonymousUsers().asJson.toString())
     else
-      Ok(dao.getAllAvailableRepertoryInfos().filter(_.access != RepAccess.Protected).asJson.toString())
+      Ok(dao.getAllAvailableRepertoryInfosForLoggedInUsers().asJson.toString())
   }
 
   /**
@@ -215,8 +233,8 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     else {
       val dao = new RepertoryDao(dbContext)
       dao.queryRepertory(repertoryAbbrev.trim, symptom.trim, page, remedyString.trim, minWeight, getRemedies != 0) match {
-        case Some((ResultsCaseRubrics(totalNumberOfResults, totalNumberOfPages, page, results), remedyStats)) if (totalNumberOfPages > 0) =>
-          Ok((ResultsCaseRubrics(totalNumberOfResults, totalNumberOfPages, page, results), remedyStats).asJson.toString())
+        case Some((ResultsCaseRubrics(totalNumberOfRepertoryRubrics, totalNumberOfResults, totalNumberOfPages, page, results), remedyStats)) if (totalNumberOfPages > 0) =>
+          Ok((ResultsCaseRubrics(totalNumberOfRepertoryRubrics, totalNumberOfResults, totalNumberOfPages, page, results), remedyStats).asJson.toString())
         case _ =>
           val errStr = s"Get: repertorise(abbrev: ${repertoryAbbrev}, symptom: ${symptom}, page: ${page}, remedy: ${remedyString}, weight: ${minWeight}): no results found"
           Logger.warn(errStr)
@@ -231,9 +249,20 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
 
   def show(repertory: String, symptom: String, page: Int, remedyString: String, minWeight: Int) = Action { request: Request[AnyContent] =>
     if (getRequestCookies(request) == List.empty)
-      Ok(views.html.index(repertory, symptom, page - 1, remedyString, minWeight, s"OOREP ${xml.Utility.escape("—")} open online homeopathic repertorisation"))
+      Ok(views.html.index(repertory, symptom, page - 1, remedyString, minWeight, s"OOREP ${xml.Utility.escape("—")} open online homeopathic repertory"))
     else
-      Ok(views.html.index_private(repertory, symptom, page - 1, remedyString, minWeight, s"OOREP ${xml.Utility.escape("—")} open online homeopathic repertorisation"))
+      Ok(views.html.index_private(repertory, symptom, page - 1, remedyString, minWeight, s"OOREP ${xml.Utility.escape("—")} open online homeopathic repertory"))
   }
 
+}
+
+// Used in HTML-templates/-files
+object Get {
+  val staticServerUrl = {
+    sys.env.get("OOREP_APPLICATION_HOST") match {
+      case Some(host) => host
+      case _ => "https://www.oorep.com"
+    }
+  }
+  val staticAssetsPath = "/assets/html"
 }

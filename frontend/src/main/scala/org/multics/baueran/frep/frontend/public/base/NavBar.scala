@@ -34,12 +34,12 @@ object NavBar {
               a(cls:="nav-link py-0", href:="#", onclick:= { () =>
                 // TODO: Using JQuery here, because the below doesn't work. Not nice, I know!
                 // dom.document.getElementById("content").innerHTML = "<object type='text/html' data='pricing.html'></object>"
-                $("#content").load(s"${serverUrl()}/assets/html/pricing.html")
+                $("#content").load(s"${serverUrl()}/partial/pricing")
               })("Pricing")),
             li(cls:="navbar-item",
               a(cls:="nav-link py-0", href:="#", onclick:= { () =>
                 // TODO: Same as bove.
-                $("#content").load(s"${serverUrl()}/assets/html/faq.html")
+                $("#content").load(s"${serverUrl()}/partial/faq")
               })("FAQ")),
             li(cls:="navbar-item",
               a(cls:="nav-link py-0", style:="margin-right:10px;", href:=s"#content_bottom", onclick:={ () => goToAnchor("content_bottom") })("Contact")),

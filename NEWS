@@ -1,6 +1,33 @@
 OOREP NEWS
 =-=-=-=-=-
 
+v0.9.0  Sun 14 Mar 2021 05:58:57 PM CET [tag: v0.9.0]
+-----------------------------------------------------
+- Main features:
+  - Sane site view when JavaScript is disabled (required introduction
+    of a lot of new API endpoints)
+  - HTML5-compliance on all pages (where I managed to check it; i.e.
+    that are rather static rather than dynamic)
+  - Clicking on "Remedies" now toggles display of remedy name format
+    (instead of displaying remedy weights as numerals)
+
+- Minor improvements and changes:
+  - Display 0-valued remedies in brackets (e.g., bogboen)
+  - Show small repertories, such as tylercold, always in full,
+    irrespective of user input
+  - More verbose repertory descriptions in pull-down menus (also
+    required a database schema change)
+  - Optimise transmission of available repertories and remedies on
+    start-up for faster site loading
+  - Remove code to import repertories from JSON representation as this
+    is no longer used (Instead, there is now an SQL dump of a
+    PostgreSQL database in the git repository that contains both GPL'ed
+    repositories publicum and kent-de. This also removes the need for
+    defining $OOREP_REP_PATH and $OOREP_IMPORT_REPERTORIES)
+  - The looking up of a user's cases no longer opens a separate
+    database connection, but also uses connection pool, which makes
+    this operation also considerably faster
+
 v0.8.1  Sun 31 Jan 2021 10:30:54 AM CET [tag: v0.8.1]
 -----------------------------------------------------
 - A less "in your face" cookie-consent dialog
@@ -118,9 +145,9 @@ v0.2.1  Wed 29 Jan 2020 09:17:11 PM CET [tag: v0.2.1]
 v0.2.0  Sat Jan 25 13:25:04 2020 +0100  [tag: v0.2.0]
 -----------------------------------------------------
 - Check authorisation for authenticated users in API calls
-- All REST-API calls now have a preceeding /api/ in their paths
+- All REST-API calls now have a preceding /api/ in their paths
 - Improved error pages on BadRequest-errors from API calls
 
 v0.1.1  Thu Jan 9 20:12:59 2020 +0100  [tag: v0.1.1]
 ----------------------------------------------------
-- Initial version that was uploaeded to oorep.pspace.org
+- Initial version that was uploaded to oorep.pspace.org

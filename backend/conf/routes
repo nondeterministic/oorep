@@ -1,12 +1,27 @@
 # This file defines all application routes (Higher priority routes first)
 # https://www.playframework.com/documentation/latest/ScalaRouting
+#
+# TODO: For reminder only:
+# GET     /                                  controllers.Assets.at(path="/public/html", file="index.html")
 
 GET     /                                  org.multics.baueran.frep.backend.controllers.Get.index
-# GET     /                                  controllers.Assets.at(path="/public/html", file="index.html")
+GET     /partial/about                     org.multics.baueran.frep.backend.controllers.Get.serve_partial_html(page:String ?= "about")
+GET     /partial/cookies                   org.multics.baueran.frep.backend.controllers.Get.serve_partial_html(page:String ?= "cookies")
+GET     /partial/contact                   org.multics.baueran.frep.backend.controllers.Get.serve_partial_html(page:String ?= "contact")
+GET     /partial/datenschutz               org.multics.baueran.frep.backend.controllers.Get.serve_partial_html(page:String ?= "datenschutz")
+GET     /partial/disclaimer_text_only      org.multics.baueran.frep.backend.controllers.Get.serve_partial_html(page:String ?= "disclaimer_text_only")
+GET     /partial/faq                       org.multics.baueran.frep.backend.controllers.Get.serve_partial_html(page:String ?= "faq")
+GET     /partial/features                  org.multics.baueran.frep.backend.controllers.Get.serve_partial_html(page:String ?= "features")
+GET     /partial/impressum                 org.multics.baueran.frep.backend.controllers.Get.serve_partial_html(page:String ?= "impressum")
+GET     /partial/pricing                   org.multics.baueran.frep.backend.controllers.Get.serve_partial_html(page:String ?= "pricing")
+GET     /noscript/contact                  org.multics.baueran.frep.backend.controllers.Get.serve_noscript_whole_html(page:String ?= "contact")
+GET     /noscript/cookies                  org.multics.baueran.frep.backend.controllers.Get.serve_noscript_whole_html(page:String ?= "cookies")
+GET     /noscript/datenschutz              org.multics.baueran.frep.backend.controllers.Get.serve_noscript_whole_html(page:String ?= "datenschutz")
+GET     /noscript/impressum                org.multics.baueran.frep.backend.controllers.Get.serve_noscript_whole_html(page:String ?= "impressum")
 GET		/api/authenticate                  org.multics.baueran.frep.backend.controllers.Get.authenticate
 GET		/api/lookup						   org.multics.baueran.frep.backend.controllers.Get.repertorise(repertory: String, symptom: String, page: Int, remedyString: String, minWeight: Int, getRemedies: Int)
 GET     /api/available_reps                org.multics.baueran.frep.backend.controllers.Get.availableReps
-GET     /api/available_remedies            org.multics.baueran.frep.backend.controllers.Get.availableRemedies
+GET     /api/available_rems_and_reps       org.multics.baueran.frep.backend.controllers.Get.availableRemediesAndRepertories
 GET     /api/available_files               org.multics.baueran.frep.backend.controllers.Get.availableFiles(memberId: Int)
 GET     /api/file_overview                 org.multics.baueran.frep.backend.controllers.Get.fileOverview(fileId: String)
 GET     /api/file                          org.multics.baueran.frep.backend.controllers.Get.getFile(fileId: String)

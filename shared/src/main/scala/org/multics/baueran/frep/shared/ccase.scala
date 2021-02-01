@@ -163,13 +163,13 @@ object CaseRubric {
 /**
   * This class is merely used/necessary in order to transmit lookup results of a repertory
   */
-case class ResultsCaseRubrics(totalNumberOfResults: Int, totalNumberOfPages: Int, currPage: Int, results: List[CaseRubric])
+case class ResultsCaseRubrics(totalNumberOfRepertoryRubrics: Int, totalNumberOfResults: Int, totalNumberOfPages: Int, currPage: Int, results: List[CaseRubric])
 object ResultsCaseRubrics {
   implicit val encoder: Encoder[ResultsCaseRubrics] = deriveEncoder[ResultsCaseRubrics]
   implicit val decoder: Decoder[ResultsCaseRubrics] = deriveDecoder[ResultsCaseRubrics]
 }
 
-case class ResultsRemedyStats(nameabbrev: String, count: Int, cumulativeWeight: Int)
+case class ResultsRemedyStats(nameabbrev: String, count: Int, cumulativeweight: Int)
 object ResultsRemedyStats {
   implicit val encoder: Encoder[ResultsRemedyStats] = deriveEncoder[ResultsRemedyStats]
   implicit val decoder: Decoder[ResultsRemedyStats] = deriveDecoder[ResultsRemedyStats]

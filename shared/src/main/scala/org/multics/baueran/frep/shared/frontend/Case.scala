@@ -405,14 +405,8 @@ object Case {
     def caseRow(crub: CaseRubric) = {
       implicit def crToCR(cr: CaseRubric) = new BetterCaseRubric(cr)
 
-      val remedies =
-        if (remedyFormat == RemedyFormat.NotFormatted)
-          crub.getRawRemedies()
-        else
-          crub.getFormattedRemedies()
-
-      // The weight label on the drop-down button, which needs to change automatically on new user choice
-      val weight = Var(crub.rubricWeight)
+      val remedies = crub.getFormattedRemedyNames(remedyFormat)
+      val weight = Var(crub.rubricWeight) // The weight label on the drop-down button, which needs to change automatically on new user choice
       val printWeight = Rx { weight().toString() }
 
       // Same for label

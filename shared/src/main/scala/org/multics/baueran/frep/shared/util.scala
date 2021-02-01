@@ -1,7 +1,10 @@
 package org.multics.baueran.frep.shared
 
 import org.multics.baueran.frep.shared.Defs.SpecialLookupParams
+import org.multics.baueran.frep.shared.frontend.RemedyFormat
+import org.multics.baueran.frep.shared.frontend.RemedyFormat._
 import scalatags.JsDom.all._
+
 import scala.scalajs.js
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -13,29 +16,23 @@ class BetterString(val s: String) {
 
 class BetterCaseRubric(val cr: CaseRubric) {
 
-  def getFormattedRemedies() = {
+  def getFormattedRemedyNames(format: RemedyFormat) = {
     cr.weightedRemedies.toList.sortBy(_.remedy.nameAbbrev).map {
       case WeightedRemedy(r, w) =>
-        if (w == 2)
-          b(r.nameAbbrev)
-        else if (w == 3)
-          b(r.nameAbbrev.toUpperCase())
-        else if (w == 4)
-          u(b(r.nameAbbrev.toUpperCase()))
-        else if (w >= 5)
-          b(style:="text-decoration-line: underline; text-decoration-style: double;", r.nameAbbrev.toUpperCase())
-        else
-          span(r.nameAbbrev)
-    }
-  }
+        val remedyName = if (format == RemedyFormat.Abbreviated) r.nameAbbrev else r.nameLong
 
-  def getRawRemedies() = {
-    cr.weightedRemedies.toList.sortBy(_.remedy.nameAbbrev).map {
-      case WeightedRemedy(r, w) =>
-        if (w > 1)
-          span(r.nameAbbrev + " (" + w.toString() + ")")
+        if (w == 0) // 0-valued, e.g., repertory bogboen
+          span(s"(${remedyName})")
+        else if (w == 2)
+          b(remedyName)
+        else if (w == 3)
+          b(remedyName.toUpperCase())
+        else if (w == 4)
+          u(b(remedyName.toUpperCase()))
+        else if (w >= 5)
+          b(style:="text-decoration-line: underline; text-decoration-style: double;", remedyName.toUpperCase())
         else
-          span(r.nameAbbrev)
+          span(remedyName) // 1-valued - the normal case
     }
   }
 
