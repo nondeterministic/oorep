@@ -1,5 +1,6 @@
 package org.multics.baueran.frep.backend.dao
 
+import io.getquill.{Insert, Update}
 import org.multics.baueran.frep.shared.{Member, MyDate}
 import org.multics.baueran.frep.backend.db
 
@@ -9,11 +10,13 @@ class MemberDao(dbContext: db.db.DBContext) {
 
   private val tableMember = quote { querySchema[Member]("Member", _.member_id -> "member_id") }
 
-  def insert(u: Member) = {
-    val insert = quote {
-      tableMember.insert(lift(u))
+  // Stores the hash of `password` in the member table of database
+  def updatePassword(password: String, id: Int) = {
+    val rawInsert = quote {
+      infix"""UPDATE member SET hash=(crypt('#${password}', gen_salt('bf'))) WHERE member_id=#${id}"""
+        .as[Update[Member]]
     }
-    run(insert)
+    run(rawInsert)
   }
 
   def get(id: Int) = {
@@ -25,6 +28,11 @@ class MemberDao(dbContext: db.db.DBContext) {
 
   def getFromEmail(email: String) = {
     val select = quote{ query[Member].filter(_.email == lift(email)) }
+    run(select)
+  }
+
+  def getFromUsername(username: String) = {
+    val select = quote{ query[Member].filter(_.member_name == lift(username)) }
     run(select)
   }
 

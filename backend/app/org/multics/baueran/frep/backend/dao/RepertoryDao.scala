@@ -306,6 +306,10 @@ class RepertoryDao(dbContext: db.db.DBContext) {
       run(query[Rubric].filter(_.abbrev == lift(abbrev)))
     }
 
+    // If search was not successful, no point in continuing...
+    if (tmpRubricsAll.length <= 0)
+      return None
+
     val remedyStats = new ArrayBuffer[ResultsRemedyStats]()
     if (getRemedies == true) {
       val rawQuery = quote {

@@ -1,6 +1,28 @@
 OOREP NEWS
 =-=-=-=-=-
 
+v0.10.0  Fri 30 Apr 2021 08:22:12 PM CEST [tag: v0.10.0]
+--------------------------------------------------------
+- Main features:
+  - Users can now get their username sent to their email address
+  - Users can now get a password change request sent to their
+    email address
+  - Removed all authentication code in favour of using dedicated
+    third-party modules instead (right now: SAML 2.0 in the form
+    of SimpleSAMLphp as IdP and mod_auth_mellon as SP); that is,
+    API endpoints, which are meant to be only used by logged in
+    users, now start with /api/sec/ (where /sec/ needs to be
+    protected by the SP) rather than just /api/ alone
+
+- Minor improvements and changes:
+  - Rudimentary beginnings of a system test suite under /test
+
+- Bug fixes:
+  - Unsuccessful lookup no longer throws exception in the background
+    (bug introduced in v0.9.0)
+  - Empty descriptions of files could not be altered or subsequently
+    saved (bug introduced in v0.9.0)
+
 v0.9.0  Sun 14 Mar 2021 05:58:57 PM CET [tag: v0.9.0]
 -----------------------------------------------------
 - Main features:

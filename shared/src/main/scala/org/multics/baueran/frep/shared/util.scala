@@ -98,12 +98,28 @@ class SearchTerms(val symptom: String) {
 }
 
 class MyDate(isoDateString: String) {
-  def this() {
+  def this() = {
     this(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()))
   }
 
-  def this(javaDate: Date) {
+  def this(javaDate: Date) = {
     this(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(javaDate))
+  }
+
+  // Compute the difference in hours between this and other.
+  // If other is newer, the difference is positive, otherwise negative.
+
+  def diff(other: MyDate) = {
+    val dateThis = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").parse(isoDateString)
+    val dateOther = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").parse(other.toString())
+
+    (dateOther.getTime - dateThis.getTime) / 1000.0 / 60.0 / 60
+  }
+
+  // Age of this date in hours
+
+  def age() = {
+    diff(new MyDate())
   }
 
   override def toString() = isoDateString

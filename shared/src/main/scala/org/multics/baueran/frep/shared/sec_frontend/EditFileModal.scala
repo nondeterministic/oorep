@@ -26,7 +26,6 @@ object EditFileModal {
   val fileName_fileId = Var(("", ""))
   private var currentFileDescription: Option[String] = None
   private val currentlyAssociatedCaseHeaders: Var[List[(Int, String)]] = Var(Nil)
-  private var currentlyActiveMemberId = -1
   private val currentlySelectedCaseId = Var(-1)
   private val currentlySelectedCaseHeader = Var("")
   private val casesHeight = Rx(max(200, min(100, currentlyAssociatedCaseHeaders().length * 30)))
@@ -54,7 +53,6 @@ object EditFileModal {
     // Reset UI and some data
     currentlySelectedCaseId() = -1
     currentlySelectedCaseHeader() = ""
-    currentlyActiveMemberId = -1
     currentFileDescription = None
     $("#openFileEditFileModal").attr("disabled", true)
     $("#deleteFileEditFileModal").attr("disabled", true)
@@ -85,30 +83,24 @@ object EditFileModal {
                   println("Decoding of cases' ids and headers failed: " + err + "; " + response.get.body)
               }
             }
-            case Left(err) =>
-              println("Parsing of file failed (is it JSON?): " + err + "; " + response.get.body)
+            case Left(msg) =>
+              println(s"INFO: No file information received as there probably aren't any (or an error occurred): $msg")
+              currentlyAssociatedCaseHeaders() = List()
+              $("#fileDescrEditFileModal").`val`(currentFileDescription.getOrElse(""))
           }
         }
         case error: Failure[SimpleHttpResponse] => println("ERROR: " + error.get.body)
       }
     }
 
-    // Request data from backend...
-    getCookieData(dom.document.cookie, CookieFields.id.toString) match {
-      case Some(memberId) =>
-        // TODO: This is a clumsy if-condition and else-feedback. OK for now, but fix!
-        if (fileName.length() > 0 && fileId.forall(_.isDigit) && memberId.forall(_.isDigit) && memberId.toInt >= 0) {
-          currentlyActiveMemberId = memberId.toInt
-          HttpRequest(s"${serverUrl()}/${apiPrefix()}/file_overview")
-            .withQueryParameters("fileId" -> fileId)
-            .send()
-            .onComplete((r: Try[SimpleHttpResponse]) => {
-              updateModal(r)
-            })
-        }
-        else
-          println("fileName_fileId rx-activation failed: " + fileName_fileId.toString())
-      case None => println("WARNING: getCasesForFile() failed. Could not get memberID from cookie.")
+    // The call-back is defined right above this if-condition!
+    if (fileName.length() > 0 && fileId.forall(_.isDigit)) {
+      HttpRequest(s"${serverUrl()}/${apiPrefix()}/sec/file_overview")
+        .withQueryParameters("fileId" -> fileId)
+        .send()
+        .onComplete((r: Try[SimpleHttpResponse]) => {
+          updateModal(r)
+        })
     }
   }
 
@@ -127,22 +119,26 @@ object EditFileModal {
             button(`type`:="button", cls:="btn btn-secondary", data.dismiss:="modal", "Cancel"),
             button(`type`:="button", cls:="btn btn-primary", data.dismiss:="modal",
               onclick:= { (event: Event) =>
-                HttpRequest(s"${serverUrl()}/${apiPrefix()}/del_case")
-                  .withMethod(Method.DELETE)
-                  .withHeader("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
-                  .withBody(MultiPartBody(
-                    "caseId"     -> PlainTextBody(currentlySelectedCaseId.now.toString()),
-                    "memberId"   -> PlainTextBody(currentlyActiveMemberId.toString())))
-                  .send()
+                if (Case.descr.isDefined) {
+                  HttpRequest(s"${serverUrl()}/${apiPrefix()}/sec/del_case")
+                    .withMethod(Method.DELETE)
+                    .withHeader("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
+                    .withBody(MultiPartBody(
+                      "caseId" -> PlainTextBody(currentlySelectedCaseId.now.toString()),
+                      "memberId" -> PlainTextBody(Case.descr.get.member_id.toString())))
+                    .send()
+                } else {
+                  println("EditFileModal: could not send delete request for case to backend, as case not fully available in memory.")
+                }
 
                 // If the deleted case is currently opened, update current view by basically removing that case.
-                if (Case.descr.isDefined && (Case.descr.get.id == currentlySelectedCaseId.now) && (Case.descr.get.member_id == currentlyActiveMemberId)) {
+                if (Case.descr.isDefined && (Case.descr.get.id == currentlySelectedCaseId.now)) {
                   Case.descr = None
                   Case.updateCaseViewAndDataStructures()
                   Case.rmCaseDiv()
                 }
                 else
-                  println("EditFileModal: deleted case was not currently opened. Nothing to be done.")
+                  println("EditFileModal: the case which was deleted from DB, was not currently opened. Nothing to be done.")
               },
               "Delete")
           )
@@ -176,26 +172,30 @@ object EditFileModal {
                     currentFileDescription match {
                       case Some(fileDescription) =>
                         if ($("#fileDescrEditFileModal").`val`().toString() != fileDescription)
-                          $("#saveFileDescrEditFileModal").removeAttr("disabled")
+                          $("#saveFileDescrEditFileModalButton").removeAttr("disabled")
                         else
-                          $("#saveFileDescrEditFileModal").attr("disabled", true)
-                      case None => ;
+                          $("#saveFileDescrEditFileModalButton").attr("disabled", true)
+                      case None =>
+                        if ($("#fileDescrEditFileModal").`val`().toString().length == 0)
+                          $("#saveFileDescrEditFileModalButton").attr("disabled", true)
+                        else
+                          $("#saveFileDescrEditFileModalButton").removeAttr("disabled")
                     }
                   })
               ),
               div(cls:="form-row d-flex flex-row-reverse",
-                button(cls:="btn mb-2 mr-2 ml-2", id:="saveFileDescrEditFileModal", data.toggle:="modal", data.dismiss:="modal", disabled:=true,
+                button(cls:="btn mb-2 mr-2 ml-2", id:="saveFileDescrEditFileModalButton", data.toggle:="modal", data.dismiss:="modal", disabled:=true,
                   onclick:= { (event: Event) =>
                     fileName_fileId.now match {
                       case (fileName, fileId) if fileId.forall(_.isDigit) =>
-                        HttpRequest(s"${serverUrl()}/${apiPrefix()}/update_file_description")
+                        HttpRequest(s"${serverUrl()}/${apiPrefix()}/sec/update_file_description")
                           .withHeader("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
                           .put(MultiPartBody(
                             "filedescr" -> PlainTextBody($("#fileDescrEditFileModal").`val`().toString().trim()),
                             "fileId"    -> PlainTextBody(fileId)))
                       case _ => ;
                     }
-                    $("#saveFileDescrEditFileModal").attr("disabled", true)
+                    $("#saveFileDescrEditFileModalButton").attr("disabled", true)
                     js.eval("$('#editFileModal').modal('hide');") // TODO: This is ugly! No idea for an alternative :-(
                   },
                   "Save"),
@@ -218,8 +218,8 @@ object EditFileModal {
                   onclick:={ (event: Event) =>
                     getCaseFromCurrentSelection()
 
-                    HttpRequest(s"${serverUrl()}/${apiPrefix()}/case")
-                      .withQueryParameters(("memberId", currentlyActiveMemberId.toString()), ("caseId", currentlySelectedCaseId.now.toString()))
+                    HttpRequest(s"${serverUrl()}/${apiPrefix()}/sec/case")
+                      .withQueryParameter("caseId", currentlySelectedCaseId.now.toString())
                       .send()
                       .onComplete({
                         case response: Success[SimpleHttpResponse] => {

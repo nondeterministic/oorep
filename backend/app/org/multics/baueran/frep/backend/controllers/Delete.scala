@@ -11,88 +11,86 @@ class Delete @Inject()(cc: ControllerComponents, dbContext: DBContext) extends A
   private val Logger = play.api.Logger(this.getClass)
 
   def delCaseRubricsFromCaze() = Action { request: Request[AnyContent] =>
-    isUserAuthenticated(request) match {
-      case Right(_) => {
+    getAuthenticatedUser(request) match {
+      case Some(_) => {
         val requestData = request.body.asMultipartFormData.get.dataParts
 
         (requestData("memberID"), requestData("caseID"), requestData("caserubrics")) match {
           case (Seq(memberIdStr), Seq(cazeIDStr), Seq(caserubricsJson)) if (cazeIDStr.forall(_.isDigit) && (memberIdStr.forall(_.isDigit))) =>
             (memberIdStr.toInt, cazeIDStr.toInt, CaseRubric.decodeList(caserubricsJson)) match {
               case (memberId, caseID, Some(caseRubrics)) =>
-                isUserAuthorized(request, memberId) match {
-                  case Left(err) =>
-                    Logger.error(s"Post: delCaseRubricsFromCaze() failed: not authorised: $err")
-                    Unauthorized
-                  case Right(_) =>
-                    if (cazeDao.delCaseRubrics(caseID, caseRubrics) > 0) {
-                      Logger.debug(s"Post: delCaseRubricsFromCaze(): success")
-                      Ok
-                    }
-                    else {
-                      Logger.error(s"Post: delCaseRubricsFromCaze(): failed")
-                      BadRequest("delCaseRubrics() failed")
-                    }
+                if (!isUserAuthorized(request, memberId)) {
+                  Logger.error(s"Delete: delCaseRubricsFromCaze() failed: not authorised.")
+                  Forbidden
+                } else {
+                  if (cazeDao.delCaseRubrics(caseID, caseRubrics) > 0) {
+                    Logger.debug(s"Delete: delCaseRubricsFromCaze(): success")
+                    Ok
+                  }
+                  else {
+                    Logger.error(s"Delete: delCaseRubricsFromCaze(): failed")
+                    BadRequest("Delete: delCaseRubrics() failed")
+                  }
                 }
               case _ =>
-                Logger.error(s"Post: delCaseRubricsFromCaze() failed: type conversion error which should never have happened")
-                BadRequest("delCaseRubricsFromCaze() failed: type conversion error which should never have happened")
+                Logger.error(s"Delete: delCaseRubricsFromCaze() failed: type conversion error which should never have happened")
+                BadRequest("Delete: delCaseRubricsFromCaze() failed: type conversion error which should never have happened")
             }
           case _ => {
             Logger.error(s"Post: delCaseRubricsFromCaze() failed: no or the wrong form data received.")
-            BadRequest("delRubricsFromCaze() failed: no or the wrong form data received.")
+            BadRequest("Delete: delRubricsFromCaze() failed: no or the wrong form data received.")
           }
         }
       }
-      case Left(err) => BadRequest("delCaseRubricsFromCaze() failed: " + err)
+      case None =>
+        Unauthorized("Delete: delCaseRubricsFromCaze() failed: not authenticated.")
     }
   }
 
   def delCaze() = Action { request: Request[AnyContent] =>
-    isUserAuthenticated(request) match {
-      case Right(_) => {
+    getAuthenticatedUser(request) match {
+      case Some(_) => {
         val requestData = request.body.asMultipartFormData.get.dataParts
 
         (requestData("caseId"), requestData("memberId")) match {
           case (Seq(caseIdStr), Seq(memberIdStr)) if (caseIdStr.forall(_.isDigit) && (memberIdStr.forall(_.isDigit))) =>
-            isUserAuthorized(request, memberIdStr.toInt) match {
-              case Left(err) =>
-                Logger.error(s"Post: delCaze() failed: not authorised: $err")
-                Unauthorized
-              case Right(_) =>
-                cazeDao.delete(caseIdStr.toInt)
-                Ok
+            if (!isUserAuthorized(request, memberIdStr.toInt)) {
+              Logger.error(s"Delete: delCaze() failed: not authorised.")
+              Forbidden
+            } else {
+              cazeDao.delete(caseIdStr.toInt)
+              Ok
             }
           case _ =>
-            BadRequest("delCaze() failed")
+            BadRequest("Delete: delCaze() failed")
         }
       }
-      case Left(err) =>
-        BadRequest("delCaze() failed: " + err)
+      case None =>
+        Unauthorized("Delete: delCaze() failed: not authenticated.")
     }
   }
 
   def delFileAndCases() = Action { request: Request[AnyContent] =>
-    isUserAuthenticated(request) match {
-      case Right(_) => {
+    getAuthenticatedUser(request) match {
+      case Some(_) => {
         val requestData = request.body.asMultipartFormData.get.dataParts
 
         (requestData("memberId"), requestData("fileId")) match {
           case (Seq(memberIdStr), Seq(fileIdStr)) if (fileIdStr.forall(_.isDigit) && (memberIdStr.forall(_.isDigit))) => {
-            isUserAuthorized(request, memberIdStr.toInt) match {
-              case Left(err) =>
-                Logger.error(s"Post: delFileAndCases() failed: not authorised: $err")
-                Unauthorized
-              case Right(_) =>
-                fileDao.delFileAndAllCases(fileIdStr.toInt)
-                Ok
+            if (!isUserAuthorized(request, memberIdStr.toInt)) {
+              Logger.error(s"Delete: delFileAndCases() failed: not authorised.")
+              Forbidden
+            } else {
+              fileDao.delFileAndAllCases(fileIdStr.toInt)
+              Ok
             }
           }
           case _ =>
-            BadRequest("delFile() failed: wrong data received.")
+            BadRequest("Delete: delFile() failed: wrong data received.")
         }
       }
-      case Left(err) =>
-        BadRequest("delFile() failed: " + err)
+      case None =>
+        Unauthorized("Delete: delFile() failed: not authenticated.")
     }
   }
 

@@ -44,10 +44,23 @@ object NavBar {
             li(cls:="navbar-item",
               a(cls:="nav-link py-0", style:="margin-right:10px;", href:=s"#content_bottom", onclick:={ () => goToAnchor("content_bottom") })("Contact")),
             li(cls:="navbar-item", style:="margin-right:5px;",
-              a(cls:="py-0", href:=s"${serverUrl()}/assets/html/login.html", p(cls:="btn btn-sm btn-success my-auto",
-                span(cls := "oi oi-account-login", title := "Login", aria.hidden := "true"),
-                " Login"
-              ))),
+//              a(cls:="py-0", href:=s"#",
+//                p(cls:="btn btn-sm btn-success my-auto",
+//                  span(cls := "oi oi-account-login", title := "Login", aria.hidden := "true"),
+//                  " Login"
+//                ),
+//                onclick:= { () =>
+//                  $("#content").load(s"${serverUrl()}/partial/login")
+//                }
+//              )
+
+              a(cls:="py-0", href:=s"${serverUrl()}/login",
+                p(cls:="btn btn-sm btn-success my-auto",
+                  span(cls := "oi oi-account-login", title := "Login", aria.hidden := "true"),
+                  " Login"
+                )
+              )
+            ),
             li(cls:="navbar-item",
               a(cls:="py-0", href:=s"${serverUrl()}/assets/html/register.html", p(cls:="btn btn-sm btn-danger my-auto",
                 span(cls := "oi oi-check", title := "Register", aria.hidden := "true"),

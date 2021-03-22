@@ -12,6 +12,7 @@ val quillVersion       = "3.5.2"
 val pgDriverVersion    = "42.2.5"
 val notifyjsVersion    = "0.2.0"
 val scriptsVersion     = "1.1.4"
+val apacheCommonsMailV = "1.5"
 
 // resolvers in ThisBuild += "hmil" at "https://dl.bintray.com/hmil/maven"
 resolvers in ThisBuild += Resolver.bintrayRepo("hmil", "maven")
@@ -32,6 +33,7 @@ lazy val backend = (project in file("backend")).settings(commonSettings).setting
     jdbc,
     evolutions,
     "org.postgresql" % "postgresql" % pgDriverVersion,
+    "org.apache.commons" % "commons-email" % apacheCommonsMailV,
     "io.getquill" %% "quill-jdbc" % quillVersion,
     "io.circe" %% "circe-core" % circeVersion,
     "io.circe" %% "circe-generic" % circeVersion,
@@ -115,7 +117,7 @@ lazy val commonSettings = Seq(
   scalaVersion := myScalaVersion,
   organization := "org.multics.baueran.frep",
   maintainer := "baueran@gmail.com",
-  version := "0.9.0"
+  version := "0.10.0"
 )
 
 // TODO: This doesn't work, and I can't be bothered to get it to work.

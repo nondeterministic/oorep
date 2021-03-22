@@ -31,25 +31,6 @@ class FileDao(dbContext: db.db.DBContext) {
     }
   }
 
-// TODO: Currently not used in favour of function below. Can be removed?
-//
-//  def getFilesForMember(member_id: Int) = {
-//    try {
-//      Logger.debug(s"FileDao: getFilesForMember($member_id)")
-//      run ( quote {
-//        tableFile.filter(_.member_id == lift(member_id))
-//      }).map { case dbFile =>
-//        val cazeDao = new CazeDao(dbContext)
-//        val cazes: List[Caze] = cazeDao.get(dbFile.case_ids)
-//        FIle(Some(dbFile.id), dbFile.header, dbFile.member_id, dbFile.date, dbFile.description, cazes)
-//      }
-//    } catch {
-//      case exception: Throwable =>
-//        Logger.warn(s"FileDao: getFilesForMember($member_id) == List(): ${exception.getStackTrace.map(_.toString).mkString("\n")}")
-//        List()
-//    }
-//  }
-
   def getDbFilesForMember(member_id: Int): List[dbFile] = {
     try {
       Logger.debug(s"FileDao: getDbFilesForMember($member_id)")

@@ -11,73 +11,75 @@ class Put @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
   private val Logger = play.api.Logger(this.getClass)
 
   def updateCaseRubricsUserDefinedValues() = Action { implicit request: Request[AnyContent] =>
-    isUserAuthenticated(request) match {
-      case Right(_) => {
+    getAuthenticatedUser(request) match {
+      case Some(_) => {
         val requestData = request.body.asMultipartFormData.get.dataParts
 
         (requestData("memberID"), requestData("caseID"), requestData("caserubrics")) match {
           case (Seq(memberIdStr), Seq(cazeIDStr), Seq(caserubricsJson)) if (cazeIDStr.forall(_.isDigit) && (memberIdStr.forall(_.isDigit))) =>
             (memberIdStr.toInt, cazeIDStr.toInt, CaseRubric.decodeList(caserubricsJson)) match {
               case (memberId, caseID, Some(caseRubrics)) =>
-                isUserAuthorized(request, memberId) match {
-                  case Left(err) =>
-                    Logger.error(s"Put: updateCaseRubricsUserDefinedValues() failed: not authorised: $err")
-                    Unauthorized(views.html.defaultpages.unauthorized())
-                  case Right(_) =>
-                    if (cazeDao.updateCaseRubricsUserDefinedValues(caseID, caseRubrics) > 0) {
-                      Logger.debug(s"Put: updateCaseRubricsUserDefinedValues(): success")
-                      Ok
-                    }
-                    else {
-                      Logger.error(s"Put: updateCaseRubricsUserDefinedValues(): failed")
-                      BadRequest(views.html.defaultpages.badRequest("PUT", request.uri, "updateCaseRubricsUserDefinedValues() failed"))
-                    }
+                if (!isUserAuthorized(request, memberId)) {
+                  val err = s"Put: updateCaseRubricsUserDefinedValues() failed: not authorised."
+                  Logger.error(err)
+                  Forbidden(err)
+                } else {
+                  if (cazeDao.updateCaseRubricsUserDefinedValues(caseID, caseRubrics) > 0) {
+                    Logger.debug(s"Put: updateCaseRubricsUserDefinedValues(): success")
+                    Ok
+                  }
+                  else {
+                    Logger.error(s"Put: updateCaseRubricsUserDefinedValues(): failed")
+                    BadRequest("Put: updateCaseRubricsUserDefinedValues() failed")
+                  }
                 }
               case _ =>
                 Logger.error(s"Put: updateCaseRubricsUserDefinedValues() failed: type conversion error which should never have happened")
-                BadRequest(views.html.defaultpages.badRequest("PUT", request.uri, "updateCaseRubricsUserDefinedValues() failed: type conversion error which should never have happened"))
+                BadRequest("Put: updateCaseRubricsUserDefinedValues() failed: type conversion error which should never have happened")
             }
           case _ => {
             Logger.error(s"Put: updateCaseRubricsUserDefinedValues() failed: no or the wrong form data received.")
-            BadRequest(views.html.defaultpages.badRequest("PUT", request.uri, "updateCaseRubricsUserDefinedValues() failed: no or the wrong form data received."))
+            BadRequest(s"Put: updateCaseRubricsUserDefinedValues() failed: no or the wrong form data received.")
           }
         }
       }
-      case Left(err) =>
-        BadRequest(views.html.defaultpages.badRequest("PUT", request.uri, "updateCaseRubricsUserDefinedValues() failed: " + err))
+      case None =>
+        Unauthorized("Put: updateCaseRubricsUserDefinedValues() failed: not authenticated.")
     }
   }
 
   def updateCaseDescription() = Action { implicit request =>
-    isUserAuthenticated(request) match {
-      case Right(_) => {
+    getAuthenticatedUser(request) match {
+      case Some(_) => {
         val requestData = request.body.asMultipartFormData.get.dataParts
 
         (requestData("memberID"), requestData("caseID"), requestData("casedescription")) match {
           case (Seq(memberIdStr), Seq(cazeIDStr), Seq(casedescription)) if (cazeIDStr.forall(_.isDigit) && (memberIdStr.forall(_.isDigit))) =>
-            isUserAuthorized(request, memberIdStr.toInt) match {
-              case Left(err) =>
-                Logger.error(s"Put: updateCaseDescription() failed: not authorised: $err")
-                Unauthorized(views.html.defaultpages.unauthorized())
-              case Right(_) =>
-                if (cazeDao.updateCaseDescription(cazeIDStr.toInt, casedescription) > 0) {
-                  Logger.debug(s"Put: updateCaseDescription(): success")
-                  Ok
-                }
-                else {
-                  Logger.error(s"Put: updateCaseDescription(): failed")
-                  BadRequest(views.html.defaultpages.badRequest("PUT", request.uri, "updateCaseDescription() failed"))
-                }
+            if (!isUserAuthorized(request, memberIdStr.toInt)) {
+              val err = s"Put: updateCaseDescription() failed: not authorised."
+              Logger.error(err)
+              Forbidden(err)
+            } else {
+              if (cazeDao.updateCaseDescription(cazeIDStr.toInt, casedescription) > 0) {
+                Logger.debug(s"Put: updateCaseDescription(): success")
+                Ok
+              }
+              else {
+                val err = s"Put: updateCaseDescription() failed"
+                Logger.error(err)
+                BadRequest(err)
+              }
             }
         }
       }
-      case Left(err) => BadRequest(views.html.defaultpages.badRequest("PUT", request.uri, "updateCaseDescription() failed: " + err))
+      case None =>
+        Unauthorized("Put: updateCaseDescription() failed: not authenticated.")
     }
   }
 
   def updateFileDescription() = Action { implicit request =>
-    isUserAuthenticated(request) match {
-      case Right(_) => {
+    getAuthenticatedUser(request) match {
+      case Some(_) => {
         val requestData = request.body.asMultipartFormData.get.dataParts
         (requestData("filedescr"), requestData("fileId")) match {
           case (Seq(filedescr), Seq(fileId)) if (fileId.forall(_.isDigit)) =>
@@ -85,23 +87,23 @@ class Put @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
             fileDao.getFIle(fileId.toInt) match {
               case tmpFile :: Nil =>
                 val memberId = tmpFile.member_id
-                isUserAuthorized(request, memberId) match {
-                  case Left(err) =>
-                    Logger.error(s"Put: updateFileDescription() failed: not authorised: $err")
-                    Unauthorized(views.html.defaultpages.unauthorized())
-                  case Right(_) =>
-                    fileDao.changeDescription(fileId.toInt, filedescr)
-                    Ok
+                if (!isUserAuthorized(request, memberId)) {
+                  val err = s"Put: updateFileDescription() failed: not authorised."
+                  Logger.error(err)
+                  Forbidden(err)
+                } else {
+                  fileDao.changeDescription(fileId.toInt, filedescr)
+                  Ok
                 }
               case _ =>
-                BadRequest(views.html.defaultpages.badRequest("PUT", request.uri, "updateFileDescription() failed"))
+                BadRequest("Put: updateFileDescription() failed")
             }
           case _ =>
-            BadRequest(views.html.defaultpages.badRequest("PUT", request.uri, "updateFileDescription() failed"))
+            BadRequest("Put: updateFileDescription() failed")
         }
       }
-      case Left(err) =>
-        BadRequest(views.html.defaultpages.badRequest("PUT", request.uri, "updateFileDescription() failed: " + err))
+      case None =>
+        Unauthorized("Put: updateFileDescription() failed: not authenticated.")
     }
   }
 

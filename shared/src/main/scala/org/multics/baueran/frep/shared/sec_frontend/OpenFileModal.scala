@@ -18,7 +18,7 @@ object OpenFileModal extends FileModal {
   private def requestFileDeletion() = {
     getCookieData(dom.document.cookie, CookieFields.id.toString) match {
       case Some(memberId) => {
-        HttpRequest(s"${serverUrl()}/${apiPrefix()}/del_file_and_cases")
+        HttpRequest(s"${serverUrl()}/${apiPrefix()}/sec/del_file_and_cases")
           .withMethod(Method.DELETE)
           .withHeader("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
           .withBody(MultiPartBody(

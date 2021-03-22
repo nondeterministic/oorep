@@ -48,7 +48,7 @@ object AddToFileModal extends FileModal {
                 onclick:={(event: Event) =>
                   Case.descr match {
                     case Some(caze) => {
-                      HttpRequest(s"${serverUrl()}/${apiPrefix()}/save_case")
+                      HttpRequest(s"${serverUrl()}/${apiPrefix()}/sec/save_case")
                         .withHeader("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
                         .post(MultiPartBody(
                           "fileId" -> PlainTextBody(selected_file_id.now.getOrElse(-1).toString()),

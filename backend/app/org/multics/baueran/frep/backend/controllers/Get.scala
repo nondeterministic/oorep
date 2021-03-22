@@ -3,11 +3,12 @@ package org.multics.baueran.frep.backend.controllers
 import javax.inject._
 import io.circe.syntax._
 import play.api.mvc._
-import org.multics.baueran.frep.backend.dao.{CazeDao, FileDao, RepertoryDao}
+import org.multics.baueran.frep.backend.dao.{CazeDao, EmailHistoryDao, FileDao, MemberDao, PasswordChangeRequestDao, RepertoryDao}
 import org.multics.baueran.frep.shared._
-import org.multics.baueran.frep.backend.dao.MemberDao
 import org.multics.baueran.frep.backend.db.db.DBContext
 import org.multics.baueran.frep.shared.Defs._
+
+import java.text.SimpleDateFormat
 
 /**
  * This controller creates an `Action` to handle HTTP requests to the application's home page.
@@ -18,14 +19,59 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
   cazeDao = new CazeDao(dbContext)
   fileDao = new FileDao(dbContext)
   memberDao = new MemberDao(dbContext)
+  passwordDao = new PasswordChangeRequestDao(dbContext)
+  emailHistoryDao = new EmailHistoryDao(dbContext)
 
   private val Logger = play.api.Logger(this.getClass)
 
+  /**
+    * Login is handled by an external service provider, such as mod_auth_mellon, and an external
+    * identiy provider, such as SimpleSAML, for example. In this scenario, you should run OOREP
+    * behind an (Apache) reverse proxy and intercept calls to the location "/login", such that a
+    * valid Mellon user is required and requested for this location.
+    *
+    * OOREP doesn't do any authentication itself, it merely expects the web server (or rather:
+    * reverse proxy) to send the variable "X-Remote-User" to the application server, containing
+    * the authenticated user's ID (see @getAuthenticatedUser).  So this method here merely
+    * redirects to the landing page and won't do anything, unless your web server / reverse proxy
+    * handles incoming connections to "/login" separately.
+    *
+    * see @logout
+    */
+
+  def login() = Action { implicit request =>
+    getAuthenticatedUser(request) match {
+      case None =>
+        Logger.error("Get: login() not completed successfully: sending user to logout to be safe.")
+        Redirect(sys.env.get("OOREP_URL_LOGOUT").getOrElse(""))
+      case Some(uid) =>
+        Logger.debug(s"Get: login() completed for user ${uid.toString}.")
+        Redirect(sys.env.get("OOREP_APPLICATION_HOST").getOrElse(""))
+          .withCookies(
+            Cookie(CookieFields.id.toString, uid.toString, httpOnly = false),
+            Cookie(CookieFields.cookiePopupAccepted.toString, "1", httpOnly = false)
+          )
+    }
+  }
+
+  /**
+    * Logout is handled by an external service provider, such as mod_auth_mellon, for example.
+    * A valid logout URL could be https://www.oorep.com/mellon/logout?ReturnTo=https://www.oorep.com/
+    * when /mellon/ is your Mellon-endpoint path. (You will also need an IdP for all this to work,
+    * such as SimpleSAML, for example.)
+    *
+    * see @login
+    */
+
+  def logout() = Action { implicit request =>
+    Redirect(sys.env.get("OOREP_URL_LOGOUT").getOrElse(""))
+  }
+
   def index() = Action { request: Request[AnyContent] =>
-    if (getRequestCookies(request) == List.empty)
-      Ok(views.html.index_landing.render)
-    else
-      Ok(views.html.index_landing_private.render)
+    getAuthenticatedUser(request) match {
+      case None => Ok(views.html.index_landing.render)
+      case Some(_) => Ok(views.html.index_landing_private.render)
+    }
   }
 
   def serve_partial_html(page: String) = Action { request: Request[AnyContent] =>
@@ -39,7 +85,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
       case "features" => Ok(views.html.partial.features.render)
       case "impressum" => Ok(views.html.partial.impressum.render)
       case "pricing" => Ok(views.html.partial.pricing.render)
-      case _ => BadRequest
+      case _ => BadRequest(page)
     }
   }
 
@@ -49,7 +95,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
       case "cookies" => Ok(views.html.cookies_noscript.render)
       case "datenschutz" => Ok(views.html.datenschutz_noscript.render)
       case "impressum" => Ok(views.html.impressum_noscript.render)
-      case _ => BadRequest
+      case _ => BadRequest(page)
     }
   }
 
@@ -57,87 +103,76 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     Ok.withCookies(Cookie(CookieFields.cookiePopupAccepted.toString, "1", httpOnly = false))
   }
 
-  /**
-    * If method is called, it is expected that the browser has sent a cookie with the
-    * request.  The method then checks, if this cookie authenticates the user for access
-    * of further application functionality.
-    */
   def authenticate() = Action { request: Request[AnyContent] =>
-    val cookies = getRequestCookies(request)
-
-    getCookieValue(cookies, CookieFields.id.toString) match {
-      case Some(memberIdStr) => {
-        isUserAuthenticated(request) match {
-          case Right(_) =>
-            Ok(memberIdStr).withCookies(cookies.map({ c => Cookie(name = c.name, value = c.value, httpOnly = false) }): _*)
-          case _ =>
-            val errStr = s"Get: authenticate(): User ${memberIdStr} cannot be authenticated."
-            Logger.error(errStr)
-            BadRequest(errStr)
-        }
-      }
-      case _ =>
-        val errStr = s"Get: authenticate(): User ${CookieFields.id.toString} not in database."
+    getAuthenticatedUser(request) match {
+      case Some(uid) =>
+        Ok(uid.toString)
+      case None =>
+        val errStr = s"Get: authenticate(): User cannot be authenticated."
         Logger.error(errStr)
-        BadRequest(errStr)
+        Unauthorized(errStr)
     }
   }
 
   def availableRemediesAndRepertories() = Action { request: Request[AnyContent] =>
     val dao = new RepertoryDao(dbContext)
 
-    if (getRequestCookies(request) == List.empty)
-      Ok((dao.getAllAvailableRemediesForAnonymousUsers(),
-        dao.getAllAvailableRepertoryInfosForAnonymousUsers()).asJson.toString())
-    else
-      Ok((dao.getAllAvailableRemediesForLoggedInUsers(),
-        dao.getAllAvailableRepertoryInfosForLoggedInUsers()).asJson.toString())
+    getAuthenticatedUser(request) match {
+      case None =>
+        Ok((dao.getAllAvailableRemediesForAnonymousUsers(),
+          dao.getAllAvailableRepertoryInfosForAnonymousUsers()).asJson.toString())
+      case Some(_) =>
+        Ok((dao.getAllAvailableRemediesForLoggedInUsers(),
+          dao.getAllAvailableRepertoryInfosForLoggedInUsers()).asJson.toString())
+    }
   }
 
   def availableReps() = Action { request: Request[AnyContent] =>
     val dao = new RepertoryDao(dbContext)
 
-    if (getRequestCookies(request) == List.empty)
-      Ok(dao.getAllAvailableRepertoryInfosForAnonymousUsers().asJson.toString())
-    else
-      Ok(dao.getAllAvailableRepertoryInfosForLoggedInUsers().asJson.toString())
+    getAuthenticatedUser(request) match {
+      case None =>
+        Ok(dao.getAllAvailableRepertoryInfosForAnonymousUsers().asJson.toString())
+      case Some(_) =>
+        Ok(dao.getAllAvailableRepertoryInfosForLoggedInUsers().asJson.toString())
+    }
   }
 
   /**
     * Won't actually return files with associated cases, but a list of tuples, (file ID, file header).
     */
   def availableFiles(memberId: Int) = Action { request: Request[AnyContent] =>
-    isUserAuthenticated(request) match {
-      case Left(err) =>
-        val errStr = "Get: availableFiles(): availableFiles() failed: " + err
+    getAuthenticatedUser(request) match {
+      case None =>
+        val errStr = "Get: availableFiles(): availableFiles() failed: not authenticated."
         Logger.error(errStr)
-        BadRequest(errStr)
-      case Right(_) =>
-        isUserAuthorized(request, memberId) match {
-          case Left(err) =>
-            Logger.error(s"Get: availableFiles() failed: not authorised: $err")
-            Unauthorized
-          case Right(_) =>
-            val dbFiles = fileDao.getDbFilesForMember(memberId)
-            Ok(dbFiles.map(dbFile => (dbFile.id, dbFile.header)).asJson.toString)
+        Unauthorized(errStr)
+      case Some(uid) =>
+        if (!isUserAuthorized(request, memberId)) {
+          val err = s"Get: availableFiles() failed: not authorised."
+          Logger.error(err)
+          Forbidden(err)
+        } else {
+          val dbFiles = fileDao.getDbFilesForMember(memberId)
+          Ok(dbFiles.map(dbFile => (dbFile.id, dbFile.header)).asJson.toString)
         }
     }
   }
 
   def getFile(fileId: String) = Action { request: Request[AnyContent] =>
-    isUserAuthenticated(request) match {
-      case Left(err) =>
-        Logger.error(err)
-        BadRequest(err)
-      case Right(_) => {
+    getAuthenticatedUser(request) match {
+      case None =>
+        Logger.error("Get: getFile(): Not authenticated")
+        Unauthorized("Get: getFile(): Not authenticated")
+      case Some(_) => {
         fileDao.getFIle(fileId.toInt) match {
           case file :: Nil =>
-            isUserAuthorized(request, file.member_id) match {
-              case Left(err) =>
-                Logger.error(s"Get: getFile() failed: not authorised: $err")
-                Unauthorized
-              case Right(_) =>
-                Ok(file.asJson.toString())
+            if (!isUserAuthorized(request, file.member_id)) {
+              val err = s"Get: getFile() failed: not authorised."
+              Logger.error(err)
+              Forbidden(err)
+            } else {
+              Ok(file.asJson.toString())
             }
           case _ =>
             val errStr = "Get: getFile() returned nothing"
@@ -148,18 +183,18 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     }
   }
 
-  def getCase(memberId: Int, caseId: String) = Action { request: Request[AnyContent] =>
-    isUserAuthenticated(request) match {
-      case Right(_) if (caseId.forall(_.isDigit)) => {
+  def getCase(caseId: String) = Action { request: Request[AnyContent] =>
+    getAuthenticatedUser(request) match {
+      case Some(uid) if (caseId.forall(_.isDigit)) => {
         val dao = new CazeDao(dbContext)
         dao.get(caseId.toInt) match {
-          case Right(caze) if (caze.member_id == memberId) =>
-            isUserAuthorized(request, caze.member_id) match {
-              case Left(err) =>
-                Logger.error(s"Get: getCase() failed: not authorised: $err")
-                Unauthorized
-              case Right(_) =>
-                Ok(caze.asJson.toString())
+          case Right(caze) if (caze.member_id == uid) =>
+            if (!isUserAuthorized(request, caze.member_id)) {
+              val err = s"Get: getCase() failed: not authorised."
+              Logger.error(err)
+              Forbidden(err)
+            } else {
+              Ok(caze.asJson.toString())
             }
           case _ =>
             val errStr = "Get: getCase() failed: DB returned nothing."
@@ -168,7 +203,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
         }
       }
       case _ =>
-        BadRequest("getCase() failed")
+        Unauthorized("getCase() failed: not authenticated.")
     }
   }
 
@@ -181,8 +216,8 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     * are associated.
     */
   def fileOverview(fileId: String) = Action { request: Request[AnyContent] =>
-    isUserAuthenticated(request) match {
-      case Right(_) if (fileId.forall(_.isDigit)) =>
+    getAuthenticatedUser(request) match {
+      case Some(_) if (fileId.forall(_.isDigit)) =>
         val files = fileDao.getFIle(fileId.toInt)
 
         if (files.length > 0) {
@@ -195,23 +230,22 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
                 }
               )
 
-          isUserAuthorized(request, files.head.member_id) match {
-            case Left(err) =>
-              Logger.error(s"Get: fileOverview() failed: not authorised: $err")
-              Unauthorized
-            case Right(_) =>
-              Ok(results.asJson.toString())
+          if (!isUserAuthorized(request, files.head.member_id)) {
+            val err = s"Get: fileOverview() failed: not authorised."
+            Logger.error(err)
+            Forbidden(err)
+          } else {
+            Ok(results.asJson.toString())
           }
         }
-        else
-          BadRequest(s"fileOverview($fileId) failed: no files found.")
-      case Left(err) =>
-        Logger.error(err)
-        BadRequest(err)
+        else {
+          Logger.warn(s"Get: fileOverview(${fileId}): nothing found.")
+          NoContent
+        }
       case _ =>
-        val err = "Get: fileOverview failed."
+        val err = "Get: fileOverview failed: not authenticated"
         Logger.error(err)
-        BadRequest(err)
+        Unauthorized(err)
     }
   }
 
@@ -238,7 +272,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
         case _ =>
           val errStr = s"Get: repertorise(abbrev: ${repertoryAbbrev}, symptom: ${symptom}, page: ${page}, remedy: ${remedyString}, weight: ${minWeight}): no results found"
           Logger.warn(errStr)
-          BadRequest(errStr)
+          NoContent
       }
     }
   }
@@ -248,10 +282,41 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
   }
 
   def show(repertory: String, symptom: String, page: Int, remedyString: String, minWeight: Int) = Action { request: Request[AnyContent] =>
-    if (getRequestCookies(request) == List.empty)
-      Ok(views.html.index(repertory, symptom, page - 1, remedyString, minWeight, s"OOREP ${xml.Utility.escape("—")} open online homeopathic repertory"))
-    else
-      Ok(views.html.index_private(repertory, symptom, page - 1, remedyString, minWeight, s"OOREP ${xml.Utility.escape("—")} open online homeopathic repertory"))
+    getAuthenticatedUser(request) match {
+      case None =>
+        Ok(views.html.index_lookup(repertory, symptom, page - 1, remedyString, minWeight, s"OOREP ${xml.Utility.escape("—")} open online homeopathic repertory"))
+      case Some(_) =>
+        Ok(views.html.index_lookup_private(repertory, symptom, page - 1, remedyString, minWeight, s"OOREP ${xml.Utility.escape("—")} open online homeopathic repertory"))
+    }
+  }
+
+  def forgotPassword() = Action { implicit request: Request[AnyContent] =>
+    Ok(views.html.index_forgotpassword(s"OOREP ${xml.Utility.escape("—")} open online homeopathic repertory"))
+  }
+
+  def changePassword(pcrId: String) = Action { implicit request: Request[AnyContent] =>
+    val errorMessage = s"The password-change-request ID is invalid or has expired. Go to main page ${serverUrl(request)} and create a new request, if you still want to change your password."
+
+    val passwordChangeRequestInstance = passwordDao.get(pcrId) match {
+      case entry :: Nil => Some(entry)
+      case _ => None
+    }
+
+    passwordChangeRequestInstance match {
+      case Some(pcr) =>
+        val pcrDate = new MyDate((new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ")).parse(pcr.date_))
+
+        println(pcrDate.age())
+
+        // A password change request must not be older than 5h...
+        if (pcrDate.age() <= 5.0)
+          Ok(views.html.index_changepassword(pcr.member_id, pcr.id, s"OOREP ${xml.Utility.escape("—")} open online homeopathic repertory"))
+        else
+          BadRequest(views.html.defaultpages.badRequest("GET", request.uri, errorMessage))
+
+      case None =>
+        BadRequest(views.html.defaultpages.badRequest("GET", request.uri, errorMessage))
+    }
   }
 
 }

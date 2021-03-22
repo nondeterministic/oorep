@@ -1,7 +1,6 @@
 package org.multics.baueran.frep.shared.sec_frontend
 
 import java.io.IOException
-
 import monix.execution.Scheduler.Implicits.global
 import fr.hmil.roshttp.HttpRequest
 import fr.hmil.roshttp.exceptions.HttpException
@@ -72,23 +71,22 @@ package object FileModalCallbacks {
       }
     }
 
-    // When an exception occurs, we're erring on the safe side (as it is likely due to a stale cookie)
-    // and reload the main page, which checks if a valid cookie is present.  And if it isn't, you'll
-    // have to relogin.
-    HttpRequest(s"${serverUrl()}/${apiPrefix()}/available_files")
+    // TODO: with the error handling code, we get type erasure problems in the onComplete part. Not sure why, and more importantly, not sure if error handling code still relevant - I think, after SAML 2.0, it isn't.
+
+    HttpRequest(s"${serverUrl()}/${apiPrefix()}/sec/available_files")
       .withQueryParameter("memberId", memberId.toString)
       .send()
-      .recover {
-        case HttpException(e: SimpleHttpResponse) =>
-          dom.window.location.replace(serverUrl())
-          println(s"ERROR: updateMemberFiles: HttpException occurred: ${e.statusCode}")
-        case e: IOException =>
-          dom.window.location.replace(serverUrl())
-          println(s"ERROR: updateMemberFiles: IOException occurred: There was a network issue, perhaps try again: ${e.getMessage}")
-      }
+//      .recover {
+//        case HttpException(e: SimpleHttpResponse) =>
+//          dom.window.location.replace(serverUrl())
+//          println(s"ERROR: updateMemberFiles: HttpException occurred: ${e.statusCode}")
+//        case e: IOException =>
+//          dom.window.location.replace(serverUrl())
+//          println(s"ERROR: updateMemberFiles: IOException occurred: There was a network issue, perhaps try again: ${e.getMessage}")
+//      }
       .onComplete({
-        case r:Success[SimpleHttpResponse] =>
-          updateMemberFiles(r.get.body)
+        case response:Success[SimpleHttpResponse] =>
+          updateMemberFiles(response.get.body)
         case _ =>
           println("ERROR: updateMemberFiles: received Failure response likely due a stale cookie, which has now been deleted.")
       })

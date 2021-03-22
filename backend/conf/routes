@@ -1,49 +1,46 @@
 # This file defines all application routes (Higher priority routes first)
 # https://www.playframework.com/documentation/latest/ScalaRouting
-#
+
 # TODO: For reminder only:
-# GET     /                                  controllers.Assets.at(path="/public/html", file="index.html")
+# GET     /                                   controllers.Assets.at(path="/public/html", file="index.html")
 
-GET     /                                  org.multics.baueran.frep.backend.controllers.Get.index
-GET     /partial/about                     org.multics.baueran.frep.backend.controllers.Get.serve_partial_html(page:String ?= "about")
-GET     /partial/cookies                   org.multics.baueran.frep.backend.controllers.Get.serve_partial_html(page:String ?= "cookies")
-GET     /partial/contact                   org.multics.baueran.frep.backend.controllers.Get.serve_partial_html(page:String ?= "contact")
-GET     /partial/datenschutz               org.multics.baueran.frep.backend.controllers.Get.serve_partial_html(page:String ?= "datenschutz")
-GET     /partial/disclaimer_text_only      org.multics.baueran.frep.backend.controllers.Get.serve_partial_html(page:String ?= "disclaimer_text_only")
-GET     /partial/faq                       org.multics.baueran.frep.backend.controllers.Get.serve_partial_html(page:String ?= "faq")
-GET     /partial/features                  org.multics.baueran.frep.backend.controllers.Get.serve_partial_html(page:String ?= "features")
-GET     /partial/impressum                 org.multics.baueran.frep.backend.controllers.Get.serve_partial_html(page:String ?= "impressum")
-GET     /partial/pricing                   org.multics.baueran.frep.backend.controllers.Get.serve_partial_html(page:String ?= "pricing")
-GET     /noscript/contact                  org.multics.baueran.frep.backend.controllers.Get.serve_noscript_whole_html(page:String ?= "contact")
-GET     /noscript/cookies                  org.multics.baueran.frep.backend.controllers.Get.serve_noscript_whole_html(page:String ?= "cookies")
-GET     /noscript/datenschutz              org.multics.baueran.frep.backend.controllers.Get.serve_noscript_whole_html(page:String ?= "datenschutz")
-GET     /noscript/impressum                org.multics.baueran.frep.backend.controllers.Get.serve_noscript_whole_html(page:String ?= "impressum")
-GET		/api/authenticate                  org.multics.baueran.frep.backend.controllers.Get.authenticate
-GET		/api/lookup						   org.multics.baueran.frep.backend.controllers.Get.repertorise(repertory: String, symptom: String, page: Int, remedyString: String, minWeight: Int, getRemedies: Int)
-GET     /api/available_reps                org.multics.baueran.frep.backend.controllers.Get.availableReps
-GET     /api/available_rems_and_reps       org.multics.baueran.frep.backend.controllers.Get.availableRemediesAndRepertories
-GET     /api/available_files               org.multics.baueran.frep.backend.controllers.Get.availableFiles(memberId: Int)
-GET     /api/file_overview                 org.multics.baueran.frep.backend.controllers.Get.fileOverview(fileId: String)
-GET     /api/file                          org.multics.baueran.frep.backend.controllers.Get.getFile(fileId: String)
-GET     /api/case                          org.multics.baueran.frep.backend.controllers.Get.getCase(memberId: Int, caseId: String)
-GET     /api/accept_cookies                org.multics.baueran.frep.backend.controllers.Get.acceptCookies
-GET     /api/displayErrorPage              org.multics.baueran.frep.backend.controllers.Get.displayGetErrorPage(message: String)
-GET     /show                              org.multics.baueran.frep.backend.controllers.Get.show(repertory: String, symptom: String, page: Int, remedyString: String, minWeight: Int)
-GET     /favicon.ico                       controllers.Assets.at(path="/public/html", file="favicon.ico")
+GET     /                                   org.multics.baueran.frep.backend.controllers.Get.index
+GET   	/login                              org.multics.baueran.frep.backend.controllers.Get.login
+GET   	/logout                             org.multics.baueran.frep.backend.controllers.Get.logout
+GET     /partial/:page                      org.multics.baueran.frep.backend.controllers.Get.serve_partial_html(page:String)
+GET     /noscript/:page                     org.multics.baueran.frep.backend.controllers.Get.serve_noscript_whole_html(page:String)
+GET		/api/authenticate                   org.multics.baueran.frep.backend.controllers.Get.authenticate
+GET		/api/lookup						    org.multics.baueran.frep.backend.controllers.Get.repertorise(repertory: String, symptom: String, page: Int, remedyString: String, minWeight: Int, getRemedies: Int)
+GET     /api/available_reps                 org.multics.baueran.frep.backend.controllers.Get.availableReps
+GET     /api/available_rems_and_reps        org.multics.baueran.frep.backend.controllers.Get.availableRemediesAndRepertories
+GET     /api/accept_cookies                 org.multics.baueran.frep.backend.controllers.Get.acceptCookies
+GET     /api/display_error_page             org.multics.baueran.frep.backend.controllers.Get.displayGetErrorPage(message: String)
+GET     /show                               org.multics.baueran.frep.backend.controllers.Get.show(repertory: String, symptom: String, page: Int, remedyString: String, minWeight: Int)
+GET     /api/sec/available_files            org.multics.baueran.frep.backend.controllers.Get.availableFiles(memberId: Int)
+GET     /api/sec/file_overview              org.multics.baueran.frep.backend.controllers.Get.fileOverview(fileId: String)
+GET     /api/sec/file                       org.multics.baueran.frep.backend.controllers.Get.getFile(fileId: String)
+GET     /api/sec/case                       org.multics.baueran.frep.backend.controllers.Get.getCase(caseId: String)
+GET     /change_password                    org.multics.baueran.frep.backend.controllers.Get.changePassword(id: String)
+GET     /forgot_password                    org.multics.baueran.frep.backend.controllers.Get.forgotPassword
+GET     /favicon.ico                        controllers.Assets.at(path="/public/html", file="favicon.ico")
 
-+nocsrf
-POST   	/api/login                         org.multics.baueran.frep.backend.controllers.Post.login
-POST   	/api/save_case                     org.multics.baueran.frep.backend.controllers.Post.saveCaze
-POST   	/api/save_file                     org.multics.baueran.frep.backend.controllers.Post.saveFile
-POST    /api/add_caserubrics_to_case       org.multics.baueran.frep.backend.controllers.Post.addCaseRubricsToCaze
+POST    /api/sec/add_caserubrics_to_case    org.multics.baueran.frep.backend.controllers.Post.addCaseRubricsToCaze
+POST   	/api/sec/save_case                  org.multics.baueran.frep.backend.controllers.Post.saveCaze
+POST   	/api/sec/save_file                  org.multics.baueran.frep.backend.controllers.Post.saveFile
++ nocsrf
+POST    /api/request_password_change        org.multics.baueran.frep.backend.controllers.Post.requestPasswordChange
++ nocsrf
+POST    /api/request_username               org.multics.baueran.frep.backend.controllers.Post.requestUsername
++ nocsrf
+POST    /api/submit_new_password            org.multics.baueran.frep.backend.controllers.Post.submitNewPassword
 
-PUT     /api/update_caserubrics_userdef    org.multics.baueran.frep.backend.controllers.Put.updateCaseRubricsUserDefinedValues
-PUT   	/api/update_file_description       org.multics.baueran.frep.backend.controllers.Put.updateFileDescription
-PUT   	/api/update_case_description       org.multics.baueran.frep.backend.controllers.Put.updateCaseDescription
+PUT     /api/sec/update_caserubrics_userdef org.multics.baueran.frep.backend.controllers.Put.updateCaseRubricsUserDefinedValues
+PUT   	/api/sec/update_file_description    org.multics.baueran.frep.backend.controllers.Put.updateFileDescription
+PUT   	/api/sec/update_case_description    org.multics.baueran.frep.backend.controllers.Put.updateCaseDescription
 
-DELETE  /api/del_caserubrics_from_case     org.multics.baueran.frep.backend.controllers.Delete.delCaseRubricsFromCaze
-DELETE  /api/del_case                      org.multics.baueran.frep.backend.controllers.Delete.delCaze
-DELETE 	/api/del_file_and_cases            org.multics.baueran.frep.backend.controllers.Delete.delFileAndCases
+DELETE  /api/sec/del_caserubrics_from_case  org.multics.baueran.frep.backend.controllers.Delete.delCaseRubricsFromCaze
+DELETE  /api/sec/del_case                   org.multics.baueran.frep.backend.controllers.Delete.delCaze
+DELETE 	/api/sec/del_file_and_cases         org.multics.baueran.frep.backend.controllers.Delete.delFileAndCases
 
 # Map static resources from the /public folder to the /assets URL path
-GET     /assets/*file                      controllers.Assets.versioned(path="/public", file: Asset)
+GET     /assets/*file                       controllers.Assets.versioned(path="/public", file: Asset)

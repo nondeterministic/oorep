@@ -54,25 +54,34 @@ class CazeDao(dbContext: db.db.DBContext) {
     */
   // TODO: Return not List of basic types, but List[RawCaze]!
   private def getRaw(ids: List[Int]): List[RawCaze] = {
-    val rawQuery = quote {
-      // Notice the '#' in front for dynamic infix queries! It is, sort of, the alternative to lift(...).
-      infix"""SELECT id, header, member_id, date_, description, results FROM caze WHERE id IN (#${ids.mkString(", ")})"""
-        .as[Query[RawCaze]]
-    }
+    if (ids.length == 0)
+      List()
+    else {
+      val rawQuery = quote {
+        // Notice the '#' in front for dynamic infix queries! It is, sort of, the alternative to lift(...).
+        infix"""SELECT id, header, member_id, date_, description, results FROM caze WHERE id IN (#${ids.mkString(", ")})"""
+          .as[Query[RawCaze]]
+      }
 
-    run(rawQuery)
+      run(rawQuery)
+    }
   }
 
   def getResultIds(id: Int) = getRaw(List(id)).map(_.results).flatten
 
   def get(ids: List[Int]): List[Caze] = {
-    val cResultDao = new CazeResultDao(dbContext)
+    if (ids.length > 0) {
+      val cResultDao = new CazeResultDao(dbContext)
 
-    getRaw(ids) match {
-      case Nil => List()
-      case rawCases => rawCases.map { case RawCaze(id, header, memberId, date, descr, resultIds) =>
-        Caze(id, header, memberId, date, descr, cResultDao.get(resultIds)) }
+      getRaw(ids) match {
+        case Nil => List()
+        case rawCases => rawCases.map { case RawCaze(id, header, memberId, date, descr, resultIds) =>
+          Caze(id, header, memberId, date, descr, cResultDao.get(resultIds))
+        }
+      }
     }
+    else
+      List()
   }
 
   def get(id: Int): Either[String, Caze] = {

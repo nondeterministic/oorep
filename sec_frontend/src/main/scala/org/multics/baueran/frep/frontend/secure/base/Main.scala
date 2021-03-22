@@ -23,6 +23,7 @@ object Main {
   private val loadingSpinner = new LoadingSpinner("content")
   private val disclaimer = new Disclaimer("content_bottom", "content")
 
+  // TODO: I think the below is no longer necessary if the html and js files for logged in users are protected by location/SP in the reverse proxy.
   private def authenticateAndPrepare(): Unit = {
     HttpRequest(s"${serverUrl()}/${apiPrefix()}/authenticate")
       .send()

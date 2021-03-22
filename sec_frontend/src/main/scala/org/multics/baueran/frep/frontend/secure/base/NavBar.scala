@@ -6,6 +6,7 @@ import io.circe.parser.parse
 import org.multics.baueran.frep.shared.Defs.deleteCookies
 import org.multics.baueran.frep.shared.frontend.{serverUrl, apiPrefix}
 import org.multics.baueran.frep.shared.Info
+import scala.util.{Failure, Success}
 import scalatags.JsDom.TypedTag
 import scalatags.JsDom.all.{id, li, _}
 import scalatags.JsDom.tags2.nav
@@ -13,10 +14,6 @@ import monix.execution.Scheduler.Implicits.global
 import org.scalajs.dom
 import dom.Event
 import org.multics.baueran.frep.shared.sec_frontend.RepertoryModal
-
-import scala.scalajs
-import scala.scalajs.js
-import scala.util.{Failure, Success}
 
 object NavBar {
 
@@ -68,8 +65,6 @@ object NavBar {
             li(cls:="navbar-item dropdown", a(cls:="nav-link dropdown-toggle py-0", href:="#", data.toggle:="dropdown")("Repertories"),
               div(cls:="dropdown-menu", id:="secNavBarRepertories")
             ),
-            // li(cls:="navbar-item", a(cls:="nav-link", href:="", onclick:={ () => println("pressed1") })("Repertory")),
-            // li(cls:="navbar-item", a(cls:="nav-link", href:="", onclick:={ () => println("pressed1") })("Materia Medica")),
             li(cls:="navbar-item dropdown", a(cls:="nav-link dropdown-toggle py-0", href:="#", data.toggle:="dropdown")("File"),
               div(cls:="dropdown-menu",
                 a(cls:="dropdown-item", href:="#", data.toggle:="modal", data.target:="#newFileModal")("New..."),
@@ -85,7 +80,7 @@ object NavBar {
               onclick:={ (e: Event) =>
                 e.stopPropagation()
                 deleteCookies()
-                dom.window.location.replace(serverUrl())
+                dom.window.location.replace(s"${serverUrl()}/logout")
               })("Log-out"))
           )
         )

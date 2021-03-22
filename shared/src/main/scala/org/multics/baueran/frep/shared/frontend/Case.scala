@@ -127,7 +127,7 @@ object Case {
           if (descr.get.isSupersetOf(prevCase.get).length > 0) { // Add additional case rubrics to DB
             val diff = descr.get.isSupersetOf(prevCase.get)
 
-            HttpRequest(s"${serverUrl()}/${apiPrefix()}/add_caserubrics_to_case")
+            HttpRequest(s"${serverUrl()}/${apiPrefix()}/sec/add_caserubrics_to_case")
               .withHeader("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
               .post(MultiPartBody(
                 "memberID" -> PlainTextBody(memberId.toString),
@@ -137,7 +137,7 @@ object Case {
           else if (prevCase.get.isSupersetOf(descr.get).length > 0) { // Delete the removed case rubrics in DB
             val diff = prevCase.get.isSupersetOf(descr.get)
 
-            HttpRequest(s"${serverUrl()}/${apiPrefix()}/del_caserubrics_from_case")
+            HttpRequest(s"${serverUrl()}/${apiPrefix()}/sec/del_caserubrics_from_case")
               .withMethod(Method.DELETE)
               .withHeader("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
               .withBody(MultiPartBody(
@@ -149,7 +149,7 @@ object Case {
           else if (descr.get.isEqualExceptUserDefinedValues(prevCase.get).length > 0) { // Update user defined case rubric values only in DB
             val diff = prevCase.get.isEqualExceptUserDefinedValues(descr.get) // These are the user-changed ones, which we'll need to update in the DB, too.
 
-            HttpRequest(s"${serverUrl()}/${apiPrefix()}/update_caserubrics_userdef")
+            HttpRequest(s"${serverUrl()}/${apiPrefix()}/sec/update_caserubrics_userdef")
               .withHeader("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
               .put(MultiPartBody(
                 "memberID" -> PlainTextBody(memberId.toString),
@@ -157,7 +157,7 @@ object Case {
                 "caserubrics" -> PlainTextBody(diff.asJson.toString)))
           }
           else if (descr.get.description != prevCase.get.description) {
-            HttpRequest(s"${serverUrl()}/${apiPrefix()}/update_case_description")
+            HttpRequest(s"${serverUrl()}/${apiPrefix()}/sec/update_case_description")
               .withHeader("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
               .put(MultiPartBody(
                 "memberID" -> PlainTextBody(memberId.toString),
@@ -178,7 +178,7 @@ object Case {
       // Delete not only view but entire case from DB, when user removed all of its rubrics...
       if (cRubrics.size == 0) {
         if (descr != None && descr.get.id != 0)
-          HttpRequest(s"${serverUrl()}/${apiPrefix()}/del_case")
+          HttpRequest(s"${serverUrl()}/${apiPrefix()}/sec/del_case")
             .withMethod(Method.DELETE)
             .withHeader("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
             .withBody(MultiPartBody(

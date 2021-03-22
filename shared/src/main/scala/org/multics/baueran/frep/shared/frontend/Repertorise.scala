@@ -629,11 +629,25 @@ object Repertorise {
         ).render)
     }
 
-    def getPageFromBackend(abbrev: String, symptom: String, remedyString: String, minWeight: Int, page: Int) = {
+    def getPageFromBackend(abbrev: String, symptom: String, remedyString: String, minWeight: Int, page: Int): Unit = {
       val cachedRemedies = _pageCache.getRemedies(abbrev, symptom, if (remedyString.length == 0) None else Some(remedyString), minWeight)
       val getRemedies = if (cachedRemedies.length == 0) "1" else "0"
 
       val req = HttpRequest(s"${serverUrl()}/${apiPrefix()}/lookup")
+
+      // If no results were found, either tell the user in the input screen,
+      // or, if search was invoked via static /show-link (i.e., there is no input screen), then display
+      // clean error page.
+      def handleNoResultsFound() = _loadingSpinner match {
+        case Some(spinner) if (spinner.isVisible()) =>
+          val landingPage = sys.env.get("OOREP_APPLICATION_HOST").getOrElse("https://www.oorep.com/")
+          val errorMessage = s"ERROR: Lookup failed. Perhaps URL malformed, repertory does not exist or no results for given symptoms. " +
+            s"SUGGESTED SOLUTION: Go directly to ${landingPage} instead and try again!"
+          dom.document.location.replace(s"${serverUrl()}/${apiPrefix()}/display_error_page?message=${encodeURI(errorMessage)}")
+        case _ =>
+          showRepertorisationResultsError(symptom, remedyString, minWeight)
+      }
+
       val serverResponseFuture = req
         .withQueryParameters(
           ("symptom", symptom),
@@ -672,24 +686,16 @@ object Repertorise {
                   }
                   case Left(err) =>
                     println(s"Parsing of lookup as RepertoryLookup failed: $err")
+                    handleNoResultsFound()
                 }
               }
               case Left(err) =>
                 println(s"Parsing of lookup failed (is it JSON?): $err")
+                handleNoResultsFound()
             }
           }
           case _: Failure[SimpleHttpResponse] =>
-            // If no results were found, either tell the user in the input screen,
-            // or, if search was invoked via static /show-link (i.e., there is no input screen), then display
-            // clean error page.
-            _loadingSpinner match {
-              case Some(spinner) if (spinner.isVisible()) =>
-                val errorMessage = s"ERROR: Lookup failed. Perhaps URL malformed, repertory does not exist or no results for given symptoms. " +
-                  s"SUGGESTED SOLUTION: Go directly to https://www.oorep.com/ instead and try again!"
-                dom.document.location.replace(s"${serverUrl()}/${apiPrefix()}/displayErrorPage?message=${encodeURI(errorMessage)}")
-              case _ =>
-                showRepertorisationResultsError(symptom, remedyString, minWeight)
-            }
+            handleNoResultsFound()
         })
     }
 

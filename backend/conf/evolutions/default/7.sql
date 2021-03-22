@@ -1,0 +1,14 @@
+# Users schema
+
+# --- !Ups
+
+CREATE TABLE EMAILHISTORY(
+  ID           SERIAL PRIMARY KEY,
+  DATE_        VARCHAR(287) NOT NULL,
+  EMAIL        VARCHAR(200) NOT NULL,
+  PURPOSE      VARCHAR(200)
+);
+
+# --- !Downs
+
+DROP TABLE EMAILHISTORY;
