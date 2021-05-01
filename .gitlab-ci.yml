@@ -4,11 +4,11 @@ services:
   - postgres:11
 
 variables:
-  OOREP_DBUSER_PASS: test
-  OOREP_DBHOST: postgres  
-  OOREP_DBPORT: 5432
+  OOREP_DB_PASS: test
+  OOREP_DB_HOST: postgres
+  OOREP_DB_PORT: 5432
+  OOREP_APPLICATION_HOST: http://localhost:9000
   OOREP_APPLICATION_SECRET: test
-  OOREP_REP_PATH: /
   POSTGRES_DB: oorep
   POSTGRES_USER: oorep_user
   POSTGRES_PASSWORD: test
