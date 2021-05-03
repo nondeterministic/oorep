@@ -22,6 +22,8 @@ import scala.scalajs.js.annotation.JSExportTopLevel
 import scala.scalajs.js.annotation._
 import scala.scalajs.js.URIUtils._
 
+import scala.language.implicitConversions
+
 @JSExportTopLevel("Repertorise")
 object Repertorise {
 
@@ -61,13 +63,10 @@ object Repertorise {
   val _repertorisationResults: Var[Option[ResultsCaseRubrics]] = Var(None)
   private val _resultRemedyStats: Var[List[ResultsRemedyStats]] = Var(List())
   private var _loadingSpinner: Option[LoadingSpinner] = None
-  private var _disclaimer: Option[Disclaimer] = None
-  private val _cookiePopup = new CookiePopup("content")
 
   // ------------------------------------------------------------------------------------------------------------------
-  def init(loadingSpinner: LoadingSpinner, disclaimer: Disclaimer) = {
+  def init(loadingSpinner: LoadingSpinner) = {
     _loadingSpinner = Some(loadingSpinner)
-    _disclaimer = Some(disclaimer)
   }
 
   // ------------------------------------------------------------------------------------------------------------------
@@ -135,7 +134,7 @@ object Repertorise {
     case None => ;
   })
   _remedyFormat.triggerLater(_repertorisationResults.now match {
-    case Some(_) => showResults(); redrawMultiOccurringRemedies()
+    case Some(_) => showResults()
     case None => ;
   })
 
@@ -145,8 +144,20 @@ object Repertorise {
 
     def resetContentView() = {
       val contentDiv = dom.document.getElementById("content").asInstanceOf[dom.html.Element]
-      contentDiv.innerHTML = ""
-      contentDiv.appendChild(apply().render)
+      if (contentDiv != null) {
+        contentDiv.innerHTML = ""
+        contentDiv.appendChild(apply().render)
+      } else {
+        println("ERROR: contentDiv == null. This shoulnd't have happened.")
+      }
+
+      // Make sure #about and #features are REALLY gone at this point
+      val about = dom.document.getElementById("about")
+      val features = dom.document.getElementById("features")
+      if (about != null)
+        dom.document.body.removeChild(about)
+      if (features != null)
+        dom.document.body.removeChild(features)
 
       getCookieData(dom.document.cookie, CookieFields.id.toString) match {
         case Some(id) => updateMemberFiles(id.toInt)
@@ -166,7 +177,7 @@ object Repertorise {
           td(result.rubric.fullPath, style:="width:35%;"),
           td(remedies.take(remedies.size - 1).map(l => span(l, ", ")) ::: List(remedies.last)),
           td(cls := "text-right",
-            button(cls := "btn btn-sm", `type` := "button", id := ("button_" + result.repertoryAbbrev + "_" + result.rubric.id),
+            button(cls := "btn btn-sm btn-secondary", `type` := "button", id := ("button_" + result.repertoryAbbrev + "_" + result.rubric.id),
               style := "vertical-align: middle; display: inline-block",
               (if (Case.cRubrics.filter(_.equalsIgnoreWeight(result)).size > 0) attr("disabled") := "disabled" else ""),
               onclick := { (event: Event) => {
@@ -247,7 +258,7 @@ object Repertorise {
                 th(attr("scope") := "col", "Rubric"),
                 th(attr("scope") := "col",
                   a(scalatags.JsDom.attrs.id := "remediesFormatButton",
-                    cls := "underline", href := "#", style := "color:white;",
+                    cls := "underline", href := "#",
                     onclick := ((event: Event) => toggleRemedyFormat()),
                     "Remedies")
                 ),
@@ -293,7 +304,7 @@ object Repertorise {
           // Yields a sequence like [ ("pain", 130), ("abdomen", 50), ... ]
           val sortedResultOccurrences =
             (pathWords ::: textWords ::: fullPathWords).map(_.replaceAll("[^A-Za-z0-9äÄöÖüÜ]", "")).sortWith(_ > _)
-              .groupBy(identity).mapValues(_.size)
+              .groupBy(identity).view.mapValues(_.size)
               .toSeq.sortWith(_._2 > _._2)
 
           // Filter out all those results, which were actually desired via positive search terms entered by the user
@@ -336,6 +347,10 @@ object Repertorise {
         results.foreach(result => dom.document.getElementById("resultsTBody").appendChild(resultRow(result).render))
       case _ => ;
     }
+
+    // TODO: I'm not a 100% sure, this will work in all cases, but can't find a problem with it yet...
+    if (_resultRemedyStats.now.size > 1 && dom.document.getElementById("collapseMultiOccurrences") == null)
+      redrawMultiOccurringRemedies()
 
     Case.updateCaseHeaderView()
   }
@@ -432,7 +447,7 @@ object Repertorise {
               "Min. weight:"),
             div(cls := "col-sm-2",
               div(id := "weightDropDowns", cls := "dropdown show",
-                button(id := "minWeightDropdown", cls := "btn dropdown-toggle", `type` := "button", data.toggle := "dropdown", if (restorePreviousValues) _pageCache.latest.minWeight.toString else "0"),
+                button(id := "minWeightDropdown", cls := "btn dropdown-toggle btn-secondary", `type` := "button", data.toggle := "dropdown", if (restorePreviousValues) _pageCache.latest.minWeight.toString else "0"),
                 weightDropDownsDiv
               )
             )
@@ -473,13 +488,13 @@ object Repertorise {
       case advancedButton =>
         val basicButton = {
           if (landingPageIsCurrentView)
-            button(id:="buttonMainViewBasicSearch", cls:="btn", style:="width: 120px;", `type`:="button",
+            button(id:="buttonMainViewBasicSearch", cls:="btn btn-secondary text-nowrap", style:="width: 140px;", `type`:="button",
               onclick := { (event: Event) =>
                 onHideAdvancedSearchOptionsMainView(event, landingPageIsCurrentView)
-              }, "Basic"
+              }, span(cls := "oi oi-cog", title := "Toggle options", aria.hidden := "true"), " Basic"
             ).render
           else
-            button(id:="buttonMainViewBasicSearch", cls:="btn", style := "width: 70px;margin-right:5px;", `type`:="button",
+            button(id:="buttonMainViewBasicSearch", cls:="btn btn-secondary text-nowrap", style := "width: 70px;margin-right:5px;", `type`:="button",
               onclick := { (event: Event) =>
                 onHideAdvancedSearchOptionsMainView(event, landingPageIsCurrentView)
               },
@@ -502,13 +517,13 @@ object Repertorise {
     val basicButton = dom.document.getElementById("buttonMainViewBasicSearch").asInstanceOf[dom.html.Button]
     val advancedButton = {
       if (landingPageView)
-        button(id:="buttonMainViewAdvancedSearch", cls:="btn", style:="width: 120px;", `type`:="button",
+        button(id:="buttonMainViewAdvancedSearch", cls:="btn btn-secondary text-nowrap", style:="width: 140px;", `type`:="button",
           onclick := { (event: Event) =>
             event.stopPropagation()
             onShowAdvancedSearchOptionsMainView(false, landingPageView)
-          }, "Advanced...").render
+          }, span(cls := "oi oi-cog", title := "Toggle options", aria.hidden := "true"), " Advanced...").render
       else
-        button(`id`:="buttonMainViewAdvancedSearch", cls := "btn", style := "width: 70px;margin-right:5px;", `type` := "button",
+        button(`id`:="buttonMainViewAdvancedSearch", cls := "btn btn-secondary text-nowrap", style := "width: 70px;margin-right:5px;", `type` := "button",
           onclick := { (event: Event) =>
             event.stopPropagation()
             onShowAdvancedSearchOptionsMainView(false, landingPageView)
@@ -521,6 +536,9 @@ object Repertorise {
 
   @JSExport("doLookup")
   def jsDoLookup(abbrev: String, symptom: String, page: Int, remedyString: String, minWeight: Int) = {
+    // Hide navbar initially, while the spinner shows. (Later, the code in this file will show it again.)
+    dom.document.getElementById("nav_bar").asInstanceOf[dom.html.Div].classList.add("d-none")
+
     _selectedRepertory() = abbrev
 
     doLookup(abbrev,
@@ -554,6 +572,10 @@ object Repertorise {
         showCase()
 
       dom.document.body.style.cursor = "default"
+
+      // When we do a /?show=... lookup, we need to make sure the disclaimer is made visible again. For other cases, it doesn't matter, because
+      // the disclaimer is already visible at this point.
+      dom.document.getElementById("disclaimer_div").asInstanceOf[dom.html.Div].style.setProperty("display", "block")
     }
 
     def showRepertorisationResultsError(symptom: String, remedyString: String, minWeight: Int): Unit = {
@@ -852,21 +874,12 @@ object Repertorise {
       case Some(spinner) => spinner.remove()
     }
 
-    // Make sure, the disclaimer is shown at this stage
-    _disclaimer match {
-      case None => ;
-      case Some(disclaimer) => disclaimer.show()
-    }
-
-    // Request user acceptance for cookies at this stage, if it hasn't indicated acceptance, yet
-    _cookiePopup.add()
-
     // From here downwards is the actual repertorisation view...
     val ulRepertorySelection =
-      div(cls:="dropdown col-md-2", style := "margin-top:20px;",
+      div(cls:="dropdown col-md-2", style:="min-width:200px; margin-top:20px;",
         button(`type`:="button",
-          style:="overflow: hidden;",
-          cls:="btn btn-block dropdown-toggle",
+          style:="min-width: 195px;",
+          cls:="text-nowrap btn btn-block dropdown-toggle btn-secondary",
           data.toggle:="dropdown",
           `id`:="repSelectionDropDownButton",
           "Repertories"),
@@ -880,7 +893,7 @@ object Repertorise {
           div(cls := "container-fluid text-center",
             // The h1-tag here is apparently needed for SEO, cf.
             // https://stackoverflow.com/questions/665037/replacing-h1-text-with-a-logo-image-best-method-for-seo-and-accessibility
-            h1(cls:="col-sm-12 text-center", img(src:=s"${serverUrl()}/assets/html/img/logo_small.png", alt:="OOREP - open online repertory of homeopathy")),
+            h1(cls:="col-sm-12 text-center", img(src:=s"${serverUrl()}/assets/html/img/logo_small.png", style:="width:180px; height:65px;", alt:="OOREP - open online repertory of homeopathy")),
             div(cls := "row",
               div(cls := "col-sm-1"),
               div(cls := "row col-sm-10",
@@ -907,16 +920,16 @@ object Repertorise {
               )
             ),
             div(id:="mainViewSearchButtons", cls:="col-sm-12 text-center", style:="margin-top:20px;",
-              button(cls := "btn btn-primary", style := "width: 120px; margin-right:5px;", `type` := "button",
+              button(cls := "btn btn-primary text-nowrap", style := "width: 140px; margin-right:5px;", `type` := "button",
                 onclick := { (event: Event) =>
                   event.stopPropagation()
                   onSymptomEntered()
-                }, "Find"),
-              button(id:="buttonMainViewAdvancedSearch", cls := "btn", style := "width: 120px;", `type` := "button",
+                }, span(cls := "oi oi-magnifying-glass", title := "Find", aria.hidden := "true"), " Find"),
+              button(id:="buttonMainViewAdvancedSearch", cls := "btn btn-secondary text-nowrap", style := "width: 140px;", `type` := "button",
                 onclick := { (event: Event) =>
                   event.stopPropagation()
                   onShowAdvancedSearchOptionsMainView(false, true)
-                }, "Advanced...")
+                }, span(cls := "oi oi-cog", title := "Toggle options", aria.hidden := "true"), " Advanced...")
             )
           ),
           div(cls := "container-fluid", style := "margin-top: 23px;", id := "resultStatus"),
@@ -951,19 +964,19 @@ object Repertorise {
                   div(cls := "container-fluid", id:="advancedSearchControlsDiv")
                 ),
                 div(id:="mainViewSearchButtons", cls:="col-md-auto text-center center-block", style:="margin-top:20px;",
-                  button(cls := "btn btn-primary", style:="width: 80px; margin-right:5px;", `type` := "button",
+                  button(cls := "btn btn-primary text-nowrap", style:="width: 80px; margin-right:5px;", `type` := "button",
                     onclick := { (event: Event) =>
                       event.stopPropagation()
                       onSymptomEntered()
                     },
                     span(cls := "oi oi-magnifying-glass", title := "Find", aria.hidden := "true")),
-                  button(`id`:="buttonMainViewAdvancedSearch", cls := "btn", style := "width: 70px;margin-right:5px;", `type` := "button",
+                  button(`id`:="buttonMainViewAdvancedSearch", cls := "btn btn-secondary text-nowrap", style := "width: 70px;margin-right:5px;", `type` := "button",
                     onclick := { (event: Event) =>
                       event.stopPropagation()
                       onShowAdvancedSearchOptionsMainView(false, false)
                     },
                     span(cls := "oi oi-cog", title := "Toggle options", aria.hidden := "true")),
-                  button(cls := "btn", style := "width: 70px;", `type` := "button",
+                  button(cls := "btn btn-secondary text-nowrap", style := "width: 70px;", `type` := "button",
                     onclick := { (event: Event) =>
                       event.stopPropagation()
                       onSymptomListRedoPressed()
@@ -1000,12 +1013,20 @@ object Repertorise {
     // If there are already some search results, do without center and fix nav bar prior to rendering
     else {
       if (dom.document.getElementById("nav_bar_logo").innerHTML.length() == 0) {
-        val navbar = dom.document.getElementById("public_nav_bar").asInstanceOf[dom.html.Element]
+        val navbar = dom.document.getElementById("nav_bar").asInstanceOf[dom.html.Element]
 
         navbar.className = navbar.className + " bg-dark navbar-dark shadow p-3 mb-5"
 
         dom.document.getElementById("nav_bar_logo")
           .appendChild(a(cls := "navbar-brand py-0", style:="margin-top:8px;", href := serverUrl(), h5(cls:="freetext", "OOREP")).render)
+
+        // When we come from the main page, we need to delete about and features, but not if we come from /?show=.... which doesn't have these two divs to begin with.
+        (dom.document.getElementById("about"), dom.document.getElementById("features")) match {
+          case (aboutDiv: dom.Element, featuresDiv: dom.Element) =>
+            dom.document.body.removeChild(aboutDiv)
+            dom.document.body.removeChild(featuresDiv)
+          case _ => ;
+        }
       }
       div(style:="margin-top:80px;", myHTML)
     }

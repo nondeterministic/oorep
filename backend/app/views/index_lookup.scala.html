@@ -1,16 +1,13 @@
-@(repertory: String, symptom: String, page: Int, remedyString: String, minWeight: Int, title: String)
+@(request: Request[AnyContent], repertory: String, symptom: String, page: Int, remedyString: String, minWeight: Int, title: String)
+
+@import org.multics.baueran.frep.backend.controllers._
+@import org.multics.baueran.frep.shared.Defs._
 
 @header = {
-        <link rel="stylesheet" href="@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/third-party/bootstrap-4.1.3/css/bootstrap.min.css">
+        <link id="normaltheme" rel="stylesheet" href="@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/third-party/bootstrap-4.2.1/css/bootstrap.min.css" @if(getFromRequestCookie(request, CookieFields.theme.toString).getOrElse("normal") == "dark") { disabled }>
+        <link id="darktheme" rel="stylesheet" href="@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/third-party/bootstrap-4.2.1/css/bootstrap-darkly.min.css" @if(getFromRequestCookie(request, CookieFields.theme.toString).getOrElse("normal") == "normal") { disabled }>
         <script src="@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/third-party/jquery-3.3.1.min.js"></script>
-        <script src="@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/third-party/popper.min.js"></script>
-        <script src="@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/third-party/bootstrap-4.1.3/js/bootstrap.min.js"></script>
-        <script src="@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/js/oorep_local.js"></script>
-        <link rel="stylesheet" href="@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/third-party/open-iconic-master/font/css/open-iconic-bootstrap.css">
         <link rel="stylesheet" href="@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/mystyle.css">
-
-        <meta name="description" content="Free online repertory of homeopathy that requires only a web browser to run. Features many of the classical repertories, such as Kent, Boger, Hering, etc." />
-	    <meta name="keywords" content="oorep, online, repertory, homeopathy, repertorization, kent" />
 
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -24,17 +21,29 @@
         } else {
         <meta property="og:title" content="OOREP - rubrics for '@symptom' in repertory '@repertory'" />
         }
+
+        <meta name="description" content="Free online repertory of homeopathy that requires only a web browser to run. Features many of the classical repertories, such as Kent, Boger, Hering, etc." />
+        <meta name="keywords" content="oorep, online, repertory, homeopathy, repertorization, kent" />
+
+        <title>@title</title>
 }
 
 @main(title, header) {
+
+    @if(org.multics.baueran.frep.backend.controllers.getAuthenticatedUser(request) == None) {
+       @partial.cookiepopup(org.multics.baueran.frep.backend.controllers.Get.staticServerUrl)
+    }
+
+    @partial.navbar(org.multics.baueran.frep.backend.controllers.Get.staticServerUrl, request)
+
     @partial.noscript_warning()
 
     <div id="temporary_content">
 
-        <div style="width:100%;" id="content">
+        <div style="width:100%;">
             <div style="width:100%; margin-top:100px; margin-bottom:100px;" class="text-center">
                 <h1 style="font-size:20pt;">
-                    <a href="@{org.multics.baueran.frep.backend.controllers.Get.staticServerUrl}/"><img src="@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/img/logo_small.png" alt="OOREP"></a>
+                    <a href="@{org.multics.baueran.frep.backend.controllers.Get.staticServerUrl}/"><img src="@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/img/logo_small.png" width="180" height="65" alt="OOREP"></a>
                     &nbsp; &middot; &nbsp; open online homeopathic repertory
                 </h1>
             </div>
@@ -45,19 +54,26 @@
 
         </div>
 
-        <div style="width:100%;">
-            @partial.disclaimer_noscript()
-        </div>
-
     </div>
 
-    <!-- Load JavaScript application first (e.g., in case of /show?), then execute below script. -->
-    <script src="/assets/frontend-opt.js"></script>
+    <div style="width:100%;" id="content"></div>
 
-    <!-- Now that application has loaded, display the results of below lookup... -->
+    @partial.disclaimer()
+
+    @if(org.multics.baueran.frep.backend.controllers.getAuthenticatedUser(request) == None) {
+
+        <script src="/assets/frontend-opt.js"></script>
+
+    } else {
+
+        <script src="/assets/sec_frontend-opt.js"></script>
+
+    }
+
     <script>
-    $(document).ready(function(){
-      Repertorise.doLookup("@repertory", "@symptom", "@page", "@remedyString", "@minWeight");
-    });
+        $(document).ready(function(){
+          Repertorise.doLookup("@repertory", "@symptom", "@page", "@remedyString", "@minWeight");
+        });
     </script>
+
 }

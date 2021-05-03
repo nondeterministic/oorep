@@ -1,0 +1,39 @@
+@(request: Request[AnyContent], page: Html, title: String, language: String = "en")
+
+@import org.multics.baueran.frep.backend.controllers._
+@import org.multics.baueran.frep.shared.Defs._
+
+@header = {
+  @{ partial.header(title,
+                    getFromRequestCookie(request, CookieFields.theme.toString).getOrElse("normal")) }
+}
+
+@main(title, header, language) {
+
+  @if(org.multics.baueran.frep.backend.controllers.getAuthenticatedUser(request) == None) {
+    @partial.cookiepopup(org.multics.baueran.frep.backend.controllers.Get.staticServerUrl)
+  }
+
+  @partial.navbar(org.multics.baueran.frep.backend.controllers.Get.staticServerUrl, request)
+
+  @partial.noscript_warning()
+
+  <div style="width:100%;" id="content">
+    <div id="static_content">
+      @page
+    </div>
+  </div>
+
+  @if(org.multics.baueran.frep.backend.controllers.getAuthenticatedUser(request) == None) {
+
+    <script src="/assets/frontend-opt.js"></script>
+
+  } else {
+
+    <script src="/assets/sec_frontend-opt.js"></script>
+
+  }
+
+  @partial.disclaimer()
+
+}

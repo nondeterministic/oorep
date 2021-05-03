@@ -19,15 +19,15 @@ import mutable.ListBuffer
 import rx.{Rx, Var}
 import rx.Ctx.Owner.Unsafe._
 import scalatags.rx.all._
-import fr.hmil.roshttp.response.SimpleHttpResponse
-import scala.util.{Failure, Success}
-import com.github.nondeterministic.notifyjs._
 
 import org.multics.baueran.frep.shared
+import shared.frontend.Notify
 import shared._
 import shared.Defs.CookieFields
 import shared.frontend.RemedyFormat.RemedyFormat
 import shared.sec_frontend.FileModalCallbacks._
+
+import scala.language.implicitConversions
 
 object Case {
 
@@ -169,9 +169,10 @@ object Case {
               "This shouldn't have happened, but previous saves should have taken care that no data-loss occurred.")
           }
         }
-        else if (memberId == -1)
-          Notify("Saving case failed. Please log out and back in, and then try again.", "error")
-        else
+        else if (memberId == -1) {
+          if (Notify.noAlertsVisible())
+            new Notify("tempFeedbackAlert", "Saving case failed. Please log out and back in, and then try again.")
+        } else
           println("Case: updateFileModalDataStructures(): NOT updating case in DB as case is currently unchanged (or member not authorised).")
       }
 
@@ -210,11 +211,11 @@ object Case {
     // Redraw table header
     $("#analysisTHead").empty()
     if (caseUsesWeights)
-      $("#analysisTHead").append(th(attr("scope"):="col", a(href:="#caseSectionOfPage", cls:="underline", style:="color:black;", onclick:={ (event: Event) => sortCaseBy = Weight; sortReverse() = !sortReverse.now }, "W.")).render)
-    $("#analysisTHead").append(th(attr("scope"):="col", a(href:="#caseSectionOfPage", cls:="underline", style:="color:black;", onclick:={ (event: Event) => sortCaseBy = Abbrev; sortReverse() = !sortReverse.now }, "Rep.")).render)
+      $("#analysisTHead").append(th(attr("scope"):="col", a(href:="#caseSectionOfPage", cls:="underline", onclick:={ (event: Event) => sortCaseBy = Weight; sortReverse() = !sortReverse.now }, "W.")).render)
+    $("#analysisTHead").append(th(attr("scope"):="col", a(href:="#caseSectionOfPage", cls:="underline", onclick:={ (event: Event) => sortCaseBy = Abbrev; sortReverse() = !sortReverse.now }, "Rep.")).render)
     if (caseUsesLabels)
-      $("#analysisTHead").append(th(attr("scope"):="col", a(href:="#caseSectionOfPage", cls:="underline", style:="color:black;", onclick:={ (event: Event) => sortCaseBy = Label; sortReverse() = !sortReverse.now }, "L.")).render)
-    $("#analysisTHead").append(th(attr("scope"):="col", a(href:="#caseSectionOfPage", cls:="underline", style:="color:black;", onclick:={ (event: Event) => sortCaseBy = Path; sortReverse() = !sortReverse.now }, "Rubric")).render)
+      $("#analysisTHead").append(th(attr("scope"):="col", a(href:="#caseSectionOfPage", cls:="underline", onclick:={ (event: Event) => sortCaseBy = Label; sortReverse() = !sortReverse.now }, "L.")).render)
+    $("#analysisTHead").append(th(attr("scope"):="col", a(href:="#caseSectionOfPage", cls:="underline", onclick:={ (event: Event) => sortCaseBy = Path; sortReverse() = !sortReverse.now }, "Rubric")).render)
     val allRemediesInCase = cRubrics.map(_.weightedRemedies.map(_.remedy)).flatten.distinct
     remedyScores.toList.sortWith(_._2 > _._2).map(_._1).foreach(nameabbrev =>
       $("#analysisTHead").append(th(attr("scope") := "col",
@@ -229,7 +230,7 @@ object Case {
     for (cr <- cRubrics.filter(_.rubricWeight > 0)
       .sortBy(cr => {
         if (sortCaseBy == Weight)
-          cr.rubricWeight + cr.rubricLabel.getOrElse("") + cr.repertoryAbbrev + cr.rubric.fullPath
+          s"${cr.rubricWeight}${cr.rubricLabel.getOrElse("")}${cr.repertoryAbbrev}${cr.rubric.fullPath}"
         else if (sortCaseBy == Path)
           cr.rubric.fullPath
         else if (sortCaseBy == Abbrev)
@@ -377,7 +378,7 @@ object Case {
 
                       updateCaseViewAndDataStructures()
                     }),
-                  button(data.dismiss:="modal", cls:="btn mb-2",
+                  button(data.dismiss:="modal", cls:="btn mb-2 btn-secondary",
                     "Cancel",
                     onclick:={ (event: Event) =>
                       descr match {
@@ -415,7 +416,7 @@ object Case {
 
       tr(scalatags.JsDom.attrs.id := "crub_" + crub.rubric.id + crub.repertoryAbbrev,
         td(
-          button(`type` := "button", cls := "btn dropdown-toggle btn-sm", style := "width:45px;", data.toggle := "dropdown", printWeight),
+          button(`type` := "button", cls := "btn dropdown-toggle btn-sm btn-secondary", style := "width:45px;", data.toggle := "dropdown", printWeight),
           div(cls := "dropdown-menu",
             a(cls := "dropdown-item", href := "#caseSectionOfPage", onclick := { (event: Event) => crub.rubricWeight = 0; weight() = 0; updateCaseViewAndDataStructures() }, "0 (ignore)"),
             a(cls := "dropdown-item", href := "#caseSectionOfPage", onclick := { (event: Event) => crub.rubricWeight = 1; weight() = 1; updateCaseViewAndDataStructures() }, "1 (normal)"),
@@ -426,7 +427,7 @@ object Case {
         ),
         td(crub.repertoryAbbrev),
         td(
-          button(`type`:="button", cls:="btn dropdown-toggle btn-sm", style:="width:45px;", data.toggle:="dropdown", printLabel),
+          button(`type`:="button", cls:="btn dropdown-toggle btn-sm btn-secondary", style:="width:45px;", data.toggle:="dropdown", printLabel),
           div(cls := "dropdown-menu", style:="max-height:250px; overflow-y:auto;",
             a(cls := "dropdown-item", href := "#caseSectionOfPage", onclick := { (event: Event) => crub.rubricLabel = None; label() = None; updateCaseViewAndDataStructures() }, "none"),
             a(cls := "dropdown-item", href := "#caseSectionOfPage", onclick := { (event: Event) => crub.rubricLabel = Some("A"); label() = Some("A"); updateCaseViewAndDataStructures() }, "A"),
@@ -460,7 +461,7 @@ object Case {
         td(style := "width:28%;", crub.rubric.fullPath),
         td(cls:="d-none d-sm-table-cell", remedies.take(remedies.size - 1).map(l => span(l, ", ")) ::: List(remedies.last)),
         td(cls := "text-right",
-          button(cls := "btn btn-sm", `type` := "button",
+          button(cls := "btn btn-sm btn-secondary", `type` := "button",
             scalatags.JsDom.attrs.id := ("rmBut_" + crub.rubric.id + crub.repertoryAbbrev),
             style := "vertical-align: middle; display: inline-block",
             onclick := { (event: Event) => {
@@ -495,7 +496,7 @@ object Case {
           }},
           "Repertorise")
       val editDescrButton =
-        button(cls:="btn btn-sm btn-dark", id:="editDescrButton", `type`:="button", data.toggle:="modal", data.target:="#caseDescriptionModal", style:="display: none; margin-left:5px; margin-bottom: 5px;",
+        button(cls:="btn btn-sm btn-secondary", id:="editDescrButton", `type`:="button", data.toggle:="modal", data.target:="#caseDescriptionModal", style:="display: none; margin-left:5px; margin-bottom: 5px;",
           onclick := { (event: Event) => {
             descr match {
               case Some(descr) =>
@@ -506,7 +507,7 @@ object Case {
           }
           }, "Edit case description")
       val openNewCaseButton =
-        button(cls:="btn btn-sm btn-dark", id:="openNewCaseButton", `type`:="button", data.toggle:="modal", data.target:="#caseDescriptionModal", style:="margin-left:5px; margin-bottom: 5px;",
+        button(cls:="btn btn-sm btn-secondary", id:="openNewCaseButton", `type`:="button", data.toggle:="modal", data.target:="#caseDescriptionModal", style:="margin-left:5px; margin-bottom: 5px;",
           onclick := { (event: Event) => {
             dom.document.getElementById("caseDescrId").asInstanceOf[HTMLInputElement].removeAttribute("readonly")
             $("#caseDescrId").`val`("")
@@ -514,7 +515,7 @@ object Case {
           }},
           "Open new case")
       val closeCaseButton =
-        button(cls:="btn btn-sm btn-dark", id:="closeCaseButton", `type`:="button", style:="display: none; margin-left:5px; margin-bottom: 5px;",
+        button(cls:="btn btn-sm btn-secondary", id:="closeCaseButton", `type`:="button", style:="display: none; margin-left:5px; margin-bottom: 5px;",
           onclick := { (event: Event) => {
             for (crub <- cRubrics) {
               crub.rubricWeight = 1
@@ -528,7 +529,7 @@ object Case {
           }
           }, "Close case")
       val addToFileButton =
-        button(cls:="btn btn-sm btn-dark", id:="addToFileButton", `type`:="button", data.toggle:="modal", data.target:="#addToFileModal", disabled:=true, style:="margin-left:5px; margin-bottom: 5px;",
+        button(cls:="btn btn-sm btn-secondary", id:="addToFileButton", `type`:="button", data.toggle:="modal", data.target:="#addToFileModal", disabled:=true, style:="margin-left:5px; margin-bottom: 5px;",
           onclick := { (event: Event) => {
             updateCaseViewAndDataStructures()
           }},
@@ -574,7 +575,7 @@ object Case {
             th(attr("scope"):="col", "Rubric"),
             th(cls:="d-none d-sm-table-cell", attr("scope"):="col",
               a(scalatags.JsDom.attrs.id:="caseSectionOfPage",
-                cls:="underline", href:="#caseSectionOfPage", style:="color:white;",
+                cls:="underline", href:="#caseSectionOfPage",
                 onclick:=((event: Event) => Repertorise.toggleRemedyFormat()),
                 "Remedies")
             ),

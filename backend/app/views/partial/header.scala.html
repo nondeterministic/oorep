@@ -1,0 +1,35 @@
+@(title: String, theme: String)
+
+<meta charset="utf-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<meta property="og:image" content="@{org.multics.baueran.frep.backend.controllers.Get.staticServerUrl}@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/img/oorep_screenshot.jpg" />
+<meta property="og:image:secure_url" content="@{org.multics.baueran.frep.backend.controllers.Get.staticServerUrl}@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/img/oorep_screenshot.jpg" />
+<meta property="og:description" content="Free online repertory of homeopathy that requires only a web browser to run. Features many of the classical repertories, such as Kent, Boger, Hering, etc." />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="OOREP - open online homeopathic repertory" />
+
+<meta name="description" content="Free online repertory of homeopathy that requires only a web browser to run. Features many of the classical repertories, such as Kent, Boger, Hering, etc." />
+<meta name="keywords" content="oorep, online, repertory, homeopathy, repertorization, kent" />
+
+<link id="darktheme" rel="stylesheet" href="@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/third-party/bootstrap-4.2.1/css/bootstrap-darkly.min.css" @if(theme == "normal") { disabled }>
+<link id="normaltheme" rel="stylesheet" href="@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/third-party/bootstrap-4.2.1/css/bootstrap.min.css" @if(theme == "dark") { disabled }>
+
+<script src="@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/third-party/jquery-3.3.1.min.js"></script>
+
+<link rel="stylesheet" href="@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/third-party/aos-master/dist/aos.css" />
+<script src="@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/third-party/aos-master/dist/aos.js"></script>
+
+<link rel="stylesheet" href="@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/mystyle.css">
+
+<noscript>
+    <style>
+        [data-aos] {
+            opacity: 1 !important;
+            transform: translate(0) scale(1) !important;
+        }
+    </style>
+</noscript>
+
+<title>@title</title>

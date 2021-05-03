@@ -1,5 +1,6 @@
 package org.multics.baueran.frep.shared
 
+import scala.scalajs.js.annotation.JSExportTopLevel
 import org.scalajs.dom
 
 package object Defs {
@@ -30,16 +31,7 @@ package object Defs {
   // Do not rename csrfCookie unless you know what you're doing!
   object CookieFields extends Enumeration {
     type CookieFields = Value
-    val id, csrfCookie, cookiePopupAccepted = Value
-    // val email, salt, id, csrfCookie, cookiePopupAccepted, creationDate = Value
-  }
-
-  def deleteCookies() = {
-    val cookieNames = CookieFields.values.map(_.toString)
-    dom.document.cookie = "PLAY_SESSION=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT"
-    cookieNames.foreach(cookieName =>
-      dom.document.cookie = s"${cookieName}=; path=/; expires='Thu, 01 Jan 1970 00:00:01 GMT"
-    )
+    val id, csrfCookie, cookiePopupAccepted, theme = Value
   }
 
 }

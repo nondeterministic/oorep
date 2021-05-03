@@ -1,33 +1,76 @@
-        <div class="jumbotron jumbo-dark horizontal-center" id="about" style="position: relative;">
-          <div class="container">
-            <div class="row">
-              <div class="col align-self-center">
-                <h3 style="text-align:center; margin-bottom: 10px">
-                  <span>About</span>
-                </h3>
-                <div style="text-align:justify;max-width:700px;">
-                  <p>
-                    OOREP is an open online repertory for homeopathy.  It is open, because its source code is freely available,
-                    it is online, because a running instance of it is served right here on this very server for your convenience.
-                    It is NOT some kind of medical recommendation system - please read the disclaimer below.  Repertorisation is
-                    the looking up of homeopathic repertories, and as such this system does not provide any information, which
-                    you cannot obtain from its original sources.  However, online repertorisation is so much easier sometimes than
-                    looking up the categories yourself.
-                  </p>
-                  <p>
-                    A word from the author:
-                    OOREP was especially developed for people who study homeopathy, either professionally or as a hobby like I am.
-                    I am not making any money from developing this software or from a homeopathic practice of any sorts.  As an interested
-                    layperson I have found it difficult, if not impossible, to get access to a good electronic repertorisation.
-                    Most homeopathic softwares are very expensive and intended to be used by people who make money by using them.
-                    For those of us who don't (or don't yet), like hobbyists or students, the access to these kinds of programs used to be very slim.
-                    With OOREP I intend to improve this situation somewhat.  So I hope it is useful to others, too.
-                  </p>
+        <div id="about">
+
+          <div class="jumbotron jumbo-dark horizontal-center" style="position: relative;">
+            <div class="container">
+              <div class="row">
+                <div class="col align-self-center">
+                  <div data-aos="fade-right" data-aos-offset="200" data-aos-easing="ease-in-sine" data-aos-duration="600" data-aos-once="true">
+                    <h3 style="text-align:center; margin-bottom: 10px">
+                      <span class="blue-dot"></span>
+                      <span class="blue-dot"></span>
+                      <span class="blue-dot"></span>
+                      <span>About</span>
+                      <span class="blue-dot"></span>
+                      <span class="blue-dot"></span>
+                      <span class="blue-dot"></span>
+                    </h3>
+                  </div>
+                  <div style="text-align:justify;max-width:700px;">
+                    <p>
+                      OOREP is an open online repertory for homeopathy.  It is open, because its source code is freely available,
+                      it is online, because a running instance of it is served right here on this very server for your convenience.
+                      It is NOT some kind of medical recommendation system - please read the disclaimer below.  Repertorisation is
+                      the looking up of homeopathic repertories, and as such this system does not provide any information, which
+                      you cannot obtain from its original sources.  However, online repertorisation is so much easier sometimes than
+                      looking up the categories yourself.
+                    </p>
+                    <p>
+                      A word from the author:
+                      OOREP was especially developed for people who study homeopathy, either professionally or as a hobby like I am.
+                      I am not making any money from developing this software or from a homeopathic practice of any sorts.  As an interested
+                      layperson I have found it difficult, if not impossible, to get access to a good electronic repertorisation.
+                      Most homeopathic softwares are very expensive and intended to be used by people who make money by using them.
+                      For those of us who don't (or don't yet), like hobbyists or students, the access to these kinds of programs used to be very slim.
+                      With OOREP I intend to improve this situation somewhat.  So I hope it is useful to others, too.
+                    </p>
+                  </div>
                 </div>
-              </div>
-              <div class="col">
-                <img style="height:500px" src="@{org.multics.baueran.frep.backend.controllers.Get.staticServerUrl}@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/img/hahnemann_statue.png" alt="">
+                <div class="col">
+                  <img height="500" width="383" src="@{org.multics.baueran.frep.backend.controllers.Get.staticServerUrl}@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/img/hahnemann_statue_2.webp" alt="">
+                </div>
               </div>
             </div>
           </div>
+
+          <div class="jumbotron jumbo-light" style="position: relative;">
+            <div class="container">
+              <div class="row h-100">
+                <div class="col">
+                  <img src="@{org.multics.baueran.frep.backend.controllers.Get.staticServerUrl}@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/img/laptop-min.webp"
+                       srcset="@{org.multics.baueran.frep.backend.controllers.Get.staticServerUrl}@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/img/laptop-min.webp 383w,
+                       @{org.multics.baueran.frep.backend.controllers.Get.staticServerUrl}@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/img/laptop-med.webp 500w,
+                       @{org.multics.baueran.frep.backend.controllers.Get.staticServerUrl}@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/img/laptop.webp 830w"
+                       sizes="(max-width: 1024px) 383px,
+                       (max-width: 1300px) 500px,
+                       830px"
+                       style="position: relative; left:-15px;"
+                       alt="OOREP screenshot">
+                </div>
+                <div class="col my-auto" style="font-size: 120%;">
+                  <div style="width: 80%;" data-aos="fade-left" data-aos-delay="300" data-aos-offset="200" data-aos-easing="ease-in-sine" data-aos-duration="600" data-aos-once="true">
+                    <h2 style="margin-bottom: 10px">
+                      <i>At a glance...</i>
+                    </h2>
+                    <p>
+                      A homeopathic repertorisation software that runs in your browser.
+                    </p>
+                    <p>
+                      All classic repertories just a click away!
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>

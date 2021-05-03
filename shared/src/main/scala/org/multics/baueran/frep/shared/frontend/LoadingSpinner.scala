@@ -1,13 +1,12 @@
 package org.multics.baueran.frep.shared.frontend
 
-import org.querki.jquery.$
 import org.scalajs.dom
 import scalatags.JsDom.all._
 
 class LoadingSpinner(parentId: String) {
 
   def add() = {
-    $(s"#${parentId}").append(
+    dom.document.getElementById(s"${parentId}").appendChild(
       div(id:="loading", style:="text-align: center; position:fixed; top:50%; left:50%;",
         p(img(src:=s"${serverUrl()}/assets/html/img/ajax-loader.gif")),
         p("OOREP loading...")

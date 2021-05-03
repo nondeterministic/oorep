@@ -84,10 +84,10 @@ object OpenFileModal extends FileModal {
                 },
                 "Open"
               ),
-              button(cls:="btn mb-2", style:="margin-left:8px;", id:="deleteFileOpenFileModal", data.toggle:="modal", data.dismiss:="modal", data.target:="#openFileModalAreYouSure", disabled:=true,
+              button(cls:="btn mb-2 btn-secondary", style:="margin-left:8px;", id:="deleteFileOpenFileModal", data.toggle:="modal", data.dismiss:="modal", data.target:="#openFileModalAreYouSure", disabled:=true,
                 "Delete"
               ),
-              button(data.dismiss:="modal", cls:="btn mb-2", "Cancel")
+              button(data.dismiss:="modal", cls:="btn mb-2 btn-secondary", "Cancel")
             )
           )
         )

@@ -10,7 +10,6 @@ val circeVersion       = "0.13.0"
 val rosHttpVersion     = "3.0.0"
 val quillVersion       = "3.5.2"
 val pgDriverVersion    = "42.2.5"
-val notifyjsVersion    = "0.2.0"
 val scriptsVersion     = "1.1.4"
 val apacheCommonsMailV = "1.5"
 
@@ -19,6 +18,8 @@ resolvers in ThisBuild += "fr.hmil" at "https://files.hmil.fr/maven"
 useJCenter := true
 
 scalaVersion in ThisBuild := myScalaVersion
+
+scalaJSStage in Global := FullOptStage
 
 lazy val backend = (project in file("backend")).settings(commonSettings).settings(
   scalaJSProjects := Seq(frontend, sec_frontend),
@@ -41,14 +42,11 @@ lazy val backend = (project in file("backend")).settings(commonSettings).setting
     guice,
     specs2 % Test
   )
-  // Compile the project before generating Eclipse files, so that generated .scala or .class files for views and routes are present
-  // EclipseKeys.preTasks := Seq(compile in Compile)
 ).enablePlugins(PlayScala)
  .dependsOn(sharedJvm)
 
 lazy val frontend = (project in file("frontend")).settings(commonSettings).settings(
   scalaJSUseMainModuleInitializer := true,
-  skip in packageJSDependencies := false,
 
   libraryDependencies ++= Seq(
     "org.scala-js" %%% "scalajs-dom" % scalaJsDomVersion,
@@ -60,12 +58,11 @@ lazy val frontend = (project in file("frontend")).settings(commonSettings).setti
     "fr.hmil" %%% "roshttp" % rosHttpVersion,
     "com.timushev" %%% "scalatags-rx" % scalatagsrxVersion
   ),
-).enablePlugins(JSDependenciesPlugin, ScalaJSPlugin, ScalaJSWeb)
+).enablePlugins(ScalaJSPlugin, ScalaJSWeb)
  .dependsOn(sharedJs)
 
 lazy val sec_frontend = (project in file("sec_frontend")).settings(commonSettings).settings(
   scalaJSUseMainModuleInitializer := true,
-  skip in packageJSDependencies := false,
 
   libraryDependencies ++= Seq(
     "org.scala-js" %%% "scalajs-dom" % scalaJsDomVersion,
@@ -77,13 +74,12 @@ lazy val sec_frontend = (project in file("sec_frontend")).settings(commonSetting
     "fr.hmil" %%% "roshttp" % rosHttpVersion, 
     "com.timushev" %%% "scalatags-rx" % scalatagsrxVersion
   ),
-).enablePlugins(JSDependenciesPlugin, ScalaJSPlugin, ScalaJSWeb)
+).enablePlugins(ScalaJSPlugin, ScalaJSWeb)
  .dependsOn(sharedJs)
 
 lazy val shared = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
   .in(file("shared"))
-  .jsConfigure(_.enablePlugins(JSDependenciesPlugin))
   .settings(
     libraryDependencies ++= Seq(
       "io.circe" %% "circe-core" % circeVersion,
@@ -94,15 +90,13 @@ lazy val shared = crossProject(JSPlatform, JVMPlatform)
       "org.querki" %%% "jquery-facade" % scalaJQueryVersion,
       "fr.hmil" %%% "roshttp" % rosHttpVersion,
       "com.timushev" %%% "scalatags-rx" % scalatagsrxVersion,
-      "org.scalatestplus.play" %% "scalatestplus-play" % scalaTestVersion % "test",
-      "com.github.nondeterministic" %%% "scalajs-notifyjs" % notifyjsVersion,
-      guice,
-      specs2 % Test
+// TODO: Not sure if they are required for backend tests...
+//      "org.scalatestplus.play" %% "scalatestplus-play" % scalaTestVersion % "test",
+//      guice,
+//      specs2 % Test
     ),
-    jsDependencies += "org.webjars" % "jquery"   % "2.2.4" / "2.2.4/jquery.js",
-    jsDependencies += "org.webjars" % "notifyjs" % "0.4.2" / "0.4.2/notify.js",
   )
-  .enablePlugins(JSDependenciesPlugin, ScalaJSPlugin, ScalaJSWeb)
+  .enablePlugins(ScalaJSPlugin, ScalaJSWeb)
 
 lazy val sharedJvm = shared.jvm
 lazy val sharedJs = shared.js
@@ -116,7 +110,7 @@ lazy val commonSettings = Seq(
   scalaVersion := myScalaVersion,
   organization := "org.multics.baueran.frep",
   maintainer := "baueran@gmail.com",
-  version := "0.10.0"
+  version := "0.11.0"
 )
 
 // TODO: This doesn't work, and I can't be bothered to get it to work.

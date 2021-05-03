@@ -14,6 +14,12 @@ class FileDao(dbContext: db.db.DBContext) {
     querySchema[dbFile]("File", _.date -> "date_")
   }
 
+  def getAllFilesWithHeader(header: String) = {
+    run ( quote {
+      tableFile.filter(_.header == lift(header))
+    })
+  }
+
   def getFIle(id: Int) = {
     try {
       Logger.debug(s"FileDao: getFIle(${id}): getting file with id ${id}")

@@ -1,13 +1,18 @@
 package org.multics.baueran.frep.shared
 
-import org.multics.baueran.frep.shared.Defs.SpecialLookupParams
-import org.multics.baueran.frep.shared.frontend.RemedyFormat
+import fr.hmil.roshttp.HttpRequest
+import fr.hmil.roshttp.response.SimpleHttpResponse
+import monix.execution.Scheduler.Implicits.global
+import org.multics.baueran.frep.shared.Defs.{CookieFields, SpecialLookupParams}
+import org.multics.baueran.frep.shared.frontend.{RemedyFormat, apiPrefix, serverUrl}
 import org.multics.baueran.frep.shared.frontend.RemedyFormat._
+import org.scalajs.dom
 import scalatags.JsDom.all._
 
-import scala.scalajs.js
 import java.text.SimpleDateFormat
 import java.util.Date
+import scala.scalajs.js.annotation.JSExportTopLevel
+import scala.util.Success
 
 class BetterString(val s: String) {
   def shorten = if (s.length <= 66) s else s.substring(0,62) + "..."
@@ -123,4 +128,63 @@ class MyDate(isoDateString: String) {
   }
 
   override def toString() = isoDateString
+}
+
+object TopLevelUtilCode {
+
+  @JSExportTopLevel("deleteCookies")
+  def deleteCookies() = {
+    val cookieNames = CookieFields.values.map(_.toString)
+    dom.document.cookie = "PLAY_SESSION=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT"
+    cookieNames.foreach(cookieName =>
+      dom.document.cookie = s"${cookieName}=; path=/; expires='Thu, 01 Jan 1970 00:00:01 GMT"
+    )
+  }
+
+  @JSExportTopLevel("sendAcceptCookies")
+  def sendAcceptCookies() = {
+    HttpRequest(s"${serverUrl()}/${apiPrefix()}/store_cookie")
+      .withQueryParameters("name" -> CookieFields.cookiePopupAccepted.toString, "value" -> "1")
+      .send()
+      .onComplete({
+        case _: Success[SimpleHttpResponse] =>
+          dom.document.getElementById("cookiePopup").asInstanceOf[dom.html.Div].classList.remove("show")
+          dom.document.getElementById("cookiePopup").asInstanceOf[dom.html.Div].style.setProperty("display", "none")
+        case _ =>
+          println("Error: Cookie popup not destroyed.")
+      })
+  }
+
+  @JSExportTopLevel("loadMainPageAndJumpToAnchor")
+  def loadMainPageAndJumpToAnchor(anchor: String) = {
+    if (dom.document.getElementById(anchor) != null) {
+      dom.document.getElementById(anchor).scrollIntoView(true)
+    } else {
+      dom.window.location.reload(true)
+      dom.window.location.assign(s"${serverUrl()}/#${anchor}")
+    }
+  }
+
+  @JSExportTopLevel("toggleTheme")
+  def toggleTheme() = {
+    def storeThemeInCookie(theme: String) =
+      HttpRequest(s"${serverUrl()}/${apiPrefix()}/store_cookie")
+        .withQueryParameters("name" -> CookieFields.theme.toString, "value" -> theme)
+        .send()
+
+    val normaltheme = dom.document.getElementById("normaltheme").asInstanceOf[dom.html.Element]
+    val darktheme = dom.document.getElementById("darktheme").asInstanceOf[dom.html.Element]
+
+    normaltheme.getAttribute("disabled") match {
+      case _:String =>
+        normaltheme.removeAttribute("disabled")
+        darktheme.setAttribute("disabled", "disabled")
+        storeThemeInCookie("normal")
+      case _ =>
+        darktheme.removeAttribute("disabled")
+        normaltheme.setAttribute("disabled", "disabled")
+        storeThemeInCookie("dark")
+    }
+  }
+
 }

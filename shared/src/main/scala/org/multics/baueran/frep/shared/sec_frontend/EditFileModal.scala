@@ -156,18 +156,20 @@ object EditFileModal {
     }
 
     div(cls:="modal fade", tabindex:="-1", role:="dialog", id:="editFileModal",
-      div(cls:="modal-dialog modal-dialog-centered", role:="document", style:="min-width: 80%;",
+      div(cls:="modal-dialog modal-dialog-centered", role:="document", style:="min-width: 80%; overflow-y: initial;",
         div(cls:="modal-content",
           div(cls:="modal-header",
             h5(cls:="modal-title", Rx(fileName_fileId()._1)),
             button(`type`:="button", cls:="close", data.dismiss:="modal", "\u00d7")
           ),
-          div(cls:="modal-body",
+          div(cls:="modal-body", style:="height: auto; overflow-y: auto;",
+          // TODO: If one wants to scroll modal body, we need a height. Right now, however, we don't want that:
+          // div(cls:="modal-body", style:="height: 80vh; overflow-y: auto;",
 
             div(cls:="form-group mb-2",
               div(cls:="mb-3",
                 label(`for`:="fileDescr", "Description"),
-                textarea(cls:="form-control", id:="fileDescrEditFileModal", rows:="8", placeholder:="A more verbose description of the file",
+                textarea(cls:="form-control", id:="fileDescrEditFileModal", rows:="8", placeholder:="A more verbose description of the file", style:="height: 20vh;",
                   onkeyup:= { (event: Event) =>
                     currentFileDescription match {
                       case Some(fileDescription) =>
@@ -184,7 +186,7 @@ object EditFileModal {
                   })
               ),
               div(cls:="form-row d-flex flex-row-reverse",
-                button(cls:="btn mb-2 mr-2 ml-2", id:="saveFileDescrEditFileModalButton", data.toggle:="modal", data.dismiss:="modal", disabled:=true,
+                button(cls:="btn btn-primary mb-2 mr-2 ml-2", id:="saveFileDescrEditFileModalButton", data.toggle:="modal", data.dismiss:="modal", disabled:=true,
                   onclick:= { (event: Event) =>
                     fileName_fileId.now match {
                       case (fileName, fileId) if fileId.forall(_.isDigit) =>
@@ -199,7 +201,7 @@ object EditFileModal {
                     js.eval("$('#editFileModal').modal('hide');") // TODO: This is ugly! No idea for an alternative :-(
                   },
                   "Save"),
-                button(cls:="btn mb-2", data.dismiss:="modal", "Cancel")
+                button(cls:="btn mb-2 btn-secondary", data.dismiss:="modal", "Cancel")
               )
             ),
 
@@ -208,13 +210,14 @@ object EditFileModal {
             div(cls:="form-group",
               div(cls:="form-row",
                 label(`for`:="editFileAvailableFilesList", "Cases"),
-                div(cls:="row",
-                  cls:="col-12 list-group", role:="tablist", id:="editFileAvailableCasesList", style:=Rx("height: " + casesHeight.toString() + "px; overflow-y: scroll;"),
+                div(cls:="col-12 list-group", role:="tablist", id:="editFileAvailableCasesList", style:="height: 30vh; overflow-y: scroll;",
+                  // TODO: It seems, we no longer need this RX here...
+                  // cls:="col-12 list-group", role:="tablist", id:="editFileAvailableCasesList", style:=Rx("height: " + casesHeight.toString() + "px; overflow-y: scroll;"),
                   caseAnchors
                 )
               ),
               div(cls:="form-row d-flex flex-row-reverse",
-                button(cls:="btn mb-2 mt-2 ml-2", id:="openFileEditFileModal", data.toggle:="modal", data.dismiss:="modal", disabled:=true,
+                button(cls:="btn btn-primary mb-2 mt-2 ml-2", id:="openFileEditFileModal", data.toggle:="modal", data.dismiss:="modal", disabled:=true,
                   onclick:={ (event: Event) =>
                     getCaseFromCurrentSelection()
 
@@ -243,7 +246,7 @@ object EditFileModal {
                       })
                   },
                   "Open"),
-                button(cls:="btn mb-2 mt-2", id:="deleteFileEditFileModal", data.toggle:="modal", data.dismiss:="modal", data.target:="#editFileModalAreYouSureCase", disabled:=true,
+                button(cls:="btn mb-2 mt-2 btn-secondary", id:="deleteFileEditFileModal", data.toggle:="modal", data.dismiss:="modal", data.target:="#editFileModalAreYouSureCase", disabled:=true,
                   onclick:= { (event: Event) => getCaseFromCurrentSelection() },
                   "Delete")
 

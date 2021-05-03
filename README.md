@@ -54,16 +54,21 @@ attempting to execute the OOREP code using SBT.
 It is strongly recommended to also download the following external JavaScript
 libraries and fonts:
 
-* [bootstrap](https://getbootstrap.com/) (tested with v4.1.3)
+* [aos](https://github.com/michalsnik/aos) (tested with v2.3.4)
+* [bootstrap](https://getbootstrap.com/) (tested with v4.2.1)
+* [bootswatch](https://bootswatch.com/) (tested with v4.2.1)
 * [jquery](https://jquery.com/) (tested with v3.3.1)
 * [popper](https://popper.js.org/) (tested with v1.15.0)
-* [notify.js](https://github.com/jpillora/notifyjs) (tested with v0.4.2)
 * [Open Iconic font](https://useiconic.com/open)
+* [Open Sans font](https://fonts.google.com/specimen/Open+Sans)
+* [Linux Libertine Display font](https://en.wikipedia.org/wiki/Linux_Libertine)
 
 For your convenience, an archived package with the respective versions 
-is available [here](http://pspace.org/a/third-party.tar.gz).  It should
+is available [here](http://pspace.org/a/third-party-v2.tar.gz).  It should
 be unpacked and then placed inside `backend/public/html` within the main
-OOREP directory.
+OOREP directory. (For OOREP versions < 0.11, you should use
+[this file](http://pspace.org/a/third-party.tar.gz)
+instead.)
 
 ### Compiling and running
 

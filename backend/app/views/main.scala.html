@@ -4,14 +4,11 @@
  * two arguments, a `String` for the title of the page and an `Html`
  * object to insert into the body of the page.
  *@
-@(title: String, header: Html)(content: Html)
+@(title: String, header: Html, language: String = "en")(content: Html)
 
 <!DOCTYPE html>
-<html lang="en" xmlns="http://www.w3.org/1999/xhtml" prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns/fb#">
+<html lang="@language" xmlns="http://www.w3.org/1999/xhtml" prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns/fb#">
     <head>
-        @* Here's where we render the page title `String`. *@
-        <title>@title</title>
-
         @header
     </head>
     <body>

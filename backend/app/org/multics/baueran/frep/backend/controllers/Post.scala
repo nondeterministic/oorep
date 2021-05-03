@@ -124,7 +124,8 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
 
         // Delete old (-ish) entries from email history to clean up...
         val oldEmailHistory = emailHistoryDao.getAllOlderThan(25.0)
-        Logger.debug(s"Deleted ${emailHistoryDao.deleteAll(oldEmailHistory.map(_.id))} old entries from email history table.")
+        val deletedEmails = emailHistoryDao.deleteAll(oldEmailHistory.map(_.id))
+        Logger.debug(s"Deleted ${deletedEmails} old entries from email history table.")
 
         // We don't want OOREP to send more than 6 emails to the same address within 24 hours (to avoid abuse)
         val recentEmailsToMember = emailHistoryDao.getAllYoungerThan(24.0).filter(_.email == member.email)
@@ -270,7 +271,11 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
               Logger.error( err)
               Forbidden(err)
             } else {
-              Ok(fileDao.insert(file).toString())
+              // File headers must be unique
+              if (fileDao.getAllFilesWithHeader(file.header).length == 0)
+                Ok(fileDao.insert(file).toString())
+              else
+                Conflict("Error inserting file, file with that name/header probably already exists.")
             }
           case None =>
             BadRequest(s"Post: saveFile() failed for input: ${request.body.asText}.")

@@ -72,7 +72,7 @@ object AddToFileModal extends FileModal {
 
                   js.eval("$('#addToFileModal').modal('hide');")
                 }),
-              button(data.dismiss:="modal", cls:="btn mb-2", "Cancel")
+              button(data.dismiss:="modal", cls:="btn mb-2 btn-secondary", "Cancel")
             )
           )
         )

@@ -13,6 +13,13 @@ package object controllers {
 
   private val Logger = play.api.Logger(this.getClass)
 
+  def getFromRequestCookie(request: Request[AnyContent], name: String): Option[String] = {
+    request.cookies.get(name) match {
+      case Some(cookie) => Some(cookie.value)
+      case None => None
+    }
+  }
+
   /**
     * Check if user has received a cookie after authentication (but do not check authorization here! This is not
     * a login method or the like!  Look inside Post.scala for how login is done, AFTER which a cookie is stored.)

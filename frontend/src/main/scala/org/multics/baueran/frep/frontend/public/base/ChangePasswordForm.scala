@@ -12,9 +12,12 @@ object ChangePasswordForm {
 
   @JSExport("show")
   def show(memberId: Int, pcrId: String) = {
-    val contentDiv = dom.document.getElementById("content").asInstanceOf[dom.html.Element]
-    contentDiv.innerHTML = ""
-    contentDiv.appendChild(apply(memberId, pcrId).render)
+    dom.document.getElementById("content") match {
+      case null => ;
+      case contentDiv =>
+        contentDiv.innerHTML = ""
+        contentDiv.appendChild(apply(memberId, pcrId).render)
+    }
   }
 
   private def isAllowedPassword(password: String) = {
@@ -87,7 +90,7 @@ object ChangePasswordForm {
     div(cls:="container", id:="changePasswordFormContainer", style:="padding-top:200px; padding-bottom:200px;",
 
       div(cls:="col text-center",
-        img(src:=s"${serverUrl()}/assets/html/img/logo_small.png", alt:="OOREP - open online repertory of homeopathy")
+        img(src:=s"${serverUrl()}/assets/html/img/logo_small.png", style:="width:180px; height:65px;", alt:="OOREP - open online repertory of homeopathy")
       ),
 
       div(cls:="row justify-content-center", style:="padding-top:50px; padding-bottom:30px;",

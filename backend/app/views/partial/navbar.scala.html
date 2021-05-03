@@ -1,0 +1,105 @@
+@(serverUrl: String, request: Request[AnyContent])
+
+@if(org.multics.baueran.frep.backend.controllers.getAuthenticatedUser(request) == None) {
+
+<nav class="navbar py-0 py-md-0 fixed-top navbar-expand-sm navbar-light" id="nav_bar">
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggler">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div id="nav_bar_logo"></div>
+    <div class="navbar-header pull-right">
+        <form class="form-inline">
+            <div class="nav-item custom-control custom-switch mr-sm-2" style="line-height: 7px; padding-right: 0rem; padding-left: 3rem;">
+                <input type="checkbox" class="navbar-toggler form-control custom-control-input" onclick="toggleTheme()" id="transparency" checked>
+                <label class="navbar-text custom-control-label p-0 small" for="transparency">
+                    <span class="oi oi-moon" style="font-size: 18px; padding-top: 0px;" title="Dark mode"></span>
+                </label>
+            </div>
+        </form>
+    </div>
+    <div class="collapse navbar-collapse" id="navbarToggler">
+        <div class="ml-auto">
+            <ul class="navbar-nav mr-auto">
+                <li class="navbar-item">
+                    <a class="nav-link py-0" onclick="loadMainPageAndJumpToAnchor('about')" href="#about">About</a>
+                </li>
+                <li class="navbar-item">
+                    <a class="nav-link py-0" onclick="loadMainPageAndJumpToAnchor('features')" href="#features">Features</a>
+                </li>
+                <li class="navbar-item">
+                    <a class="nav-link py-0" href="/pricing">Pricing</a>
+                </li>
+                <li class="navbar-item">
+                    <a class="nav-link py-0" href="/faq">FAQ</a>
+                </li>
+                <li class="navbar-item" style="margin-right:10px;">
+                    <a class="nav-link py-0" href="#disclaimer_div">Contact</a>
+                </li>
+                <li class="navbar-item" style="margin-right:5px;">
+                    <a class="py-0" href="/login">
+                        <p class="btn btn-sm btn-light my-auto text-nowrap">
+                            <span class="oi oi-account-login" title="Login" aria-hidden="true"></span>
+                            Login
+                        </p>
+                    </a>
+                </li>
+                <li class="navbar-item">
+                    <a class="py-0" href="/register">
+                        <p class="btn btn-sm btn-light my-auto text-nowrap">
+                            <span class="oi oi-check" title="Register" aria-hidden="true"></span>
+                            Register
+                        </p>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+} else {
+
+<nav class="navbar py-0 py-md-0 fixed-top navbar-expand-sm navbar-light" id="nav_bar">
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggler">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div id="nav_bar_logo"></div>
+    <div class="navbar-header pull-right">
+        <form class="form-inline">
+            <div class="nav-item custom-control custom-switch mr-sm-2" style="line-height: 7px; padding-right: 0rem; padding-left: 3rem;">
+                <input type="checkbox" class="navbar-toggler form-control custom-control-input" onclick="toggleTheme()" id="transparency" checked>
+                <label class="navbar-text custom-control-label p-0 small" for="transparency">
+                    <span class="oi oi-moon" style="font-size: 18px; padding-top: 0px;" title="Dark mode"></span>
+                </label>
+            </div>
+        </form>
+    </div>
+    <div class="collapse navbar-collapse" id="navbarToggler">
+        <div>
+            <ul class="navbar-nav">
+                <li class="navbar-item dropdown">
+                    <a class="nav-link dropdown-toggle py-0" href="#" data-toggle="dropdown">Repertories</a>
+                    <div class="dropdown-menu" id="secNavBarRepertories"></div>
+                </li>
+                <li class="navbar-item dropdown">
+                    <a class="nav-link dropdown-toggle py-0" href="#" data-toggle="dropdown">File</a>
+                    <div class="dropdown-menu">
+                        <a class="dropdown-item" href="#" data-toggle="modal" data-target="#newFileModal">New...</a>
+                        <a class="dropdown-item" href="#" data-toggle="modal" data-target="#openFileModal">Open...</a>
+                    </div>
+                </li>
+            </ul>
+        </div>
+        <div class="ml-auto">
+            <ul class="navbar-nav">
+                <li class="navbar-item">
+                    <a class="nav-link py-0" href="#">Settings</a>
+                </li>
+                <li class="navbar-item">
+                    <a class="nav-link py-0" href="/logout" target="_self" onclick="deleteCookies()">Log-out</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+}

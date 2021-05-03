@@ -67,231 +67,23 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     Redirect(sys.env.get("OOREP_URL_LOGOUT").getOrElse(""))
   }
 
-  def index() = Action { request: Request[AnyContent] =>
-    getAuthenticatedUser(request) match {
-      case None => Ok(views.html.index_landing.render)
-      case Some(_) => Ok(views.html.index_landing_private.render)
-    }
-  }
-
-  def serve_partial_html(page: String) = Action { request: Request[AnyContent] =>
-    page match {
-      case "about" => Ok(views.html.partial.about.render)
-      case "cookies" => Ok(views.html.partial.cookies.render("enabled"))
-      case "contact" => Ok(views.html.partial.contact.render)
-      case "datenschutz" => Ok(views.html.partial.datenschutz.render("enabled"))
-      case "disclaimer_text_only" => Ok(views.html.partial.disclaimer_text_only.render)
-      case "faq" => Ok(views.html.partial.faq.render)
-      case "features" => Ok(views.html.partial.features.render)
-      case "impressum" => Ok(views.html.partial.impressum.render)
-      case "pricing" => Ok(views.html.partial.pricing.render)
-      case _ => BadRequest(page)
-    }
-  }
-
-  def serve_noscript_whole_html(page: String) = Action { request: Request[AnyContent] =>
-    page match {
-      case "contact" => Ok(views.html.contact_noscript.render)
-      case "cookies" => Ok(views.html.cookies_noscript.render)
-      case "datenschutz" => Ok(views.html.datenschutz_noscript.render)
-      case "impressum" => Ok(views.html.impressum_noscript.render)
-      case _ => BadRequest(page)
-    }
-  }
-
-  def acceptCookies() = Action { request: Request[AnyContent] =>
-    Ok.withCookies(Cookie(CookieFields.cookiePopupAccepted.toString, "1", httpOnly = false))
-  }
-
-  def authenticate() = Action { request: Request[AnyContent] =>
-    getAuthenticatedUser(request) match {
-      case Some(uid) =>
-        Ok(uid.toString)
-      case None =>
-        val errStr = s"Get: authenticate(): User cannot be authenticated."
-        Logger.error(errStr)
-        Unauthorized(errStr)
-    }
-  }
-
-  def availableRemediesAndRepertories() = Action { request: Request[AnyContent] =>
-    val dao = new RepertoryDao(dbContext)
-
-    getAuthenticatedUser(request) match {
-      case None =>
-        Ok((dao.getAllAvailableRemediesForAnonymousUsers(),
-          dao.getAllAvailableRepertoryInfosForAnonymousUsers()).asJson.toString())
-      case Some(_) =>
-        Ok((dao.getAllAvailableRemediesForLoggedInUsers(),
-          dao.getAllAvailableRepertoryInfosForLoggedInUsers()).asJson.toString())
-    }
-  }
-
-  def availableReps() = Action { request: Request[AnyContent] =>
-    val dao = new RepertoryDao(dbContext)
-
-    getAuthenticatedUser(request) match {
-      case None =>
-        Ok(dao.getAllAvailableRepertoryInfosForAnonymousUsers().asJson.toString())
-      case Some(_) =>
-        Ok(dao.getAllAvailableRepertoryInfosForLoggedInUsers().asJson.toString())
-    }
-  }
-
-  /**
-    * Won't actually return files with associated cases, but a list of tuples, (file ID, file header).
-    */
-  def availableFiles(memberId: Int) = Action { request: Request[AnyContent] =>
-    getAuthenticatedUser(request) match {
-      case None =>
-        val errStr = "Get: availableFiles(): availableFiles() failed: not authenticated."
-        Logger.error(errStr)
-        Unauthorized(errStr)
-      case Some(uid) =>
-        if (!isUserAuthorized(request, memberId)) {
-          val err = s"Get: availableFiles() failed: not authorised."
-          Logger.error(err)
-          Forbidden(err)
-        } else {
-          val dbFiles = fileDao.getDbFilesForMember(memberId)
-          Ok(dbFiles.map(dbFile => (dbFile.id, dbFile.header)).asJson.toString)
-        }
-    }
-  }
-
-  def getFile(fileId: String) = Action { request: Request[AnyContent] =>
-    getAuthenticatedUser(request) match {
-      case None =>
-        Logger.error("Get: getFile(): Not authenticated")
-        Unauthorized("Get: getFile(): Not authenticated")
-      case Some(_) => {
-        fileDao.getFIle(fileId.toInt) match {
-          case file :: Nil =>
-            if (!isUserAuthorized(request, file.member_id)) {
-              val err = s"Get: getFile() failed: not authorised."
-              Logger.error(err)
-              Forbidden(err)
-            } else {
-              Ok(file.asJson.toString())
-            }
-          case _ =>
-            val errStr = "Get: getFile() returned nothing"
-            Logger.error(errStr)
-            BadRequest(errStr)
-        }
-      }
-    }
-  }
-
-  def getCase(caseId: String) = Action { request: Request[AnyContent] =>
-    getAuthenticatedUser(request) match {
-      case Some(uid) if (caseId.forall(_.isDigit)) => {
-        val dao = new CazeDao(dbContext)
-        dao.get(caseId.toInt) match {
-          case Right(caze) if (caze.member_id == uid) =>
-            if (!isUserAuthorized(request, caze.member_id)) {
-              val err = s"Get: getCase() failed: not authorised."
-              Logger.error(err)
-              Forbidden(err)
-            } else {
-              Ok(caze.asJson.toString())
-            }
-          case _ =>
-            val errStr = "Get: getCase() failed: DB returned nothing."
-            Logger.error(errStr)
-            BadRequest(errStr)
-        }
-      }
-      case _ =>
-        Unauthorized("getCase() failed: not authenticated.")
-    }
-  }
-
-  /**
-    * Returns basically a list of pairs with single entries like
-    *
-    * (file_description, Some(case_id), Some("[date] 'header'")),
-    *
-    * but JSON-encoded, of course.  (Descr, None, None) if no cases
-    * are associated.
-    */
-  def fileOverview(fileId: String) = Action { request: Request[AnyContent] =>
-    getAuthenticatedUser(request) match {
-      case Some(_) if (fileId.forall(_.isDigit)) =>
-        val files = fileDao.getFIle(fileId.toInt)
-
-        if (files.length > 0) {
-          val results =
-            files
-              .flatMap(f =>
-                f.cazes match {
-                  case Nil => List((f.description, None, None))
-                  case cazes => cazes.map(c => (f.description, Some(c.id), Some(s"[${c.date.take(10)}] '${c.header}'")))
-                }
-              )
-
-          if (!isUserAuthorized(request, files.head.member_id)) {
-            val err = s"Get: fileOverview() failed: not authorised."
-            Logger.error(err)
-            Forbidden(err)
-          } else {
-            Ok(results.asJson.toString())
-          }
-        }
-        else {
-          Logger.warn(s"Get: fileOverview(${fileId}): nothing found.")
-          NoContent
-        }
-      case _ =>
-        val err = "Get: fileOverview failed: not authenticated"
-        Logger.error(err)
-        Unauthorized(err)
-    }
-  }
-
-  /**
-    * The server response of this method streamed/chunked and ends with "<EOF>" string.
-    * Read the method's comments, to see why.  Also, you need special client code for
-    * receiving a stream/chunks.
-    *
-    * @param repertoryAbbrev
-    * @param symptom
-    * @return
-    */
-  def repertorise(repertoryAbbrev: String, symptom: String, page: Int, remedyString: String, minWeight: Int, getRemedies: Int) = Action { request: Request[AnyContent] =>
-    if (symptom.trim.length >= maxLengthOfSymptoms) {
-      val errStr = s"Get: input exceeded max length of ${maxLengthOfSymptoms}."
-      Logger.warn(errStr)
-      BadRequest(errStr)
-    }
-    else {
-      val dao = new RepertoryDao(dbContext)
-      dao.queryRepertory(repertoryAbbrev.trim, symptom.trim, page, remedyString.trim, minWeight, getRemedies != 0) match {
-        case Some((ResultsCaseRubrics(totalNumberOfRepertoryRubrics, totalNumberOfResults, totalNumberOfPages, page, results), remedyStats)) if (totalNumberOfPages > 0) =>
-          Ok((ResultsCaseRubrics(totalNumberOfRepertoryRubrics, totalNumberOfResults, totalNumberOfPages, page, results), remedyStats).asJson.toString())
-        case _ =>
-          val errStr = s"Get: repertorise(abbrev: ${repertoryAbbrev}, symptom: ${symptom}, page: ${page}, remedy: ${remedyString}, weight: ${minWeight}): no results found"
-          Logger.warn(errStr)
-          NoContent
-      }
-    }
-  }
-
-  def displayGetErrorPage(message: String) = Action { implicit request: Request[AnyContent] =>
-    BadRequest(views.html.defaultpages.badRequest("GET", request.uri, message))
-  }
-
   def show(repertory: String, symptom: String, page: Int, remedyString: String, minWeight: Int) = Action { request: Request[AnyContent] =>
-    getAuthenticatedUser(request) match {
-      case None =>
-        Ok(views.html.index_lookup(repertory, symptom, page - 1, remedyString, minWeight, s"OOREP ${xml.Utility.escape("—")} open online homeopathic repertory"))
-      case Some(_) =>
-        Ok(views.html.index_lookup_private(repertory, symptom, page - 1, remedyString, minWeight, s"OOREP ${xml.Utility.escape("—")} open online homeopathic repertory"))
-    }
+    Ok(views.html.index_lookup(request, repertory, symptom, page - 1, remedyString, minWeight, s"OOREP ${xml.Utility.escape("—")} open online homeopathic repertory"))
   }
 
-  def forgotPassword() = Action { implicit request: Request[AnyContent] =>
-    Ok(views.html.index_forgotpassword(s"OOREP ${xml.Utility.escape("—")} open online homeopathic repertory"))
+  def serve_static_html(page: String) = Action { implicit request: Request[AnyContent] =>
+    page match {
+      case "index" => Ok(views.html.index_landing(request))
+      case "cookies" => Ok(views.html.index_static_content(request, views.html.partial.cookies.render, "OOREP - Privacy policy"))
+      case "contact" => Ok(views.html.index_static_content(request, views.html.partial.contact.render, "OOREP - Contact"))
+      case "datenschutz" => Ok(views.html.index_static_content(request, views.html.partial.datenschutz.render, "OOREP - Datenschutzerklärung"))
+      case "faq" => Ok(views.html.index_static_content(request, views.html.partial.faq.render, "OOREP - Frequently asked questions and answers"))
+      case "forgot_password" => Ok(views.html.index_static_content(request, views.html.partial.forgot_password.render, s"OOREP ${xml.Utility.escape("—")} open online homeopathic repertory"))
+      case "impressum" => Ok(views.html.index_static_content(request, views.html.partial.impressum.render, "OOREP - Impressum", "de"))
+      case "pricing" => Ok(views.html.index_static_content(request, views.html.partial.pricing.render, "OOREP - Pricing"))
+      case "register" => Ok(views.html.index_static_content(request, views.html.partial.register.render, "OOREP - Registration"))
+      case _ => NotFound(views.html.defaultpages.notFound("GET", page))
+    }
   }
 
   def changePassword(pcrId: String) = Action { implicit request: Request[AnyContent] =>
@@ -310,12 +102,201 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
 
         // A password change request must not be older than 5h...
         if (pcrDate.age() <= 5.0)
-          Ok(views.html.index_changepassword(pcr.member_id, pcr.id, s"OOREP ${xml.Utility.escape("—")} open online homeopathic repertory"))
+          Ok(views.html.index_changepassword(request, pcr.member_id, pcr.id, s"OOREP ${xml.Utility.escape("—")} open online homeopathic repertory"))
         else
           BadRequest(views.html.defaultpages.badRequest("GET", request.uri, errorMessage))
 
       case None =>
         BadRequest(views.html.defaultpages.badRequest("GET", request.uri, errorMessage))
+    }
+  }
+
+  def apiDisplayGetErrorPage(message: String) = Action { implicit request: Request[AnyContent] =>
+    BadRequest(views.html.defaultpages.badRequest("GET", request.uri, message))
+  }
+
+  def apiStoreCookie(name: String, value: String) = Action { request: Request[AnyContent] =>
+    if (name == CookieFields.cookiePopupAccepted.toString)
+      Ok.withCookies(Cookie(CookieFields.cookiePopupAccepted.toString, value, httpOnly = false))
+    else if (name == CookieFields.theme.toString)
+      Ok.withCookies(Cookie(CookieFields.theme.toString, value, httpOnly = false))
+    else {
+      Logger.error(s"Get: apiStoreCookie(${name}, ${value}): failed")
+      BadRequest
+    }
+  }
+
+  def apiAuthenticate() = Action { request: Request[AnyContent] =>
+    getAuthenticatedUser(request) match {
+      case Some(uid) =>
+        Ok(uid.toString)
+      case None =>
+        val errStr = s"Get: apiAuthenticate(): User cannot be authenticated."
+        Logger.error(errStr)
+        Unauthorized(errStr)
+    }
+  }
+
+  def apiAvailableRemediesAndRepertories() = Action { request: Request[AnyContent] =>
+    val dao = new RepertoryDao(dbContext)
+
+    getAuthenticatedUser(request) match {
+      case None =>
+        Ok((dao.getAllAvailableRemediesForAnonymousUsers(),
+          dao.getAllAvailableRepertoryInfosForAnonymousUsers()).asJson.toString())
+      case Some(_) =>
+        Ok((dao.getAllAvailableRemediesForLoggedInUsers(),
+          dao.getAllAvailableRepertoryInfosForLoggedInUsers()).asJson.toString())
+    }
+  }
+
+  def apiAvailableReps() = Action { request: Request[AnyContent] =>
+    val dao = new RepertoryDao(dbContext)
+
+    getAuthenticatedUser(request) match {
+      case None =>
+        Ok(dao.getAllAvailableRepertoryInfosForAnonymousUsers().asJson.toString())
+      case Some(_) =>
+        Ok(dao.getAllAvailableRepertoryInfosForLoggedInUsers().asJson.toString())
+    }
+  }
+
+  /**
+    * Won't actually return files with associated cases, but a list of tuples, (file ID, file header).
+    */
+  def apiSecAvailableFiles(memberId: Int) = Action { request: Request[AnyContent] =>
+    getAuthenticatedUser(request) match {
+      case None =>
+        val errStr = "Get: apiSecAvailableFiles() failed: not authenticated"
+        Logger.error(errStr)
+        Unauthorized(errStr)
+      case Some(uid) =>
+        if (!isUserAuthorized(request, memberId)) {
+          val err = s"Get: apiSecAvailableFiles() failed: not authorised"
+          Logger.error(err)
+          Forbidden(err)
+        } else {
+          val dbFiles = fileDao.getDbFilesForMember(memberId)
+          Ok(dbFiles.map(dbFile => (dbFile.id, dbFile.header)).asJson.toString)
+        }
+    }
+  }
+
+  def apiSecGetFile(fileId: String) = Action { request: Request[AnyContent] =>
+    getAuthenticatedUser(request) match {
+      case None =>
+        Logger.error("Get: apiSecGetFile(): not authenticated")
+        Unauthorized("Get: apiSecGetFile(): not authenticated")
+      case Some(_) => {
+        fileDao.getFIle(fileId.toInt) match {
+          case file :: Nil =>
+            if (!isUserAuthorized(request, file.member_id)) {
+              val err = s"Get: apiSecGetFile() failed: not authorised"
+              Logger.error(err)
+              Forbidden(err)
+            } else {
+              Ok(file.asJson.toString())
+            }
+          case _ =>
+            val errStr = "Get: apiSecGetFile() returned nothing"
+            Logger.error(errStr)
+            BadRequest(errStr)
+        }
+      }
+    }
+  }
+
+  def apiSecGetCase(caseId: String) = Action { request: Request[AnyContent] =>
+    getAuthenticatedUser(request) match {
+      case Some(uid) if (caseId.forall(_.isDigit)) => {
+        val dao = new CazeDao(dbContext)
+        dao.get(caseId.toInt) match {
+          case Right(caze) if (caze.member_id == uid) =>
+            if (!isUserAuthorized(request, caze.member_id)) {
+              val err = s"Get: apiSecGetCase() failed: not authorised."
+              Logger.error(err)
+              Forbidden(err)
+            } else {
+              Ok(caze.asJson.toString())
+            }
+          case _ =>
+            val errStr = "Get: apiSecGetCase() failed: DB returned nothing."
+            Logger.error(errStr)
+            BadRequest(errStr)
+        }
+      }
+      case _ =>
+        Unauthorized("apiSecGetCase() failed: not authenticated.")
+    }
+  }
+
+  /**
+    * Returns basically a list of pairs with single entries like
+    *
+    * (file_description, Some(case_id), Some("[date] 'header'")),
+    *
+    * but JSON-encoded, of course.  (Descr, None, None) if no cases
+    * are associated.
+    */
+  def apiSecFileOverview(fileId: String) = Action { request: Request[AnyContent] =>
+    getAuthenticatedUser(request) match {
+      case Some(_) if (fileId.forall(_.isDigit)) =>
+        val files = fileDao.getFIle(fileId.toInt)
+
+        if (files.length > 0) {
+          val results =
+            files
+              .flatMap(f =>
+                f.cazes match {
+                  case Nil => List((f.description, None, None))
+                  case cazes => cazes.map(c => (f.description, Some(c.id), Some(s"[${c.date.take(10)}] '${c.header}'")))
+                }
+              )
+
+          if (!isUserAuthorized(request, files.head.member_id)) {
+            val err = s"Get: apiSecFileOverview() failed: not authorised"
+            Logger.error(err)
+            Forbidden(err)
+          } else {
+            Ok(results.asJson.toString())
+          }
+        }
+        else {
+          Logger.warn(s"Get: apiSecFileOverview(${fileId}): nothing found.")
+          NoContent
+        }
+      case _ =>
+        val err = "Get: apiSecFileOverview failed: not authenticated"
+        Logger.error(err)
+        Unauthorized(err)
+    }
+  }
+
+  /**
+    * The server response of this method streamed/chunked and ends with "<EOF>" string.
+    * Read the method's comments, to see why.  Also, you need special client code for
+    * receiving a stream/chunks.
+    *
+    * @param repertoryAbbrev
+    * @param symptom
+    * @return
+    */
+  def apiLookup(repertoryAbbrev: String, symptom: String, page: Int, remedyString: String, minWeight: Int, getRemedies: Int) = Action { request: Request[AnyContent] =>
+    if (symptom.trim.length >= maxLengthOfSymptoms) {
+      val errStr = s"Get: input exceeded max length of ${maxLengthOfSymptoms}"
+      Logger.warn(errStr)
+      BadRequest(errStr)
+    }
+    else {
+      val dao = new RepertoryDao(dbContext)
+      dao.queryRepertory(repertoryAbbrev.trim, symptom.trim, page, remedyString.trim, minWeight, getRemedies != 0) match {
+        case Some((ResultsCaseRubrics(totalNumberOfRepertoryRubrics, totalNumberOfResults, totalNumberOfPages, page, results), remedyStats)) if (totalNumberOfPages > 0) =>
+          Ok((ResultsCaseRubrics(totalNumberOfRepertoryRubrics, totalNumberOfResults, totalNumberOfPages, page, results), remedyStats).asJson.toString())
+        case _ =>
+          val errStr = s"Get: apiLookup(abbrev: ${repertoryAbbrev}, symptom: ${symptom}, page: ${page}, remedy: ${remedyString}, weight: ${minWeight}): no results found"
+          Logger.warn(errStr)
+          NoContent
+      }
     }
   }
 

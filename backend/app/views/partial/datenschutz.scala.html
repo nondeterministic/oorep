@@ -1,10 +1,7 @@
-@(javascript: String)
-<!-- Two possible values allowed: enabled or disabled, see bottom of file! -->
-
 <div class="container" style="padding-top:200px; padding-bottom:200px">
   
   <div class="col">
-    <img src="@{org.multics.baueran.frep.backend.controllers.Get.staticServerUrl}@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/img/logo_small.png" alt="OOREP">
+    <img src="@{org.multics.baueran.frep.backend.controllers.Get.staticServerUrl}@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/img/logo_small.png" width="180" height="65" alt="OOREP">
   </div>
 
   <div class="col">
@@ -226,19 +223,11 @@
   </div>
 
   <div class="col text-center">
-    @if(javascript == "enabled") {
-    <a href="#" onclick="oorepLoadIntoContentDiv('@{org.multics.baueran.frep.backend.controllers.Get.staticServerUrl}/partial/cookies');">
+    <a href="/cookies">
       <img src="@{org.multics.baueran.frep.backend.controllers.Get.staticServerUrl}@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/img/englishflag.png" alt="English version of this document">
       <br>
       Same information in English
     </a>
-    } else {
-    <a href="@{org.multics.baueran.frep.backend.controllers.Get.staticServerUrl}/noscript/cookies">
-      <img src="@{org.multics.baueran.frep.backend.controllers.Get.staticServerUrl}@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/img/englishflag.png" alt="English version of this document">
-      <br>
-      Same information in English
-    </a>
-    }
   </div>
 
 </div>

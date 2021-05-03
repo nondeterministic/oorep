@@ -4,25 +4,31 @@
 # TODO: For reminder only:
 # GET     /                                   controllers.Assets.at(path="/public/html", file="index.html")
 
-GET     /                                   org.multics.baueran.frep.backend.controllers.Get.index
+
 GET   	/login                              org.multics.baueran.frep.backend.controllers.Get.login
 GET   	/logout                             org.multics.baueran.frep.backend.controllers.Get.logout
-GET     /partial/:page                      org.multics.baueran.frep.backend.controllers.Get.serve_partial_html(page:String)
-GET     /noscript/:page                     org.multics.baueran.frep.backend.controllers.Get.serve_noscript_whole_html(page:String)
-GET		/api/authenticate                   org.multics.baueran.frep.backend.controllers.Get.authenticate
-GET		/api/lookup						    org.multics.baueran.frep.backend.controllers.Get.repertorise(repertory: String, symptom: String, page: Int, remedyString: String, minWeight: Int, getRemedies: Int)
-GET     /api/available_reps                 org.multics.baueran.frep.backend.controllers.Get.availableReps
-GET     /api/available_rems_and_reps        org.multics.baueran.frep.backend.controllers.Get.availableRemediesAndRepertories
-GET     /api/accept_cookies                 org.multics.baueran.frep.backend.controllers.Get.acceptCookies
-GET     /api/display_error_page             org.multics.baueran.frep.backend.controllers.Get.displayGetErrorPage(message: String)
-GET     /show                               org.multics.baueran.frep.backend.controllers.Get.show(repertory: String, symptom: String, page: Int, remedyString: String, minWeight: Int)
-GET     /api/sec/available_files            org.multics.baueran.frep.backend.controllers.Get.availableFiles(memberId: Int)
-GET     /api/sec/file_overview              org.multics.baueran.frep.backend.controllers.Get.fileOverview(fileId: String)
-GET     /api/sec/file                       org.multics.baueran.frep.backend.controllers.Get.getFile(fileId: String)
-GET     /api/sec/case                       org.multics.baueran.frep.backend.controllers.Get.getCase(caseId: String)
-GET     /change_password                    org.multics.baueran.frep.backend.controllers.Get.changePassword(id: String)
-GET     /forgot_password                    org.multics.baueran.frep.backend.controllers.Get.forgotPassword
+
+GET		/api/authenticate                   org.multics.baueran.frep.backend.controllers.Get.apiAuthenticate
+GET		/api/lookup						    org.multics.baueran.frep.backend.controllers.Get.apiLookup(repertory: String, symptom: String, page: Int, remedyString: String, minWeight: Int, getRemedies: Int)
+GET     /api/available_reps                 org.multics.baueran.frep.backend.controllers.Get.apiAvailableReps
+GET     /api/available_rems_and_reps        org.multics.baueran.frep.backend.controllers.Get.apiAvailableRemediesAndRepertories
+GET     /api/display_error_page             org.multics.baueran.frep.backend.controllers.Get.apiDisplayGetErrorPage(message: String)
+GET     /api/store_cookie                   org.multics.baueran.frep.backend.controllers.Get.apiStoreCookie(name: String, value: String)
+GET     /api/sec/available_files            org.multics.baueran.frep.backend.controllers.Get.apiSecAvailableFiles(memberId: Int)
+GET     /api/sec/file_overview              org.multics.baueran.frep.backend.controllers.Get.apiSecFileOverview(fileId: String)
+GET     /api/sec/file                       org.multics.baueran.frep.backend.controllers.Get.apiSecGetFile(fileId: String)
+GET     /api/sec/case                       org.multics.baueran.frep.backend.controllers.Get.apiSecGetCase(caseId: String)
+
+# Map static resources from the /public folder to the /assets URL path
+GET     /assets/*file                       controllers.Assets.versioned(path="/public", file: Asset)
 GET     /favicon.ico                        controllers.Assets.at(path="/public/html", file="favicon.ico")
+
+GET     /change_password                    org.multics.baueran.frep.backend.controllers.Get.changePassword(id: String)
+GET     /show                               org.multics.baueran.frep.backend.controllers.Get.show(repertory: String, symptom: String, page: Int, remedyString: String, minWeight: Int)
+
+GET     /                                   org.multics.baueran.frep.backend.controllers.Get.serve_static_html(page="index")
+GET     /:page                              org.multics.baueran.frep.backend.controllers.Get.serve_static_html(page:String)
+
 
 POST    /api/sec/add_caserubrics_to_case    org.multics.baueran.frep.backend.controllers.Post.addCaseRubricsToCaze
 POST   	/api/sec/save_case                  org.multics.baueran.frep.backend.controllers.Post.saveCaze
@@ -34,13 +40,12 @@ POST    /api/request_username               org.multics.baueran.frep.backend.con
 + nocsrf
 POST    /api/submit_new_password            org.multics.baueran.frep.backend.controllers.Post.submitNewPassword
 
+
 PUT     /api/sec/update_caserubrics_userdef org.multics.baueran.frep.backend.controllers.Put.updateCaseRubricsUserDefinedValues
 PUT   	/api/sec/update_file_description    org.multics.baueran.frep.backend.controllers.Put.updateFileDescription
 PUT   	/api/sec/update_case_description    org.multics.baueran.frep.backend.controllers.Put.updateCaseDescription
 
-DELETE  /api/sec/del_caserubrics_from_case  org.multics.baueran.frep.backend.controllers.Delete.delCaseRubricsFromCaze
-DELETE  /api/sec/del_case                   org.multics.baueran.frep.backend.controllers.Delete.delCaze
-DELETE 	/api/sec/del_file_and_cases         org.multics.baueran.frep.backend.controllers.Delete.delFileAndCases
 
-# Map static resources from the /public folder to the /assets URL path
-GET     /assets/*file                       controllers.Assets.versioned(path="/public", file: Asset)
+DELETE  /api/sec/del_caserubrics_from_case  org.multics.baueran.frep.backend.controllers.Delete.apiSecDelCaseRubricsFromCaze
+DELETE  /api/sec/del_case                   org.multics.baueran.frep.backend.controllers.Delete.apiSecDelCaze
+DELETE 	/api/sec/del_file_and_cases         org.multics.baueran.frep.backend.controllers.Delete.apiSecDelFileAndCases

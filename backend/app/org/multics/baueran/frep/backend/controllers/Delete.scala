@@ -10,7 +10,7 @@ class Delete @Inject()(cc: ControllerComponents, dbContext: DBContext) extends A
 
   private val Logger = play.api.Logger(this.getClass)
 
-  def delCaseRubricsFromCaze() = Action { request: Request[AnyContent] =>
+  def apiSecDelCaseRubricsFromCaze() = Action { request: Request[AnyContent] =>
     getAuthenticatedUser(request) match {
       case Some(_) => {
         val requestData = request.body.asMultipartFormData.get.dataParts
@@ -47,7 +47,7 @@ class Delete @Inject()(cc: ControllerComponents, dbContext: DBContext) extends A
     }
   }
 
-  def delCaze() = Action { request: Request[AnyContent] =>
+  def apiSecDelCaze() = Action { request: Request[AnyContent] =>
     getAuthenticatedUser(request) match {
       case Some(_) => {
         val requestData = request.body.asMultipartFormData.get.dataParts
@@ -70,7 +70,7 @@ class Delete @Inject()(cc: ControllerComponents, dbContext: DBContext) extends A
     }
   }
 
-  def delFileAndCases() = Action { request: Request[AnyContent] =>
+  def apiSecDelFileAndCases() = Action { request: Request[AnyContent] =>
     getAuthenticatedUser(request) match {
       case Some(_) => {
         val requestData = request.body.asMultipartFormData.get.dataParts

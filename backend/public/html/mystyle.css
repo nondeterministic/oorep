@@ -1,14 +1,63 @@
 @font-face {
     font-family: 'Linux Libertine Display';
-    src: url('fonts/LinLibertine_DR.woff') format('woff'),
-         url('fonts/LinLibertine_DRah.ttf') format('truetype');
+    src: url('third-party/fonts/LinLibertine_DR.woff') format('woff'),
+         url('third-party/fonts/LinLibertine_DRah.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
     font-display: swap;
 }
 
+/* open-sans-regular - latin */
+@font-face {
+  font-family: 'Open Sans Google';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('third-party/fonts/open-sans-v20-latin-regular.eot'); /* IE9 Compat Modes */
+  src: local(''),
+       url('third-party/fonts/open-sans-v20-latin-regular.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
+       url('third-party/fonts/open-sans-v20-latin-regular.woff2') format('woff2'), /* Super Modern Browsers */
+       url('third-party/fonts/open-sans-v20-latin-regular.woff') format('woff'), /* Modern Browsers */
+       url('third-party/fonts/open-sans-v20-latin-regular.ttf') format('truetype'), /* Safari, Android, iOS */
+       url('third-party/fonts/open-sans-v20-latin-regular.svg#OpenSans') format('svg'); /* Legacy iOS */
+}
+
+/* open-sans-italic - latin */
+@font-face {
+  font-family: 'Open Sans Google';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url('third-party/fonts/open-sans-v20-latin-italic.eot'); /* IE9 Compat Modes */
+  src: local(''),
+       url('third-party/fonts/open-sans-v20-latin-italic.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
+       url('third-party/fonts/open-sans-v20-latin-italic.woff2') format('woff2'), /* Super Modern Browsers */
+       url('third-party/fonts/open-sans-v20-latin-italic.woff') format('woff'), /* Modern Browsers */
+       url('third-party/fonts/open-sans-v20-latin-italic.ttf') format('truetype'), /* Safari, Android, iOS */
+       url('third-party/fonts/open-sans-v20-latin-italic.svg#OpenSans') format('svg'); /* Legacy iOS */
+}
+
+/* open-sans-700 - latin */
+@font-face {
+  font-family: 'Open Sans Google';
+  font-style: normal;
+  font-weight: bold; /* was: 700 */
+  font-display: swap;
+  src: url('third-party/fonts/open-sans-v20-latin-700.eot'); /* IE9 Compat Modes */
+  src: local(''),
+       url('third-party/fonts/open-sans-v20-latin-700.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
+       url('third-party/fonts/open-sans-v20-latin-700.woff2') format('woff2'), /* Super Modern Browsers */
+       url('third-party/fonts/open-sans-v20-latin-700.woff') format('woff'), /* Modern Browsers */
+       url('third-party/fonts/open-sans-v20-latin-700.ttf') format('truetype'), /* Safari, Android, iOS */
+       url('third-party/fonts/open-sans-v20-latin-700.svg#OpenSans') format('svg'); /* Legacy iOS */
+}
+
 html {
   scroll-behavior: smooth;
+}
+
+body {
+  font-family: "Open Sans Google", "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 .vertical-text {
@@ -164,4 +213,54 @@ a.underline:hover {
 .cookiealert .acceptcookies {
     margin-left: 10px;
     vertical-align: baseline;
+}
+
+.icon {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 80px;
+    height: 80px;
+    margin: 0px auto 1rem;
+
+    background: rgb(197,222,234); /* Old browsers */
+    background: -moz-linear-gradient(-45deg, rgba(197,222,234,1) 0%, rgba(138,187,215,1) 31%, rgba(9,56,229,1) 100%); /* FF3.6-15 */
+    background: -webkit-linear-gradient(-45deg, rgba(197,222,234,1) 0%,rgba(138,187,215,1) 31%,rgba(9,56,229,1) 100%); /* Chrome10-25,Safari5.1-6 */
+    background: linear-gradient(135deg, rgba(197,222,234,1) 0%,rgba(138,187,215,1) 31%,rgba(9,56,229,1) 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#c5deea', endColorstr='#0938e5',GradientType=1 ); /* IE6-9 fallback on horizontal gradient */
+
+    border-radius: 50%;
+    border-style: solid;
+    font-size: 2rem;
+    color: rgba(0, 0, 0, 0.9);
+}
+
+.background-image {
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center center;
+    background-image: linear-gradient(rgba(20, 20, 20, 0.5), rgba(20, 20, 20, 0.5)), url("img/wallpaper.webp");
+}
+
+.blue-dot {
+  height: 11px;
+  width: 11px;
+  margin-right: 13px;
+  margin-left: 13px;
+  margin-bottom: 3px;
+  background-color: #0d6efd;
+  // border-radius: 50%;
+  display: inline-block;
+}
+
+.white-dot {
+  height: 11px;
+  width: 11px;
+  margin-right: 13px;
+  margin-left: 13px;
+  margin-bottom: 3px;
+  background-color: #fff;
+  // border-radius: 50%;
+  display: inline-block;
 }
