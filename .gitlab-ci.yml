@@ -1,4 +1,4 @@
-image: java:11
+image: java:8
 
 services: 
   - postgres:11
