@@ -14,8 +14,7 @@ val notifyjsVersion    = "0.2.0"
 val scriptsVersion     = "1.1.4"
 val apacheCommonsMailV = "1.5"
 
-// resolvers in ThisBuild += "hmil" at "https://dl.bintray.com/hmil/maven"
-resolvers in ThisBuild += Resolver.bintrayRepo("hmil", "maven")
+resolvers in ThisBuild += "fr.hmil" at "https://files.hmil.fr/maven"
 
 useJCenter := true
 
