@@ -1,6 +1,16 @@
 OOREP NEWS
 =-=-=-=-=-
 
+v0.11.1  Sun 18 Jul 2021 12:05:36 PM CEST [tag: v0.11.1]
+--------------------------------------------------------
+- Minor improvements and changes:
+  - Replace "Add" and "Remove" buttons with "+" and "-"
+
+- Bug fixes:
+  - Cases that were not currently opened, could not be deleted
+  - Multi-occurrences view also contained all single-occurrences of
+    remedies
+
 v0.11.0  Sun 20 Jun 2021 04:41:09 PM CEST [tag: v0.11.0]
 --------------------------------------------------------
 - Main features:

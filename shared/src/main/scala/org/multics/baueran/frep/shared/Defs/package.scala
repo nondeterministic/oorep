@@ -24,7 +24,8 @@ package object Defs {
     }
   }
 
-  def maxNumberOfResults = 100
+  def smallRepertoriesMaxSize = 550
+  def maxNumberOfResultsPerPage = 100
   def maxLengthOfSymptoms = 200
   def maxNumberOfSymptoms = 20
 

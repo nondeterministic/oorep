@@ -16,7 +16,7 @@ variables:
 
 before_script:
   # Install SBT
-  - wget https://bintray.com/artifact/download/sbt/debian/sbt-1.3.4.deb
+  - wget https://scala.jfrog.io/artifactory/debian/sbt-1.3.4.deb
   - dpkg -i sbt-1.3.4.deb
 
 build:

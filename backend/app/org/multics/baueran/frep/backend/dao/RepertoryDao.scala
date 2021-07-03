@@ -2,7 +2,7 @@ package org.multics.baueran.frep.backend.dao
 
 import org.multics.baueran.frep.shared._
 import org.multics.baueran.frep.backend.db
-import Defs.{SpecialLookupParams, maxNumberOfResults, maxNumberOfSymptoms}
+import Defs.{SpecialLookupParams, maxNumberOfResultsPerPage, smallRepertoriesMaxSize, maxNumberOfSymptoms}
 import io.getquill.Query
 
 import scala.collection.mutable.ArrayBuffer
@@ -214,10 +214,10 @@ class RepertoryDao(dbContext: db.db.DBContext) {
     // full, when the user sends a query - irrespective of the entered search term (cf. Tyler's cold repertory)
     val totalNumberOfRepertoryRubrics = getNumberOfRubrics(abbrev).toInt
 
-    // We only do a proper lookup for big repertories. Small ones with less than 100 rubrics,
+    // We only do a proper lookup for big repertories. Small ones with less than smallRepertoriesMaxSize rubrics,
     // will simply return ALL rubrics, whatever the user entered.  For big repertories, we then
     // further distinguish the case whether a remedy was given to narrow search down, etc.
-    val tmpRubricsAll = if (totalNumberOfRepertoryRubrics > maxNumberOfResults) {
+    var tmpRubricsAll =
       remedyEntered match {
         // User has NOT provided a remedy in search to restrict it
         case None => {
@@ -301,14 +301,15 @@ class RepertoryDao(dbContext: db.db.DBContext) {
           }
         }
       }
-    }
-    else {
-      run(query[Rubric].filter(_.abbrev == lift(abbrev)))
-    }
 
     // If search was not successful, no point in continuing...
-    if (tmpRubricsAll.length <= 0)
-      return None
+    if (tmpRubricsAll.length <= 0) {
+      if (totalNumberOfRepertoryRubrics > smallRepertoriesMaxSize) {
+        return None
+      } else {
+        tmpRubricsAll = run(query[Rubric].filter(_.abbrev == lift(abbrev)))
+      }
+    }
 
     val remedyStats = new ArrayBuffer[ResultsRemedyStats]()
     if (getRemedies == true) {
@@ -325,8 +326,8 @@ class RepertoryDao(dbContext: db.db.DBContext) {
 
     val tmpRubricsTruncated =
       tmpRubricsAll
-        .drop(page * maxNumberOfResults) // Start on page <page>, where each page is maxNumberOfResults long (so first page is obviously 0!!)
-        .take(maxNumberOfResults)
+        .drop(page * maxNumberOfResultsPerPage) // Start on page <page>, where each page is maxNumberOfResultsPerPage long (so first page is obviously 0!!)
+        .take(maxNumberOfResultsPerPage)
 
     val tmpRubricRemedies = run {
       quote {
@@ -352,7 +353,7 @@ class RepertoryDao(dbContext: db.db.DBContext) {
 
     // Compute the to be returned results...
     val caseRubrics = tmpRubricsTruncated.map(rubric => CaseRubric(rubric, abbrev, 1, None, getWeightedRemedies(rubric)))
-    val returnTotalNumberOfPages = math.ceil(tmpRubricsAll.size.toDouble / maxNumberOfResults.toDouble).toInt
+    val returnTotalNumberOfPages = math.ceil(tmpRubricsAll.size.toDouble / maxNumberOfResultsPerPage.toDouble).toInt
     Logger.info(s"queryRepertory(abbrev: ${abbrev}, symptom: ${symptom}, page: ${page}, remedy: ${remedyString}, weight: ${minWeight}, getRemedies: $getRemedies) found ${tmpRubricsAll.size} case rubrics.")
     Some((ResultsCaseRubrics(totalNumberOfRepertoryRubrics, tmpRubricsAll.size, returnTotalNumberOfPages, page, caseRubrics), remedyStats.toList))
   }

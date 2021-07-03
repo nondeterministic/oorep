@@ -119,17 +119,13 @@ object EditFileModal {
             button(`type`:="button", cls:="btn btn-secondary", data.dismiss:="modal", "Cancel"),
             button(`type`:="button", cls:="btn btn-primary", data.dismiss:="modal",
               onclick:= { (event: Event) =>
-                if (Case.descr.isDefined) {
-                  HttpRequest(s"${serverUrl()}/${apiPrefix()}/sec/del_case")
-                    .withMethod(Method.DELETE)
-                    .withHeader("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
-                    .withBody(MultiPartBody(
-                      "caseId" -> PlainTextBody(currentlySelectedCaseId.now.toString()),
-                      "memberId" -> PlainTextBody(Case.descr.get.member_id.toString())))
-                    .send()
-                } else {
-                  println("EditFileModal: could not send delete request for case to backend, as case not fully available in memory.")
-                }
+                HttpRequest(s"${serverUrl()}/${apiPrefix()}/sec/del_case")
+                  .withMethod(Method.DELETE)
+                  .withHeader("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
+                  .withBody(MultiPartBody(
+                    "caseId" -> PlainTextBody(currentlySelectedCaseId.now.toString()),
+                    "memberId" -> PlainTextBody(getCookieData(dom.document.cookie, CookieFields.id.toString).getOrElse(""))))
+                  .send()
 
                 // If the deleted case is currently opened, update current view by basically removing that case.
                 if (Case.descr.isDefined && (Case.descr.get.id == currentlySelectedCaseId.now)) {
@@ -138,7 +134,7 @@ object EditFileModal {
                   Case.rmCaseDiv()
                 }
                 else
-                  println("EditFileModal: the case which was deleted from DB, was not currently opened. Nothing to be done.")
+                  println("EditFileModal: the case which was meant to be deleted from DB, was not currently opened. Nothing to be redrawn on screen.")
               },
               "Delete")
           )

@@ -464,6 +464,7 @@ object Case {
           button(cls := "btn btn-sm btn-secondary", `type` := "button",
             scalatags.JsDom.attrs.id := ("rmBut_" + crub.rubric.id + crub.repertoryAbbrev),
             style := "vertical-align: middle; display: inline-block",
+            title := "Remove rubric",
             onclick := { (event: Event) => {
               event.stopPropagation()
               crub.rubricWeight = 1
@@ -479,7 +480,7 @@ object Case {
 
               updateCaseViewAndDataStructures()
             }
-            }, "Remove")
+            }, b(raw("&nbsp;-&nbsp;")))
         )
       )
     }

@@ -15,7 +15,7 @@ import fr.hmil.roshttp.{BackendConfig, HttpRequest}
 import fr.hmil.roshttp.response.SimpleHttpResponse
 import monix.execution.Scheduler.Implicits.global
 import org.multics.baueran.frep.shared._
-import org.multics.baueran.frep.shared.Defs.{CookieFields, maxLengthOfSymptoms, maxNumberOfResults, maxNumberOfSymptoms}
+import org.multics.baueran.frep.shared.Defs.{CookieFields, maxLengthOfSymptoms, maxNumberOfResultsPerPage, maxNumberOfSymptoms}
 import org.multics.baueran.frep.shared.sec_frontend.FileModalCallbacks.updateMemberFiles
 
 import scala.scalajs.js.annotation.JSExportTopLevel
@@ -71,7 +71,7 @@ object Repertorise {
 
   // ------------------------------------------------------------------------------------------------------------------
   private def redrawMultiOccurringRemedies(): Unit = {
-    val multiRemedies = _resultRemedyStats.now.sortBy(-_.count)
+    val multiRemedies = _resultRemedyStats.now.filter(_.count > 2).sortBy(-_.count)
     val multiOccurrenceDiv = dom.document.getElementById("multiOccurrenceDiv").asInstanceOf[dom.html.Element]
 
     if (multiOccurrenceDiv != null) {
@@ -92,8 +92,7 @@ object Repertorise {
                     doLookup(_pageCache.latest.abbrev, _pageCache.latest.symptom, None, Some(nameabbrev), 0)
                   }, nameabbrev),
                   ("(" + cumulativeWeight + "), ")
-                )
-              }
+                )}
               },
             span(
               (s"${multiRemedies.last.count}x"),
@@ -104,6 +103,22 @@ object Repertorise {
             ),
             ")").render
         )
+      }
+      else if (multiRemedies.length == 1) {
+        multiOccurrenceDiv.appendChild(
+          span(id := "collapseMultiOccurrences", cls := s"collapse ${if (_showMultiOccurrences) "show" else "hide"}",
+            "(Multi-occurrences of remedies in results: ",
+            multiRemedies
+              .map { case ResultsRemedyStats(nameabbrev, count, cumulativeWeight) => {
+                span(
+                  (s"${count}x"),
+                  a(href := "#", onclick := { (event: Event) =>
+                    doLookup(_pageCache.latest.abbrev, _pageCache.latest.symptom, None, Some(nameabbrev), 0)
+                  }, nameabbrev),
+                  ("(" + cumulativeWeight + "))")
+                )}
+              })
+            .render)
       }
       else {
         multiOccurrenceDiv.appendChild(
@@ -180,6 +195,7 @@ object Repertorise {
             button(cls := "btn btn-sm btn-secondary", `type` := "button", id := ("button_" + result.repertoryAbbrev + "_" + result.rubric.id),
               style := "vertical-align: middle; display: inline-block",
               (if (Case.cRubrics.filter(_.equalsIgnoreWeight(result)).size > 0) attr("disabled") := "disabled" else ""),
+              title := "Add rubric",
               onclick := { (event: Event) => {
                 event.stopPropagation()
                 Case.addRepertoryLookup(result)
@@ -187,7 +203,7 @@ object Repertorise {
                 dom.document.getElementById("button_" + result.repertoryAbbrev + "_" + result.rubric.id).asInstanceOf[HTMLButtonElement].setAttribute("disabled", "1")
                 showCase()
               }
-              }, "Add")
+              }, b(raw("&nbsp;+&nbsp;")))
           )
         )
       else
@@ -201,7 +217,7 @@ object Repertorise {
     resetContentView()
 
     _repertorisationResults.now match {
-      case Some(ResultsCaseRubrics(_, totalNumberOfResults, totalNumberOfPages, currPage, results)) if (results.size > 0) => {
+      case Some(ResultsCaseRubrics(totalNumberOfRepertoryRubrics, totalNumberOfResults, totalNumberOfPages, currPage, results)) if (results.size > 0) => {
         dom.document.getElementById("resultStatus").innerHTML = ""
         dom.document.getElementById("resultStatus").appendChild(
           div(scalatags.JsDom.attrs.id := "multiOccurrenceDiv", cls := "alert alert-secondary", role := "alert",
@@ -225,7 +241,12 @@ object Repertorise {
                 span(aria.hidden:="true", id:="collapseMultiOccurrencesButton", cls:="oi oi-chevron-bottom", style:="font-size: 14px;", title:="Show less")
             ),
             b({
-              var searchStatsString = s"${totalNumberOfResults} rubrics for "
+              // var searchStatsString = s"${totalNumberOfResults} rubrics for "
+              var searchStatsString =
+                if (totalNumberOfResults == totalNumberOfRepertoryRubrics)
+                  s"0 rubrics found for "
+                else
+                  s"${totalNumberOfResults} rubrics for "
 
               if (_pageCache.latest.symptom.trim.length > 0) {
                 searchStatsString += s"'${_pageCache.latest.symptom}' "
@@ -293,10 +314,10 @@ object Repertorise {
             div(cls := "alert alert-success", role := "alert",
               button(`type` := "button", cls := "close", data.dismiss := "alert", onclick := { (_: Event) => _showMaxSearchResultsAlert = false },
                 span(aria.hidden := "true", raw("&times;"))),
-                b(s"Showing ALL available rubrics, because this repertory only has ${totalNumberOfRepertoryRubrics.toString} rubrics in total.")
+                b(s"Showing ALL available rubrics instead, because this small repertory only has ${totalNumberOfRepertoryRubrics.toString} rubrics in total.")
             ).render)
         }
-        else if (_showMaxSearchResultsAlert && (results.size >= maxNumberOfResults || totalNumberOfPages > 1)) {
+        else if (_showMaxSearchResultsAlert && (results.size >= maxNumberOfResultsPerPage || totalNumberOfPages > 1)) {
           val fullPathWords = results.map(cr => cr.rubric.fullPath.split("[, ]+").filter(_.length > 0).map(_.trim())).flatten
           val pathWords = results.map(cr => cr.rubric.path.getOrElse("").split("[, ]+").filter(_.length > 0).map(_.trim())).flatten
           val textWords = results.map(cr => cr.rubric.textt.getOrElse("").split("[, ]+").filter(_.length > 0).map(_.trim())).flatten
