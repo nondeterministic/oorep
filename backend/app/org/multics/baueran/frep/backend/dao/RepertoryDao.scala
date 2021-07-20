@@ -214,9 +214,6 @@ class RepertoryDao(dbContext: db.db.DBContext) {
     // full, when the user sends a query - irrespective of the entered search term (cf. Tyler's cold repertory)
     val totalNumberOfRepertoryRubrics = getNumberOfRubrics(abbrev).toInt
 
-    // We only do a proper lookup for big repertories. Small ones with less than smallRepertoriesMaxSize rubrics,
-    // will simply return ALL rubrics, whatever the user entered.  For big repertories, we then
-    // further distinguish the case whether a remedy was given to narrow search down, etc.
     var tmpRubricsAll =
       remedyEntered match {
         // User has NOT provided a remedy in search to restrict it
@@ -302,12 +299,13 @@ class RepertoryDao(dbContext: db.db.DBContext) {
         }
       }
 
-    // If search was not successful, no point in continuing...
+    // If search was not successful, we stop if repertory was of normal, big size.
+    // But if repertory was small, we simply return the entire repertory instead.
     if (tmpRubricsAll.length <= 0) {
       if (totalNumberOfRepertoryRubrics > smallRepertoriesMaxSize) {
         return None
       } else {
-        tmpRubricsAll = run(query[Rubric].filter(_.abbrev == lift(abbrev)))
+        tmpRubricsAll = run(query[Rubric].filter(_.abbrev == lift(abbrev))).sortBy(_.fullPath)
       }
     }
 
