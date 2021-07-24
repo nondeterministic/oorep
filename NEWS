@@ -1,10 +1,11 @@
 OOREP NEWS
 =-=-=-=-=-
 
-current development branch 'dev_X'
+v0.11.2  Sat 24 Jul 2021 12:14:46 PM CEST [tag: v0.11.2]
 --------------------------------------------------------
 - Bug fixes:
   - Fix alphabetic sorting of rubrics in repertorisation view
+    for small repertories
 
 v0.11.1  Sun 18 Jul 2021 12:05:36 PM CEST [tag: v0.11.1]
 --------------------------------------------------------
