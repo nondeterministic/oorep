@@ -1,4 +1,4 @@
-# OOREP
+![Logo](doc/logo.png "OOREP")
 
 OOREP is an acronym for open online repertory for homeopathy.  That is, it lets
 users look up categories in homeopathic repertories.  This git repository
@@ -58,7 +58,6 @@ libraries and fonts:
 * [bootstrap](https://getbootstrap.com/) (tested with v4.2.1)
 * [bootswatch](https://bootswatch.com/) (tested with v4.2.1)
 * [jquery](https://jquery.com/) (tested with v3.3.1)
-* [popper](https://popper.js.org/) (tested with v1.15.0)
 * [Open Iconic font](https://useiconic.com/open)
 * [Open Sans font](https://fonts.google.com/specimen/Open+Sans)
 * [Linux Libertine Display font](https://en.wikipedia.org/wiki/Linux_Libertine)
@@ -95,7 +94,7 @@ database:
 create index on rubricremedy (abbrev, remedyid);
 create index on rubricremedy (abbrev, rubricid);
 create index on rubricremedy (abbrev, rubricid, remedyid);
-create index on remedy (abbrev, id);
+create index on remedy (nameabbrev, id);
 create index on rubric (abbrev, id);
 ```
 
@@ -104,18 +103,18 @@ create index on rubric (abbrev, id);
 Since version v0.10.0, OOREP no longer provides its own code to handle login and logout
 of users. Instead, the OOREP application expects the variable `X-Remote-User` to be set
 in the HTTP request header then containing the OOREP user-ID.  There are various ways to
-achieve  this.  In www.oorep.com SAML 2.0 is used as follows: all calls to OOREP are
-routed through a SAML service provider (mod_auth_mellon) which protects calls to `/login`
-and `/api/sec/...` by invoking  a SAML identity provider (SimpleSAMLphp). When the user
-enters valid  credentials to the identity provider, this variable is set and passed back
-to OOREP's service provider.
+achieve  this.  In www.oorep.com SAML is used as follows: all calls to OOREP are routed
+through a SAML service provider which protects calls to `/login` and `/api/sec/...` by
+invoking  a SAML identity provider. When the user enters valid  credentials to the
+identity provider, this variable is set and passed back to OOREP's service provider.
 
 For this to work securely, you need to make sure that, indeed, all calls to `/login` and
 `/api/sec/...` are safe-guarded by the service provider, e.g., by adding a
-`<LocationMatch /(login|api/sec/.+)>` directive to an Apache2 reverse-proxy (or similar - depending
-on your setup), which passes such calls on to the service provider before they reach the
-main OOREP application server.
+`<LocationMatch /(login|api/sec/.+)>` directive to an Apache2 reverse-proxy (or similar - 
+depending on your setup), which passes such calls on to the service provider before they
+reach the main OOREP application server.
 
-While to this end www.oorep.com uses a SAML 2.0 solution, other authentication protocol
-implementations can also be used. Also, it is probably not easy to get all this to work without
-using the aforementioned reverse-proxy, although it is not strictly an OOREP requirement.
+While to this end www.oorep.com uses a SAML solution, other authentication protocol
+implementations can also be used. Also, it is probably not easy to get all this to work
+without using the aforementioned reverse-proxy, although it is not strictly an OOREP
+requirement.

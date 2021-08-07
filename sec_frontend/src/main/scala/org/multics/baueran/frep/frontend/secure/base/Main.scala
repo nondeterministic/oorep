@@ -2,12 +2,11 @@ package org.multics.baueran.frep.frontend.secure.base
 
 import scala.scalajs.js.annotation.JSExportTopLevel
 import org.multics.baueran.frep.shared._
-import frontend.{Case, LoadingSpinner, Repertorise}
+import frontend.{CaseModals, LoadingSpinner, MainView, RepertoryView, apiPrefix, serverUrl}
 import sec_frontend.{AddToFileModal, EditFileModal, FileModalCallbacks, NewFileModal, OpenFileModal, RepertoryModal}
 import fr.hmil.roshttp.HttpRequest
 import fr.hmil.roshttp.response.SimpleHttpResponse
 import io.circe.parser.parse
-import org.multics.baueran.frep.shared.frontend.{apiPrefix, serverUrl}
 import org.multics.baueran.frep.shared.Info
 
 import scala.util.{Failure, Success}
@@ -24,39 +23,51 @@ object Main extends MainUtil {
 
   private val loadingSpinner = new LoadingSpinner("content")
 
-  private def getRepertories() = {
-    HttpRequest(s"${serverUrl()}/${apiPrefix()}/available_reps")
-      .send()
-      .onComplete({
-        case response: Success[SimpleHttpResponse] => {
-          parse(response.get.body) match {
-            case Right(json) => {
-              val cursor = json.hcursor
-              cursor.as[List[Info]] match {
-                case Right(infos) => {
-                  infos
-                    .sortBy(_.abbrev)
-                    .foreach(info => {
-                      dom.document
-                        .getElementById("secNavBarRepertories").asInstanceOf[dom.html.Div]
-                        .appendChild(a(cls:="dropdown-item", href:="#", data.toggle:="modal",
-                          onclick := { (e: Event) =>
-                            RepertoryModal.info() = Some(info)
-                          },
-                          data.target:="#repertoryInfoModal")(s"${info.abbrev} - ${info.displaytitle.getOrElse("")}").render)
-                    })
+  // See MainUtil trait!
+  override def updateDataStructuresFromBackendData() = {
+    def getMMs() = {
+      println("TODO: Implement me!")
+      // TODO: Implement me!
+    }
+
+    def getRepertories() = {
+      HttpRequest(s"${serverUrl()}/${apiPrefix()}/available_reps")
+        .send()
+        .onComplete({
+          case response: Success[SimpleHttpResponse] => {
+            parse(response.get.body) match {
+              case Right(json) => {
+                val cursor = json.hcursor
+                cursor.as[List[Info]] match {
+                  case Right(infos) => {
+                    infos
+                      .sortBy(_.abbrev)
+                      .foreach(info => {
+                        dom.document
+                          .getElementById("secNavBarRepertories").asInstanceOf[dom.html.Div]
+                          .appendChild(a(cls:="dropdown-item", href:="#", data.toggle:="modal",
+                            onclick := { (e: Event) =>
+                              RepertoryModal.info() = Some(info)
+                            },
+                            data.target:="#repertoryInfoModal")(s"${info.abbrev} - ${info.displaytitle.getOrElse("")}").render)
+                      })
+                  }
+                  case Left(err) =>
+                    println(s"ERROR: secure.Main: JSON decoding error: $err")
                 }
-                case Left(err) =>
-                  println(s"ERROR: secure.Main: JSON decoding error: $err")
               }
+              case Left(err) =>
+                println(s"ERROR: secure.Main: JSON parsing error: $err")
             }
-            case Left(err) =>
-              println(s"ERROR: secure.Main: JSON parsing error: $err")
           }
-        }
-        case failure: Failure[_] =>
-          println(s"ERROR: secure.Main: available_reps failed: ${failure.toString}")
-      })
+          case failure: Failure[_] =>
+            println(s"ERROR: secure.Main: available_reps failed: ${failure.toString}")
+        })
+    }
+
+    getRepertories()
+    getMMs()
+    MainView.updateDataStructuresFromBackendData()
   }
 
   private def authenticateAndPrepare(): Unit = {
@@ -65,7 +76,7 @@ object Main extends MainUtil {
       .onComplete({
         case response: Success[SimpleHttpResponse] => {
           if (dom.document.getElementById("static_content") == null) {
-            dom.document.getElementById("content").appendChild(Repertorise().render)
+            dom.document.getElementById("content").appendChild(MainView().render)
           }
 
           try {
@@ -94,7 +105,7 @@ object Main extends MainUtil {
       tempContent.removeChild(tempContent.firstChild)
 
     if (dom.document.getElementById("static_content") == null) {
-      Repertorise.init(loadingSpinner)
+      RepertoryView.init(loadingSpinner)
       loadingSpinner.add()
     }
 
@@ -108,15 +119,14 @@ object Main extends MainUtil {
     dom.document.getElementById("new_file_form").asInstanceOf[dom.html.Form].addEventListener("submit", NewFileModal.onSubmit, false)
 
     dom.document.body.appendChild(RepertoryModal().render)
-    dom.document.body.appendChild(Case.analysisModalDialogHTML().render)
-    dom.document.body.appendChild(Case.editDescrModalDialogHTML().render)
+    dom.document.body.appendChild(CaseModals.Repertorisation().render)
+    dom.document.body.appendChild(CaseModals.EditDescription().render)
 
     if (!dom.window.location.toString.contains("/show?"))
       authenticateAndPrepare()
     else
       dom.document.getElementById("disclaimer_div").asInstanceOf[dom.html.Div].style.setProperty("display", "none")
 
-    getRepertories()
     showNavBar()
   }
 

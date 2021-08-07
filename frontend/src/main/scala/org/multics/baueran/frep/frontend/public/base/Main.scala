@@ -4,8 +4,7 @@ import org.multics.baueran.frep.shared.MainUtil
 import org.scalajs.dom
 
 import scala.scalajs.js.annotation.JSExportTopLevel
-import scalatags.JsDom.all._
-import org.multics.baueran.frep.shared.frontend.{Case, LoadingSpinner, Repertorise, serverUrl}
+import org.multics.baueran.frep.shared.frontend.{LoadingSpinner, MainView, RepertoryView, CaseModals}
 
 @JSExportTopLevel("Main")
 object Main extends MainUtil {
@@ -16,12 +15,12 @@ object Main extends MainUtil {
     if (dom.document.getElementById("temporary_content") != null)
       dom.document.body.removeChild(dom.document.getElementById("temporary_content"))
 
-    dom.document.body.appendChild(Case.analysisModalDialogHTML().render)
+    dom.document.body.appendChild(CaseModals.Repertorisation().render)
 
     if (dom.document.getElementById("static_content") == null) {
       val loadingSpinner = new LoadingSpinner("content")
       loadingSpinner.add()
-      Repertorise.init(loadingSpinner)
+      RepertoryView.init(loadingSpinner)
 
       // /?show=... calls its own Repertorise().render via html-page embedded JS
       if (dom.window.location.toString.contains("/show?")) {
@@ -33,7 +32,7 @@ object Main extends MainUtil {
       }
       // Static content must not also show the repertorisation view
       else {
-        dom.document.getElementById("content").appendChild(Repertorise().render)
+        dom.document.getElementById("content").appendChild(MainView().render)
       }
     }
 
@@ -43,4 +42,10 @@ object Main extends MainUtil {
     if (dom.document.getElementById("cookiePopup") != null)
       showCookieDialog()
   }
+
+  // See MainUtil trait!
+  override def updateDataStructuresFromBackendData(): Unit = {
+    MainView.updateDataStructuresFromBackendData()
+  }
+
 }

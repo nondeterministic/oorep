@@ -1,7 +1,7 @@
 package org.multics.baueran.frep.backend
 
 import play.api.mvc._
-import org.multics.baueran.frep.backend.dao.{CazeDao, EmailHistoryDao, FileDao, MemberDao, PasswordChangeRequestDao}
+import org.multics.baueran.frep.backend.dao.{CazeDao, EmailHistoryDao, FileDao, MMDao, MemberDao, PasswordChangeRequestDao, RepertoryDao}
 
 package object controllers {
 
@@ -10,6 +10,8 @@ package object controllers {
   var fileDao: FileDao = _
   var passwordDao: PasswordChangeRequestDao = _
   var emailHistoryDao: EmailHistoryDao = _
+  var repertoryDao: RepertoryDao = _
+  var mmDao: MMDao = _
 
   private val Logger = play.api.Logger(this.getClass)
 

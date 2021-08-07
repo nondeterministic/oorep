@@ -1,6 +1,6 @@
 package org.multics.baueran.frep.shared
 
-case class PaginationResult(left: List[Int], middle: List[Int], right: List[Int]) {
+case class PaginationResult(left: List[Int], middle: List[Int], right: List[Int], currPage: Int) {
   def isEmpty() = left.size == 0 && middle.size == 0 && right.size == 0
 
   def pageMin = (left ::: middle ::: right).min
@@ -36,11 +36,13 @@ case class PaginationResult(left: List[Int], middle: List[Int], right: List[Int]
   * Creates a pagination
   *
   * @param totalNumberOfPages
-  * @param currPage must be greater or equal than 1!  (First page is 1, not 0!)
+  * @param currPage must be greater or equal to 0 - although first displayed page starts from 1, of course.
   * @param maxActivePages must be UNEVEN!
   */
 
-class Paginator(totalNumberOfPages: Int, currPage: Int, maxActivePages: Int) {
+class Paginator(totalNumberOfPages: Int, currPageRaw: Int, maxActivePages: Int) {
+  val currPage = currPageRaw + 1
+
   // For example [ 1 ... 15, 16, (17), 18, 19 ... 187 ] has 5 maxActivePages in the middle
   //
   // The logic / cases are then as follows:
@@ -60,7 +62,7 @@ class Paginator(totalNumberOfPages: Int, currPage: Int, maxActivePages: Int) {
 
   // Return true if input values are 'sane'
   private def inputsSane() = {
-    currPage >= 1 && currPage <= totalNumberOfPages && (maxActivePages % 2 != 0)
+    currPage <= totalNumberOfPages && (maxActivePages % 2 != 0)
   }
 
   // When page = 7, in the above example, this method returns 5, 6, 7, 8, 9
@@ -86,24 +88,24 @@ class Paginator(totalNumberOfPages: Int, currPage: Int, maxActivePages: Int) {
   def getPagination() = {
     if (inputsSane()) {
       if (totalNumberOfPages <= maxActivePages) {
-        PaginationResult(closure(currPage), List.empty, List.empty)
+        PaginationResult(closure(currPage), List.empty, List.empty, currPage)
       }
       else {
         if (currPage <= maxActivePages && (currPage - ((maxActivePages - 1) / 2)) <= 2) {
-          PaginationResult((1 :: closure(currPage)).distinct.sorted, List.empty, List(totalNumberOfPages))
+          PaginationResult((1 :: closure(currPage)).distinct.sorted, List.empty, List(totalNumberOfPages), currPage)
         }
         else {
           if (totalNumberOfPages - currPage > (maxActivePages - 1) / 2 + 1) {
-            PaginationResult(List(1), closure(currPage), List(totalNumberOfPages))
+            PaginationResult(List(1), closure(currPage), List(totalNumberOfPages), currPage)
           }
           else {
-            PaginationResult(List(1), List.empty, (totalNumberOfPages :: closure(currPage)).distinct.sorted)
+            PaginationResult(List(1), List.empty, (totalNumberOfPages :: closure(currPage)).distinct.sorted, currPage)
           }
         }
       }
     }
     else
-      PaginationResult(List.empty, List.empty, List.empty)
+      PaginationResult(List.empty, List.empty, List.empty, currPage)
   }
 
 }

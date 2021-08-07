@@ -1,7 +1,7 @@
 package org.multics.baueran.frep.shared
 
 import org.multics.baueran.frep.shared.Defs.CookieFields
-import org.multics.baueran.frep.shared.frontend.{Repertorise, getCookieData, serverUrl}
+import org.multics.baueran.frep.shared.frontend.{MainView, MateriaMedicaView, RepertoryView, getCookieData, serverUrl}
 import org.querki.jquery.$
 import org.scalajs.dom
 import scalatags.JsDom.all._
@@ -15,26 +15,8 @@ trait MainUtil {
 
     Future {
       blocking {
-        val scriptNotify = dom.document.createElement("script").asInstanceOf[dom.html.Script]
-        scriptNotify.src = s"${serverUrl()}/assets/html/third-party/notify.min.js"
-        scriptNotify.async = true
-        dom.document.head.appendChild(scriptNotify)
-      }
-    }
-
-    Future {
-      blocking {
-        val scriptPopper = dom.document.createElement("script").asInstanceOf[dom.html.Script]
-        scriptPopper.src = s"${serverUrl()}/assets/html/third-party/popper.min.js"
-        scriptPopper.async = true
-        dom.document.head.appendChild(scriptPopper)
-      }
-    }
-
-    Future {
-      blocking {
         val scriptBootstrap = dom.document.createElement("script").asInstanceOf[dom.html.Script]
-        scriptBootstrap.src = s"${serverUrl()}/assets/html/third-party/bootstrap-4.2.1/js/bootstrap.min.js"
+        scriptBootstrap.src = s"${serverUrl()}/assets/html/third-party/bootstrap-4.2.1/js/bootstrap.bundle.min.js"
         scriptBootstrap.async = true
         dom.document.head.appendChild(scriptBootstrap)
       }
@@ -61,7 +43,7 @@ trait MainUtil {
 
   def showNavBar() = {
     $(dom.window).scroll(() => {
-      if (Repertorise._repertorisationResults.now.size == 0) {
+      if (!MainView.someResultsHaveBeenShown()) {
         if ($(dom.document).scrollTop() > 150) {
           if (!dom.document.getElementById("nav_bar").asInstanceOf[dom.html.Element].classList.contains("bg-dark")) {
             $("#nav_bar").addClass("bg-dark navbar-dark shadow p-3 mb-5")
@@ -75,5 +57,10 @@ trait MainUtil {
       }
     })
   }
+
+  // This is like a class constructor: we want Main to get the data from the backend as soon as OOREP application has started up.
+  // The second line basically calls all implementations of updateDataStructuresFromBackendData() that exist.
+  def updateDataStructuresFromBackendData(): Unit
+  updateDataStructuresFromBackendData()
 
 }

@@ -7,7 +7,7 @@ import io.circe.parser.parse
 import monix.execution.Scheduler.Implicits.global
 import org.multics.baueran.frep.shared.Defs.CookieFields
 import org.multics.baueran.frep.shared.{Caze}
-import org.multics.baueran.frep.shared.frontend.{Case, Repertorise, getCookieData, serverUrl, apiPrefix}
+import org.multics.baueran.frep.shared.frontend.{Case, RepertoryView, getCookieData, serverUrl, apiPrefix, MainView}
 import org.scalajs.dom
 import org.scalajs.dom.Event
 import scalatags.JsDom.all.{onclick, _}
@@ -131,7 +131,7 @@ object EditFileModal {
                 if (Case.descr.isDefined && (Case.descr.get.id == currentlySelectedCaseId.now)) {
                   Case.descr = None
                   Case.updateCaseViewAndDataStructures()
-                  Case.rmCaseDiv()
+                  MainView.CaseDiv.empty()
                 }
                 else
                   println("EditFileModal: the case which was meant to be deleted from DB, was not currently opened. Nothing to be redrawn on screen.")
@@ -229,7 +229,7 @@ object EditFileModal {
                                 case Right(caze) => {
                                   Case.descr = Some(caze)
                                   Case.cRubrics = caze.results
-                                  Repertorise.showResults()
+                                  RepertoryView.showResults()
                                   Case.updateCaseHeaderView() // So that the buttons Add, Edit, etc. are redrawn properly
                                 }
                                 case Left(err) => println("Decoding of case failed: " + err)

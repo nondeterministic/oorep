@@ -1,24 +1,17 @@
 package org.multics.baueran.frep.shared
 
+import org.multics.baueran.frep.shared.Defs.ResourceAccessLvl
+import ResourceAccessLvl._
+
 import io.circe.{Decoder, Encoder, Json}
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.HCursor
 
 // ------------------------------------------------------------------------------------------------------------------
-object RepAccess extends Enumeration {
-  type RepAccess = Value
-  val Default = Value("Default")
-  val Public = Value("Public")
-  val Protected = Value("Protected")
-  val Private = Value("Private")
-}
-import RepAccess._
-
-// ------------------------------------------------------------------------------------------------------------------
 case class Info(abbrev: String, title: String, languag: String,
                 authorLastName: Option[String], authorFirstName: Option[String],
                 yearr: Option[Int], publisher: Option[String], license: Option[String],
-                edition: Option[String], access: RepAccess, displaytitle: Option[String])
+                edition: Option[String], access: ResourceAccessLvl, displaytitle: Option[String])
 
 object Info {
   implicit val infoDecoder: Decoder[Info] = new Decoder[Info] {
@@ -51,8 +44,8 @@ object Info {
         case Left(_) => None
       }
       val access= c.downField("access").as[String] match {
-        case Right(access) => RepAccess.withName(access)
-        case Left(_) => RepAccess.Private // In case of doubt: make it private!
+        case Right(access) => ResourceAccessLvl.withName(access)
+        case Left(_) => ResourceAccessLvl.Private // In case of doubt: make it private!
       }
       val displaytitle = c.downField("displaytitle").as[String] match {
         case Right(displaytitle) => Some(displaytitle)
@@ -127,17 +120,18 @@ object RubricRemedy {
 }
 
 // ------------------------------------------------------------------------------------------------------------------
-case class Remedy(abbrev: String, id: Int, nameAbbrev: String, nameLong: String) {
+case class Remedy(id: Int, nameAbbrev: String, nameLong: String, namealt: List[String]) {
   def canEqual(a: Any) = a.isInstanceOf[Remedy]
 
   override def equals(that: Any) = {
     that match {
       case that: Remedy =>
         this.canEqual(that) &&
-          that.abbrev == this.abbrev &&
+          that.id == this.id &&
           that.id == this.id &&
           that.nameAbbrev == this.nameAbbrev &&
-          that.nameLong == this.nameLong
+          that.nameLong == this.nameLong &&
+          that.namealt.forall(na => this.namealt.exists(_ == na))
       case _ => false
     }
   }
@@ -147,9 +141,9 @@ case class Remedy(abbrev: String, id: Int, nameAbbrev: String, nameLong: String)
     var result = 1
     result = prime * result + id +
       (if (nameAbbrev == null) 0 else nameAbbrev.hashCode()) +
-      (if (abbrev == null) 0 else abbrev.hashCode()) +
-      (if (nameLong == null) 0 else nameLong.hashCode())
-    return result
+      (if (nameLong == null) 0 else nameLong.hashCode()) +
+      namealt.foldLeft(0)(_.hashCode() + _.hashCode)
+    result
   }
 
 }
@@ -157,14 +151,6 @@ case class Remedy(abbrev: String, id: Int, nameAbbrev: String, nameLong: String)
 object Remedy {
   implicit val remedyDecoder: Decoder[Remedy] = deriveDecoder[Remedy]
   implicit val remedyEncoder: Encoder[Remedy] = deriveEncoder[Remedy]
-}
-
-// ------------------------------------------------------------------------------------------------------------------
-case class ChapterRemedy(abbrev: String, remedyId: Int, chapterId: Int)
-
-object ChapterRemedy {
-  implicit val cRemedyDecoder: Decoder[ChapterRemedy] = deriveDecoder[ChapterRemedy]
-  implicit val cRemedyEncoder: Encoder[ChapterRemedy] = deriveEncoder[ChapterRemedy]
 }
 
 // ------------------------------------------------------------------------------------------------------------------
@@ -208,20 +194,20 @@ case class Rubric(abbrev: String, id: Int, mother: Option[Int], isMother: Option
    * Checks if rubric matches all words in posStrings, so long as it doesn't match a word in negStrings.
    */
   def isMatchFor(searchTerms: SearchTerms, caseSensitive: Boolean = false): Boolean = {
-    def isWordInText(word: String, caseSensitive: Boolean) = searchTerms.isWordInX(word, textt, caseSensitive)
-    def isWordInPath(word: String, caseSensitive: Boolean) = searchTerms.isWordInX(word, path, caseSensitive)
-    def isWordInFullPath(word: String, caseSensitive: Boolean) = searchTerms.isWordInX(word, Some(fullPath), caseSensitive)
+    def isExpressionInText(expression: String, caseSensitive: Boolean) = searchTerms.isExpressionInTextPassage(expression, textt, caseSensitive)
+    def isExpressionInPath(expression: String, caseSensitive: Boolean) = searchTerms.isExpressionInTextPassage(expression, path, caseSensitive)
+    def isExpressionInFullPath(expression: String, caseSensitive: Boolean) = searchTerms.isExpressionInTextPassage(expression, Some(fullPath), caseSensitive)
 
     if (searchTerms.positive.length == 0)
       return false
 
     val isPosMatch = searchTerms.positive.map(word =>
-      isWordInText(word, caseSensitive) || isWordInPath(word, caseSensitive) || isWordInFullPath(word, caseSensitive))
+      isExpressionInText(word, caseSensitive) || isExpressionInPath(word, caseSensitive) || isExpressionInFullPath(word, caseSensitive))
       .foldLeft(true) { (x, y) => x && y }
 
-    if (searchTerms.negative.length > 0 && isPosMatch) {
+    if (isPosMatch && searchTerms.negative.length > 0) {
       searchTerms.negative.map(word =>
-        !isWordInText(word, caseSensitive) && !isWordInPath(word, caseSensitive) && !isWordInFullPath(word, caseSensitive))
+        !isExpressionInText(word, caseSensitive) && !isExpressionInPath(word, caseSensitive) && !isExpressionInFullPath(word, caseSensitive))
           .foldLeft(true) { (x, y) => x && y }
     }
     else
@@ -236,16 +222,8 @@ object Rubric {
 }
 
 // ------------------------------------------------------------------------------------------------------------------
-// Do not use this class any more!  Its purpose is for testing and repertory import/conversion only.
-// Repertory accesses for rubric lookups etc. should be made via RepertoryDao only!
-case class Repertory(info: Info, chapters: Seq[Chapter], remedies: Seq[Remedy],
-                     chapterRemedies: Seq[ChapterRemedy], rubrics: Seq[Rubric],
-                     rubricRemedies: Seq[RubricRemedy])
-
-// ------------------------------------------------------------------------------------------------------------------
-case class RemedyAndItsRepertories(nameabbrev: String, namelong: String, repertories: String)
-
-object RemedyAndItsRepertories {
-  implicit val remedyRepDecoder: Decoder[RemedyAndItsRepertories] = deriveDecoder[RemedyAndItsRepertories]
-  implicit val remedyRepEncoder: Encoder[RemedyAndItsRepertories] = deriveEncoder[RemedyAndItsRepertories]
+case class InfoExtended(info: Info, remedyIds: List[Int])
+object InfoExtended {
+  implicit val infoExtendedDecoder: Decoder[InfoExtended] = deriveDecoder[InfoExtended]
+  implicit val infoExtendedEncoder: Encoder[InfoExtended] = deriveEncoder[InfoExtended]
 }

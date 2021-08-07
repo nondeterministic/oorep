@@ -194,7 +194,7 @@ a.underline:hover {
     visibility: hidden;
     border-radius: 0;
     transform: translateY(100%);
-    transition: all 500ms ease-out;
+    // transition: all 500ms ease-out;
     color: #ecf0f1;
     background: #212327;
 }
@@ -203,7 +203,7 @@ a.underline:hover {
     opacity: 1;
     visibility: visible;
     transform: translateY(0%);
-    transition-delay: 1000ms;
+    // transition-delay: 1000ms;
 }
 
 .cookiealert a {
@@ -263,4 +263,12 @@ a.underline:hover {
   background-color: #fff;
   // border-radius: 50%;
   display: inline-block;
+}
+
+.wait {
+    cursor:wait;
+}
+
+.wait > * {
+  pointer-events:none;
 }

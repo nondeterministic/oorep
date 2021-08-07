@@ -3,10 +3,10 @@ package org.multics.baueran.frep.backend.controllers
 import javax.inject._
 import io.circe.syntax._
 import play.api.mvc._
-import org.multics.baueran.frep.backend.dao.{CazeDao, EmailHistoryDao, FileDao, MemberDao, PasswordChangeRequestDao, RepertoryDao}
+import org.multics.baueran.frep.backend.dao.{CazeDao, EmailHistoryDao, FileDao, MemberDao, PasswordChangeRequestDao, RepertoryDao, MMDao}
 import org.multics.baueran.frep.shared._
 import org.multics.baueran.frep.backend.db.db.DBContext
-import org.multics.baueran.frep.shared.Defs._
+import Defs._
 
 import java.text.SimpleDateFormat
 
@@ -16,11 +16,15 @@ import java.text.SimpleDateFormat
 
 @Singleton
 class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends AbstractController(cc) with ServerUrl {
+  // TODO: I'm not sure, if DAOs shouldn't be local to the calling methods due to potential locking-waiting issues with many requests. I simply don't know enough how Play controllers handle concurrent access, really...
+  // TODO: If there are every problems that smell like that, turn those DAOs local to the method that is using them and remove those global variables here!
   cazeDao = new CazeDao(dbContext)
   fileDao = new FileDao(dbContext)
   memberDao = new MemberDao(dbContext)
   passwordDao = new PasswordChangeRequestDao(dbContext)
   emailHistoryDao = new EmailHistoryDao(dbContext)
+  repertoryDao = new RepertoryDao(dbContext)
+  mmDao = new MMDao(dbContext)
 
   private val Logger = play.api.Logger(this.getClass)
 
@@ -87,7 +91,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
   }
 
   def changePassword(pcrId: String) = Action { implicit request: Request[AnyContent] =>
-    val errorMessage = s"The password-change-request ID is invalid or has expired. Go to main page ${serverUrl(request)} and create a new request, if you still want to change your password."
+    val errorMessage = s"Get: The password-change-request ID is invalid or has expired. Go to main page ${serverUrl(request)} and create a new request, if you still want to change your password."
 
     val passwordChangeRequestInstance = passwordDao.get(pcrId) match {
       case entry :: Nil => Some(entry)
@@ -97,8 +101,6 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     passwordChangeRequestInstance match {
       case Some(pcr) =>
         val pcrDate = new MyDate((new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ")).parse(pcr.date_))
-
-        println(pcrDate.age())
 
         // A password change request must not be older than 5h...
         if (pcrDate.age() <= 5.0)
@@ -137,28 +139,16 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     }
   }
 
-  def apiAvailableRemediesAndRepertories() = Action { request: Request[AnyContent] =>
-    val dao = new RepertoryDao(dbContext)
-
-    getAuthenticatedUser(request) match {
-      case None =>
-        Ok((dao.getAllAvailableRemediesForAnonymousUsers(),
-          dao.getAllAvailableRepertoryInfosForAnonymousUsers()).asJson.toString())
-      case Some(_) =>
-        Ok((dao.getAllAvailableRemediesForLoggedInUsers(),
-          dao.getAllAvailableRepertoryInfosForLoggedInUsers()).asJson.toString())
-    }
+  def apiAvailableRemedies() = Action { request: Request[AnyContent] =>
+    Ok(repertoryDao.getRemedies().asJson.toString())
   }
 
-  def apiAvailableReps() = Action { request: Request[AnyContent] =>
-    val dao = new RepertoryDao(dbContext)
+  def apiAvailableRepertoriesAndRemedies() = Action { request: Request[AnyContent] =>
+    Ok((repertoryDao.getRepsAndRemedies(getAuthenticatedUser(request) != None).asJson.toString))
+  }
 
-    getAuthenticatedUser(request) match {
-      case None =>
-        Ok(dao.getAllAvailableRepertoryInfosForAnonymousUsers().asJson.toString())
-      case Some(_) =>
-        Ok(dao.getAllAvailableRepertoryInfosForLoggedInUsers().asJson.toString())
-    }
+  def apiAvailableMateriaMedicasAndRemedies() = Action { request: Request[AnyContent] =>
+    Ok(mmDao.getMMsAndRemedies(getAuthenticatedUser(request) != None).asJson.toString())
   }
 
   /**
@@ -209,8 +199,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
   def apiSecGetCase(caseId: String) = Action { request: Request[AnyContent] =>
     getAuthenticatedUser(request) match {
       case Some(uid) if (caseId.forall(_.isDigit)) => {
-        val dao = new CazeDao(dbContext)
-        dao.get(caseId.toInt) match {
+        cazeDao.get(caseId.toInt) match {
           case Right(caze) if (caze.member_id == uid) =>
             if (!isUserAuthorized(request, caze.member_id)) {
               val err = s"Get: apiSecGetCase() failed: not authorised."
@@ -272,31 +261,29 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     }
   }
 
-  /**
-    * The server response of this method streamed/chunked and ends with "<EOF>" string.
-    * Read the method's comments, to see why.  Also, you need special client code for
-    * receiving a stream/chunks.
-    *
-    * @param repertoryAbbrev
-    * @param symptom
-    * @return
-    */
-  def apiLookup(repertoryAbbrev: String, symptom: String, page: Int, remedyString: String, minWeight: Int, getRemedies: Int) = Action { request: Request[AnyContent] =>
-    if (symptom.trim.length >= maxLengthOfSymptoms) {
-      val errStr = s"Get: input exceeded max length of ${maxLengthOfSymptoms}"
-      Logger.warn(errStr)
-      BadRequest(errStr)
+  def apiLookupRep(repertoryAbbrev: String, symptom: String, page: Int, remedyString: String, minWeight: Int, getRemedies: Int) = Action { request: Request[AnyContent] =>
+    val searchTerms = new SearchTerms(symptom.trim)
+    val cleanedUpAbbrev = repertoryAbbrev.replaceAll("[^0-9A-Za-z\\-]", "")
+
+    repertoryDao.queryRepertory(cleanedUpAbbrev, searchTerms, page, remedyString.trim, minWeight, getRemedies != 0) match {
+      case Some((ResultsCaseRubrics(totalNumberOfRepertoryRubrics, totalNumberOfResults, totalNumberOfPages, page, results), remedyStats)) if (totalNumberOfPages > 0) =>
+        Ok((ResultsCaseRubrics(totalNumberOfRepertoryRubrics, totalNumberOfResults, totalNumberOfPages, page, results), remedyStats).asJson.toString())
+      case _ =>
+        Logger.info(s"Get: apiLookupRep(abbrev: ${repertoryAbbrev}, symptom: ${symptom}, page: ${page}, remedy: ${remedyString}, weight: ${minWeight}): no results found")
+        NoContent
     }
-    else {
-      val dao = new RepertoryDao(dbContext)
-      dao.queryRepertory(repertoryAbbrev.trim, symptom.trim, page, remedyString.trim, minWeight, getRemedies != 0) match {
-        case Some((ResultsCaseRubrics(totalNumberOfRepertoryRubrics, totalNumberOfResults, totalNumberOfPages, page, results), remedyStats)) if (totalNumberOfPages > 0) =>
-          Ok((ResultsCaseRubrics(totalNumberOfRepertoryRubrics, totalNumberOfResults, totalNumberOfPages, page, results), remedyStats).asJson.toString())
-        case _ =>
-          val errStr = s"Get: apiLookup(abbrev: ${repertoryAbbrev}, symptom: ${symptom}, page: ${page}, remedy: ${remedyString}, weight: ${minWeight}): no results found"
-          Logger.warn(errStr)
-          NoContent
-      }
+  }
+
+  def apiLookupMM(mmAbbrev: String, symptom: String, page: Int, remedyString: String) = Action { request: Request[AnyContent] =>
+    val searchTerms = new SearchTerms(symptom.trim)
+    val cleanedUpAbbrev = mmAbbrev.replaceAll("[^0-9A-Za-z\\-]", "")
+
+    mmDao.getSectionHits(cleanedUpAbbrev, searchTerms, page, Some(remedyString)) match {
+      case Some(sectionHits) if (sectionHits.results.length > 0 || sectionHits.numberOfMatchingSectionsPerChapter.length > 0) =>
+        Ok(sectionHits.asJson.toString())
+      case _ =>
+        Logger.info(s"Get: apiLookupMM(abbrev: ${mmAbbrev}, symptom: ${symptom}, page: ${page}, remedy: ${remedyString}): no results found")
+        NoContent
     }
   }
 

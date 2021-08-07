@@ -1,18 +1,15 @@
 package org.multics.baueran.frep.shared
 
-import scala.scalajs.js.annotation.JSExportTopLevel
-import org.scalajs.dom
-
 package object Defs {
 
-  // TODO: We ended up only using rep. REMOVE rem AND min!
-  object SpecialLookupParams extends Enumeration {
-    type SpecialSearchParams = Value
-    val Remedy = Value("rem")
-    val Repertory = Value("rep")
-    val MinWeight = Value("min")
+  object ResourceAccessLvl extends Enumeration {
+    type ResourceAccessLvl = Value
+    val Default = Value("Default")
+    val Public = Value("Public")
+    val Protected = Value("Protected")
+    val Private = Value("Private")
   }
-  import SpecialLookupParams._
+  import ResourceAccessLvl._
 
   def localRepPath() = {
     sys.env.get("OOREP_REP_PATH") match {
@@ -26,6 +23,7 @@ package object Defs {
 
   def smallRepertoriesMaxSize = 550
   def maxNumberOfResultsPerPage = 100
+  def maxNumberOfResultsPerMMPage = 50
   def maxLengthOfSymptoms = 200
   def maxNumberOfSymptoms = 20
 

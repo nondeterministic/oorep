@@ -1,5 +1,23 @@
-OOREP NEWS
-=-=-=-=-=-
+  ___   ___  ____  _____ ____    _   _ _______        ______  
+ / _ \ / _ \|  _ \| ____|  _ \  | \ | | ____\ \      / / ___| 
+| | | | | | | |_) |  _| | |_) | |  \| |  _|  \ \ /\ / /\___ \ 
+| |_| | |_| |  _ <| |___|  __/  | |\  | |___  \ V  V /  ___) |
+ \___/ \___/|_| \_\_____|_|     |_| \_|_____|  \_/\_/  |____/ 
+
+
+v0.12.0  Sun Mar 27 08:07:19 PM CEST 2022 [tag: v0.12.0]
+--------------------------------------------------------
+- Main features:
+  - Add various materia medicas and the search within
+  - Add exact search using "..." to both repertory and
+    materia medica search
+
+- Minor improvements and changes:
+  - Move from Play 2.8.2 to 2.8.13
+
+- Bug fixes:
+  - Do not load Popper manually to avoid race condition
+    in the rendering of popup menus on page load
 
 v0.11.2  Sat 24 Jul 2021 12:14:46 PM CEST [tag: v0.11.2]
 --------------------------------------------------------

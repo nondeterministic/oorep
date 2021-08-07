@@ -14,9 +14,11 @@ import play.api.test._
 
 class RepertoryDatastructures extends PlaySpec with GuiceOneAppPerTest with Injecting {
 
-  val caust1 = Remedy("Caust", 0, "Caust", "Causticum")
-  val caust1_same = Remedy("Caust", 0, "Caust", "Causticum")
-  val sil = Remedy("Sil", 1, "Sil", "Silicea terra")
+  // case class Remedy(id: Int, nameAbbrev: String, nameLong: String, namealt: List[String]) {
+
+  val caust1 = Remedy(0, "Caust", "Causticum", List())
+  val caust1_same = Remedy(0, "Caust", "Causticum", List())
+  val sil = Remedy(1, "Sil", "Silicea terra", List())
 
   "Remedy " should {
 

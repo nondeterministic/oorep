@@ -43,7 +43,7 @@ object WeightedRemedy {
         case Right(json) => {
           val cursor = json.hcursor
           cursor.as[Remedy] match {
-            case Right(result) => Some(Remedy(result.abbrev, result.id, result.nameAbbrev, result.nameLong))
+            case Right(result) => Some(Remedy(result.id, result.nameAbbrev, result.nameLong, result.namealt))
             case Left(_) => None
           }
         }

@@ -9,11 +9,13 @@ GET   	/login                              org.multics.baueran.frep.backend.cont
 GET   	/logout                             org.multics.baueran.frep.backend.controllers.Get.logout
 
 GET		/api/authenticate                   org.multics.baueran.frep.backend.controllers.Get.apiAuthenticate
-GET		/api/lookup						    org.multics.baueran.frep.backend.controllers.Get.apiLookup(repertory: String, symptom: String, page: Int, remedyString: String, minWeight: Int, getRemedies: Int)
-GET     /api/available_reps                 org.multics.baueran.frep.backend.controllers.Get.apiAvailableReps
-GET     /api/available_rems_and_reps        org.multics.baueran.frep.backend.controllers.Get.apiAvailableRemediesAndRepertories
+GET		/api/lookup_rep				        org.multics.baueran.frep.backend.controllers.Get.apiLookupRep(repertory: String, symptom: String, page: Int, remedyString: String, minWeight: Int, getRemedies: Int)
+GET     /api/lookup_mm                      org.multics.baueran.frep.backend.controllers.Get.apiLookupMM(mmAbbrev: String, symptom: String, page: Int, remedyString: String)
 GET     /api/display_error_page             org.multics.baueran.frep.backend.controllers.Get.apiDisplayGetErrorPage(message: String)
 GET     /api/store_cookie                   org.multics.baueran.frep.backend.controllers.Get.apiStoreCookie(name: String, value: String)
+GET     /api/available_remedies             org.multics.baueran.frep.backend.controllers.Get.apiAvailableRemedies
+GET     /api/available_rems_and_mms         org.multics.baueran.frep.backend.controllers.Get.apiAvailableMateriaMedicasAndRemedies
+GET     /api/available_rems_and_reps        org.multics.baueran.frep.backend.controllers.Get.apiAvailableRepertoriesAndRemedies
 GET     /api/sec/available_files            org.multics.baueran.frep.backend.controllers.Get.apiSecAvailableFiles(memberId: Int)
 GET     /api/sec/file_overview              org.multics.baueran.frep.backend.controllers.Get.apiSecFileOverview(fileId: String)
 GET     /api/sec/file                       org.multics.baueran.frep.backend.controllers.Get.apiSecGetFile(fileId: String)

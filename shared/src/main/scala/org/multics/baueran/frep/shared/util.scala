@@ -3,7 +3,7 @@ package org.multics.baueran.frep.shared
 import fr.hmil.roshttp.HttpRequest
 import fr.hmil.roshttp.response.SimpleHttpResponse
 import monix.execution.Scheduler.Implicits.global
-import org.multics.baueran.frep.shared.Defs.{CookieFields, SpecialLookupParams}
+import org.multics.baueran.frep.shared.Defs.{CookieFields}
 import org.multics.baueran.frep.shared.frontend.{RemedyFormat, apiPrefix, serverUrl}
 import org.multics.baueran.frep.shared.frontend.RemedyFormat._
 import org.scalajs.dom
@@ -13,6 +13,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import scala.scalajs.js.annotation.JSExportTopLevel
 import scala.util.Success
+import scala.util.matching.Regex
 
 class BetterString(val s: String) {
   def shorten = if (s.length <= 66) s else s.substring(0,62) + "..."
@@ -45,58 +46,82 @@ class BetterCaseRubric(val cr: CaseRubric) {
 
 class SearchTerms(val symptom: String) {
 
-  // Extract a cleaned-up string from raw input search string, if user supplied "rep:..."
-  // Otherwise, if no such special terms were entered, raw input search string is used/returned.
-  private def getSymptomString(submittedSymptomString: String): String = {
-    for (term <- SpecialLookupParams.values)
-      if (submittedSymptomString.contains(s"${term}:"))
-        return getSymptomString(submittedSymptomString.replaceAll(term + """:([\w\-_]+)""", ""))
-
-    submittedSymptomString
+  private def exactSearchStringsOnly(rawSymptom: String): List[String] = {
+    val pattern = ("((?:\\-?)\"[^\"]+\")").r
+    pattern.findAllIn(rawSymptom).toList  // Contains both -"strong pain" and "weak muscle"
   }
 
-  private val searchStrings = getSymptomString(symptom)
-    .trim                                                                    // Remove trailing spaces
-    .replaceAll(" +", " ")                              // Remove double spaces
-    .replaceAll("[^A-Za-z0-9 äÄÜüÖöß\\-*]", "")         // Remove all but alphanum-, wildcard-, minus-symbols
-    .split(" ")                                                      // Get list of search strings
-    .filter(_.length > 0)
-    .distinct
+  private def unexactSearchStringsOnly(rawSymptom: String): List[String] = {
+    val exactSymptoms = exactSearchStringsOnly(rawSymptom)
+
+    def removeExactSymptoms(input: String, exactsSymptoms: List[String]): String = {
+      if (exactsSymptoms.length == 0)
+        input
+      else
+        removeExactSymptoms(input.replaceAll(Regex.quote(exactsSymptoms.head), ""), exactsSymptoms.tail)
+    }
+
+    val unexactSymptoms =
+      removeExactSymptoms(rawSymptom, exactSymptoms)
+        .trim                                                                    // Remove trailing spaces
+        .replaceAll(",", " ")                               // Remove commas
+        .replaceAll(" +", " ")                              // Remove double spaces
+        .replaceAll("[^A-Za-z0-9 äÄÜüÖöß\\-\\*]", "")       // Remove all but alphanum-, wildcard-, minus-symbols
+        .split(" ")                                                      // Get list of search strings
+        .filter(_.length > 0)
+        .distinct
+        .toList
+
+    unexactSymptoms
+  }
 
   // Positive and negative search terms
-  def positive = searchStrings.filter(!_.startsWith("-")).toList
-  def negative = searchStrings.filter(_.startsWith("-")).map(_.substring(1)).toList
+  // (That somewhat weird filter for length > 0 in the end is to avoid the empty string creep in the search terms lists...)
+  val exactPositiveOnly = exactSearchStringsOnly(symptom).filter(!_.startsWith("-")).map(_.replace("\"", "")).filter(_.trim.length > 0)
+  val exactNegativeOnly = exactSearchStringsOnly(symptom).filter(_.startsWith("-")).map(_.substring(1)).map(_.replace("\"", "")).filter(_.trim.length > 0)
+  val unexactPositiveOnly = unexactSearchStringsOnly(symptom).filter(!_.startsWith("-")).filter(_.trim.length > 0)
+  val unexactNegativeOnly = unexactSearchStringsOnly(symptom).filter(_.startsWith("-")).map(_.substring(1)).filter(_.trim.length > 0)
+  val positive = unexactPositiveOnly ::: exactPositiveOnly
+  val negative = unexactNegativeOnly ::: exactNegativeOnly
 
   /**
-    * Looks for a word, word, within some other text passage, x, where
-    * x is usually either the content of fullPath, path or ttext of an
-    * element of Rubric (but could be any other text as well).
+    * Looks for an expression (a word or a sentence), expression, within
+    * some other text passage, textPassage, where x is usually either the
+    * content of fullPath, path or ttext of an element of Rubric (but could
+    * be any other text as well).
     */
-  def isWordInX(word: String, x: Option[String], caseSensitive: Boolean = false): Boolean = {
-    x match {
+  def isExpressionInTextPassage(expression: String, textPassage: Option[String], caseSensitive: Boolean = false): Boolean = {
+    val expressionIsExact = expression.contains(' ') // An exact search term like "gums swollen" has to have a space in it, otherwise it's a 'normal' search term
+
+    textPassage match {
       case None => false
-      case Some(x) => {
-        var wordMod = word
-        var xMod = x
+      case Some(textPassage) => {
+        var expressionMod: String = expression.replace("\"", "") // In case of exact search term, we need to strip the ""
+        var textPassageMod = textPassage
 
-        if (!caseSensitive) {
-          wordMod = word.toLowerCase
-          xMod = x.toLowerCase
+        if (caseSensitive == false) {
+          expressionMod = expressionMod.toLowerCase
+          textPassageMod = textPassageMod.toLowerCase
         }
 
-        val searchSpace = xMod.replaceAll("[^A-Za-z0-9 äüößÄÖÜ\\-]", "").split(" ")
+        if (expressionIsExact) {
+          val searchPattern = expressionMod.replaceAll("\\*", ".*").r
+          searchPattern.findFirstMatchIn(textPassageMod) != None
+        } else {
+          val searchSpace: List[String] = textPassageMod.replaceAll("[^A-Za-z0-9 äüößÄÖÜ\\-]", "").split(" ").toList
 
-        if (wordMod.contains("*")) {
-          // If there's no * at beginning of search term, add ^, so that "urin*" doesn't
-          // match "during" (unless you want to, in which case you'd write "*urin*").
-          if (!wordMod.startsWith("*"))
-            wordMod = "^" + wordMod
+          if (expressionMod.contains("*")) {
+            // If there's no * at beginning of search term, add ^, so that "urin*" doesn't
+            // match "during" (unless you want to, in which case you'd write "*urin*").
+            if (!expressionMod.startsWith("*"))
+              expressionMod = "^" + expressionMod
 
-          val searchPattern = wordMod.replaceAll("\\*", ".*").r
-          searchSpace.filter(searchPattern.findFirstMatchIn(_).isDefined).length > 0
+            val searchPattern = expressionMod.replaceAll("\\*", ".*").r
+            searchSpace.filter(searchPattern.findFirstMatchIn(_).isDefined).length > 0
+          }
+          else
+            searchSpace.contains(expressionMod)
         }
-        else
-          searchSpace.contains(wordMod)
       }
     }
   }

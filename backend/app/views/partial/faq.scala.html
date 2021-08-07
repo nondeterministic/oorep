@@ -104,14 +104,15 @@
 		guarantees, not even fitness for a particular purpose.
     </p>
 
-    <h5 class="freetext">&bull; What repertories do you use?</h5>
+    <h5 class="freetext">&bull; What repertories and materia medicas do you use?</h5>
 
     <p style="text-align:justify;">
-		At the moment, there are 13 different repertories installed
+		At the moment, there is more than a dozen different repertories and materia medicas installed
 		on this server.  We do <b>not</b> consider them all to be part of
 		OOREP itself though.  Until further notice, the OOREP source
 		code is only accompanied by the <i>kent-de</i> and <i>publicum</i>
-		repertories (see list below).  The other repertories are served
+		repertories as well as the <i>boericke</i> materia medica (see list below).
+		The other repertories and materia medicas are served
 		on this very server for your convenience, but are presently not
 		intended for any further redistribution.
     </p>
@@ -172,36 +173,59 @@
     </ul>
 
     <p style="text-align:justify;">
-	Unless otherwise noted, the repertories were extracted
-	from publicly available sources from the Internet, e.g.,
-	scans, PDFs, etc.  We do not hold responsibility for any errors
-	that may have occurred in the process.  If you do happen
-	to find any such error and report it to us, we will,
-	however, attempt to correct it as soon as possible.
+		And the following materia medicas are currently used on this server:
+	</p>
+
+    <ul>
+		<li>allen: <b>H. C. Allen:</b> <i>Keynotes and Characteristics of some of the Leading Remedies of the Materia Medica</i>,
+			Boericke &amp; Tafel, New York (1899).</li>
+
+		<li>allentf: <b>T. F. Allen:</b> <i>The Encyclopedia of Pure Materia Medica</i>,
+			Boericke &amp; Tafel, New York (1874).</li>
+
+		<li>boericke: <b>W. Boericke:</b> <i>Pocket Manual of Homoeopathic Materia Medica</i>,
+			Boericke &amp; Runyon, New York (1906).</li>
+
+		<li>bogsk: <b>C. M. Boger:</b> <i>A Synoptic Key of the Materia Medica</i>,
+			2nd ed., Parkersburg, W. Va. (1916).</li>
+
+		<li>clarke: <b>J. H. Clarke:</b> <i>A Dictionary of Practical Materia Medica</i>,
+			The Homeopathic Publishing Company, London (1902).</li>
+
+	</ul>
+
+    <p style="text-align:justify;">
+		Unless otherwise noted, the repertories and materia medicas were extracted
+		from publicly available sources from the Internet, e.g.,
+		scans, PDFs, etc.
+		We do not hold responsibility for any errors
+		that may have occurred in the process.  If you do happen
+		to find any such error and report it to us, we will,
+		however, attempt to correct it as soon as possible.
     </p>
 
     <p style="text-align:justify;">
-	Please also note that the availability of certain repertories
-	is likely to change in the future.  There will always be one
-	or two repertories free to use for anybody who wishes to, but
-	we have plans to make certain features and repertories
-	available only to those, who register with this web
-	site. When/if this will happen, we cannot foresee right now.
+		Please also note that the availability of certain repertories and materia medicas
+		is likely to change in the future.  There will always be one
+		or two repertories and materia medicas free to use for anybody who wishes to, but
+		we have plans to make certain features and resources
+		available only to those, who register with this web
+		site. When/if this will happen, we cannot foresee right now.
     </p>
       
     <h5 class="freetext">&bull; Any plans to offer the modern/big repertories like Synthesis or Murphy?</h5>
 
     <p style="text-align:justify;">
-	Yes, we'd love to.  For example, we have even spoken to Roger
-	Zandvoort at some point about the inclusion of his repertory,
-	but due to the limited amount of time we can invest in OOREP
-	right now, we have no concrete plans when/if this will happen.
+		Yes, we'd love to.  For example, we have even spoken to Roger
+		Zandvoort at some point about the inclusion of his repertory,
+		but due to the limited amount of time we can invest in OOREP
+		right now, we have no concrete plans when/if this will happen.
     </p>
 
     <h5 class="freetext">&bull; Who made the graphics on this web site?</h5>
 
     <p style="text-align:justify;">
-	Please see the impressum (link at the bottom of this page) for the respective attribution.
+		Please see the impressum (link at the bottom of this page) for the respective attribution.
     </p>
 
     <h5 class="freetext">&bull; Which third-party libraries and fonts are used on this web site?</h5>
@@ -219,32 +243,58 @@
     
     <h3 class="freetext">Other</h3>
     
-    <h5 class="freetext">&bull; Why am I not getting the desired results from repertorisation?</h5>
+    <h5 class="freetext">&bull; Why am I not getting good search results from OOREP?</h5>
 
     <p style="text-align:justify;">
-	There are two major reasons, why you may be dissatisifed with
+	There are possibly three major reasons, why you may be dissatisifed with
 	the search results of this site:
     </p>
 
     <p style="text-align:justify;">
-		1. the search returned <i>too many</i> results and you have trouble finding
+		1. the search returned too many results and you have trouble finding
 		the one that is specific to your need. If that's the case, you can try
 		restricting your search by adding additional search terms to narrow
-		the scope. Alternatively, you can <i>exclude</i> certain search terms
+		the scope. Alternatively, you can <b>exclude</b> certain search terms
 		to make your search more specific. So, for example, rather than looking
-		for "pain", you could look for "pain, -abdomen, -head", thereby excluding
-		all results containing "head" or "abdomen".
+		for <i>pain</i>, you could look for <tt>pain, -abdomen, -head</tt>, thereby excluding
+		all results containing <i>head</i> or <i>abdomen</i>.
     </p>
 
+	<div class="alert alert-primary container" style="width: 85%;">
+		<i class="oi oi-info"></i>
+		<strong class="mx-2">Info!</strong>
+		Exclude certain symptoms using <i>minus</i>, like <tt>pain, -abdomen, -head</tt>.
+	</div>
+
     <p style="text-align:justify;">
-		2. the search doesn't return <i>enough</i> results for a
+		2. the search doesn't return enough results for a
 		single look-up.  In this case, try using
 		so-called <b>wildcards</b>.  So, instead of looking for
-		"throat, dry" (2 results in publicum), you could try looking
-		for "throat*, dry*" (47 results in publicum).  This also
-		matches "dryness", for example.
+		<tt>throat, dry</tt> (2 results in publicum), you could try looking
+		for <tt>throat*, dry*</tt> (47 results in publicum).  This also
+		matches <i>dryness</i>, for example.
     </p>
-      
+
+	<div class="alert alert-primary container" style="width: 85%;">
+		<i class="oi oi-info"></i>
+		<strong class="mx-2">Info!</strong>
+		Use the <i>star-symbol</i> as placeholder: <tt>pain*</tt> will also match <i>painful, pain, painless, pains</i>, etc.
+	</div>
+
+	<p style="text-align:justify;">
+		3. Especially in materia medica search, you may find that results are not
+		specific enough. For example, if you look for <i>swollen gums</i> as a symptom
+		then "gums, swollen" gets all sections that contain symptoms about the gums
+		and swellings, but not necessarily swollen gums. You can use <b>exact search</b>
+		with explicit <b>quotation marks</b> for that as follows:
+	</p>
+
+	<div class="alert alert-primary container" style="width: 85%;">
+		<i class="oi oi-info"></i>
+		<strong class="mx-2">Info!</strong>
+		Search for <tt><red>"</red>gums swollen"</tt> instead of <tt>gums swollen</tt> (or even better: <tt>"gums sw*"</tt>).
+	</div>
+
     <h5 class="freetext">&bull; How does registration/login work?</h5>
       
     <p style="text-align:justify;">

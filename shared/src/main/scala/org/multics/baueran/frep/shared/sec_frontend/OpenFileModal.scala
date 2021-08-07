@@ -4,7 +4,7 @@ import fr.hmil.roshttp.{HttpRequest, Method}
 import fr.hmil.roshttp.body.{MultiPartBody, PlainTextBody}
 import monix.execution.Scheduler.Implicits.global
 import org.multics.baueran.frep.shared.Defs.CookieFields
-import org.multics.baueran.frep.shared.frontend.{ getCookieData, Case, serverUrl, apiPrefix }
+import org.multics.baueran.frep.shared.frontend.{ getCookieData, Case, serverUrl, apiPrefix, MainView }
 import org.scalajs.dom
 import org.scalajs.dom.Event
 import scalatags.JsDom.all._
@@ -34,7 +34,7 @@ object OpenFileModal extends FileModal {
         // in case the user then modifies the case...
         if (Case.getCurrOpenFileId() == selected_file_id.now) {
           Case.updateCurrOpenFile(None)
-          Case.rmCaseDiv()
+          MainView.CaseDiv.empty()
         }
       }
       case None => ; // TODO: Display error modal?!

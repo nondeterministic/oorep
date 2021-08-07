@@ -6,7 +6,6 @@ import fr.hmil.roshttp.{HttpRequest, Method}
 import fr.hmil.roshttp.body.{MultiPartBody, PlainTextBody}
 import monix.execution.Scheduler.Implicits.global
 
-import org.scalajs.dom.raw.HTMLInputElement
 import org.querki.jquery.$
 import org.scalajs.dom
 import scalatags.JsDom
@@ -21,7 +20,6 @@ import rx.Ctx.Owner.Unsafe._
 import scalatags.rx.all._
 
 import org.multics.baueran.frep.shared
-import shared.frontend.Notify
 import shared._
 import shared.Defs.CookieFields
 import shared.frontend.RemedyFormat.RemedyFormat
@@ -87,14 +85,10 @@ object Case {
   def updateCurrOpenCaseId(caseId: Int) = {
     if (descr != None) {
       descr = Some(shared.Caze(caseId, descr.get.header, descr.get.member_id, descr.get.date, descr.get.description, cRubrics))
-      dom.document.getElementById("caseDescrId").asInstanceOf[HTMLInputElement].setAttribute("readonly", "readonly")
+      CaseModals.EditDescription.setCaseDescriptionIdReadOnly()
     }
     else
       println(s"Case: updateCaseId with ID ${caseId} failed.")
-  }
-
-  def rmCaseDiv() = {
-    $("#caseDiv").empty()
   }
 
   // ------------------------------------------------------------------------------------------------------------------
@@ -172,8 +166,7 @@ object Case {
         else if (memberId == -1) {
           if (Notify.noAlertsVisible())
             new Notify("tempFeedbackAlert", "Saving case failed. Please log out and back in, and then try again.")
-        } else
-          println("Case: updateFileModalDataStructures(): NOT updating case in DB as case is currently unchanged (or member not authorised).")
+        }
       }
 
       // Delete not only view but entire case from DB, when user removed all of its rubrics...
@@ -187,8 +180,7 @@ object Case {
               "memberId" -> PlainTextBody(memberId.toString())))
             .send()
 
-        if (dom.document.getElementById("caseDescrId") != null)
-          dom.document.getElementById("caseDescrId").asInstanceOf[HTMLInputElement].removeAttribute("readonly")
+        CaseModals.EditDescription.setCaseDescriptionIdEditable()
         descr = None
       }
     }
@@ -288,115 +280,14 @@ object Case {
             // Id is != 0, if the case has been already added to DB.  We disallow readding.
             if (currCase.id == 0) {
               $("#addToFileButton").removeAttr("disabled")
-              dom.document.getElementById("caseDescrId").asInstanceOf[HTMLInputElement].removeAttribute("readonly")
+              CaseModals.EditDescription.setCaseDescriptionIdEditable()
             }
             else {
               $("#addToFileButton").attr("disabled", true)
-              dom.document.getElementById("caseDescrId").asInstanceOf[HTMLInputElement].setAttribute("readonly", "readonly")
+              CaseModals.EditDescription.setCaseDescriptionIdReadOnly()
             }
         }
     }
-  }
-
-  // ------------------------------------------------------------------------------------------------------------------
-  // The modal-dialog HTML-code for showing the case analysis
-  def analysisModalDialogHTML() = {
-    div(cls:="modal fade", tabindex:="-1", role:="dialog", scalatags.JsDom.attrs.id:="caseAnalysisModal",
-      div(cls:="modal-dialog modal-dialog-centered", role:="document", style:="min-width: 80%;",
-        // style:="left: 10%; min-width: 80%; margin-left:0px; margin-right:0px; margin-top:20px;",
-        div(cls:="modal-content",
-          div(cls:="modal-header",
-            h5(cls:="modal-title", "Case repertorisation"),
-            button(`type`:="button", cls:="close", data.dismiss:="modal", "\u00d7")
-          ),
-          div(cls:="modal-body",
-            div(cls:="table-responsive",
-              table(cls:="table case table-striped table-hover table-sm table-bordered",
-                thead(scalatags.JsDom.attrs.id:="analysisTHead",
-                  th(attr("scope"):="col", "W."),
-                  th(attr("scope"):="col", "Rep."),
-                  th(attr("scope"):="col", "Rubric")
-                ),
-                tbody(scalatags.JsDom.attrs.id:="analysisTBody")
-              )
-            )
-          )
-        )
-      )
-    )
-  }
-
-  // ------------------------------------------------------------------------------------------------------------------
-  // The modal-dialog HTML-code for editing case description
-  def editDescrModalDialogHTML() = {
-    div(cls:="modal fade", tabindex:="-1", role:="dialog", scalatags.JsDom.attrs.id:="caseDescriptionModal",
-      div(cls:="modal-dialog modal-dialog-centered", role:="document", style:="min-width: 80%;",
-        div(cls:="modal-content",
-          div(cls:="modal-header",
-            h5(cls:="modal-title", "Case description"),
-            button(`type`:="button", cls:="close", data.dismiss:="modal", "\u00d7")
-          ),
-          div(cls:="modal-body",
-            div(cls:="table-responsive",
-              form(
-                div(cls:="form-group",
-                  label(`for`:="caseDescrId", "ID"),
-                  input(cls:="form-control", id:="caseDescrId", placeholder:="A simple, unique case identifier", required)
-                ),
-                div(cls:="form-group",
-                  label(`for`:="caseDescrDescr", "Description"),
-                  textarea(cls:="form-control", id:="caseDescrDescr", rows:="3", placeholder:="A more verbose description of the case")
-                ),
-                div(cls:="d-flex flex-row-reverse",
-                  button(cls:="btn btn-primary mb-2", style:="margin-left:8px;", `type`:="button",
-                    "Submit",
-                    onclick:={(event: Event) =>
-                      event.stopPropagation()
-
-                      val caseIdTxt = dom.document.getElementById("caseDescrId").asInstanceOf[HTMLInputElement].value
-                      dom.document.getElementById("caseDescrId").asInstanceOf[HTMLInputElement].setAttribute("readonly", "readonly")
-                      val caseDescrTxt = dom.document.getElementById("caseDescrDescr").asInstanceOf[HTMLInputElement].value
-                      val memberId = getCookieData(dom.document.cookie, CookieFields.id.toString) match {
-                        case Some(id) => id.toInt
-                        case None => -1 // TODO: Force user to relogin; the identification cookie has disappeared!!!!!!!!!!
-                      }
-
-                      descr = Some(shared.Caze( // WHERE CAZE IS INITIALLY CREATED: WITH ID -1!
-                        (if (descr.isDefined) descr.get.id else -1),
-                        caseIdTxt,
-                        memberId,
-                        (new js.Date()).toISOString(),
-                        caseDescrTxt,
-                        cRubrics))
-
-                      dom.document.getElementById("caseHeader").textContent = s"Case '${descr.get.header}':"
-                      $("#openNewCaseButton").hide()
-                      $("#editDescrButton").show()
-                      $("#closeCaseButton").show()
-                      $("#addToFileButton").removeAttr("disabled")
-                      js.eval("$('#caseDescriptionModal').modal('hide');")
-
-                      updateCaseViewAndDataStructures()
-                    }),
-                  button(data.dismiss:="modal", cls:="btn mb-2 btn-secondary",
-                    "Cancel",
-                    onclick:={ (event: Event) =>
-                      descr match {
-                        case Some(descr) =>
-                          $("#caseDescrId").`val`(descr.header)
-                          $("#caseDescrDescr").`val`(descr.description)
-                        case None =>
-                          $("#caseDescrId").`val`("")
-                          $("#caseDescrDescr").`val`("")
-                      }
-                    })
-                )
-              )
-            )
-          )
-        )
-      )
-    )
   }
 
   // ------------------------------------------------------------------------------------------------------------------
@@ -476,9 +367,10 @@ object Case {
 
               // If this was last case-rubric, clear case div
               if (cRubrics.size == 0)
-                rmCaseDiv()
+                MainView.CaseDiv.empty()
 
               updateCaseViewAndDataStructures()
+              MainView.toggleOnBeforeUnload()
             }
             }, b(raw("&nbsp;-&nbsp;")))
         )
@@ -501,8 +393,8 @@ object Case {
           onclick := { (event: Event) => {
             descr match {
               case Some(descr) =>
-                $("#caseDescrId").`val`(descr.header)
-                $("#caseDescrDescr").`val`(descr.description)
+                CaseModals.EditDescription.setDescriptionId(descr.header)
+                CaseModals.EditDescription.setDescription(descr.description)
               case None => ;
             }
           }
@@ -510,9 +402,9 @@ object Case {
       val openNewCaseButton =
         button(cls:="btn btn-sm btn-secondary", id:="openNewCaseButton", `type`:="button", data.toggle:="modal", data.target:="#caseDescriptionModal", style:="margin-left:5px; margin-bottom: 5px;",
           onclick := { (event: Event) => {
-            dom.document.getElementById("caseDescrId").asInstanceOf[HTMLInputElement].removeAttribute("readonly")
-            $("#caseDescrId").`val`("")
-            $("#caseDescrDescr").`val`("")
+            CaseModals.EditDescription.setCaseDescriptionIdEditable()
+            CaseModals.EditDescription.setDescriptionId("")
+            CaseModals.EditDescription.setDescription("")
           }},
           "Open new case")
       val closeCaseButton =
@@ -526,7 +418,8 @@ object Case {
             }
             cRubrics = List()
             descr = None
-            rmCaseDiv()
+            MainView.CaseDiv.empty()
+            MainView.toggleOnBeforeUnload()
           }
           }, "Close case")
       val addToFileButton =
@@ -577,7 +470,7 @@ object Case {
             th(cls:="d-none d-sm-table-cell", attr("scope"):="col",
               a(scalatags.JsDom.attrs.id:="caseSectionOfPage",
                 cls:="underline", href:="#caseSectionOfPage",
-                onclick:=((event: Event) => Repertorise.toggleRemedyFormat()),
+                onclick:=((event: Event) => RepertoryView.toggleRemedyFormat()),
                 "Remedies")
             ),
             th(attr("scope"):="col", " ")
@@ -590,4 +483,19 @@ object Case {
       )
     )
   }
+
+  // ------------------------------------------------------------------------------------------------------------------
+  def containsUnsavedResults(): Boolean = {
+    var unsaved = false
+
+    if (size() > 0) {
+      currOpenFileId match {
+        case Some(_) => unsaved = false
+        case None => unsaved = true
+      }
+    }
+
+    unsaved
+  }
+
 }

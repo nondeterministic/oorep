@@ -1,7 +1,7 @@
 import sbt.Keys.libraryDependencies
 
 val myScalaVersion     = "2.13.1"
-val scalaTestVersion   = "5.1.0"
+val scalaTestPlusVersion = "5.1.0"
 val scalaJsDomVersion  = "1.0.0"
 val scalaTagsVersion   = "0.8.6"
 val scalatagsrxVersion = "0.5.0"
@@ -38,7 +38,7 @@ lazy val backend = (project in file("backend")).settings(commonSettings).setting
     "io.circe" %% "circe-core" % circeVersion,
     "io.circe" %% "circe-generic" % circeVersion,
     "io.circe" %% "circe-parser" % circeVersion,
-    "org.scalatestplus.play" %% "scalatestplus-play" % scalaTestVersion % "test",
+    "org.scalatestplus.play" %% "scalatestplus-play" % scalaTestPlusVersion % "test",
     guice,
     specs2 % Test
   )
@@ -90,10 +90,9 @@ lazy val shared = crossProject(JSPlatform, JVMPlatform)
       "org.querki" %%% "jquery-facade" % scalaJQueryVersion,
       "fr.hmil" %%% "roshttp" % rosHttpVersion,
       "com.timushev" %%% "scalatags-rx" % scalatagsrxVersion,
-// TODO: Not sure if they are required for backend tests...
-//      "org.scalatestplus.play" %% "scalatestplus-play" % scalaTestVersion % "test",
-//      guice,
-//      specs2 % Test
+      "org.scalatestplus.play" %% "scalatestplus-play" % scalaTestPlusVersion % "test",
+      guice,
+      specs2 % Test
     ),
   )
   .enablePlugins(ScalaJSPlugin, ScalaJSWeb)
@@ -110,7 +109,7 @@ lazy val commonSettings = Seq(
   scalaVersion := myScalaVersion,
   organization := "org.multics.baueran.frep",
   maintainer := "baueran@gmail.com",
-  version := "0.11.2"
+  version := "0.12.0-beta1"
 )
 
 // TODO: This doesn't work, and I can't be bothered to get it to work.

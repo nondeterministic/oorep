@@ -103,7 +103,7 @@ class CazeResultDao(dbContext: db.db.DBContext) {
           caseResults    <- query[CazeResult].filter(cr => liftQuery(caseResultIds).contains(cr.id))
           rubricRemedies <- query[RubricRemedy].filter(rubricR => rubricR.abbrev == caseResults.abbrev && rubricR.rubricId == caseResults.rubricId)
           rubrics        <- query[Rubric].join(rubric => rubric.abbrev == rubricRemedies.abbrev && rubric.id == rubricRemedies.rubricId)
-          remedies       <- query[Remedy].join(rem => rem.abbrev == rubricRemedies.abbrev && rem.id == rubricRemedies.remedyId)
+          remedies       <- query[Remedy].join(rem => rem.id == rubricRemedies.remedyId)
         } yield (remedies, rubricRemedies, rubrics, caseResults)
       }
     }
