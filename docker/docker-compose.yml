@@ -1,0 +1,27 @@
+version: '3.3'
+
+services:      
+
+  db:
+    image: oorep/database:0.12.0
+    build:
+       context: ./oorep_db
+    expose:
+      - 5432
+    
+  app:
+    image: oorep/application:0.12.0
+    build:
+       context: ./oorep_app
+       args:
+          - VERSION=0.12.0
+    environment:
+      OOREP_APPLICATION_HOST: http://localhost:9000
+      OOREP_APPLICATION_SECRET: abcdefghijklmnopqrstuvwxyz
+      OOREP_DB_HOST: db
+      OOREP_DB_PASS: poofoo
+      OOREP_DB_PORT: 5432
+    ports:
+      - 9000:9000
+    depends_on:
+      - db

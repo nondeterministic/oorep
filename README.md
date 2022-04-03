@@ -10,9 +10,34 @@ can also be found at https://www.oorep.com/.
 Besides the aforementioned homepage, check out the [NEWS](NEWS) file for the
 latest updates.
 
-## How to get the source code running
+## Running the program
 
-### Prerequisites
+You can choose between the following two different methods in order to get OOREP
+up and running on your own machine.
+
+### Method 1: By using ready-made Docker images (recommended way)
+
+#### Prerequisite
+
+* You have the commands `docker` and `docker-compose` available on your machine.
+
+#### Execute the Docker containers from [Dockerhub](https://hub.docker.com/u/oorep)
+
+But first, clone OOREP's source code repository from here. Afterwards execute the
+following commands one after another:
+```
+cd docker/
+docker-compose pull
+docker-compose up
+```
+Depending on your Internet connection, those commands may take a while to complete.
+When all is done, you should be able to point your web browser to `http://localhost:9000`
+and see OOREP's landing page. Needless to say, those images are test-only and are not
+intended for any production environments or the like. 
+
+### Method 2: By building the project from scratch (for experts only)
+
+#### Prerequisites
 
 * Java SDK (for best results, use JDK 8 or 11.  (In particular, I've had build
   problems with JDK 12 - broken String class.))
@@ -49,7 +74,7 @@ Check `backend/conf/application.conf` for their respective use, and make other
 adjustments as you see fit there.  Also be sure these variables are set before
 attempting to execute the OOREP code using SBT.
 
-### Recommended external libraries
+#### Recommended external libraries
 
 It is strongly recommended to also download the following external JavaScript
 libraries and fonts:
@@ -69,7 +94,7 @@ OOREP directory. (For OOREP versions < 0.11, you should use
 [this file](http://pspace.org/a/third-party.tar.gz)
 instead.)
 
-### Compiling and running
+#### Compiling and running
 
 When you're content with your setup, OOREP, a
 [Play](https://www.playframework.com/) application written in Scala, can be run
@@ -83,7 +108,7 @@ and then `dist` in SBT, which will build an executable,
 a stand-alone version of the application. This is also how the oorep.com-server
 is run.
 
-## Runtime optimisations
+#### Runtime optimisations
 
 Some queries will be slow, if the database is not optimised. As this is
 work in progress, the following is a somewhat crude approximation: It is
