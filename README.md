@@ -15,25 +15,25 @@ latest updates.
 You can choose between the following two different methods in order to get OOREP
 up and running on your own machine.
 
-### Method 1: By using ready-made Docker images (recommended way)
+### Method 1: By using ready-made Docker images (recommended method)
 
 #### Prerequisite
 
 * You have the commands `docker` and `docker-compose` available on your machine.
 
-#### Execute the Docker containers from [Dockerhub](https://hub.docker.com/u/oorep)
+#### Pull the Docker images from [Dockerhub](https://hub.docker.com/u/oorep)
 
-But first, clone OOREP's source code repository from here. Afterwards execute the
-following commands one after another:
+But first, clone OOREP's source code repository from here. Afterwards change into
+the `docker` directory of the source code repository and execute the following two
+commands one after another:
 ```
-cd docker/
-docker-compose pull
-docker-compose up
+$ docker-compose pull
+$ docker-compose up
 ```
 Depending on your Internet connection, those commands may take a while to complete.
 When all is done, you should be able to point your web browser to `http://localhost:9000`
 and see OOREP's landing page. Needless to say, those images are test-only and are not
-intended for any production environments or the like. 
+intended for any production environments or the like without further modifications.
 
 ### Method 2: By building the project from scratch (for experts only)
 
