@@ -24,8 +24,8 @@ up and running on your own machine.
 #### Pull the Docker images from [Dockerhub](https://hub.docker.com/u/oorep)
 
 But first, clone OOREP's source code repository from here. Afterwards change into
-the `docker` directory of the source code repository and execute the following two
-commands one after another:
+the `docker` directory of your local source code repository and execute the following
+two commands one after another:
 ```
 $ docker-compose pull
 $ docker-compose up

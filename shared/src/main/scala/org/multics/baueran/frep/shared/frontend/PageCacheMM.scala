@@ -91,5 +91,10 @@ class PageCacheMM {
 
   def length() = _cache.length
 
-  def latest = _cache.last
+  def latest() = {
+    if (length() > 0)
+      Some(_cache.last)
+    else
+      None
+  }
 }

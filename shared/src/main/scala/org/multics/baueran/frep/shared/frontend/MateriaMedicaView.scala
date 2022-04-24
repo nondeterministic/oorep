@@ -137,30 +137,32 @@ object MateriaMedicaView extends TabView {
             multiOccDiv.asInstanceOf[dom.html.Div].appendChild(multiOccurrencesSpan)
         }
 
-        if (_pageCache.length() > 0 && _pageCache.latest.content.numberOfMatchingSectionsPerChapter.length > 1) {
-          val multiOccurrencesLinks = _pageCache.latest.content.numberOfMatchingSectionsPerChapter
-            .sortWith((h1, h2) => _remedies.get(h1.remedyId) > _remedies.get(h2.remedyId)) // Uses the above implicit!
-            .sortBy(-_.hits)
-            .map {
-              case HitsPerRemedy(numberOfHits, remedyId) => {
-                val remedyAbbrev = _remedies.get(remedyId) match {
-                  case Some(remedy) => Some(remedy.nameAbbrev)
-                  case None => None
-                }
-                span(numberOfHits.toString + "x",
-                  a(href := "#", onclick := { (_: Event) => doLookup(_pageCache.latest.abbrev, "", None, remedyAbbrev) },
-                    // ### Should never be seen by the user. Could only happen if remedy data transfer from backend was incomplete.
-                    remedyAbbrev.getOrElse("###").toString
+        _pageCache.latest() match {
+          case Some(latestCachePage) if latestCachePage.content.numberOfMatchingSectionsPerChapter.length > 1 => {
+            val multiOccurrencesLinks = latestCachePage.content.numberOfMatchingSectionsPerChapter
+              .sortWith((h1, h2) => _remedies.get(h1.remedyId) > _remedies.get(h2.remedyId)) // Uses the above implicit!
+              .sortBy(-_.hits)
+              .map {
+                case HitsPerRemedy(numberOfHits, remedyId) => {
+                  val remedyAbbrev = _remedies.get(remedyId) match {
+                    case Some(remedy) => Some(remedy.nameAbbrev)
+                    case None => None
+                  }
+                  span(numberOfHits.toString + "x",
+                    a(href := "#", onclick := { (_: Event) => doLookup(latestCachePage.abbrev, "", None, remedyAbbrev) },
+                      // ### Should never be seen by the user. Could only happen if remedy data transfer from backend was incomplete.
+                      remedyAbbrev.getOrElse("###").toString
+                    )
                   )
-                )
+                }
               }
-            }
-          multiOccurrencesSpan.appendChild(span(" (All matching chapters: ").render)
-          multiOccurrencesLinks.take(multiOccurrencesLinks.length - 1).foreach(lnk => multiOccurrencesSpan.appendChild(span(lnk, ", ").render))
-          multiOccurrencesLinks.takeRight(1).foreach(lnk => multiOccurrencesSpan.appendChild(span(lnk, ")").render))
+            multiOccurrencesSpan.appendChild(span(" (All matching chapters: ").render)
+            multiOccurrencesLinks.take(multiOccurrencesLinks.length - 1).foreach(lnk => multiOccurrencesSpan.appendChild(span(lnk, ", ").render))
+            multiOccurrencesLinks.takeRight(1).foreach(lnk => multiOccurrencesSpan.appendChild(span(lnk, ")").render))
+          }
+          case _ =>
+            multiOccurrencesSpan.appendChild(span(" (No further matching chapters.)").render)
         }
-        else
-          multiOccurrencesSpan.appendChild(span(" (No further matching chapters.)").render)
       }
       // If multi-occurrences already there, even if collapse, do nothing!
       case multiOccurrencesContentSpan => ;
@@ -175,7 +177,12 @@ object MateriaMedicaView extends TabView {
     val pg = new Paginator(totalNumberOfPages, _page.getOrElse(0), 5).getPagination()
     val htmlPg = new PaginatorHtml(s"${_prefix}_paginationDiv", pg)
 
-    Some(htmlPg.toHtml(_pageCache.latest.abbrev, _pageCache.latest.symptom, _pageCache.latest.remedy, doLookup))
+    _pageCache.latest() match {
+      case Some(latestPageCache) =>
+        Some(htmlPg.toHtml(latestPageCache.abbrev, latestPageCache.symptom, latestPageCache.remedy, doLookup))
+      case _ =>
+        None
+    }
   }
 
   private def getResultsHtml(): JsDom.TypedTag[Div] = {
