@@ -73,58 +73,63 @@ object RepertoryView extends TabView {
   private def redrawMultiOccurringRemedies(): Unit = {
     val multiRemedies = _resultRemedyStats.now.filter(_.count > 2).sortBy(-_.count)
     val multiOccurrenceDiv = dom.document.getElementById("multiOccurrenceDiv").asInstanceOf[dom.html.Element]
+    val collapseMultiOccurrences = dom.document.getElementById("collapseMultiOccurrences").asInstanceOf[dom.html.Element]
 
-    if (multiOccurrenceDiv != null) {
-      val collapseMultiOccurrences = dom.document.getElementById("collapseMultiOccurrences").asInstanceOf[dom.html.Element]
-      if (collapseMultiOccurrences != null)
-        multiOccurrenceDiv.removeChild(collapseMultiOccurrences)
+    if (multiOccurrenceDiv == null)
+      return
 
-      if (multiRemedies.length > 1) {
-        multiOccurrenceDiv.appendChild(
-          span(id := "collapseMultiOccurrences", cls := s"collapse ${if (_showMultiOccurrences) "show" else "hide"}",
-            "(Multi-occurrences of remedies in results: ",
-            multiRemedies
-              .take(multiRemedies.size - 1)
-              .map { case ResultsRemedyStats(nameabbrev, count, cumulativeWeight) => {
-                span(
-                  (s"${count}x"),
-                  a(href := "#", onclick := { (event: Event) =>
-                    doLookup(_pageCache.latest.abbrev, _pageCache.latest.symptom, None, Some(nameabbrev), 0)
-                  }, nameabbrev),
-                  ("(" + cumulativeWeight + "), ")
-                )}
-              },
-            span(
-              (s"${multiRemedies.last.count}x"),
-              a(href := "#", onclick := { (event: Event) =>
-                doLookup(_pageCache.latest.abbrev, _pageCache.latest.symptom, None, Some(multiRemedies.last.nameabbrev), 0)
-              }, multiRemedies.last.nameabbrev),
-              ("(" + multiRemedies.last.cumulativeweight + ")")
-            ),
-            ")").render
-        )
-      }
-      else if (multiRemedies.length == 1) {
-        multiOccurrenceDiv.appendChild(
-          span(id := "collapseMultiOccurrences", cls := s"collapse ${if (_showMultiOccurrences) "show" else "hide"}",
-            "(Multi-occurrences of remedies in results: ",
-            multiRemedies
-              .map { case ResultsRemedyStats(nameabbrev, count, cumulativeWeight) => {
-                span(
-                  (s"${count}x"),
-                  a(href := "#", onclick := { (event: Event) =>
-                    doLookup(_pageCache.latest.abbrev, _pageCache.latest.symptom, None, Some(nameabbrev), 0)
-                  }, nameabbrev),
-                  ("(" + cumulativeWeight + "))")
-                )}
-              })
-            .render)
-      }
-      else {
+    if (collapseMultiOccurrences != null)
+      multiOccurrenceDiv.removeChild(collapseMultiOccurrences)
+
+    _pageCache.latest() match {
+      case Some(cachePage) if (multiRemedies.length > 0) =>
+        if (multiRemedies.length > 1) {
+          multiOccurrenceDiv.appendChild(
+            span(id := "collapseMultiOccurrences", cls := s"collapse ${if (_showMultiOccurrences) "show" else "hide"}",
+              "(Multi-occurrences of remedies in results: ",
+              multiRemedies
+                .take(multiRemedies.size - 1)
+                .map { case ResultsRemedyStats(nameabbrev, count, cumulativeWeight) => {
+                  span(
+                    (s"${count}x"),
+                    a(href := "#", onclick := { (event: Event) =>
+                      doLookup(cachePage.abbrev, cachePage.symptom, None, Some(nameabbrev), 0)
+                    }, nameabbrev),
+                    ("(" + cumulativeWeight + "), ")
+                  )
+                }
+                },
+              span(
+                (s"${multiRemedies.last.count}x"),
+                a(href := "#", onclick := { (event: Event) =>
+                  doLookup(cachePage.abbrev, cachePage.symptom, None, Some(multiRemedies.last.nameabbrev), 0)
+                }, multiRemedies.last.nameabbrev),
+                ("(" + multiRemedies.last.cumulativeweight + ")")
+              ),
+              ")").render
+          )
+        }
+        else if (multiRemedies.length == 1) {
+          multiOccurrenceDiv.appendChild(
+            span(id := "collapseMultiOccurrences", cls := s"collapse ${if (_showMultiOccurrences) "show" else "hide"}",
+              "(Multi-occurrences of remedies in results: ",
+              multiRemedies
+                .map { case ResultsRemedyStats(nameabbrev, count, cumulativeWeight) => {
+                  span(
+                    (s"${count}x"),
+                    a(href := "#", onclick := { (event: Event) =>
+                      doLookup(cachePage.abbrev, cachePage.symptom, None, Some(nameabbrev), 0)
+                    }, nameabbrev),
+                    ("(" + cumulativeWeight + "))")
+                  )
+                }
+                })
+              .render)
+        }
+      case _ =>
         multiOccurrenceDiv.appendChild(
           span(id := "collapseMultiOccurrences", cls := s"collapse ${if (_showMultiOccurrences) "show" else "hide"}",
             "(Multi-occurrences of remedies in results: None)").render)
-      }
     }
   }
 
@@ -195,8 +200,8 @@ object RepertoryView extends TabView {
     MainView.resetContentView()
     showCase()
 
-    _repertorisationResults.now match {
-      case Some(ResultsCaseRubrics(totalNumberOfRepertoryRubrics, totalNumberOfResults, totalNumberOfPages, currPage, results)) if (results.size > 0) => {
+    (_repertorisationResults.now, _pageCache.latest) match {
+      case (Some(ResultsCaseRubrics(totalNumberOfRepertoryRubrics, totalNumberOfResults, totalNumberOfPages, currPage, results)), Some(latestCachePage)) if (results.size > 0) => {
         dom.document.getElementById("resultStatus").innerHTML = ""
         dom.document.getElementById("resultStatus").appendChild(
           div(scalatags.JsDom.attrs.id := "multiOccurrenceDiv", cls := "alert alert-secondary", role := "alert",
@@ -223,17 +228,17 @@ object RepertoryView extends TabView {
               var searchStatsString =
                 if (totalNumberOfResults == totalNumberOfRepertoryRubrics)
                   s"0 rubrics found for "
-                else if (_pageCache.latest.symptom.trim.length > 0 && _pageCache.latest.remedy.getOrElse("").length > 0)
-                  s"${totalNumberOfResults} rubrics match '${_pageCache.latest.symptom}' containing '${_pageCache.latest.remedy.getOrElse("")}'"
-                else if (_pageCache.latest.symptom.trim.length > 0)
-                  s"${totalNumberOfResults} rubrics match '${_pageCache.latest.symptom}'"
-                else if (_pageCache.latest.remedy.getOrElse("").trim.length > 0)
-                  s"${totalNumberOfResults} rubrics contain '${_pageCache.latest.remedy.getOrElse("")}'"
+                else if (latestCachePage.symptom.trim.length > 0 && latestCachePage.remedy.getOrElse("").length > 0)
+                  s"${totalNumberOfResults} rubrics match '${latestCachePage.symptom}' containing '${latestCachePage.remedy.getOrElse("")}'"
+                else if (latestCachePage.symptom.trim.length > 0)
+                  s"${totalNumberOfResults} rubrics match '${latestCachePage.symptom}'"
+                else if (latestCachePage.remedy.getOrElse("").trim.length > 0)
+                  s"${totalNumberOfResults} rubrics contain '${latestCachePage.remedy.getOrElse("")}'"
                 else // This case should never fire, really.
                   s"${totalNumberOfResults} rubrics found"
 
-              if (_pageCache.latest.minWeight > 0)
-                searchStatsString += s" with min. weight >= ${_pageCache.latest.minWeight}"
+              if (latestCachePage.minWeight > 0)
+                searchStatsString += s" with min. weight >= ${latestCachePage.minWeight}"
 
               searchStatsString += s". Showing page ${currPage + 1} of ${totalNumberOfPages} ("
               searchStatsString
@@ -269,7 +274,7 @@ object RepertoryView extends TabView {
 
           dom.document.getElementById(s"${_prefix}_paginationDiv")
             .appendChild(
-              htmlPg.toHtml(_pageCache.latest.abbrev, _pageCache.latest.symptom, _pageCache.latest.remedy, _pageCache.latest.minWeight, doLookup)
+              htmlPg.toHtml(latestCachePage.abbrev, latestCachePage.symptom, latestCachePage.remedy, latestCachePage.minWeight, doLookup)
                 .render)
         }
       }
@@ -277,8 +282,8 @@ object RepertoryView extends TabView {
     }
 
     // Display potentially useful hint, when max. number of search results was returned.
-    _repertorisationResults.now match {
-      case Some(ResultsCaseRubrics(totalNumberOfRepertoryRubrics, totalNumberOfResults, totalNumberOfPages, _, results)) => {
+    (_repertorisationResults.now, _pageCache.latest) match {
+      case (Some(ResultsCaseRubrics(totalNumberOfRepertoryRubrics, totalNumberOfResults, totalNumberOfPages, _, results)), Some(latestCachePage)) => {
         // If the total number of results matches the total number of available rubrics in a repertory, the user either entered "*"
         // or, in fact, the repertory is a so called small repertory, which means, we show everything...
         if (_showMaxSearchResultsAlert && totalNumberOfRepertoryRubrics == totalNumberOfResults) {
@@ -301,7 +306,7 @@ object RepertoryView extends TabView {
               .toSeq.sortWith(_._2 > _._2)
 
           // Filter out all those results, which were actually desired via positive search terms entered by the user
-          val searchTerms = new SearchTerms(_pageCache.latest.symptom)
+          val searchTerms = new SearchTerms(latestCachePage.symptom)
           val filteredSortedResultOccurrences =
             sortedResultOccurrences
               .filter { case (t, _) =>
@@ -365,13 +370,18 @@ object RepertoryView extends TabView {
   }
 
   // ------------------------------------------------------------------------------------------------------------------
-//  private def advancedSearchOptionsVisible(): Boolean = {
-//    dom.document.getElementById("advancedSearchControlsDiv").childNodes.length > 0
-//  }
+  //  private def advancedSearchOptionsVisible(): Boolean = {
+  //    dom.document.getElementById("advancedSearchControlsDiv").childNodes.length > 0
+  //  }
 
   // ------------------------------------------------------------------------------------------------------------------
-  private def onSymptomLinkClicked(symptom: String) = {
-    doLookup(_selectedRepertory.now, symptom, None, _pageCache.latest.remedy, _pageCache.latest.minWeight)
+  private def onSymptomLinkClicked(symptom: String): Unit = {
+    _pageCache.latest() match {
+      case Some(latestCachePage) =>
+        doLookup(_selectedRepertory.now, symptom, None, latestCachePage.remedy, latestCachePage.minWeight)
+      case _ =>
+        println("RepertoryView: onSymptomLinkClicked failed.")
+    }
   }
 
   // ------------------------------------------------------------------------------------------------------------------
@@ -396,24 +406,28 @@ object RepertoryView extends TabView {
   }
 
   // ------------------------------------------------------------------------------------------------------------------
-  private def onSymptomListRedoPressed() = {
-    dom.document.getElementById("inputField").asInstanceOf[dom.html.Input].value = _pageCache.latest.symptom
+  private def onSymptomListRedoPressed(): Unit = {
+    _pageCache.latest() match {
+      case Some(latestCachePage) =>
+        dom.document.getElementById("inputField").asInstanceOf[dom.html.Input].value = latestCachePage.symptom
 
-    _pageCache.latest.remedy match {
-      case Some(_) => onShowAdvancedSearchOptionsMainView(true, false)
-      case _ => {
-        if (_pageCache.latest.minWeight > 0)
-          onShowAdvancedSearchOptionsMainView(true, false)
-      }
+        latestCachePage.remedy match {
+          case Some(_) =>
+            onShowAdvancedSearchOptionsMainView(true, false)
+          case _ =>
+            if (latestCachePage.minWeight > 0)
+              onShowAdvancedSearchOptionsMainView(true, false)
+        }
+
+        dom.document.getElementById("inputField").asInstanceOf[HTMLInputElement].focus()
+      case _ =>
+        println("RepertoryView: onSymptomListRedoPressed failed.")
     }
-
-    dom.document.getElementById("inputField").asInstanceOf[HTMLInputElement].focus()
   }
 
   // ------------------------------------------------------------------------------------------------------------------
   private def onShowAdvancedSearchOptionsMainView(restorePreviousValues: Boolean, landingPageIsCurrentView: Boolean): Unit = {
     val parentDiv = dom.document.getElementById("advancedSearchControlsDiv")
-    val weightDropDownsDiv = div(id:="weightDropDownsDiv", cls:="dropdown-menu")
 
     if (parentDiv == null)
       return
@@ -439,8 +453,10 @@ object RepertoryView extends TabView {
               "Min. weight:"),
             div(cls := "col-sm-2",
               div(id := "weightDropDowns", cls := "dropdown show",
-                button(id := "minWeightDropdown", cls := "btn dropdown-toggle btn-secondary", `type` := "button", data.toggle := "dropdown", if (restorePreviousValues && _pageCache.size() > 0) _pageCache.latest.minWeight.toString else "0"),
-                weightDropDownsDiv
+                button(id := "minWeightDropdown", cls := "btn dropdown-toggle btn-secondary", `type` := "button", data.toggle := "dropdown",
+                  if (restorePreviousValues && _pageCache.size() > 0) _pageCache.latest().get.minWeight.toString else "0"
+                ),
+                div(id:="weightDropDownsDiv", cls:="dropdown-menu")
               )
             )
           ).render)
@@ -449,18 +465,23 @@ object RepertoryView extends TabView {
 
     // Set remedy input string, if one was previously submitted, and redo-button was pressed
     if (restorePreviousValues && _pageCache.size() > 0) {
-      _pageCache.latest.remedy match {
-        case Some(remedyAbbrev) =>
-          dom.document.getElementById("inputRemedy").asInstanceOf[dom.html.Input].value = remedyAbbrev
-        case None => ;
-      }
+      for {
+        latestCachePage <- _pageCache.latest()
+      } yield for {
+        remedyAbbrev <- latestCachePage.remedy
+      } yield dom.document.getElementById("inputRemedy").asInstanceOf[dom.html.Input].value = remedyAbbrev
     }
 
     refreshRemedyDataList(_repertories.getRemedies(_selectedRepertory.now))
 
-    // Add possible weights for search (4 is only in Hering's)
+    // Add possible weights for search (4 is only in hering, 0 is only in bogboen)
+    val weightDropDownsDiv = dom.document.getElementById("weightDropDownsDiv").asInstanceOf[dom.html.Div]
+
+    while (weightDropDownsDiv.childNodes.length > 0)
+      weightDropDownsDiv.removeChild(weightDropDownsDiv.firstChild)
+
     for (i <- 0 to 4) {
-      dom.document.getElementById("weightDropDownsDiv").asInstanceOf[dom.html.Div].appendChild(
+      weightDropDownsDiv.appendChild(
         a(cls:="dropdown-item", href:="#",
           onclick := { (_: Event) =>
             dom.document.getElementById("minWeightDropdown").asInstanceOf[dom.html.Button].textContent = s"$i" },

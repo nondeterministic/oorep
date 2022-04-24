@@ -91,8 +91,13 @@ class PageCache {
     List.empty
   }
 
-  // TODO: This is utter crap. Turn `latest` inton option and remove size() checks!
-  def latest = _cache.last
   def size() = _cache.size
+
+  def latest(): Option[CachePage] = {
+    if (size() > 0)
+      Some(_cache.last)
+    else
+      None
+  }
 
 }
