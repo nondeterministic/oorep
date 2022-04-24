@@ -97,8 +97,14 @@ case class MMSearchResult(abbrev: String, remedy_id: Int, remedy_fullname: Strin
         remedy match {
           case Some(remedy) =>
             if (remedy.nameLong.toLowerCase != remedy_fullname.toLowerCase) {
-              if (remedy.namealt.length > 0)
-                "[alt. " + remedy.nameLong + ", " + remedy.namealt.filter(_.toLowerCase != remedy_fullname.toLowerCase).mkString(", ")
+              if (remedy.namealt.length > 0) {
+                val altNames = remedy.namealt.filter(_.toLowerCase != remedy_fullname.toLowerCase)
+
+                if (altNames.length > 0)
+                  "[alt. " + remedy.nameLong + ", " + altNames.mkString(", ")
+                else
+                  "[alt. " + remedy.nameLong
+              }
               else
                 "[alt. " + remedy.nameLong
             }

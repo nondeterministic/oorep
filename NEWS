@@ -10,6 +10,7 @@ v0.12.1                                under development
   - Move from Play 2.8.13 to 2.8.15
   - Pressing 'redo' in repertory view no longer duplicates
     the elements in the weight dropdown
+  - Fix display of "alt." remedy names in MM view
   - Update site documentation
 
 v0.12.0  Sun Mar 27 08:07:19 PM CEST 2022 [tag: v0.12.0]
