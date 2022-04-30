@@ -91,21 +91,23 @@ class Paginator(totalNumberOfPages: Int, currPageRaw: Int, maxActivePages: Int) 
         PaginationResult(closure(currPage), List.empty, List.empty, currPage)
       }
       else {
-        if (currPage <= maxActivePages && (currPage - ((maxActivePages - 1) / 2)) <= 2) {
+        if (totalNumberOfPages - maxActivePages == 1) {
+          PaginationResult((1 to totalNumberOfPages).toList, List.empty, List.empty, currPage)
+        }
+        else if (currPage <= maxActivePages && (currPage - ((maxActivePages - 1) / 2)) <= 2) {
           PaginationResult((1 :: closure(currPage)).distinct.sorted, List.empty, List(totalNumberOfPages), currPage)
         }
+        else if (totalNumberOfPages - currPage > (maxActivePages - 1) / 2 + 1) {
+          PaginationResult(List(1), closure(currPage), List(totalNumberOfPages), currPage)
+        }
         else {
-          if (totalNumberOfPages - currPage > (maxActivePages - 1) / 2 + 1) {
-            PaginationResult(List(1), closure(currPage), List(totalNumberOfPages), currPage)
-          }
-          else {
-            PaginationResult(List(1), List.empty, (totalNumberOfPages :: closure(currPage)).distinct.sorted, currPage)
-          }
+          PaginationResult(List(1), List.empty, (totalNumberOfPages :: closure(currPage)).distinct.sorted, currPage)
         }
       }
     }
-    else
+    else {
       PaginationResult(List.empty, List.empty, List.empty, currPage)
+    }
   }
 
 }
