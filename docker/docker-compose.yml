@@ -3,18 +3,18 @@ version: '3.3'
 services:      
 
   db:
-    image: oorep/database:0.12.0
+    image: oorep/database:0.12.1
     build:
        context: ./oorep_db
     expose:
       - 5432
     
   app:
-    image: oorep/application:0.12.0
+    image: oorep/application:0.12.1
     build:
        context: ./oorep_app
        args:
-          - VERSION=0.12.0
+          - VERSION=0.12.1
     environment:
       OOREP_APPLICATION_HOST: http://localhost:9000
       OOREP_APPLICATION_SECRET: abcdefghijklmnopqrstuvwxyz
