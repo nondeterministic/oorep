@@ -2,7 +2,7 @@
 
 OOREP is an acronym for open online repertory for homeopathy.  That is, it lets
 users look up categories in homeopathic repertories.  This git repository
-consists of its (mainly) ScalaJS source code.  A running version of it, however,
+consists of its (mainly) Scala source code.  A running version of it, however,
 can also be found at https://www.oorep.com/.
 
 ## Current status / what's new
@@ -21,11 +21,11 @@ up and running on your own machine.
 
 * You have the commands `docker` and `docker-compose` available on your machine.
 
-#### Pull the Docker images from [Dockerhub](https://hub.docker.com/u/oorep)
+#### Pull and start the Docker images from [Dockerhub](https://hub.docker.com/u/oorep)
 
 But first, clone OOREP's source code repository from here. Afterwards change into
-the `docker` directory of your local source code repository and execute the following
-two commands one after another:
+the `docker` subdirectory of your then local source code repository and execute the
+following two commands one after another:
 ```
 $ docker-compose pull
 $ docker-compose up
@@ -33,16 +33,16 @@ $ docker-compose up
 Depending on your Internet connection, those commands may take a while to complete.
 When all is done, you should be able to point your web browser to `http://localhost:9000`
 and see OOREP's landing page. Needless to say, those images are test-only and are not
-intended for any production environments or the like without further modifications.
+intended for any production environments or the like without further modifications
+and additions.
 
 ### Method 2: By building the project from scratch (for experts only)
 
 #### Prerequisites
 
-* Java SDK (for best results, use JDK 8 or 11.  (In particular, I've had build
-  problems with JDK 12 - broken String class.))
-* Scala Build Tool (SBT, tested with 1.3.x)
-* A PostgreSQL database server >= 9.6 (tested with versions 10.x and 11.x)
+* Java SDK >= 8 (tested with version 11)
+* Scala Build Tool SBT >= 1.3.0 (tested with 1.3.4)
+* A PostgreSQL database server >= 9.6 (tested with versions 11.x)
 
 Before executing SBT, the database (which is provided here as an SQL dump) needs
 to be up and running and PostgreSQL's pgcrypto-extension created (e.g., as
