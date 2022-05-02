@@ -8,11 +8,12 @@ v0.12.1                                under development
 --------------------------------------------------------
 - Minor improvements and changes:
   - Move from Play 2.8.13 to 2.8.15
-  - Update site documentation
+  - Add docker/Makefile (for developers only)
+  - Update site and project documentation
 
 - Bug fixes:
-  - Pressing 'redo' in repertory view no longer duplicates
-    the elements in the weight dropdown
+  - Pressing 'redo' in repertory view no longer duplicates the
+    elements in the weight dropdown
   - Fix display of "alt." remedy names in MM view
   - Fix display (and test) of paginator
 
