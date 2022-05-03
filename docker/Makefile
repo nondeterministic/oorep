@@ -8,16 +8,16 @@
 SHELL:=/bin/bash
 
 branch:="master"
-version:="$(shell cat ../../project/build.sbt | grep 'version :=' | awk '{print substr($$3, 2, length($$3)-2)}')"
+version:="$(shell cat ../build.sbt | grep 'version :=' | awk '{print substr($$3, 2, length($$3)-2)}')"
 playapp:=backend-$(version)
 sbt:=sbt-1.3.4
 
-all: oorep_app/$(playapp).zip oorep_db/oorep.sql
-	@echo "*********************************************************"
-	@echo "All done. Now, do VERSION='"$(version)"' docker-compose build"
-	@echo "*********************************************************"
+all: oorep_app/$(playapp).zip oorep_db/oorep.sql .env
+	@echo "**************************************"
+	@echo "All done. Now, do docker-compose build"
+	@echo "**************************************"
 
-oorep_app/$(playapp).zip: tmp/$(sbt).zip tmp/oorep/LICENSE
+oorep_app/$(playapp).zip: tmp/$(sbt).zip tmp/oorep/LICENSE .env
 	cd tmp/oorep && git pull
 	cd tmp/oorep/backend/public/html && wget -nc http://pspace.org/a/third-party-v2.tar.gz && tar xzf third-party-v2.tar.gz && rm third-party-v2.tar.gz
 	cd tmp/oorep && ../sbt/bin/sbt compile && ../sbt/bin/sbt dist
@@ -25,6 +25,9 @@ oorep_app/$(playapp).zip: tmp/$(sbt).zip tmp/oorep/LICENSE
 	cd tmp/oorep/backend/target/universal && zip -r $(playapp).zip $(playapp)
 	cp tmp/oorep/backend/target/universal/$(playapp).zip ./oorep_app/
 	cd ./oorep_app && unzip $(playapp).zip
+
+.env:
+	echo "VERSION=$(version)" > ./.env
 
 tmp/$(sbt).zip:
 	mkdir -p tmp
