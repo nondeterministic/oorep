@@ -37,6 +37,27 @@ class PaginatorTest extends PlaySpec with GuiceOneAppPerTest with Injecting {
       assert(pagination.left.size == 6 && pagination.middle.size == 0 && pagination.right.size == 0)
     }
 
+    "page 4/7" in {
+      val p = new Paginator(7, 3, maxActivePages)
+      val pagination = p.getPagination()
+      println(pagination)
+      assert(pagination.left.size == 7 && pagination.middle.size == 0 && pagination.right.size == 0)
+    }
+
+    "page 5/7" in {
+      val p = new Paginator(7, 4, maxActivePages)
+      val pagination = p.getPagination()
+      println(pagination)
+      assert(pagination.left.size == 1 && pagination.middle.size == 0 && pagination.right.size == 5)
+    }
+
+    "page 6/7" in {
+      val p = new Paginator(7, 5, maxActivePages)
+      val pagination = p.getPagination()
+      println(pagination)
+      assert(pagination.left.size == 1 && pagination.middle.size == 0 && pagination.right.size == 5)
+    }
+
   }
 
   s"Pagination with 3 maxActivePages: " should {

@@ -85,29 +85,72 @@ class Paginator(totalNumberOfPages: Int, currPageRaw: Int, maxActivePages: Int) 
     result.distinct.sorted
   }
 
-  def getPagination() = {
+  // Distance of the closure to a value, z. For example:
+  // distance((4, 5, 6), 8) == 2, distance((4, 5, 6), 7) == 1, and distance((4, 5, 6), 6) == 0.
+  private def distance(closure: List[Int], z: Int): Int = {
+    val c_sorted = closure.sorted
+
+    if (z > c_sorted.takeRight(1).head) {
+      z - c_sorted.takeRight(1).head
+    } else if (z < c_sorted.head) {
+      c_sorted.head - z
+    } else {
+      0
+    }
+  }
+
+  def getPagination(): PaginationResult = {
+    var left: List[Int] = List.empty
+    var middle: List[Int] = List.empty
+    var right: List[Int] = List.empty
+
     if (inputsSane()) {
       if (totalNumberOfPages <= maxActivePages) {
-        PaginationResult(closure(currPage), List.empty, List.empty, currPage)
+        return PaginationResult(closure(currPage), List.empty, List.empty, currPage)
       }
+
+      val distance_left = distance(closure(currPage), 1)
+      val distance_right = distance(closure(currPage), totalNumberOfPages)
+
+      // Examples are all for middle size = 3:
+      // 1  ... 3 (4) 5
+      if (distance_left > 1) {
+        left = List(1)
+      }
+      // 1 2 (3) 4
+      else if (distance_left == 1) {
+        left = List(1) ::: closure(currPage)
+      }
+      // 1 (2) 3
       else {
-        if (totalNumberOfPages - maxActivePages == 1) {
-          PaginationResult((1 to totalNumberOfPages).toList, List.empty, List.empty, currPage)
-        }
-        else if (currPage <= maxActivePages && (currPage - ((maxActivePages - 1) / 2)) <= 2) {
-          PaginationResult((1 :: closure(currPage)).distinct.sorted, List.empty, List(totalNumberOfPages), currPage)
-        }
-        else if (totalNumberOfPages - currPage > (maxActivePages - 1) / 2 + 1) {
-          PaginationResult(List(1), closure(currPage), List(totalNumberOfPages), currPage)
-        }
-        else {
-          PaginationResult(List(1), List.empty, (totalNumberOfPages :: closure(currPage)).distinct.sorted, currPage)
-        }
+        left = closure(currPage)
+      }
+
+      // 5 (6) 7 ... 9
+      if (distance_right > 1) {
+        right = List(totalNumberOfPages)
+      }
+      // 6 (7) 8 9
+      else if (distance_right == 1) {
+        right = closure(currPage) ::: List(totalNumberOfPages)
+      }
+      // 7 (8) 9
+      else {
+        right = closure(currPage)
+      }
+
+      // Override and complement the above for special cases...
+      if (distance_left <= 1 && distance_right <= 1) {
+        left = 1.to(totalNumberOfPages).toList
+        middle = List.empty
+        right = List.empty
+      }
+      else if (distance_left > 1 && distance_right > 1) {
+        middle = closure(currPage)
       }
     }
-    else {
-      PaginationResult(List.empty, List.empty, List.empty, currPage)
-    }
+
+    PaginationResult(left, middle, right, currPage)
   }
 
 }
