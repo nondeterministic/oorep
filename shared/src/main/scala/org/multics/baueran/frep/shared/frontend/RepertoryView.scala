@@ -227,7 +227,7 @@ object RepertoryView extends TabView {
             b({
               var searchStatsString =
                 if (totalNumberOfResults == totalNumberOfRepertoryRubrics)
-                  s"0 rubrics found for "
+                  s"0 rubrics match '${latestCachePage.symptom}'"
                 else if (latestCachePage.symptom.trim.length > 0 && latestCachePage.remedy.getOrElse("").length > 0)
                   s"${totalNumberOfResults} rubrics match '${latestCachePage.symptom}' containing '${latestCachePage.remedy.getOrElse("")}'"
                 else if (latestCachePage.symptom.trim.length > 0)
