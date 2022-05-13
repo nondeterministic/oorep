@@ -427,24 +427,27 @@ object MateriaMedicaView extends TabView {
       return
 
     parentDiv.asInstanceOf[dom.html.Div].appendChild(
-      div(id := s"${_prefix}_advancedSearchControlsContent", cls := "row", style := "margin-top:15px;",
-        div(cls := "col-md-auto my-auto",
-          "Remedy:"),
-        div(cls := "col",
-          input(cls := "form-control", `id` := s"${_prefix}_inputRemedy", list := s"${_prefix}_remedyDataList",
-            onkeydown := { (event: dom.KeyboardEvent) =>
-              if (event.keyCode == 13) {
-                event.stopPropagation()
-                val symptom = dom.document.getElementById(s"${_prefix}inputField").asInstanceOf[HTMLInputElement].value
-                val abbrev = _selectedMateriaMedicaAbbrev.now.getOrElse("")
-                val remedyName = dom.document.getElementById(s"${_prefix}_inputRemedy") match {
-                  case null => None
-                  case remedyDataList => Some(remedyDataList.asInstanceOf[dom.html.Input].value.trim)
-                }
-                doLookup(abbrev, symptom, None, remedyName)
-              }
-            }, `placeholder` := "Enter a remedy abbreviation or fullname (for example: Sil. or Silica)"),
-          datalist(`id` := s"${_prefix}_remedyDataList")
+      div(id := s"${_prefix}_advancedSearchControlsContent", cls := "row justify-content-center", style := "margin-top:15px;",
+        div(cls := "col-md-10",
+          div(cls := "row",
+            div(cls := "col-md-auto my-auto", "Remedy:"),
+            div(cls := "col",
+              input(cls := "form-control", `id` := s"${_prefix}_inputRemedy", list := s"${_prefix}_remedyDataList",
+                onkeydown := { (event: dom.KeyboardEvent) =>
+                  if (event.keyCode == 13) {
+                    event.stopPropagation()
+                    val symptom = dom.document.getElementById(s"${_prefix}inputField").asInstanceOf[HTMLInputElement].value
+                    val abbrev = _selectedMateriaMedicaAbbrev.now.getOrElse("")
+                    val remedyName = dom.document.getElementById(s"${_prefix}_inputRemedy") match {
+                      case null => None
+                      case remedyDataList => Some(remedyDataList.asInstanceOf[dom.html.Input].value.trim)
+                    }
+                    doLookup(abbrev, symptom, None, remedyName)
+                  }
+                }, `placeholder` := "Enter a remedy abbreviation or fullname (for example: Sil. or Silica)"),
+              datalist(`id` := s"${_prefix}_remedyDataList")
+            )
+          )
         )
       ).render)
 
@@ -501,31 +504,26 @@ object MateriaMedicaView extends TabView {
 
   override def drawWithoutResults(): JsDom.TypedTag[Div] = {
     div(cls := "container-fluid text-center",
-      div(cls := "row",
-        div(cls := "row col-sm-12",
-          ulMMSelection,
-          div(cls := "col-sm", style := "margin-top:20px;",
-            input(cls := "form-control", `id` := s"${_prefix}inputField",
-              onkeydown := { (event: dom.KeyboardEvent) =>
-                if (event.keyCode == 13) {
-                  event.stopPropagation()
-                  val symptom = dom.document.getElementById(s"${_prefix}inputField").asInstanceOf[HTMLInputElement].value
-                  val abbrev = _selectedMateriaMedicaAbbrev.now.getOrElse("")
-                  val remedyName = dom.document.getElementById(s"${_prefix}_inputRemedy") match {
-                    case null => None
-                    case remedyDataList => Some(remedyDataList.asInstanceOf[dom.html.Input].value.trim)
-                  }
-                  doLookup(abbrev, symptom, None, remedyName)
+      div(cls := "row justify-content-center",
+        ulMMSelection,
+        div(cls := "col-sm", style := "margin-top:20px;",
+          input(cls := "form-control", `id` := s"${_prefix}inputField",
+            onkeydown := { (event: dom.KeyboardEvent) =>
+              if (event.keyCode == 13) {
+                event.stopPropagation()
+                val symptom = dom.document.getElementById(s"${_prefix}inputField").asInstanceOf[HTMLInputElement].value
+                val abbrev = _selectedMateriaMedicaAbbrev.now.getOrElse("")
+                val remedyName = dom.document.getElementById(s"${_prefix}_inputRemedy") match {
+                  case null => None
+                  case remedyDataList => Some(remedyDataList.asInstanceOf[dom.html.Input].value.trim)
                 }
-              }, `placeholder` := "Enter some search terms (for example: menses, night)")
-          ),
+                doLookup(abbrev, symptom, None, remedyName)
+              }
+            }, `placeholder` := "Enter some search terms (for example: menses, night)")
         )
       ),
-      div(cls := "row",
-        div(cls := "row col-sm-12",
-          div(cls := "col-sm-2"),
-          div(cls := "col-sm-10", id := s"${_prefix}_advancedSearchControlsDiv")
-        )
+      div(cls := "row justify-content-center",
+        div(cls := "col-sm-10", id := s"${_prefix}_advancedSearchControlsDiv")
       ),
       div(id := s"${_prefix}_mainViewSearchButtons", cls := "col-sm-12 text-center", style := "margin-top:20px;",
         button(cls := "btn btn-primary text-nowrap", style := "width: 140px; margin:5px;", `type` := "button",
@@ -547,8 +545,8 @@ object MateriaMedicaView extends TabView {
 
   override def drawWithResults(): JsDom.TypedTag[dom.html.Div] = {
     div(cls := "container-fluid", style := "padding-bottom:20px",
-      div(cls := "row justify-content-md-center",
-        div(cls := "row col-lg-11 justify-content-md-center",
+      div(cls := "col-md-12 justify-content-md-center",
+        div(cls := "row justify-content-center",
           ulMMSelection,
           div(cls := "col-md-7", style := "margin-top:20px;",
             input(cls := "form-control", `id` := s"${_prefix}inputField",
@@ -566,8 +564,6 @@ object MateriaMedicaView extends TabView {
               },
               `placeholder` := "Enter some search terms (for example: menses, night)"
             ),
-            // It will be (de-) populated on demand
-            div(cls:="container-fluid", id:=s"${_prefix}_advancedSearchControlsDiv")
           ),
           div(id := s"${_prefix}_mainViewSearchButtons", cls := "col-md-auto text-center center-block", style := "margin-top:20px;",
             button(cls := "btn btn-primary text-nowrap", style := "width: 80px; margin-right:5px;", `type` := "button",
@@ -613,6 +609,8 @@ object MateriaMedicaView extends TabView {
           )
         )
       ),
+      // It will be (de-) populated on demand
+      div(cls:="col-md-12 text-center", id:=s"${_prefix}_advancedSearchControlsDiv"),
       div(id := s"${_prefix}_result_div", cls := "container-fluid", style := "margin-top:23px;",
         div(getResultsHtml(),
           div(cls:= "container-fluid", id:=s"${_prefix}_paginationDiv",

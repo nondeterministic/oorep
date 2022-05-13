@@ -19,7 +19,7 @@ all: oorep_app/$(playapp).zip oorep_db/oorep.sql .env
 
 oorep_app/$(playapp).zip: tmp/$(sbt).zip tmp/oorep/LICENSE .env
 	cd tmp/oorep && git pull
-	cd tmp/oorep/backend/public/html && wget -nc http://pspace.org/a/third-party-v2.tar.gz && tar xzf third-party-v2.tar.gz && rm third-party-v2.tar.gz
+	cd tmp/oorep/backend/public/html && wget -nc http://pspace.org/a/third-party-v3.tar.gz && tar xzf third-party-v3.tar.gz && rm third-party-v3.tar.gz
 	cd tmp/oorep && ../sbt/bin/sbt compile && ../sbt/bin/sbt dist
 	cd tmp/oorep/backend/target/universal && unzip $(playapp).zip && rm $(playapp).zip && touch $(playapp)/RUNNING_info.json 
 	cd tmp/oorep/backend/target/universal && zip -r $(playapp).zip $(playapp)
@@ -35,7 +35,7 @@ tmp/$(sbt).zip:
 	cd tmp && unzip $(sbt).zip
 
 tmp/oorep/LICENSE: tmp/$(sbt).zip
-	cd tmp && git clone git@github.com:nondeterministic/oorep.git
+	cd tmp && git clone -b $(branch) git@github.com:nondeterministic/oorep.git
 
 oorep_db/oorep.sql:
 	cp ../oorep.sql.gz ./oorep_db/.

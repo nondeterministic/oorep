@@ -73,7 +73,7 @@ object MainView {
         if (dom.document.getElementById("nav_bar_logo").innerHTML.length() == 0) {
           val navbar = dom.document.getElementById("nav_bar").asInstanceOf[dom.html.Element]
 
-          navbar.className = navbar.className + " bg-dark navbar-dark shadow p-3 mb-5"
+          navbar.className = navbar.className + " bg-dark navbar-dark shadow"
 
           dom.document.getElementById("nav_bar_logo")
             .appendChild(a(cls:="navbar-brand py-0", style:="margin-top:8px;", href:=serverUrl(), h5(cls:="freetext", "OOREP")).render)
@@ -138,7 +138,7 @@ object MainView {
         )
       }
 
-      div(cls:="container-fluid", style:="margin-top:100px; margin-bottom:30px;",
+      div(cls:="container-fluid", style:="margin-top:30px; margin-bottom:30px;",
         ul(cls:="nav nav-tabs",
           _tabViews.map(tabView =>
             li(cls:="nav-item",

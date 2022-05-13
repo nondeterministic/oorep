@@ -5,17 +5,29 @@
               <div class="row">
                 <div class="col align-self-center">
                   <div data-aos="fade-right" data-aos-offset="200" data-aos-easing="ease-in-sine" data-aos-duration="600" data-aos-once="true">
-                    <h3 style="text-align:center; margin-bottom: 10px">
-                      <span class="blue-dot"></span>
-                      <span class="blue-dot"></span>
-                      <span class="blue-dot"></span>
-                      <span>About</span>
-                      <span class="blue-dot"></span>
-                      <span class="blue-dot"></span>
-                      <span class="blue-dot"></span>
-                    </h3>
+                    <div style="text-align: center; margin-bottom: 10px">
+
+                      <div class="d-sm-none">
+                        <h3>
+                          <span>About</span>
+                        </h3>
+                      </div>
+
+                      <div class="d-none d-sm-block">
+                        <h3>
+                          <span class="blue-dot"></span>
+                          <span class="blue-dot"></span>
+                          <span class="blue-dot"></span>
+                          <span>About</span>
+                          <span class="blue-dot"></span>
+                          <span class="blue-dot"></span>
+                          <span class="blue-dot"></span>
+                        </h3>
+                      </div>
+
+                    </div>
                   </div>
-                  <div style="text-align:justify;max-width:700px;">
+                  <div style="text-align: justify; max-width:700px;">
                     <p>
                       OOREP is an open online repertory for homeopathy.  It is open, because its source code is freely available,
                       it is online, because a running instance of it is served right here on this very server for your convenience.
@@ -35,8 +47,11 @@
                     </p>
                   </div>
                 </div>
-                <div class="col">
-                  <img height="500" width="383" src="@{org.multics.baueran.frep.backend.controllers.Get.staticServerUrl}@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/img/hahnemann_statue_2.webp" alt="">
+                <div class="col d-none d-sm-block">
+                  <img height="500" width="383"
+                       src="@{org.multics.baueran.frep.backend.controllers.Get.staticServerUrl}@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/img/hahnemann_statue_2.webp"
+                       loading="lazy"
+                       alt="">
                 </div>
               </div>
             </div>
@@ -44,28 +59,39 @@
 
           <div class="jumbotron jumbo-light" style="position: relative;">
             <div class="container">
-              <div class="row h-100">
-                <div class="col">
+              <div class="row h-100 text-center">
+                <div class="col d-none d-sm-block">
                   <img src="@{org.multics.baueran.frep.backend.controllers.Get.staticServerUrl}@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/img/laptop-min.webp"
                        srcset="@{org.multics.baueran.frep.backend.controllers.Get.staticServerUrl}@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/img/laptop-min.webp 383w,
-                       @{org.multics.baueran.frep.backend.controllers.Get.staticServerUrl}@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/img/laptop-med.webp 500w,
-                       @{org.multics.baueran.frep.backend.controllers.Get.staticServerUrl}@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/img/laptop.webp 830w"
+                               @{org.multics.baueran.frep.backend.controllers.Get.staticServerUrl}@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/img/laptop-med.webp 500w,
+                               @{org.multics.baueran.frep.backend.controllers.Get.staticServerUrl}@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/img/laptop.webp 830w"
                        sizes="(max-width: 1024px) 383px,
-                       (max-width: 1300px) 500px,
-                       830px"
+                              (max-width: 1300px) 500px,
+                              830px"
                        style="position: relative; left:-15px;"
+                       loading="lazy"
                        alt="OOREP screenshot">
                 </div>
                 <div class="col my-auto" style="font-size: 120%;">
-                  <div style="width: 80%;" data-aos="fade-left" data-aos-delay="300" data-aos-offset="200" data-aos-easing="ease-in-sine" data-aos-duration="600" data-aos-once="true">
-                    <h2 style="margin-bottom: 10px">
-                      <i>At a glance...</i>
-                    </h2>
+                  <div class="text-center" style="width: 100%;" data-aos="fade-left" data-aos-delay="300" data-aos-offset="200" data-aos-easing="ease-in-sine" data-aos-duration="600" data-aos-once="true">
+                    <div style="margin-bottom: 10px;">
+                      <span class="oi oi-video" style="font-size: 47px;"></span>
+                    </div>
                     <p>
-                      A homeopathic repertorisation software that runs in your browser.
+                      Short video tutorials to learn all about OOREP's features on
                     </p>
                     <p>
-                      All classic repertories just a click away!
+                      <a href="https://vimeo.com/oorep">
+                        <img src="@{org.multics.baueran.frep.backend.controllers.Get.staticServerUrl}@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/third-party/img/vimeo_logo_blue.webp"
+                             loading="lazy"
+                             height="47" width="165"
+                             alt="Vimeo logo">
+                      </a>
+                    </p>
+                    <p>
+                      <small>
+                        (Also available on <a href="https://www.youtube.com/channel/UCcHQXsPwIK53ciSjR9_P2xw">YouTube</a>)
+                      </small>
                     </p>
                   </div>
                 </div>

@@ -1,54 +1,94 @@
-
  <div class="jumbotron jumbo-dark horizontal-center background-image" id="features" style="position: relative;">
     <div class="container">
-      <h3 style="text-align:center;margin-bottom: 10px">
-        <span class="white-dot"></span>
-        <span class="white-dot"></span>
-        <span class="white-dot"></span>
-        <span>Why use OOREP?</span>
-        <span class="white-dot"></span>
-        <span class="white-dot"></span>
-        <span class="white-dot"></span>
-      </h3>
+      <div style="margin-bottom: 10px">
+        <div class="row justify-content-center" style="text-align: center;">
+
+          <div class="d-sm-none">
+            <h3>
+              <span>Why use OOREP?</span>
+            </h3>
+<!--            hide on screens wider than sm-->
+          </div>
+
+          <div class="d-none d-sm-block">
+            <h3>
+              <span class="white-dot"></span>
+              <span class="white-dot"></span>
+              <span class="white-dot"></span>
+              <span>Why use OOREP?</span>
+              <span class="white-dot"></span>
+              <span class="white-dot"></span>
+              <span class="white-dot"></span>
+            </h3>
+<!--            hide on screens smaller than md-->
+          </div>
+
+<!--          <div class="d-none d-sm-block">-->
+<!--            <span class="white-dot"></span>-->
+<!--            <span class="white-dot"></span>-->
+<!--            <span class="white-dot"></span>-->
+<!--          </div>-->
+<!--          <h3 style="display: inline;">-->
+<!--            <span>Why use OOREP?</span>-->
+<!--          </h3>-->
+<!--          <div class="d-none d-sm-block">-->
+<!--            <span class="white-dot"></span>-->
+<!--            <span class="white-dot"></span>-->
+<!--            <span class="white-dot"></span>-->
+<!--          </div>-->
+        </div>
+      </div>
       <div class="row">
         <div class="col-lg-4 col-sm-6">
           <div class="icon" data-aos-delay="400" data-aos="fade" data-aos-offset="200" data-aos-easing="ease-in-sine" data-aos-duration="600" data-aos-once="true">
-            <img style="height:65px; width:55px;" src="@{org.multics.baueran.frep.backend.controllers.Get.staticServerUrl}@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/img/icon-penguin.png" alt="penguin">
+            <img style="height:65px; width:55px;" src="@{org.multics.baueran.frep.backend.controllers.Get.staticServerUrl}@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/img/icon-penguin.png"
+                 loading="lazy"
+                 alt="penguin">
           </div>
           <h4>Powered by open-source</h4>
           <p>Built using proven open-source technologies and products. You can also download all the source code and run your own version of the software.</p>
         </div>
         <div class="col-lg-4 col-sm-6">
           <div class="icon" data-aos-delay="400" data-aos="fade" data-aos-offset="200" data-aos-easing="ease-in-sine" data-aos-duration="600" data-aos-once="true">
-            <img style="height:55px; width:55px;" src="@{org.multics.baueran.frep.backend.controllers.Get.staticServerUrl}@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/img/icon-browser.png" alt="browser">
+            <img style="height:55px; width:55px;" src="@{org.multics.baueran.frep.backend.controllers.Get.staticServerUrl}@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/img/icon-browser.png"
+                 loading="lazy"
+                 alt="browser">
           </div>
           <h4>Platform-independent</h4>
           <p>Works with any computer and OS. All you need is a web-browser - no installations, serial numbers or dongles.</p>
         </div>
         <div class="col-lg-4 col-sm-6">
           <div class="icon" data-aos-delay="400" data-aos="fade" data-aos-offset="200" data-aos-easing="ease-in-sine" data-aos-duration="600" data-aos-once="true">
-            <img style="height:40px; width:50px;" src="@{org.multics.baueran.frep.backend.controllers.Get.staticServerUrl}@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/img/icon-book.png" alt="book">
+            <img style="height:40px; width:50px;" src="@{org.multics.baueran.frep.backend.controllers.Get.staticServerUrl}@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/img/icon-book.png"
+                 loading="lazy"
+                 alt="book">
           </div>
           <h4>Various sources</h4>
           <p>Search in well-known repertories and materia medicas like Kent, Boger, Hering, etc.</p>
         </div>
         <div class="col-lg-4 col-sm-6">
           <div class="icon" data-aos-delay="400" data-aos="fade" data-aos-offset="200" data-aos-easing="ease-in-sine" data-aos-duration="600" data-aos-once="true">
-            <img style="height:40px; width:40px;" src="@{org.multics.baueran.frep.backend.controllers.Get.staticServerUrl}@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/img/icon-results.png" alt="results">
+            <img style="height:40px; width:40px;" src="@{org.multics.baueran.frep.backend.controllers.Get.staticServerUrl}@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/img/icon-results.png"
+                 loading="lazy"
+                 alt="results">
           </div>
           <h4>Get results fast</h4>
           <p>Very easy to use: only the essential features - no distractions, no non-sense.</p>
         </div>
         <div class="col-lg-4 col-sm-6">
           <div class="icon" data-aos-delay="400" data-aos="fade" data-aos-offset="200" data-aos-easing="ease-in-sine" data-aos-duration="600" data-aos-once="true">
-            <img style="height:60px; width:60px;" src="@{org.multics.baueran.frep.backend.controllers.Get.staticServerUrl}@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/img/icon-search.png" alt="search">
+            <img style="height:60px; width:60px;" src="@{org.multics.baueran.frep.backend.controllers.Get.staticServerUrl}@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/img/icon-search.png"
+                 loading="lazy"
+                 alt="search">
           </div>
           <h4>Advanced search</h4>
           <p>Widen your search using wildcards, like <b>'cough*, dry*'</b>, or narrow it down using <b>'-'</b> (minus).</p>
         </div>
         <div class="col-lg-4 col-sm-6">
           <div class="icon" data-aos-delay="400" data-aos="fade" data-aos-offset="200" data-aos-easing="ease-in-sine" data-aos-duration="600" data-aos-once="true">
-            <img style="height:55px; width:28px;" src="@{org.multics.baueran.frep.backend.controllers.Get.staticServerUrl}@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/img/icon-mobile.png" alt="mobile">
+            <img style="height:55px; width:28px;" src="@{org.multics.baueran.frep.backend.controllers.Get.staticServerUrl}@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/img/icon-mobile.png"
+                 loading="lazy"
+                 alt="mobile">
           </div>
           <h4>Mobile friendly</h4>
           <p>Although repertorisation requires screen real estate, OOREP's responsive design supports mobile devices.</p>

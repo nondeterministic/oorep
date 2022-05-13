@@ -437,26 +437,34 @@ object RepertoryView extends TabView {
         _advancedSearchOptionsVisible = true
         parentDiv.asInstanceOf[dom.html.Div].appendChild(
           div(id := "advancedSearchControlsContent", cls := "row", style := "margin-top:15px;",
-            div(cls := "col-md-auto my-auto",
-              "Remedy:"),
             div(cls := "col",
-              input(cls := "form-control", `id` := "inputRemedy", list := s"${_prefix}_remedyDataList",
-                onkeydown := { (event: dom.KeyboardEvent) =>
-                  if (event.keyCode == 13) {
-                    event.stopPropagation()
-                    onSymptomEntered()
-                  }
-                }, `placeholder` := "Enter a remedy abbreviation or fullname (for example: Sil. or Silica)"),
-              datalist(`id` := s"${_prefix}_remedyDataList")
+              div(cls := "row",
+                div(cls := "col-md-auto my-auto",
+                  "Remedy:"),
+                div(cls := "col",
+                  input(cls := "form-control", `id` := "inputRemedy", list := s"${_prefix}_remedyDataList",
+                    onkeydown := { (event: dom.KeyboardEvent) =>
+                      if (event.keyCode == 13) {
+                        event.stopPropagation()
+                        onSymptomEntered()
+                      }
+                    }, `placeholder` := "Enter a remedy abbreviation or fullname (for example: Sil. or Silica)"),
+                  datalist(`id` := s"${_prefix}_remedyDataList")
+                )
+              )
             ),
-            div(cls := "col-md-auto my-auto",
-              "Min. weight:"),
-            div(cls := "col-sm-2",
-              div(id := "weightDropDowns", cls := "dropdown show",
-                button(id := "minWeightDropdown", cls := "btn dropdown-toggle btn-secondary", `type` := "button", data.toggle := "dropdown",
-                  if (restorePreviousValues && _pageCache.size() > 0) _pageCache.latest().get.minWeight.toString else "0"
-                ),
-                div(id:="weightDropDownsDiv", cls:="dropdown-menu")
+            div(cls := "col-md-auto",
+              div(cls := "row",
+                div(cls := "col-md-auto my-auto",
+                  "Min. weight:"),
+                div(cls := "col-md-2",
+                  div(id := "weightDropDowns", cls := "dropdown show",
+                    button(id := "minWeightDropdown", cls := "btn dropdown-toggle btn-secondary", `type` := "button", data.toggle := "dropdown",
+                      if (restorePreviousValues && _pageCache.size() > 0) _pageCache.latest().get.minWeight.toString else "0"
+                    ),
+                    div(id:="weightDropDownsDiv", cls:="dropdown-menu")
+                  )
+                )
               )
             )
           ).render)
@@ -967,24 +975,27 @@ object RepertoryView extends TabView {
     def myHTML(ulRepertorySelection: JsDom.TypedTag[dom.html.Div]): JsDom.TypedTag[dom.html.Div]  =
       div(cls := "container-fluid text-center",
         div(cls := "row",
-          div(cls := "row col-sm-12",
-            ulRepertorySelection,
-            div(cls := "col-sm", style:="margin-top:20px;",
-              input(cls := "form-control", `id` := "inputField",
-                onkeydown := { (event: dom.KeyboardEvent) =>
-                  if (event.keyCode == 13) {
-                    event.stopPropagation()
-                    onSymptomEntered()
-                  }
-                }, `placeholder` := "Enter a symptom (for example: head, pain, left)")
+          div(cls := "col-sm-12",
+            div(cls := "row",
+              ulRepertorySelection,
+              div(cls := "col-sm", style:="margin-top:20px;",
+                input(cls := "form-control", `id` := "inputField",
+                  onkeydown := { (event: dom.KeyboardEvent) =>
+                    if (event.keyCode == 13) {
+                      event.stopPropagation()
+                      onSymptomEntered()
+                    }
+                  }, `placeholder` := "Enter a symptom (for example: head, pain, left)")
+              ),
             ),
           )
         ),
         // We copy above div's, because this is as wide as the search bar. It will be (de-) populated on demand.
         div(cls := "row",
-          div(cls := "row col-sm-12",
-            div(cls:="col-sm-2"),
-            div(cls := "col-sm-10", id:="advancedSearchControlsDiv")
+          div(cls := "col-sm-12",
+            div(cls := "row justify-content-center",
+              div(cls := "col-sm-10", id:="advancedSearchControlsDiv")
+            )
           )
         ),
         div(id:="mainViewSearchButtons", cls:="col-sm-12 text-center", style:="margin-top:20px;",
@@ -1011,44 +1022,46 @@ object RepertoryView extends TabView {
     def myHTML(ulRepertorySelection: JsDom.TypedTag[dom.html.Div]): JsDom.TypedTag[dom.html.Div]  =
       div(cls := "container-fluid",
         shareResultsModal,
-        div(cls := "container-fluid",
-          div(cls := "row justify-content-md-center",
-            div(cls := "row col-lg-11 justify-content-md-center",
-              ulRepertorySelection,
-              div(cls := "col-md-7", style := "margin-top:20px;",
-                input(cls := "form-control", `id` := "inputField",
-                  onkeydown := { (event: dom.KeyboardEvent) =>
-                    if (event.keyCode == 13) {
+        div(cls := "container-fluid text-center",
+          div(cls := "row justify-content-center",
+            div(cls := "col-md-12 justify-content-center",
+              div(cls := "row justify-content-center",
+                ulRepertorySelection,
+                div(cls := "col-md-7", style := "margin-top:20px;",
+                  input(cls := "form-control", `id` := "inputField",
+                    onkeydown := { (event: dom.KeyboardEvent) =>
+                      if (event.keyCode == 13) {
+                        event.stopPropagation()
+                        onSymptomEntered()
+                      }
+                    },
+                    `placeholder` := "Enter a symptom (for example: head, pain, left)"
+                  )
+                ),
+                div(id:="mainViewSearchButtons", cls:="col-md-auto text-center center-block", style:="margin-top:20px;",
+                  button(cls := "btn btn-primary text-nowrap", style:="width: 80px; margin-right:5px;", `type` := "button",
+                    onclick := { (event: Event) =>
                       event.stopPropagation()
                       onSymptomEntered()
-                    }
-                  },
-                  `placeholder` := "Enter a symptom (for example: head, pain, left)"
-                ),
-                // It will be (de-) populated on demand.
-                div(cls := "container-fluid", id:="advancedSearchControlsDiv")
-              ),
-              div(id:="mainViewSearchButtons", cls:="col-md-auto text-center center-block", style:="margin-top:20px;",
-                button(cls := "btn btn-primary text-nowrap", style:="width: 80px; margin-right:5px;", `type` := "button",
-                  onclick := { (event: Event) =>
-                    event.stopPropagation()
-                    onSymptomEntered()
-                  },
-                  span(cls := "oi oi-magnifying-glass", title := "Find", aria.hidden := "true")),
-                button(`id`:="buttonMainViewAdvancedSearch", cls := "btn btn-secondary text-nowrap", style := "width: 70px;margin-right:5px;", `type` := "button",
-                  onclick := { (event: Event) =>
-                    event.stopPropagation()
-                    onShowAdvancedSearchOptionsMainView(false, false)
-                  },
-                  span(cls := "oi oi-cog", title := "Toggle options", aria.hidden := "true")),
-                button(cls := "btn btn-secondary text-nowrap", style := "width: 70px;", `type` := "button",
-                  onclick := { (event: Event) =>
-                    event.stopPropagation()
-                    onSymptomListRedoPressed()
-                  },
-                  span(cls := "oi oi-action-redo", title := "Find again", aria.hidden := "true"))
+                    },
+                    span(cls := "oi oi-magnifying-glass", title := "Find", aria.hidden := "true")),
+                  button(`id`:="buttonMainViewAdvancedSearch", cls := "btn btn-secondary text-nowrap", style := "width: 70px;margin-right:5px;", `type` := "button",
+                    onclick := { (event: Event) =>
+                      event.stopPropagation()
+                      onShowAdvancedSearchOptionsMainView(false, false)
+                    },
+                    span(cls := "oi oi-cog", title := "Toggle options", aria.hidden := "true")),
+                  button(cls := "btn btn-secondary text-nowrap", style := "width: 70px;", `type` := "button",
+                    onclick := { (event: Event) =>
+                      event.stopPropagation()
+                      onSymptomListRedoPressed()
+                    },
+                    span(cls := "oi oi-action-redo", title := "Find again", aria.hidden := "true"))
+                )
               )
-            )
+            ),
+            // It will be (de-) populated on demand.
+            div(cls:="col-md-10", id:="advancedSearchControlsDiv")
           )
         ),
         div(cls := "container-fluid", style := "margin-top: 23px;", id := "resultStatus"),

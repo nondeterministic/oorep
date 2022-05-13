@@ -4,9 +4,9 @@
 @import org.multics.baueran.frep.shared.Defs._
 
 @header = {
-        <link id="normaltheme" rel="stylesheet" href="@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/third-party/bootstrap-4.2.1/css/bootstrap.min.css" @if(getFromRequestCookie(request, CookieFields.theme.toString).getOrElse("normal") == "dark") { disabled }>
-        <link id="darktheme" rel="stylesheet" href="@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/third-party/bootstrap-4.2.1/css/bootstrap-darkly.min.css" @if(getFromRequestCookie(request, CookieFields.theme.toString).getOrElse("normal") == "normal") { disabled }>
-        <script src="@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/third-party/jquery-3.3.1.min.js"></script>
+        <link id="normaltheme" rel="stylesheet" href="@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/third-party/bootstrap-4.3.1/css/bootstrap.min.css" @if(getFromRequestCookie(request, CookieFields.theme.toString).getOrElse("normal") == "dark") { disabled }>
+        <link id="darktheme" rel="stylesheet" href="@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/third-party/bootstrap-4.3.1/css/bootstrap-darkly.min.css" @if(getFromRequestCookie(request, CookieFields.theme.toString).getOrElse("normal") == "normal") { disabled }>
+        <script src="@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/third-party/jquery-3.5.1.min.js"></script>
         <link rel="stylesheet" href="@{org.multics.baueran.frep.backend.controllers.Get.staticAssetsPath}/mystyle.css">
 
         <meta charset="utf-8">
@@ -62,11 +62,11 @@
 
     @if(org.multics.baueran.frep.backend.controllers.getAuthenticatedUser(request) == None) {
 
-        <script src="/assets/frontend-opt.js"></script>
+        <script async src="/assets/frontend-opt.js"></script>
 
     } else {
 
-        <script src="/assets/sec_frontend-opt.js"></script>
+        <script async src="/assets/sec_frontend-opt.js"></script>
 
     }
 

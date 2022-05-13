@@ -3,11 +3,10 @@ package org.multics.baueran.frep.frontend.secure.base
 import scala.scalajs.js.annotation.JSExportTopLevel
 import org.multics.baueran.frep.shared._
 import frontend.{CaseModals, LoadingSpinner, MainView, RepertoryView, apiPrefix, serverUrl}
-import sec_frontend.{AddToFileModal, EditFileModal, FileModalCallbacks, NewFileModal, OpenFileModal, RepertoryModal}
+import sec_frontend.{AddToFileModal, EditFileModal, FileModalCallbacks, NewFileModal, OpenFileModal, RepertoryModal, MMModal}
 import fr.hmil.roshttp.HttpRequest
 import fr.hmil.roshttp.response.SimpleHttpResponse
 import io.circe.parser.parse
-import org.multics.baueran.frep.shared.Info
 
 import scala.util.{Failure, Success}
 import scalatags.JsDom.all.{id, _}
@@ -25,32 +24,64 @@ object Main extends MainUtil {
 
   // See MainUtil trait!
   override def updateDataStructuresFromBackendData() = {
-    def getMMs() = {
-      println("TODO: Implement me!")
-      // TODO: Implement me!
-    }
 
-    def getRepertories() = {
-      HttpRequest(s"${serverUrl()}/${apiPrefix()}/available_reps")
+    def getMMs() = {
+      HttpRequest(s"${serverUrl()}/${apiPrefix()}/available_rems_and_mms")
         .send()
         .onComplete({
           case response: Success[SimpleHttpResponse] => {
             parse(response.get.body) match {
               case Right(json) => {
                 val cursor = json.hcursor
-                cursor.as[List[Info]] match {
-                  case Right(infos) => {
-                    infos
-                      .sortBy(_.abbrev)
-                      .foreach(info => {
+                cursor.as[List[MMAndRemedyIds]] match {
+                  case Right(mmAndRemedyIds) => {
+                    mmAndRemedyIds
+                      .sortBy(_.mminfo.abbrev)
+                      .foreach(mmAndRemedyId =>
+                        dom.document
+                          .getElementById("secNavBarMMs").asInstanceOf[dom.html.Div]
+                          .appendChild(a(cls := "dropdown-item", href := "#", data.toggle := "modal",
+                            onclick := { (e: Event) =>
+                              MMModal.info() = Some(mmAndRemedyId.mminfo)
+                            },
+                            data.target := "#mmInfoModal")(s"${mmAndRemedyId.mminfo.abbrev} - ${mmAndRemedyId.mminfo.displaytitle.getOrElse("")}").render)
+                      )
+                  }
+                  case Left(err) =>
+                    println(s"ERROR: secure.Main: JSON mm decoding error: $err")
+                }
+              }
+              case Left(err) =>
+                println(s"ERROR: secure.Main: JSON mm parsing error: $err")
+            }
+          }
+          case failure: Failure[_] =>
+            println(s"ERROR: secure.Main: available_rems_and_mms failed: ${failure.toString}")
+
+        })
+    }
+
+    def getRepertories() = {
+      HttpRequest(s"${serverUrl()}/${apiPrefix()}/available_rems_and_reps")
+        .send()
+        .onComplete({
+          case response: Success[SimpleHttpResponse] => {
+            parse(response.get.body) match {
+              case Right(json) => {
+                val cursor = json.hcursor
+                cursor.as[List[InfoExtended]] match {
+                  case Right(extendedRepertoryInfos) => {
+                    extendedRepertoryInfos
+                      .sortBy(_.info.abbrev)
+                      .foreach(extendedInfo =>
                         dom.document
                           .getElementById("secNavBarRepertories").asInstanceOf[dom.html.Div]
-                          .appendChild(a(cls:="dropdown-item", href:="#", data.toggle:="modal",
+                          .appendChild(a(cls := "dropdown-item", href := "#", data.toggle := "modal",
                             onclick := { (e: Event) =>
-                              RepertoryModal.info() = Some(info)
+                              RepertoryModal.info() = Some(extendedInfo.info)
                             },
-                            data.target:="#repertoryInfoModal")(s"${info.abbrev} - ${info.displaytitle.getOrElse("")}").render)
-                      })
+                            data.target := "#repertoryInfoModal")(s"${extendedInfo.info.abbrev} - ${extendedInfo.info.displaytitle.getOrElse("")}").render)
+                      )
                   }
                   case Left(err) =>
                     println(s"ERROR: secure.Main: JSON decoding error: $err")
@@ -61,7 +92,7 @@ object Main extends MainUtil {
             }
           }
           case failure: Failure[_] =>
-            println(s"ERROR: secure.Main: available_reps failed: ${failure.toString}")
+            println(s"ERROR: secure.Main: available_rems_and_reps failed: ${failure.toString}")
         })
     }
 
@@ -119,6 +150,7 @@ object Main extends MainUtil {
     dom.document.getElementById("new_file_form").asInstanceOf[dom.html.Form].addEventListener("submit", NewFileModal.onSubmit, false)
 
     dom.document.body.appendChild(RepertoryModal().render)
+    dom.document.body.appendChild(MMModal().render)
     dom.document.body.appendChild(CaseModals.Repertorisation().render)
     dom.document.body.appendChild(CaseModals.EditDescription().render)
 

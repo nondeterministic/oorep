@@ -4,6 +4,27 @@
 | |_| | |_| |  _ <| |___|  __/  | |\  | |___  \ V  V /  ___) |
  \___/ \___/|_| \_\_____|_|     |_| \_|_____|  \_/\_/  |____/ 
 
+v0.13.0                 Thu May 26 12:13:11 PM CEST 2022
+--------------------------------------------------------
+- Main features:
+  - Not really a user-visible one: but now would require
+    third-party-v3.tar.gz support file
+
+- Minor improvements and changes:
+  - Move from OpenJDK 11.0.14 to 11.0.15
+  - Move bootstrap and bootswatch from 4.2.1 to 4.3.1
+  - Move jquery from 3.3.1 to 3.5.1
+  - Load main JS application asynchronously
+  - Improvements to reactive/mobile layout
+  - Link to OOREP tutorial videos on landing page
+
+- Bug fixes:
+  - Fix display of unsuccessful repertory searches for
+    small repertories (e.g., boger)
+  - Fix materia medica and repertory info dialogs for
+    logged in users
+  - This time, hopefully really fix pagination display
+
 v0.12.1  Tue 03 May 2022 07:00:51 PM CEST [tag: v0.12.1]
 --------------------------------------------------------
 - Minor improvements and changes:

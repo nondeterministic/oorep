@@ -52,6 +52,11 @@
        url('third-party/fonts/open-sans-v20-latin-700.svg#OpenSans') format('svg'); /* Legacy iOS */
 }
 
+/* as per https://stackoverflow.com/questions/14270084/overflow-xhidden-doesnt-prevent-content-from-overflowing-in-mobile-browsers/14271049 */
+html, body {
+  overflow-x: hidden;
+}
+
 html {
   scroll-behavior: smooth;
 }
@@ -161,7 +166,7 @@ a.underline:hover {
 
 .vertical-align {
     position: relative;
-    top: 50%;
+    top: 45%;
     -webkit-transform: translateY(-50%);
     -ms-transform: translateY(-50%);
     transform: translateY(-50%);
@@ -261,6 +266,17 @@ a.underline:hover {
   margin-left: 13px;
   margin-bottom: 3px;
   background-color: #fff;
+  // border-radius: 50%;
+  display: inline-block;
+}
+
+.black-dot {
+  height: 11px;
+  width: 11px;
+  margin-right: 9px;
+  // margin-left: 13px;
+  margin-bottom: 3px;
+  background-color: #000;
   // border-radius: 50%;
   display: inline-block;
 }

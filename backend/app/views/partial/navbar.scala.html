@@ -2,8 +2,8 @@
 
 @if(org.multics.baueran.frep.backend.controllers.getAuthenticatedUser(request) == None) {
 
-<nav class="navbar py-0 py-md-0 fixed-top navbar-expand-sm navbar-light" id="nav_bar">
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggler">
+<nav class="navbar py-0 py-md-0 navbar-expand-sm navbar-light p-3" id="nav_bar">
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggler" aria-label="Menu">
         <span class="navbar-toggler-icon"></span>
     </button>
     <div id="nav_bar_logo"></div>
@@ -21,10 +21,10 @@
         <div class="ml-auto">
             <ul class="navbar-nav mr-auto">
                 <li class="navbar-item">
-                    <a class="nav-link py-0" onclick="loadMainPageAndJumpToAnchor('about')" href="#about">About</a>
+                    <a class="nav-link py-0" onclick="loadMainPageAndJumpToAnchor('about')" href="@{org.multics.baueran.frep.backend.controllers.Get.staticServerUrl}/#about">About</a>
                 </li>
                 <li class="navbar-item">
-                    <a class="nav-link py-0" onclick="loadMainPageAndJumpToAnchor('features')" href="#features">Features</a>
+                    <a class="nav-link py-0" onclick="loadMainPageAndJumpToAnchor('features')" href="@{org.multics.baueran.frep.backend.controllers.Get.staticServerUrl}/#features">Features</a>
                 </li>
                 <li class="navbar-item">
                     <a class="nav-link py-0" href="/faq">FAQ</a>
@@ -55,8 +55,8 @@
 
 } else {
 
-<nav class="navbar py-0 py-md-0 fixed-top navbar-expand-sm navbar-light" id="nav_bar">
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggler">
+<nav class="navbar py-0 py-md-0 navbar-expand-sm navbar-light" id="nav_bar">
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggler" aria-label="Menu">
         <span class="navbar-toggler-icon"></span>
     </button>
     <div id="nav_bar_logo"></div>

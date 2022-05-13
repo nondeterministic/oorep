@@ -24,7 +24,7 @@ scalaJSStage in Global := FullOptStage
 lazy val backend = (project in file("backend")).settings(commonSettings).settings(
   scalaJSProjects := Seq(frontend, sec_frontend),
   pipelineStages in Assets := Seq(scalaJSPipeline),
-  pipelineStages := Seq(digest, gzip),
+  pipelineStages := Seq(scalaJSProd, gzip),
   // triggers scalaJSPipeline when using compile or continuous compilation
   compile in Compile := ((compile in Compile) dependsOn scalaJSPipeline).value,
   isDevMode in scalaJSPipeline := false,
@@ -109,7 +109,7 @@ lazy val commonSettings = Seq(
   scalaVersion := myScalaVersion,
   organization := "org.multics.baueran.frep",
   maintainer := "baueran@gmail.com",
-  version := "0.12.2-beta1"
+  version := "0.13.0"
 )
 
 // TODO: This doesn't work, and I can't be bothered to get it to work.
