@@ -50,7 +50,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
         Redirect(sys.env.get("OOREP_URL_LOGOUT").getOrElse(""))
       case Some(uid) =>
         Logger.debug(s"Get: login() completed for user ${uid.toString}.")
-        Redirect(sys.env.get("OOREP_APPLICATION_HOST").getOrElse(""))
+        Redirect(serverUrl(request))
           .withCookies(
             Cookie(CookieFields.id.toString, uid.toString, httpOnly = false),
             Cookie(CookieFields.cookiePopupAccepted.toString, "1", httpOnly = false)
@@ -72,7 +72,11 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
   }
 
   def show(repertory: String, symptom: String, page: Int, remedyString: String, minWeight: Int) = Action { request: Request[AnyContent] =>
-    Ok(views.html.index_lookup(request, repertory, symptom, page - 1, remedyString, minWeight, s"OOREP ${xml.Utility.escape("—")} open online homeopathic repertory"))
+    Ok(views.html.index_lookup(request, repertory, symptom, page - 1, remedyString, minWeight, s"OOREP - ${symptom} (${repertory})"))
+  }
+
+  def showMM(materiaMedica: String, symptom: String, page: Int, hideSections: Boolean, remedyString: String) = Action { request: Request[AnyContent] =>
+    Ok(views.html.index_lookup_mm(request, materiaMedica, symptom, page - 1, hideSections, remedyString, s"OOREP - ${symptom} (${materiaMedica})"))
   }
 
   def serve_static_html(page: String) = Action { implicit request: Request[AnyContent] =>
@@ -290,12 +294,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
 }
 
 // Used in HTML-templates/-files
-object Get {
-  val staticServerUrl = {
-    sys.env.get("OOREP_APPLICATION_HOST") match {
-      case Some(host) => host
-      case _ => "https://www.oorep.com"
-    }
-  }
+object Get extends ServerUrl {
+  val staticServerUrl = serverUrl()
   val staticAssetsPath = "/assets/html"
 }

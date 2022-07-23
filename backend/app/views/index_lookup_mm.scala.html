@@ -1,4 +1,4 @@
-@(request: Request[AnyContent], repertory: String, symptom: String, page: Int, remedyString: String, minWeight: Int, title: String)
+@(request: Request[AnyContent], materiaMedica: String, symptom: String, page: Int, hideSections: Boolean, remedyString: String, title: String)
 
 @import org.multics.baueran.frep.backend.controllers._
 @import org.multics.baueran.frep.shared.Defs._
@@ -17,9 +17,9 @@
         <meta property="og:type" content="website" />
 
         @if(remedyString.length > 0) {
-        <meta property="og:title" content="OOREP - rubrics for '@symptom' containing '@remedyString' in repertory '@repertory'" />
+        <meta property="og:title" content="OOREP - chapter(s) for '@remedyString' in '@materiaMedica'" />
         } else {
-        <meta property="og:title" content="OOREP - rubrics for '@symptom' in repertory '@repertory'" />
+        <meta property="og:title" content="OOREP - chapter(s) for '@symptom' in '@materiaMedica'" />
         }
 
         <meta name="description" content="Free online repertory of homeopathy that requires only a web browser to run. Features many of the classical repertories, such as Kent, Boger, Hering, etc." />
@@ -72,7 +72,7 @@
 
     <script>
         $(document).ready(function(){
-          RepertoryView.doLookup("@repertory", "@symptom", @page, "@remedyString", @minWeight);
+          MateriaMedicaView.doLookup("@materiaMedica", "@symptom", @page, @hideSections, "@remedyString");
         });
     </script>
 

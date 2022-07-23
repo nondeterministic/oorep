@@ -11,16 +11,6 @@ package object Defs {
   }
   import ResourceAccessLvl._
 
-  def localRepPath() = {
-    sys.env.get("OOREP_REP_PATH") match {
-      case Some(path) => path
-      case _ => {
-        System.err.println(s"ERROR: localRepPath: environment variable OOREP_REP_PATH not defined. Returning empty string to calling function.")
-        ""
-      }
-    }
-  }
-
   def smallRepertoriesMaxSize = 550
   def maxNumberOfResultsPerPage = 100
   def maxNumberOfResultsPerMMPage = 50

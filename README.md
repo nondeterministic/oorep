@@ -8,7 +8,7 @@ can also be found at https://www.oorep.com/.
 ## Current status / what's new
 
 Besides the aforementioned homepage, check out the [NEWS](NEWS) file for the
-latest updates.
+latest development updates.
 
 ## Running the program
 
@@ -33,8 +33,7 @@ $ docker-compose up
 Depending on your Internet connection, those commands may take a while to complete.
 When all is done, you should be able to point your web browser to `http://localhost:9000`
 and see OOREP's landing page. Needless to say, those images are test-only and are not
-intended for any production environments or the like without further modifications
-and additions.
+intended for any production environments or the like without further modifications.
 
 ### Method 2: By building the project from scratch (for experts only)
 
@@ -51,15 +50,25 @@ OOREP-database). The database needs to be named '`oorep`' and the PostgreSQL-use
 owning it, '`oorep_user`'. Also, you will need to define the following environment
 variables:
 
-* `$OOREP_APPLICATION_HOST`: Usually something like `http://localhost:9000`
-  for development environments, or `https://www.oorep.com` for a production
-  environment (notice, no trailing slash)
-* `$OOREP_APPLICATION_SECRET`: application-specific password you need to set
-  if you run the server using `https` instead of `http` (which I don't, since
-  I use a reverse proxy)
-* `$OOREP_DB_HOST`: hostname of DB-server (e.g., localhost)
-* `$OOREP_DB_PORT`: port of DB-server (usually 5432)
-* `$OOREP_DB_PASS`: password used by the DB-user
+* `$OOREP_APP_PROTOCOL`: usually either `http` or `https`
+* `$OOREP_APP_HOSTNAME`: the part that follows `$OOREP_APP_PROTOCOL`,
+  such as `www`, for example, or any other hostname
+* `$OOREP_APP_PORT`: port of application server (normally `9000`), but should only be
+  set if application server is directly used (i.e., do not set when using a reverse
+  proxy!)
+* `$OOREP_APP_DOMAIN`: your domain name, e.g., `oorep.com`, but do not set when, for
+  example, you're merely using `localhost` as hostname
+* `$OOREP_APP_SECRET`: application-specific password you need to set if you run the 
+  application server using `https` instead of `http` (which I don't, since I use a
+  reverse proxy that does end-to-end encryption)
+* `$OOREP_DB_NAME`: name of your PostgreSQL database; set to `oorep`, unless 
+  you know better!
+* `$OOREP_DB_USER`: name of your PostgreSQL database user; set to `oorep_user`, unless
+  you know better!
+* `$OOREP_DB_PASS`: password of your PostgreSQL database; for test-environments, 
+  use the one from within the `docker` directory of this repository, unless you know better!
+* `$OOREP_DB_HOST`: full hostname of DB-server (e.g., `localhost` or `db.oorep.com`)
+* `$OOREP_DB_PORT`: port of DB-server (usually `5432`)
 * `$OOREP_URL_LOGOUT`: right now only mandatory if authentication is used:
   the URL which users must click on in order to logout of OOREP (usually your
   logout binding of an accompanying (SAML) Service Provider)
@@ -69,10 +78,11 @@ variables:
   username on your SMTP server
 * `$OOREP_MAIL_PASS`: right now only mandatory if authentication is used:
   password for that username on your SMTP server
-
+  
 Check `backend/conf/application.conf` for their respective use, and make other
-adjustments as you see fit there.  Also be sure these variables are set before
-attempting to execute the OOREP code using SBT.
+adjustments as you see fit there (especially if you alter the domain variable).
+Also be sure these variables are set before attempting to execute the OOREP code
+using SBT.
 
 #### Recommended external libraries
 

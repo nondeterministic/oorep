@@ -131,13 +131,26 @@ object Main extends MainUtil {
     loadJavaScriptDependencies()
 
     // This is the static page which is shown when JS is disabled
-    val tempContent = dom.document.getElementById("temporary_content")
-    while (tempContent != null && tempContent.hasChildNodes())
-      tempContent.removeChild(tempContent.firstChild)
+    if (dom.document.getElementById("temporary_content") != null)
+      dom.document.body.removeChild(dom.document.getElementById("temporary_content"))
 
     if (dom.document.getElementById("static_content") == null) {
-      RepertoryView.init(loadingSpinner)
+      val loadingSpinner = new LoadingSpinner("content")
       loadingSpinner.add()
+      MainView.init(loadingSpinner)
+
+      // Both /?show...-calls call their own render() functions via html-page embedded JS
+      if (dom.window.location.toString.contains("/show")) {
+        dom.document.getElementById("disclaimer_div").asInstanceOf[dom.html.Div].style.setProperty("display", "none")
+      }
+      // /?change_password mustn't execute the main OOREP application. So, do nothing!
+      else if (dom.window.location.toString.contains("/change_password?")) {
+        ;
+      }
+      // Static content must not also show the repertorisation view
+      else {
+        dom.document.getElementById("content").appendChild(MainView().render)
+      }
     }
 
     dom.document.body.appendChild(div(style := "width:100%;", id := "content_bottom").render)
@@ -154,7 +167,7 @@ object Main extends MainUtil {
     dom.document.body.appendChild(CaseModals.Repertorisation().render)
     dom.document.body.appendChild(CaseModals.EditDescription().render)
 
-    if (!dom.window.location.toString.contains("/show?"))
+    if (!dom.window.location.toString.contains("/show"))
       authenticateAndPrepare()
     else
       dom.document.getElementById("disclaimer_div").asInstanceOf[dom.html.Div].style.setProperty("display", "none")

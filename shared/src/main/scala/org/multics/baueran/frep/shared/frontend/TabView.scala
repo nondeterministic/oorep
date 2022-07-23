@@ -2,11 +2,12 @@ package org.multics.baueran.frep.shared.frontend
 
 import org.multics.baueran.frep.shared.Remedy
 import org.scalajs.dom
-import org.scalajs.dom.html
+import dom.html
 import scalatags.JsDom
 import JsDom.all._
 
 trait TabView {
+
   def toFront(): Unit
   def toBack(): Unit
   def tabPaneId(): String
@@ -15,7 +16,7 @@ trait TabView {
   def drawWithoutResults(): JsDom.TypedTag[dom.html.Div]
   def drawWithResults(): JsDom.TypedTag[dom.html.Div]
   def onResultsDrawn(): Unit // This is an event handler which fires after tab views' results were rendered; e.g., to maniupulate the DOM afterwards
-  def containesAnyResults(): Boolean
+  def containsAnyResults(): Boolean
   def containsUnsavedResults(): Boolean
   def updateDataStructures(remedy: List[Remedy]): Unit
   def getPrefix(): String

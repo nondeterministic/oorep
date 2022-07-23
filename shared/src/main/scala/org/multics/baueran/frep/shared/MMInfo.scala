@@ -1,12 +1,14 @@
 package org.multics.baueran.frep.shared
 
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
-import io.circe.{Decoder, Encoder, HCursor}
+import io.circe.{Decoder, Encoder}
+import org.multics.baueran.frep.shared.frontend.{ShareResultsModal, serverUrl}
 import org.scalajs.dom
 import org.scalajs.dom.Event
 import scalatags.JsDom.all._
+import rx.Var
 
-import scala.collection.mutable
+import scala.scalajs.js.URIUtils.encodeURI
 
 case class MMInfo(id: Int,
                   abbrev: String,
@@ -34,7 +36,9 @@ object MMAndRemedyIds {
 
 case class MMSearchResult(abbrev: String, remedy_id: Int, remedy_fullname: String, result_sections: List[MMSection]) {
 
-  def render(prefix: String, hideSections: Boolean, symptomString: String, materiaMedicas: MateriaMedicas, doLookup: (String, String, Option[Int], Option[String]) => Unit) = {
+  private val _prefix = "MMSearchResult"
+
+  def render(prefix: String, hideSections: Var[Boolean], symptomString: String, materiaMedicas: MateriaMedicas, doLookup: (String, String, Option[Int], Option[String]) => Unit) = {
 
     def getTopMostSection() = result_sections.find(sec => sec.parent_sec_id == None)
     def getChildren(currSec: MMSection) = {
@@ -61,21 +65,22 @@ case class MMSearchResult(abbrev: String, remedy_id: Int, remedy_fullname: Strin
           )
         else
           div(
-            currSec.render(prefix, hideSections, symptomString, indent),
-            div(name:=s"parent_${currSec.id}", cls:=s"collapse ${if (hideSections) "hide" else "show"}", `type`:=s"${prefix}_mm_section_span",
+            currSec.render(prefix, hideSections.now, symptomString, indent),
+            div(name:=s"parent_${currSec.id}", cls:=s"collapse ${if (hideSections.now) "hide" else "show"}", `type`:=s"${prefix}_mm_section_span",
               div(style:="padding-left:20px;", children.map(renderEntireChapterFromRoot(_, indent + 1)))
             )
           )
       }
       else
-        currSec.render(prefix, hideSections, symptomString, indent)
+        currSec.render(prefix, hideSections.now, symptomString, indent)
     }
 
     val remedy = materiaMedicas.get(abbrev) match {
       case Some((_, remedies)) =>
         remedies.find(_.id == remedy_id)
       case None =>
-        println(s"MMInfo: var. remedy in render(...'${remedy_fullname}'...) is None; this is a bug and should never have happened.")
+        println(s"MMInfo: var. remedy in render(...'${remedy_fullname}'...) is None; this is a bug and should never have happened. " +
+          s"Available materia medica and remedies not yet loaded? Race condition?")
         None
     }
 
@@ -139,8 +144,28 @@ case class MMSearchResult(abbrev: String, remedy_id: Int, remedy_fullname: Strin
             div(cls := "col", style := "padding:0; margin:0;",
               remedy match {
                 case Some(remedy) =>
-                  b(a(href := "#", onclick := { (_: Event) => doLookup(abbrev, "", None, Some(remedy.nameAbbrev)) }, s"""${remedy_fullname.toUpperCase} (${remedy.nameAbbrev})"""))
+
+                  def resultsLink() =
+                    s"${serverUrl()}/show_mm?materiaMedica=${abbrev}&symptom=&page=1&hideSections=${hideSections.now}&remedyString=${remedy.nameAbbrev}"
+
+                  val shareResultsModal = new ShareResultsModal(_prefix, resultsLink)
+
+                  span(
+                    shareResultsModal(),
+
+                    b(a(href := "#", onclick := { (_: Event) => doLookup(abbrev, "", None, Some(remedy.nameAbbrev)) }, s"""${remedy_fullname.toUpperCase} (${remedy.nameAbbrev})""")),
+                    span(raw("&nbsp;&nbsp;")),
+                    button(`type`:="button", cls:="btn btn-sm px-1 py-0 btn-outline-primary", data.toggle:="modal", data.dismiss:="modal", data.target:=s"#${_prefix}shareResultsModal",
+                      onclick:={ (_: Event) => shareResultsModal.updateResultsLink(s"${resultsLink()}") },
+                      span(cls:="oi oi-link-intact", style:="font-size: 12px;", title:="Share link...", aria.hidden:="true")),
+                    span(raw("&nbsp;")),
+                    button(`type`:="button", cls:="btn btn-sm px-1 py-0 btn-outline-primary", style:="margin-left: 8px;",
+                      onclick:={ (_: Event) => dom.window.open(encodeURI(s"${resultsLink()}")) },
+                      span(cls:="oi oi-external-link", style:="font-size: 12px;", title:="Open in new window...", aria.hidden:="true")
+                    )
+                  )
                 case None =>
+                  // This case fires, if we open link via external link button, because there is a race condition that loads list of remedies after this is rendered... :-(
                   b(a(href := "#", onclick := { (_: Event) => doLookup(abbrev, "", None, Some(remedy_fullname)) }, s"""${remedy_fullname.toUpperCase}"""))
               }
             ),
@@ -156,7 +181,7 @@ case class MMSearchResult(abbrev: String, remedy_id: Int, remedy_fullname: Strin
       div(cls:="card-body",
         // Some symptom search...
         if (getTopMostSection() == None) {
-          result_sections.sortBy(_.id).map(_.render(prefix, hideSections, symptomString, 0))
+          result_sections.sortBy(_.id).map(_.render(prefix, hideSections.now, symptomString, 0))
         }
         // Displaying a remedy chapter in its entirety...
         else

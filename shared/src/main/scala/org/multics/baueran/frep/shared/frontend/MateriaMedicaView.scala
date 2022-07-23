@@ -19,16 +19,22 @@ import org.multics.baueran.frep.shared.{HitsPerRemedy, MMAllSearchResults, MMAnd
 import org.multics.baueran.frep.shared.Defs.{maxLengthOfSymptoms, maxNumberOfResultsPerMMPage}
 import org.multics.baueran.frep.shared.Defs.ResourceAccessLvl
 
+import scala.scalajs.js.URIUtils.encodeURI
+import scala.scalajs.js.annotation.{JSExport, JSExportTopLevel}
+
+@JSExportTopLevel("MateriaMedicaView")
 object MateriaMedicaView extends TabView {
 
   private val _prefix = "MMView"
+
+  private var _currResultShareLink = s"${serverUrl()}"
 
   // private var _showMaxSearchResultsAlert = true
   private val _collapsedMultiOccurrencesSpans = Var(true)
   private var _defaultMMAbbrev: Option[String] = None
 
   private val _selectedMateriaMedicaAbbrev: Var[Option[String]] = Var(None)
-  private var _remedies: Remedies = _
+  private var _remedies: Remedies = new Remedies(List.empty)
   private val _materiaMedicas: Var[MateriaMedicas] = Var(new MateriaMedicas(List()))
 
   private val _latestSymptomString: Var[Option[String]] = Var(None)
@@ -37,7 +43,7 @@ object MateriaMedicaView extends TabView {
   private var _totalNumberOfResultRemedies = 0
   private var _page: Option[Int] = None
   private val _pageCache = new PageCacheMM()
-  private var _allSectionsHide = true
+  private val _allSectionsHide = Var(true)
   private var _advancedSearchOptionsVisible = false
 
   private val ulMMSelection =
@@ -67,12 +73,16 @@ object MateriaMedicaView extends TabView {
     )
 
   _sectionHits.triggerLater {
-    dom.document.getElementById(s"${_prefix}_result_div").innerHTML = ""
-    dom.document.getElementById(s"${_prefix}_result_div").appendChild(getResultsHtml().render)
-    dom.document.getElementById(s"${_prefix}_result_div").appendChild(div(cls:= "container-fluid", id:=s"${_prefix}_paginationDiv").render)
+    dom.document.getElementById(s"${_prefix}_result_div") match {
+      case null =>
+        println("ERROR: _sectionHits.triggerLater failed")
+      case element =>
+        element.innerHTML = ""
+        element.appendChild(getResultsHtml().render)
+        element.appendChild(div(cls := "container-fluid", id := s"${_prefix}_paginationDiv").render)
+    }
 
     refreshMMDropDownButtonLabel()
-
     renderMultiOccurrencesDiv()
 
     // TODO: If we, one day, actually want to show the case under the MM view as well, we only should have to uncomment those lines here (more or less)...
@@ -85,6 +95,8 @@ object MateriaMedicaView extends TabView {
     }
     ()
   }
+
+  private def resultsLink(): String = encodeURI(_currResultShareLink + s"&hideSections=${_allSectionsHide.now}")
 
   private def refreshRemedyDataList(): Unit = {
     val selectedAbbrev = _selectedMateriaMedicaAbbrev.now.getOrElse("")
@@ -201,7 +213,7 @@ object MateriaMedicaView extends TabView {
           val currSpan = allMMSectionChevronSpans.item(i).asInstanceOf[dom.html.Div]
           currSpan.setAttribute("class", "oi oi-chevron-right")
         }
-        _allSectionsHide = true
+        _allSectionsHide() = true
       }
 
       def showLinksHandler(event: Event) = {
@@ -216,11 +228,15 @@ object MateriaMedicaView extends TabView {
           val currSpan = allMMSectionChevronSpans.item(i).asInstanceOf[dom.html.Div]
           currSpan.setAttribute("class", "oi oi-chevron-bottom")
         }
-        _allSectionsHide = false
+        _allSectionsHide() = false
       }
+
+      val shareResultsModal = new ShareResultsModal(_prefix, resultsLink)
 
       // Here starts the actual HTML which is returned by this function...
       div(
+
+        shareResultsModal(),
 
         div(id:=s"${_prefix}_resultStatusAlerts",
 
@@ -265,7 +281,18 @@ object MateriaMedicaView extends TabView {
                   searchResultsTxt = s"Something went wrong. Please, try again."
               }
 
-              b(searchResultsTxt)
+              span(
+                b(searchResultsTxt),
+                span(raw("&nbsp;&nbsp;")),
+                button(`type`:="button", cls:="btn btn-sm px-1 py-0 btn-outline-primary", data.toggle:="modal", data.dismiss:="modal", data.target:=s"#${_prefix}shareResultsModal",
+                  onclick:={ (_: Event) => shareResultsModal.updateResultsLink(resultsLink()) },
+                  span(cls:="oi oi-link-intact", style:="font-size: 12px;", title:="Share link...", aria.hidden:="true")),
+                span(raw("&nbsp;&nbsp;&nbsp;")),
+                button(`type`:="button", cls:="btn btn-sm px-1 py-0 btn-outline-primary",
+                  onclick:={ (_: Event) => dom.window.open(resultsLink()) },
+                  span(cls:="oi oi-external-link", style:="font-size: 12px;", title:="Open in new window...", aria.hidden:="true")),
+                span(raw("&nbsp;&nbsp;"))
+              )
             }
           ),
 
@@ -326,17 +353,39 @@ object MateriaMedicaView extends TabView {
   override def tabPaneId(): String = s"${_prefix}_tab_materia_medica"
 
   override def toFront(): Unit = {
-    dom.document.getElementById(tabLinkId()).classList.add("show")
-    dom.document.getElementById(tabLinkId()).classList.add("active")
-    dom.document.getElementById(tabPaneId()).classList.add("show")
-    dom.document.getElementById(tabPaneId()).classList.add("active")
+    dom.document.getElementById(tabLinkId()) match {
+      case null =>
+        println("ERROR: MateriaMedicaView.toFront() failed.")
+      case element =>
+        element.classList.add("show")
+        element.classList.add("active")
+    }
+
+    dom.document.getElementById(tabPaneId()) match {
+      case null =>
+        println("ERROR: MateriaMedicaView.toFront() failed.")
+      case element =>
+        element.classList.add("show")
+        element.classList.add("active")
+    }
   }
 
   override def toBack(): Unit = {
-    dom.document.getElementById(tabLinkId()).classList.remove("show")
-    dom.document.getElementById(tabLinkId()).classList.remove("active")
-    dom.document.getElementById(tabPaneId()).classList.remove("show")
-    dom.document.getElementById(tabPaneId()).classList.remove("active")
+    dom.document.getElementById(tabLinkId()) match {
+      case null =>
+        println("ERROR: MateriaMedicaView.toBack() failed.")
+      case element =>
+        element.classList.remove("show")
+        element.classList.remove("active")
+    }
+
+    dom.document.getElementById(tabPaneId()) match {
+      case null =>
+        println("ERROR: MateriaMedicaView.toBack() failed.")
+      case element =>
+        element.classList.remove("show")
+        element.classList.remove("active")
+    }
   }
 
   override def tabLink() = {
@@ -365,7 +414,7 @@ object MateriaMedicaView extends TabView {
       "Materia Medica")
   }
 
-  private def updateAvailableMMsAndRemedies(remedies: List[Remedy]): Unit = {
+  private def updateAvailableMMsAndRemedies(remedies: List[Remedy], runAfterUpdate: (() => Unit)): Unit = {
     _remedies = new Remedies(remedies)
 
     if (_materiaMedicas.now.size() == 0) {
@@ -400,6 +449,8 @@ object MateriaMedicaView extends TabView {
                         case Nil => ;
                       }
                     }
+
+                    runAfterUpdate()
                   }
                   case Left(error) => println(s"Materia medica decoding failed: $error")
                 }
@@ -624,11 +675,25 @@ object MateriaMedicaView extends TabView {
     )
   }
 
+  @JSExport("doLookup")
+  def jsDoLookup(abbrev: String, symptom: String, page: Int, hideSections: Boolean, remedyString: String): Unit = {
+    // Hide navbar initially, while the spinner shows. (Later, the code in this file will show it again.)
+    dom.document.getElementById("nav_bar").asInstanceOf[dom.html.Div].classList.add("d-none")
+
+    _selectedMateriaMedicaAbbrev() = Some(abbrev)
+    _allSectionsHide() = hideSections
+
+    doLookup(abbrev, symptom,
+      if (page > 0) Some(page) else None,
+      if (remedyString.length > 0) Some(remedyString) else None
+    )
+  }
+
   private def doLookup(abbrev: String, symptom: String, page: Option[Int], remedyStringOpt: Option[String]): Unit = {
 
     dom.document.body.classList.add("wait")
 
-    def updateDataAndView(searchResults: MMAllSearchResults) = {
+    def updateDataAndView(searchResults: MMAllSearchResults): Unit = {
       MainView.resetContentView()
       MainView.tabToFront(this)
 
@@ -644,6 +709,10 @@ object MateriaMedicaView extends TabView {
 
       dom.document.body.classList.remove("wait")
 
+      // When we do a /?show=... lookup, we need to make sure the disclaimer is made visible again. For other cases, it doesn't matter, because
+      // the disclaimer is already visible at this point.
+      dom.document.getElementById("disclaimer_div").asInstanceOf[dom.html.Div].style.setProperty("display", "block")
+
       // Jump to bottom nav bar, if there is one
       if (page != None && page.get > 0) {
         dom.document.getElementById(s"${_prefix}_paginationDiv") match {
@@ -651,6 +720,21 @@ object MateriaMedicaView extends TabView {
           case navDiv => navDiv.scrollIntoView(true)
         }
       }
+
+      // Reset window title (just in case we came from index_lookup), so that a window title which contained
+      // symptoms before, which now won't match with the latest search, are replaced with a generic and less
+      // confusing title.
+      if (symptom.length > 0 && remedyStringOpt != None)
+        dom.document.title = s"OOREP - ${remedyStringOpt.getOrElse("")}: ${symptom} (${abbrev})"
+      else if (symptom.length > 0)
+        dom.document.title = s"OOREP - ${symptom} (${abbrev})"
+      else if (remedyStringOpt != None)
+        dom.document.title = s"OOREP - ${remedyStringOpt.getOrElse("")} (${abbrev})"
+      else
+        dom.document.title = "OOREP - open online homeopathic repertory"
+
+      _currResultShareLink =
+        s"${serverUrl()}/show_mm?materiaMedica=${abbrev}&symptom=${symptom}&page=${_page.getOrElse(1).toString}&remedyString=${remedyStringOpt.getOrElse("")}"
     }
 
     def showErrorMessage(errorMessage: Option[String]): Unit = {
@@ -679,7 +763,11 @@ object MateriaMedicaView extends TabView {
       val errorMessageDiv = div(cls := "alert alert-danger", role := "alert", b(errorMessageTxt))
 
       dom.document.getElementById(s"${_prefix}_resultStatusAlerts") match {
-        case null => ;
+        // The null case fires, when we use /show_mm... link, because then the loading screen is empty and doesn't have the HTML element in question...
+        case null =>
+          val errorMessage = s"ERROR: Lookup failed. Perhaps URL malformed, materia medica does not exist or no results for given symptoms. " +
+            s"SUGGESTED SOLUTION: Go directly to ${serverUrl()} instead and try again!"
+          dom.document.location.replace(s"${serverUrl()}/${apiPrefix()}/display_error_page?message=${encodeURI(errorMessage)}")
         case resultDiv =>
           resultDiv.innerHTML = ""
           resultDiv.appendChild(errorMessageDiv.render)
@@ -765,13 +853,23 @@ object MateriaMedicaView extends TabView {
       onShowAdvancedSearchOptions()
   }
 
-  override def containesAnyResults() = {
+  override def containsAnyResults() = {
     _sectionHits.now.length > 0 || _latestRemedyString.now != None
   }
 
   override def containsUnsavedResults() = { false }
 
   override def updateDataStructures(remedies: List[Remedy]): Unit = {
-    updateAvailableMMsAndRemedies(remedies)
+    // See also RepertoryView.scala for a similar after-update-handler!
+    def runAfterUpdate(): Unit = {
+      if (containsAnyResults()) {
+        MainView.resetContentView()
+        MainView.tabToFront(this)
+        refreshMMDropDownButtonLabel()
+        renderMultiOccurrencesDiv()
+      }
+    }
+
+    updateAvailableMMsAndRemedies(remedies, runAfterUpdate)
   }
 }

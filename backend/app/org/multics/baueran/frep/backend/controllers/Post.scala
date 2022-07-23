@@ -63,7 +63,7 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
 
         val f = Future {
           send a new Mail(
-            from = ("info@oorep.com", "OOREP-Support"),
+            from = ("info@" + serverDomain(request), "OOREP-Support"),
             to = member.email,
             subject = "Username",
             message = s"You (or someone else) has requested that your OOREP username be emailed\n" +
@@ -135,7 +135,7 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
 
           val randomIdString = genRandomString(30)
           val requestDate = new MyDate()
-          val emailLink = sys.env.get("OOREP_APPLICATION_HOST").getOrElse("https://www.oorep.com") + "/change_password?id=" + randomIdString
+          val emailLink = "https://" + serverDomain(request) + "/change_password?id=" + randomIdString
 
           dbContext.transaction {
             // A member may at most have one password change request in the database
@@ -151,7 +151,7 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
 
           val f = Future {
             send a new Mail(
-              from = ("info@oorep.com", "OOREP-Support"),
+              from = ("info@" + serverDomain(request), "OOREP-Support"),
               to = member.email,
               subject = "Password reset",
               message = s"You (or someone else) has requested that you reset your OOREP password.\n\n" +

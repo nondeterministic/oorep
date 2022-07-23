@@ -25,30 +25,6 @@ import scala.language.implicitConversions
 @JSExportTopLevel("RepertoryView")
 object RepertoryView extends TabView {
   
-  private def shareResultsModal = {
-    div(cls:="modal fade", tabindex:="-1", role:="dialog", id:="shareResultsModal",
-      div(cls:="modal-dialog", role:="document",
-        div(cls:="modal-content",
-          div(cls:="modal-body",
-            form(
-              div(cls:="form-group",
-                button(`type`:="button", cls:="close", data.dismiss:="modal", aria.label:="Close", span(aria.hidden:="true", "\u00d7")),
-                label(`for`:="shareResultsModalLink", "To share the search results, copy and paste this link:"),
-                input(cls:="form-control", id:="shareResultsModalLink", readonly:=true, value:=Rx(_currResultShareLink()))
-              )
-            )
-          ),
-          div(cls:="modal-footer",
-            button(`type`:="button", cls:="btn btn-primary",
-              onclick:= { (event: Event) =>
-                dom.document.getElementById("shareResultsModalLink").asInstanceOf[dom.html.Input].select()
-                dom.document.execCommand("copy")
-              }, aria.label:="Copy to clipboard", "Copy to clipboard")
-          )
-        )
-      )
-    )
-  }
   private val _currResultShareLink = Var(s"${serverUrl()}")
   private val _pageCache = new PageCache()
   private var _remedies = new Remedies(List())
@@ -60,14 +36,11 @@ object RepertoryView extends TabView {
   private val _remedyFormat = Var(RemedyFormat.Abbreviated)
   private val _repertorisationResults: Var[Option[ResultsCaseRubrics]] = Var(None)
   private val _resultRemedyStats: Var[List[ResultsRemedyStats]] = Var(List())
-  private var _loadingSpinner: Option[LoadingSpinner] = None
   private val _prefix = "repertoryView"
   private var _advancedSearchOptionsVisible = false
 
   // ------------------------------------------------------------------------------------------------------------------
-  def init(loadingSpinner: LoadingSpinner) = {
-    _loadingSpinner = Some(loadingSpinner)
-  }
+  private def resultsLink(): String = encodeURI(_currResultShareLink.now)
 
   // ------------------------------------------------------------------------------------------------------------------
   private def redrawMultiOccurringRemedies(): Unit = {
@@ -240,12 +213,17 @@ object RepertoryView extends TabView {
               if (latestCachePage.minWeight > 0)
                 searchStatsString += s" with min. weight >= ${latestCachePage.minWeight}"
 
-              searchStatsString += s". Showing page ${currPage + 1} of ${totalNumberOfPages} ("
+              searchStatsString += s". Showing page ${currPage + 1} of ${totalNumberOfPages}."
               searchStatsString
             }),
-            a(href:="#", data.toggle:="modal", data.dismiss:="modal", data.target:="#shareResultsModal", b("share")),
-            b("). ")
-            ).render
+            span(raw("&nbsp;&nbsp;")),
+            button(`type`:="button", cls:="btn btn-sm px-1 py-0 btn-outline-primary", data.toggle:="modal", data.dismiss:="modal", data.target:=s"#${_prefix}shareResultsModal",
+              span(cls:="oi oi-link-intact", style:="font-size: 12px;", title:="Share link...", aria.hidden:="true")),
+            span(raw("&nbsp;&nbsp;&nbsp;")),
+            button(`type`:="button", cls:="btn btn-sm px-1 py-0 btn-outline-primary", onclick:={ (_: Event) => dom.window.open(_currResultShareLink.now) },
+              span(cls:="oi oi-external-link", style:="font-size: 12px;", title:="Open in new window...", aria.hidden:="true")),
+            span(raw("&nbsp;&nbsp;"))
+          ).render
         )
 
         dom.document.getElementById("resultDiv").innerHTML = ""
@@ -380,7 +358,7 @@ object RepertoryView extends TabView {
       case Some(latestCachePage) =>
         doLookup(_selectedRepertory.now, symptom, None, latestCachePage.remedy, latestCachePage.minWeight)
       case _ =>
-        println("RepertoryView: onSymptomLinkClicked failed.")
+        doLookup(_selectedRepertory.now, symptom, None, None, 0)
     }
   }
 
@@ -585,9 +563,8 @@ object RepertoryView extends TabView {
     def showRepertorisationResults(results: ResultsCaseRubrics, remedyStats: List[ResultsRemedyStats]): Unit = {
       _pageCache.addPage(CachePage(abbrev, symptom, abbrevForRemedyEntered, minWeight, results, remedyStats))
 
-      _currResultShareLink() = encodeURI(
+      _currResultShareLink() =
         s"${serverUrl()}/show?repertory=${abbrev}&symptom=${symptom}&page=${(pageOpt.getOrElse(0) + 1).toString}&remedyString=${abbrevForRemedyEntered.getOrElse("")}&minWeight=${minWeight.toString}"
-      )
 
       _repertorisationResults() = None
       _repertorisationResults.recalc()
@@ -605,6 +582,18 @@ object RepertoryView extends TabView {
       // When we do a /?show=... lookup, we need to make sure the disclaimer is made visible again. For other cases, it doesn't matter, because
       // the disclaimer is already visible at this point.
       dom.document.getElementById("disclaimer_div").asInstanceOf[dom.html.Div].style.setProperty("display", "block")
+
+      // Reset window title (just in case we came from index_lookup), so that a window title which contained
+      // symptoms before, which now won't match with the latest search, are replaced with a generic and less
+      // confusing title.
+      if (symptom.length > 0 && remedyStringOpt != None)
+        dom.document.title = s"OOREP - ${remedyStringOpt.getOrElse("")}: ${symptom} (${abbrev})"
+      else if (symptom.length > 0)
+        dom.document.title = s"OOREP - ${symptom} (${abbrev})"
+      else if (remedyStringOpt != None)
+        dom.document.title = s"OOREP - ${remedyStringOpt.getOrElse("")} (${abbrev})"
+      else
+        dom.document.title = "OOREP - open online homeopathic repertory"
     }
 
     def showRepertorisationResultsError(symptom: String, remedyString: String, minWeight: Int): Unit = {
@@ -690,11 +679,10 @@ object RepertoryView extends TabView {
       // If no results were found, either tell the user in the input screen,
       // or, if search was invoked via static /show-link (i.e., there is no input screen), then display
       // clean error page.
-      def handleNoResultsFound() = _loadingSpinner match {
+      def handleNoResultsFound() = MainView.loadingSpinner() match {
         case Some(spinner) if (spinner.isVisible()) =>
-          val landingPage = sys.env.get("OOREP_APPLICATION_HOST").getOrElse("https://www.oorep.com/")
           val errorMessage = s"ERROR: Lookup failed. Perhaps URL malformed, repertory does not exist or no results for given symptoms. " +
-            s"SUGGESTED SOLUTION: Go directly to ${landingPage} instead and try again!"
+            s"SUGGESTED SOLUTION: Go directly to ${serverUrl()} instead and try again!"
           dom.document.location.replace(s"${serverUrl()}/${apiPrefix()}/display_error_page?message=${encodeURI(errorMessage)}")
         case _ =>
           showRepertorisationResultsError(symptom, remedyString, minWeight)
@@ -805,7 +793,7 @@ object RepertoryView extends TabView {
   }
 
   // ------------------------------------------------------------------------------------------------------------------
-  private def updateAvailableRepertoriesAndRemedies(remedies: List[Remedy]): Unit = {
+  private def updateAvailableRepertoriesAndRemedies(remedies: List[Remedy], runAfterUpdate: (() => Unit)): Unit = {
     if (_remedies.isEmpty()) {
       _remedies = new Remedies(remedies)
 
@@ -851,6 +839,8 @@ object RepertoryView extends TabView {
                           }
                         }
                     }
+
+                    runAfterUpdate()
                   }
                   case Left(t) => println("Parsing of available repertories failed: " + t)
                 }
@@ -926,7 +916,7 @@ object RepertoryView extends TabView {
     }
 
     // Make sure, the loading animation is gone
-    _loadingSpinner match {
+    MainView.loadingSpinner() match {
       case None => ;
       case Some(spinner) => spinner.remove()
     }
@@ -1021,7 +1011,7 @@ object RepertoryView extends TabView {
   override def drawWithResults(): JsDom.TypedTag[dom.html.Div] = {
     def myHTML(ulRepertorySelection: JsDom.TypedTag[dom.html.Div]): JsDom.TypedTag[dom.html.Div]  =
       div(cls := "container-fluid",
-        shareResultsModal,
+        new ShareResultsModal(_prefix, resultsLink).apply(),
         div(cls := "container-fluid text-center",
           div(cls := "row justify-content-center",
             div(cls := "col-md-12 justify-content-center",
@@ -1077,7 +1067,7 @@ object RepertoryView extends TabView {
       onShowAdvancedSearchOptionsMainView(true, false)
   }
 
-  override def containesAnyResults(): Boolean = {
+  override def containsAnyResults(): Boolean = {
     if (_repertorisationResults.now != None)
       _repertorisationResults.now.size > 0
     else
@@ -1089,7 +1079,21 @@ object RepertoryView extends TabView {
   }
 
   override def updateDataStructures(remedies: List[Remedy]): Unit = {
-    updateAvailableRepertoriesAndRemedies(remedies)
+    // See also MateriaMedicaView.scala for a similar after-update-handler!
+    def runAfterUpdate(): Unit = {
+      if (_selectedRepertory.now == "")
+        _selectedRepertory() = _defaultRepertory
+
+      // The following code would work as in MateriaMedicaView.scala, but we don't need to draw twice, unless we have to:
+      //
+      //      if (containsAnyResults()) {
+      //        MainView.resetContentView()
+      //        MainView.tabToFront(this)
+      //        showResults()
+      //      }
+    }
+
+    updateAvailableRepertoriesAndRemedies(remedies, runAfterUpdate)
   }
 
 }

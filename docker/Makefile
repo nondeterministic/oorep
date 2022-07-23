@@ -7,8 +7,8 @@
 
 SHELL:=/bin/bash
 
-branch:="master"
-version:="$(shell cat ../build.sbt | grep 'version :=' | awk '{print substr($$3, 2, length($$3)-2)}')"
+branch:=master
+version:=$(shell cat ../build.sbt | grep 'version :=' | sed -n -r 's/.*\"([^\"]+)\"/\1/p')
 playapp:=backend-$(version)
 sbt:=sbt-1.3.4
 

@@ -16,10 +16,14 @@ services:
        args:
           - VERSION=$VERSION
     environment:
-      OOREP_APPLICATION_HOST: http://localhost:9000
-      OOREP_APPLICATION_SECRET: abcdefghijklmnopqrstuvwxyz
-      OOREP_DB_HOST: db
+      OOREP_APP_PROTOCOL: http
+      OOREP_APP_HOSTNAME: localhost
+      OOREP_APP_PORT: 9000
+      OOREP_APP_SECRET: abcdefghijklmnopqrstuvwxyz
+      OOREP_DB_NAME: oorep
+      OOREP_DB_USER: oorep_user
       OOREP_DB_PASS: poofoo
+      OOREP_DB_HOST: db
       OOREP_DB_PORT: 5432
     ports:
       - 9000:9000

@@ -1,4 +1,4 @@
-FROM openjdk:11.0.15-jdk
+FROM openjdk:11.0.16-jdk
 
 ARG VERSION
 ARG PLAYDIR=/usr/local

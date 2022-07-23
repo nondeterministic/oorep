@@ -4,6 +4,26 @@
 | |_| | |_| |  _ <| |___|  __/  | |\  | |___  \ V  V /  ___) |
  \___/ \___/|_| \_\_____|_|     |_| \_|_____|  \_/\_/  |____/ 
 
+v0.14.0                     Wed Dec 28 17:39:17 CET 2022
+--------------------------------------------------------
+- Main features:
+  - Buttons for sharing repertory search results and opening them in
+    a new window
+  - Buttons for sharing and opening materia medica search results in
+    a new window
+  - OOREP window title always reflects last search now as to make
+    working with multiple tabs easier
+
+- Minor improvements and changes:
+  - Move Play version to 2.8.18
+  - Move OpenJDK version to 11.0.16
+  - Renamed most of the $OOREP_X environment variables as to make
+    deployment easier
+
+- Bug fixes:
+  - Fix race condition that would prevent public link to repertory
+    search from loading
+
 v0.13.0                 Thu May 26 12:13:11 PM CEST 2022
 --------------------------------------------------------
 - Main features:

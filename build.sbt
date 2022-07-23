@@ -13,7 +13,7 @@ val pgDriverVersion    = "42.2.5"
 val scriptsVersion     = "1.1.4"
 val apacheCommonsMailV = "1.5"
 
-resolvers in ThisBuild += "fr.hmil" at "https://files.hmil.fr/maven"
+// resolvers in ThisBuild += "fr.hmil" at "https://files.hmil.fr/maven"
 
 useJCenter := true
 
@@ -55,7 +55,7 @@ lazy val frontend = (project in file("frontend")).settings(commonSettings).setti
     "io.circe" %%% "circe-core" % circeVersion,
     "io.circe" %%% "circe-generic" % circeVersion,
     "io.circe" %%% "circe-parser" % circeVersion,
-    "fr.hmil" %%% "roshttp" % rosHttpVersion,
+    "com.github.nondeterministic" %%% "roshttp" % rosHttpVersion,
     "com.timushev" %%% "scalatags-rx" % scalatagsrxVersion
   ),
 ).enablePlugins(ScalaJSPlugin, ScalaJSWeb)
@@ -71,7 +71,7 @@ lazy val sec_frontend = (project in file("sec_frontend")).settings(commonSetting
     "io.circe" %%% "circe-core" % circeVersion,
     "io.circe" %%% "circe-generic" % circeVersion,
     "io.circe" %%% "circe-parser" % circeVersion,
-    "fr.hmil" %%% "roshttp" % rosHttpVersion, 
+    "com.github.nondeterministic" %%% "roshttp" % rosHttpVersion,
     "com.timushev" %%% "scalatags-rx" % scalatagsrxVersion
   ),
 ).enablePlugins(ScalaJSPlugin, ScalaJSWeb)
@@ -88,7 +88,7 @@ lazy val shared = crossProject(JSPlatform, JVMPlatform)
       "org.scala-js" %%% "scalajs-dom" % scalaJsDomVersion,
       "com.lihaoyi" %%% "scalatags" % scalaTagsVersion,
       "org.querki" %%% "jquery-facade" % scalaJQueryVersion,
-      "fr.hmil" %%% "roshttp" % rosHttpVersion,
+      "com.github.nondeterministic" %%% "roshttp" % rosHttpVersion,
       "com.timushev" %%% "scalatags-rx" % scalatagsrxVersion,
       "org.scalatestplus.play" %% "scalatestplus-play" % scalaTestPlusVersion % "test",
       guice,
@@ -109,7 +109,7 @@ lazy val commonSettings = Seq(
   scalaVersion := myScalaVersion,
   organization := "org.multics.baueran.frep",
   maintainer := "baueran@gmail.com",
-  version := "0.13.0"
+  version := "0.14.0"
 )
 
 // TODO: This doesn't work, and I can't be bothered to get it to work.

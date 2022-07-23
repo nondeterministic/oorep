@@ -27,6 +27,7 @@ GET     /favicon.ico                        controllers.Assets.at(path="/public/
 
 GET     /change_password                    org.multics.baueran.frep.backend.controllers.Get.changePassword(id: String)
 GET     /show                               org.multics.baueran.frep.backend.controllers.Get.show(repertory: String, symptom: String, page: Int, remedyString: String, minWeight: Int)
+GET     /show_mm                            org.multics.baueran.frep.backend.controllers.Get.showMM(materiaMedica: String, symptom: String, page: Int, hideSections: Boolean, remedyString: String)
 
 GET     /                                   org.multics.baueran.frep.backend.controllers.Get.serve_static_html(page="index")
 GET     /:page                              org.multics.baueran.frep.backend.controllers.Get.serve_static_html(page:String)

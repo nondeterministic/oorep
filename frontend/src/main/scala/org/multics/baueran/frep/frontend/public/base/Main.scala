@@ -4,7 +4,7 @@ import org.multics.baueran.frep.shared.MainUtil
 import org.scalajs.dom
 
 import scala.scalajs.js.annotation.JSExportTopLevel
-import org.multics.baueran.frep.shared.frontend.{LoadingSpinner, MainView, RepertoryView, CaseModals}
+import org.multics.baueran.frep.shared.frontend.{LoadingSpinner, MainView, CaseModals}
 
 @JSExportTopLevel("Main")
 object Main extends MainUtil {
@@ -12,6 +12,7 @@ object Main extends MainUtil {
   def main(args: Array[String]): Unit = {
     loadJavaScriptDependencies()
 
+    // This is the static page which is shown when JS is disabled
     if (dom.document.getElementById("temporary_content") != null)
       dom.document.body.removeChild(dom.document.getElementById("temporary_content"))
 
@@ -20,10 +21,10 @@ object Main extends MainUtil {
     if (dom.document.getElementById("static_content") == null) {
       val loadingSpinner = new LoadingSpinner("content")
       loadingSpinner.add()
-      RepertoryView.init(loadingSpinner)
+      MainView.init(loadingSpinner)
 
-      // /?show=... calls its own Repertorise().render via html-page embedded JS
-      if (dom.window.location.toString.contains("/show?")) {
+      // Both /?show...-calls call their own render() functions via html-page embedded JS
+      if (dom.window.location.toString.contains("/show")) {
         dom.document.getElementById("disclaimer_div").asInstanceOf[dom.html.Div].style.setProperty("display", "none")
       }
       // /?change_password mustn't execute the main OOREP application. So, do nothing!

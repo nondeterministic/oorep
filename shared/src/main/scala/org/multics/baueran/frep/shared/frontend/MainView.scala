@@ -25,9 +25,17 @@ object MainView {
     def append(element: dom.html.Element) = dom.document.getElementById(caseDivId).appendChild(element)
   }
 
+  protected var _loadingSpinner: Option[LoadingSpinner] = None
+
   // Register tab views: order is relevant. First element is first tab, and so on...
   private val _tabViews = List(RepertoryView, MateriaMedicaView)
   private var _remedies: List[Remedy] = List.empty
+
+  def init(loadingSpinner: LoadingSpinner): Unit = {
+    _loadingSpinner = Some(loadingSpinner)
+  }
+
+  def loadingSpinner() = _loadingSpinner
 
   private def getAvailableRemedies(): List[Remedy] = {
     if (_remedies.length == 0) {
@@ -70,7 +78,7 @@ object MainView {
         // This is code, where the various tab views can modify the DOM after its been rendered
         _tabViews.foreach(_.onResultsDrawn())
 
-        if (dom.document.getElementById("nav_bar_logo").innerHTML.length() == 0) {
+        if (dom.document.getElementById("nav_bar_logo") != null && dom.document.getElementById("nav_bar_logo").innerHTML.length() == 0) {
           val navbar = dom.document.getElementById("nav_bar").asInstanceOf[dom.html.Element]
 
           navbar.className = navbar.className + " bg-dark navbar-dark shadow"
@@ -200,7 +208,7 @@ object MainView {
   }
 
   def someResultsHaveBeenShown() = {
-    _tabViews.exists(_.containesAnyResults())
+    _tabViews.exists(_.containsAnyResults())
   }
 
   def apply(): JsDom.TypedTag[dom.html.Div] = {
