@@ -72,7 +72,7 @@
 
     <script>
         $(document).ready(function(){
-          MateriaMedicaView.doLookup("@materiaMedica", "@symptom", @page, @hideSections, "@remedyString");
+          MateriaMedicaView.doLookup("@materiaMedica", decodeURIComponent("@symptom").replace( /\+/g, ' ' ), @page, @hideSections, "@remedyString");
         });
     </script>
 

@@ -4,6 +4,17 @@
 | |_| | |_| |  _ <| |___|  __/  | |\  | |___  \ V  V /  ___) |
  \___/ \___/|_| \_\_____|_|     |_| \_|_____|  \_/\_/  |____/ 
 
+v0.14.1                     Sat Jan 21 11:11:56 CET 2023
+--------------------------------------------------------
+- Minor improvements and changes:
+  - Update FAQ with example searches
+
+- Bug fixes:
+  - When logged in, the landing page contained the input mask twice
+  - Exact searches like "wisdom t*" would not be highlighted in MM
+    search
+  - Sharing of search link would fail when quotation marks were used
+
 v0.14.0                     Wed Dec 28 17:39:17 CET 2022
 --------------------------------------------------------
 - Main features:

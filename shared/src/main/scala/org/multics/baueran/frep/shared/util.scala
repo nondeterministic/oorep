@@ -105,7 +105,9 @@ class SearchTerms(val symptom: String) {
         }
 
         if (expressionIsExact) {
-          val searchPattern = expressionMod.replaceAll("\\*", ".*").r
+          // We need to add the word boundaries (\b) on both ends, or the exact search would always implicitly
+          // behave as if a "*" was at both ends and match a lot more than it should.
+          val searchPattern = ("\\b" + expressionMod + "\\b").replaceAll("\\*", "[^ ]*").r
           searchPattern.findFirstMatchIn(textPassageMod) != None
         } else {
           val searchSpace: List[String] = textPassageMod.replaceAll("[^A-Za-z0-9 äüößÄÖÜ\\-]", "").split(" ").toList

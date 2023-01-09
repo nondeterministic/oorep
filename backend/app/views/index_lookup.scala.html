@@ -72,7 +72,7 @@
 
     <script>
         $(document).ready(function(){
-          RepertoryView.doLookup("@repertory", "@symptom", @page, "@remedyString", @minWeight);
+          RepertoryView.doLookup("@repertory", decodeURIComponent("@symptom").replace( /\+/g, ' ' ), @page, "@remedyString", @minWeight);
         });
     </script>
 

@@ -151,6 +151,11 @@ case class MMSection(id: Int,
             result = "\\b" + result
           }
 
+          // A star is used inside an exact search at beginning or end of term (e.g., "right lung* liver")
+          // (this is a bit silly / hidden feature as it yields potentially ugly results, but supported...)
+          if (result.contains("* ") || result.contains(" *"))
+            result = result.replaceAll("\\*\\s", "[^ ]* ").replaceAll("\\s\\*", " [^ ]*")
+
           // If we had wildcards in the middle of a word, we would need this, but the PostgreSQL search doesn't currently support it. So we return result instead.
           // result.replace("*", "[a-zA-Z\\-]*")
           result

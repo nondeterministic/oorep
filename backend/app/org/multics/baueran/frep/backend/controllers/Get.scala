@@ -3,11 +3,14 @@ package org.multics.baueran.frep.backend.controllers
 import javax.inject._
 import io.circe.syntax._
 import play.api.mvc._
-import org.multics.baueran.frep.backend.dao.{CazeDao, EmailHistoryDao, FileDao, MemberDao, PasswordChangeRequestDao, RepertoryDao, MMDao}
+import org.multics.baueran.frep.backend.dao.{CazeDao, EmailHistoryDao, FileDao, MMDao, MemberDao, PasswordChangeRequestDao, RepertoryDao}
 import org.multics.baueran.frep.shared._
 import org.multics.baueran.frep.backend.db.db.DBContext
 import Defs._
+import play.api.libs.json.JsResult.Exception
 
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 import java.text.SimpleDateFormat
 
 /**
@@ -71,12 +74,24 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     Redirect(sys.env.get("OOREP_URL_LOGOUT").getOrElse(""))
   }
 
-  def show(repertory: String, symptom: String, page: Int, remedyString: String, minWeight: Int) = Action { request: Request[AnyContent] =>
-    Ok(views.html.index_lookup(request, repertory, symptom, page - 1, remedyString, minWeight, s"OOREP - ${symptom} (${repertory})"))
+  def show(repertory: String, symptom: String, page: Int, remedyString: String, minWeight: Int) = Action { implicit request: Request[AnyContent] =>
+    try {
+      Ok(views.html.index_lookup(request, repertory, URLEncoder.encode(symptom, StandardCharsets.UTF_8.toString()), page - 1, remedyString, minWeight, s"OOREP - ${symptom} (${repertory})"))
+    } catch {
+      case e: Exception =>
+        Logger.debug(s"GET: show() failed; most likely URLEncoder.encode(): ${e.toString}")
+        InternalServerError(views.html.defaultpages.badRequest("GET", request.uri, "Something went wrong. Go to main page, https://www.oorep.com/, and try again, or submit a bug report!"))
+    }
   }
 
-  def showMM(materiaMedica: String, symptom: String, page: Int, hideSections: Boolean, remedyString: String) = Action { request: Request[AnyContent] =>
-    Ok(views.html.index_lookup_mm(request, materiaMedica, symptom, page - 1, hideSections, remedyString, s"OOREP - ${symptom} (${materiaMedica})"))
+  def showMM(materiaMedica: String, symptom: String, page: Int, hideSections: Boolean, remedyString: String) = Action { implicit request: Request[AnyContent] =>
+    try {
+      Ok(views.html.index_lookup_mm(request, materiaMedica, URLEncoder.encode(symptom, StandardCharsets.UTF_8.toString()), page - 1, hideSections, remedyString, s"OOREP - ${symptom} (${materiaMedica})"))
+    } catch {
+      case e: Exception =>
+        Logger.debug(s"GET: showMM() failed; most likely URLEncoder.encode(): ${e.toString}")
+        InternalServerError(views.html.defaultpages.badRequest("GET", request.uri, "Something went wrong. Go to main page, https://www.oorep.com/, and try again, or submit a bug report!"))
+    }
   }
 
   def serve_static_html(page: String) = Action { implicit request: Request[AnyContent] =>
@@ -266,28 +281,38 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
   }
 
   def apiLookupRep(repertoryAbbrev: String, symptom: String, page: Int, remedyString: String, minWeight: Int, getRemedies: Int) = Action { request: Request[AnyContent] =>
-    val searchTerms = new SearchTerms(symptom.trim)
-    val cleanedUpAbbrev = repertoryAbbrev.replaceAll("[^0-9A-Za-z\\-]", "")
+    // We don't allow '*' in the middle of a search term.  '*' can only be at beginning or end of a word, whether exact search term or not.
+    if (symptom.trim.matches(".*\\w+\\*\\w+.*") || symptom.trim.contains(" * ")) {
+      NoContent
+    } else {
+      val searchTerms = new SearchTerms(symptom.trim)
+      val cleanedUpAbbrev = repertoryAbbrev.replaceAll("[^0-9A-Za-z\\-]", "")
 
-    repertoryDao.queryRepertory(cleanedUpAbbrev, searchTerms, page, remedyString.trim, minWeight, getRemedies != 0) match {
-      case Some((ResultsCaseRubrics(totalNumberOfRepertoryRubrics, totalNumberOfResults, totalNumberOfPages, page, results), remedyStats)) if (totalNumberOfPages > 0) =>
-        Ok((ResultsCaseRubrics(totalNumberOfRepertoryRubrics, totalNumberOfResults, totalNumberOfPages, page, results), remedyStats).asJson.toString())
-      case _ =>
-        Logger.info(s"Get: apiLookupRep(abbrev: ${repertoryAbbrev}, symptom: ${symptom}, page: ${page}, remedy: ${remedyString}, weight: ${minWeight}): no results found")
-        NoContent
+      repertoryDao.queryRepertory(cleanedUpAbbrev, searchTerms, page, remedyString.trim, minWeight, getRemedies != 0) match {
+        case Some((ResultsCaseRubrics(totalNumberOfRepertoryRubrics, totalNumberOfResults, totalNumberOfPages, page, results), remedyStats)) if (totalNumberOfPages > 0) =>
+          Ok((ResultsCaseRubrics(totalNumberOfRepertoryRubrics, totalNumberOfResults, totalNumberOfPages, page, results), remedyStats).asJson.toString())
+        case _ =>
+          Logger.info(s"Get: apiLookupRep(abbrev: ${repertoryAbbrev}, symptom: ${symptom}, page: ${page}, remedy: ${remedyString}, weight: ${minWeight}): no results found")
+          NoContent
+      }
     }
   }
 
   def apiLookupMM(mmAbbrev: String, symptom: String, page: Int, remedyString: String) = Action { request: Request[AnyContent] =>
-    val searchTerms = new SearchTerms(symptom.trim)
-    val cleanedUpAbbrev = mmAbbrev.replaceAll("[^0-9A-Za-z\\-]", "")
+    // We don't allow '*' in the middle of a search term.  '*' can only be at beginning or end of a word, whether exact search term or not.
+    if (symptom.trim.matches(".*\\w+\\*\\w+.*") || symptom.trim.contains(" * ")) {
+      NoContent
+    } else {
+      val searchTerms = new SearchTerms(symptom.trim)
+      val cleanedUpAbbrev = mmAbbrev.replaceAll("[^0-9A-Za-z\\-]", "")
 
-    mmDao.getSectionHits(cleanedUpAbbrev, searchTerms, page, Some(remedyString)) match {
-      case Some(sectionHits) if (sectionHits.results.length > 0 || sectionHits.numberOfMatchingSectionsPerChapter.length > 0) =>
-        Ok(sectionHits.asJson.toString())
-      case _ =>
-        Logger.info(s"Get: apiLookupMM(abbrev: ${mmAbbrev}, symptom: ${symptom}, page: ${page}, remedy: ${remedyString}): no results found")
-        NoContent
+      mmDao.getSectionHits(cleanedUpAbbrev, searchTerms, page, Some(remedyString)) match {
+        case Some(sectionHits) if (sectionHits.results.length > 0 || sectionHits.numberOfMatchingSectionsPerChapter.length > 0) =>
+          Ok(sectionHits.asJson.toString())
+        case _ =>
+          Logger.info(s"Get: apiLookupMM(abbrev: ${mmAbbrev}, symptom: ${symptom}, page: ${page}, remedy: ${remedyString}): no results found")
+          NoContent
+      }
     }
   }
 

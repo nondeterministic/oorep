@@ -2,7 +2,7 @@ package org.multics.baueran.frep.frontend.secure.base
 
 import scala.scalajs.js.annotation.JSExportTopLevel
 import org.multics.baueran.frep.shared._
-import frontend.{CaseModals, LoadingSpinner, MainView, RepertoryView, apiPrefix, serverUrl}
+import frontend.{CaseModals, LoadingSpinner, MainView, apiPrefix, serverUrl}
 import sec_frontend.{AddToFileModal, EditFileModal, FileModalCallbacks, NewFileModal, OpenFileModal, RepertoryModal, MMModal}
 import fr.hmil.roshttp.HttpRequest
 import fr.hmil.roshttp.response.SimpleHttpResponse
@@ -147,9 +147,10 @@ object Main extends MainUtil {
       else if (dom.window.location.toString.contains("/change_password?")) {
         ;
       }
-      // Static content must not also show the repertorisation view
       else {
-        dom.document.getElementById("content").appendChild(MainView().render)
+        // Static content must not also show the repertorisation view
+        // dom.document.getElementById("content").appendChild(MainView().render)
+        ;
       }
     }
 
