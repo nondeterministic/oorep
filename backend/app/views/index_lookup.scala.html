@@ -62,18 +62,15 @@
 
     @if(org.multics.baueran.frep.backend.controllers.getAuthenticatedUser(request) == None) {
 
-        <script src="/assets/frontend-opt.js"></script>
+        <script id="main_script" data-landing="lookup_rep"
+                data-repertory="@repertory" data-symptom="@symptom" data-page="@page" data-remedystring="@remedyString" data-minweight="@minWeight"
+                src="/assets/frontend-opt.js"></script>
 
     } else {
 
-        <script src="/assets/sec_frontend-opt.js"></script>
+        <script id="main_script" data-landing="lookup_rep"
+                data-repertory="@repertory" data-symptom="@symptom" data-page="@page" data-remedystring="@remedyString" data-minweight="@minWeight"
+                src="/assets/sec_frontend-opt.js"></script>
 
     }
-
-    <script>
-        $(document).ready(function(){
-          RepertoryView.doLookup("@repertory", decodeURIComponent("@symptom").replace( /\+/g, ' ' ), @page, "@remedyString", @minWeight);
-        });
-    </script>
-
 }

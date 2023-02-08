@@ -29,7 +29,7 @@ class Notify(alertId: String, message: String) {
 
   dom.document.body.appendChild(
     div(`id`:=alertId, style:="position:fixed; top:0; right:0; opacity:1; z-index: 2000;", cls:="alert alert-danger oorep-notify-alert", role:="alert",
-      button(`type`:="button", cls:="close", data.dismiss:="alert", span(aria.hidden:="true", raw("&times;"))),
+      button(`type`:="button", cls:="close", style:="margin-left:8px;", data.dismiss:="alert", span(aria.hidden:="true", raw("&times;"))),
       b(s"${message}")
     ).render
   )

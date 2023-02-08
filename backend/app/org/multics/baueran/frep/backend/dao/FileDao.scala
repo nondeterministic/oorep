@@ -20,6 +20,7 @@ class FileDao(dbContext: db.db.DBContext) {
     })
   }
 
+  // TODO: This, unfortunately, is a super slow method and needs improvement!!
   def getFIle(id: Int) = {
     try {
       Logger.debug(s"FileDao: getFIle(${id}): getting file with id ${id}")
@@ -27,6 +28,7 @@ class FileDao(dbContext: db.db.DBContext) {
         tableFile.filter(_.id == lift(id))
       }).map { case dbFile =>
         val cazeDao = new CazeDao(dbContext)
+        // TODO: Is this in fact the performance bottle-neck?
         val cazes: List[Caze] = cazeDao.get(dbFile.case_ids)
         FIle(Some(dbFile.id), dbFile.header, dbFile.member_id, dbFile.date, dbFile.description, cazes)
       }

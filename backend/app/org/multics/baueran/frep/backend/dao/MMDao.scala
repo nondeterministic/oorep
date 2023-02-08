@@ -5,7 +5,6 @@ import org.multics.baueran.frep.shared.{HitsPerRemedy, MMAllSearchResults, MMAnd
 import org.multics.baueran.frep.backend.db
 import org.multics.baueran.frep.shared.Defs.{ResourceAccessLvl, maxNumberOfResultsPerMMPage, maxNumberOfSymptoms}
 
-
 class MMDao(dbContext: db.db.DBContext) {
 
   import dbContext._
@@ -76,7 +75,7 @@ class MMDao(dbContext: db.db.DBContext) {
     )
 
     if (isUserLoggedIn)
-      tmpResults.filter(result => result.mminfo.access != ResourceAccessLvl.Protected.toString)
+      tmpResults.filter(result => result.mminfo.access != ResourceAccessLvl.Private.toString)
     else
       tmpResults.filter(result => result.mminfo.access == ResourceAccessLvl.Public.toString || result.mminfo.access == ResourceAccessLvl.Default.toString)
   }

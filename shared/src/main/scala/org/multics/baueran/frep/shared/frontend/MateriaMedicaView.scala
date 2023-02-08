@@ -20,9 +20,7 @@ import org.multics.baueran.frep.shared.Defs.{maxLengthOfSymptoms, maxNumberOfRes
 import org.multics.baueran.frep.shared.Defs.ResourceAccessLvl
 
 import scala.scalajs.js.URIUtils.encodeURI
-import scala.scalajs.js.annotation.{JSExport, JSExportTopLevel}
 
-@JSExportTopLevel("MateriaMedicaView")
 object MateriaMedicaView extends TabView {
 
   private val _prefix = "MMView"
@@ -675,7 +673,6 @@ object MateriaMedicaView extends TabView {
     )
   }
 
-  @JSExport("doLookup")
   def jsDoLookup(abbrev: String, symptom: String, page: Int, hideSections: Boolean, remedyString: String): Unit = {
     // Hide navbar initially, while the spinner shows. (Later, the code in this file will show it again.)
     dom.document.getElementById("nav_bar").asInstanceOf[dom.html.Div].classList.add("d-none")

@@ -4,6 +4,24 @@
 | |_| | |_| |  _ <| |___|  __/  | |\  | |___  \ V  V /  ___) |
  \___/ \___/|_| \_\_____|_|     |_| \_|_____|  \_/\_/  |____/ 
 
+v0.14.2                    Mo 15. Mai 18:31:05 CEST 2023
+--------------------------------------------------------
+- Minor improvements and changes:
+  - Prevent anonymous users from accessing protected materia medicas
+    and repertories using direct links
+  - Add 'secure' flag explicitly to all OOREP-created cookies
+  - Improved navbar layout for logged-in users
+  - A new file selection modal for logged-in users
+  - Replaced all inline JavaScript and therefore allow for a much
+    stricter/safer CSP at the web server
+  - Replaced all calls to jquery facade in the Scala code
+
+- Bug fixes:
+  - Make login counter and last login date capture work again
+  - Prevent creation of files with no file name
+  - Logged-in users can now access "protected" but not "private" resources
+    (useful for preview of resources to selected testers, etc.)
+
 v0.14.1                     Sat Jan 21 11:11:56 CET 2023
 --------------------------------------------------------
 - Minor improvements and changes:

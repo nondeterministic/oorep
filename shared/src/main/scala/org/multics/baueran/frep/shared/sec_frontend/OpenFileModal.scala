@@ -4,14 +4,10 @@ import fr.hmil.roshttp.{HttpRequest, Method}
 import fr.hmil.roshttp.body.{MultiPartBody, PlainTextBody}
 import monix.execution.Scheduler.Implicits.global
 import org.multics.baueran.frep.shared.Defs.CookieFields
-import org.multics.baueran.frep.shared.frontend.{ getCookieData, Case, serverUrl, apiPrefix, MainView }
+import org.multics.baueran.frep.shared.frontend.{Case, MainView, OorepHtmlButton, OorepHtmlElement, apiPrefix, getCookieData, serverUrl}
 import org.scalajs.dom
-import org.scalajs.dom.Event
+import org.scalajs.dom.{Event, document}
 import scalatags.JsDom.all._
-import rx.Rx
-import rx.Ctx.Owner.Unsafe._
-import scalatags.rx.all._
-import org.querki.jquery.$
 
 object OpenFileModal extends FileModal {
 
@@ -29,11 +25,11 @@ object OpenFileModal extends FileModal {
             FileModalCallbacks.updateMemberFiles(memberId.toInt)
           })
 
-        // If the file had currently a cose opened in the case view,
+        // If the file had currently a case opened in the case view,
         // remove it from screen to avoid weird database behaviour,
         // in case the user then modifies the case...
         if (Case.getCurrOpenFileId() == selected_file_id.now) {
-          Case.updateCurrOpenFile(None)
+          Case.removeFromMemory()
           MainView.CaseDiv.empty()
         }
       }
@@ -41,69 +37,112 @@ object OpenFileModal extends FileModal {
     }
   }
 
-  private def areYouSureModal() = {
-    div(cls:="modal fade", tabindex:="-1", role:="dialog", id:="openFileModalAreYouSure",
-      div(cls:="modal-dialog", role:="document",
-        div(cls:="modal-content",
-          div(cls:="modal-header",
-            h5(cls:="modal-title", Rx("Really delete file " + selected_file_header().getOrElse("") + "?")),
-            button(`type`:="button", cls:="close", data.dismiss:="modal", aria.label:="Close", span(aria.hidden:="true", "\u00d7"))
-          ),
-          div(cls:="modal-body",
-            p("Deleting this file will also delete all of its cases!")
-          ),
-          div(cls:="modal-footer",
-            button(`type`:="button", cls:="btn btn-secondary", data.dismiss:="modal", "Cancel"),
-            button(`type`:="button", cls:="btn btn-primary", data.dismiss:="modal", onclick:= { (event: Event) => requestFileDeletion() }, "Delete")
-          )
-        )
-      )
-    )
-  }
+  private object AreYouSureModal extends OorepHtmlElement {
+    def getId() = "OpenFileModal_AreYouSure_dfgdfgdgOpen"
 
-  private def mainModal() = {
-    div(cls:="modal fade", tabindex:="-1", role:="dialog", id:="openFileModal",
-      div(cls:="modal-dialog modal-dialog-centered", role:="document", style:="min-width: 80%;",
-        div(cls:="modal-content",
-          div(cls:="modal-header",
-            h5(cls:="modal-title", "Select file"),
-            button(`type`:="button", cls:="close", data.dismiss:="modal", "\u00d7")
-          ),
-          div(cls:="modal-body",
-            div(cls:="form-group",
-              div(cls:="list-group", role:="tablist", id:="openFileAvailableFilesList", style:="height: 250px; overflow-y: scroll;", Rx(files()))
+    def getModalHeaderId() = "OpenFileModal_AreYouSure_Header_sdkjhsdkfj"
+
+    def apply() = {
+
+      div(cls := "modal fade", tabindex := "-1", role := "dialog", id := getId(),
+        div(cls := "modal-dialog", role := "document",
+          div(cls := "modal-content",
+            div(cls := "modal-header",
+              h5(id := getModalHeaderId(), cls := "modal-title", s"Really delete file?"),
+              button(`type` := "button", cls := "close", data.dismiss := "modal", aria.label := "Close", span(aria.hidden := "true", "\u00d7"))
             ),
-            div(cls:="form-group d-flex flex-row-reverse",
-              button(cls:="btn btn-primary mb-2", style:="margin-left:8px;", id:="submitOpenFileModal", `type`:="button", disabled:=true,
-                data.toggle:="modal", data.dismiss:="modal", data.target:="#editFileModal",
-                onclick:={(event: Event) =>
-                  $("body").css("cursor", "wait")
-                  EditFileModal.fileName_fileId() = (selected_file_header.now.getOrElse("SOMETHING WENT WRONG"), selected_file_id.now.getOrElse(-1).toString)
-                  Case.updateCurrOpenFile(selected_file_id.now)
-                  EditFileModal.fileName_fileId.recalc()
-                },
-                "Open"
-              ),
-              button(cls:="btn mb-2 btn-secondary", style:="margin-left:8px;", id:="deleteFileOpenFileModal", data.toggle:="modal", data.dismiss:="modal", data.target:="#openFileModalAreYouSure", disabled:=true,
-                "Delete"
-              ),
-              button(data.dismiss:="modal", cls:="btn mb-2 btn-secondary", "Cancel")
+            div(cls := "modal-body",
+              p("Deleting this file will also delete all of its cases!")
+            ),
+            div(cls := "modal-footer",
+              button(`type` := "button", cls := "btn btn-secondary", data.dismiss := "modal", "Cancel"),
+              button(`type` := "button", cls := "btn btn-primary", data.dismiss := "modal", onclick := { (event: Event) => requestFileDeletion() }, "Delete")
             )
           )
         )
       )
-    )
+    }
   }
 
-  def enableButtons() = {
-    $("#deleteFileOpenFileModal").removeAttr("disabled")
-    $("#submitOpenFileModal").removeAttr("disabled")
+  object MainModal extends OorepHtmlElement {
+    def getId() = "OpenFileModal_MainModal_dsfkljsdkljh23P43efsdjkfjhkl345klHGg345jkl"
+
+    object SubmitButton extends OorepHtmlButton {
+      def getId() = "OpenFileModal_SubmitButton_JHGjk345bfdh5mer345jkldfgf"
+
+      def apply() = {
+        button(cls := "btn btn-primary mb-2", style := "margin-left:8px;", id := getId(), `type` := "button", disabled := true,
+          data.toggle := "modal", data.dismiss := "modal", data.target := s"#${EditFileModal.getId()}",
+          onclick := { (event: Event) =>
+            document.body.style.cursor = "wait"
+            EditFileModal.fileName_fileId() = (selected_file_header.now.getOrElse("SOMETHING WENT WRONG"), selected_file_id.now.getOrElse(-1).toString)
+            Case.updateCurrOpenFile(selected_file_id.now)
+            EditFileModal.fileName_fileId.recalc()
+          },
+          "Open"
+        )
+      }
+    }
+
+    object DeleteButton extends OorepHtmlButton {
+      def getId() = "OpenFileModal_DeleteButton_52345JfdgfgfHgsdfG3345rthjk3455jkldfgfGJK"
+
+      def apply() = {
+        button(cls := "btn mb-2 btn-secondary", style := "margin-left:8px;", id := getId(), data.toggle := "modal", data.dismiss := "modal",
+          data.target := s"#${AreYouSureModal.getId()}", disabled := true,
+          onclick := { (ev: Event) =>
+            // Set file header in the AreYouSureModal before displaying it
+            dom.document.getElementById(AreYouSureModal.getModalHeaderId()) match {
+              case null => ;
+              case modal => modal.asInstanceOf[dom.html.Heading].textContent = s"Really delete file ${selected_file_header.now.getOrElse("")}?"
+            }
+          },
+          "Delete"
+        )
+      }
+    }
+
+    def apply() = {
+      div(cls := "modal fade", tabindex := "-1", role := "dialog", id := getId(),
+        onshow := { (event: Event) =>
+          if (selected_file_id.now == None) {
+            DeleteButton.disable()
+            SubmitButton.disable()
+          }
+        },
+        div(cls := "modal-dialog modal-dialog-centered", role := "document", style := "min-width: 80%;",
+          div(cls := "modal-content",
+            div(cls := "modal-header",
+              h5(cls := "modal-title", "Select file"),
+              button(`type` := "button", cls := "close", data.dismiss := "modal", "\u00d7")
+            ),
+            div(cls := "modal-body",
+              modalBodyFileSelection(),
+              div(cls := "form-group d-flex flex-row-reverse",
+                SubmitButton(),
+                DeleteButton(),
+                button(data.dismiss := "modal", cls := "btn mb-2 btn-secondary",
+                  onclick := { (event: Event) =>
+                    unselectAll()
+                  },
+                  "Cancel")
+              )
+            )
+          )
+        )
+      )
+    }
   }
 
-  def disableButtons() = {
-    $("#submitOpenFileModal").attr("disabled", true)
-    $("#deleteFileOpenFileModal").attr("disabled", true)
+  def enableButtons(): Unit = {
+    MainModal.SubmitButton.enable()
+    MainModal.DeleteButton.enable()
   }
 
-  def apply() = div(areYouSureModal(), mainModal())
+  def disableButtons(): Unit = {
+    MainModal.SubmitButton.disable()
+    MainModal.DeleteButton.disable()
+  }
+
+  def apply() = div(AreYouSureModal(), MainModal())
 }

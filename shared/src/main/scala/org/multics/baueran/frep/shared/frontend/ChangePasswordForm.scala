@@ -1,16 +1,11 @@
-package org.multics.baueran.frep.frontend.public.base
+package org.multics.baueran.frep.shared.frontend
 
-import org.multics.baueran.frep.shared.frontend.serverUrl
-import scalatags.JsDom.all._
 import org.scalajs.dom
 import org.scalajs.dom.raw.HTMLButtonElement
+import scalatags.JsDom.all._
 
-import scala.scalajs.js.annotation.{JSExport, JSExportTopLevel}
-
-@JSExportTopLevel("ChangePasswordForm")
 object ChangePasswordForm {
 
-  @JSExport("show")
   def show(memberId: Int, pcrId: String) = {
     dom.document.getElementById("content") match {
       case null => ;

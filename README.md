@@ -39,25 +39,25 @@ intended for any production environments or the like without further modificatio
 
 #### Prerequisites
 
-* Java SDK >= 8 (tested with version 11)
-* Scala Build Tool SBT >= 1.3.0 (tested with 1.3.4)
-* A PostgreSQL database server >= 9.6 (tested with versions 11.x)
+* Java SDK >= 8
+* Scala Build Tool SBT >= 1.3.0
+* A PostgreSQL database server >= 9.6
 
 Before executing SBT, the database (which is provided here as an SQL dump) needs
 to be up and running and PostgreSQL's pgcrypto-extension created (e.g., as
-super-user `postgres`, issue the command `CREATE EXTENSION pgcrypto;` on the
-OOREP-database). The database needs to be named '`oorep`' and the PostgreSQL-user
-owning it, '`oorep_user`'. Also, you will need to define the following environment
-variables:
+superuser `postgres`, issue the command `CREATE EXTENSION pgcrypto;` on the
+OOREP-database; if you still encounter permission issues when restoring the database,
+you may also want to try `ALTER ROLE "<your username>" superuser;`). Also, you will
+need to define the following environment variables:
 
 * `$OOREP_APP_PROTOCOL`: usually either `http` or `https`
 * `$OOREP_APP_HOSTNAME`: the part that follows `$OOREP_APP_PROTOCOL`,
   such as `www`, for example, or any other hostname
+* `$OOREP_APP_DOMAIN`: your domain name, e.g., `oorep.com`, but do not set when, for
+  example, you're merely using `localhost` as hostname
 * `$OOREP_APP_PORT`: port of application server (normally `9000`), but should only be
   set if application server is directly used (i.e., do not set when using a reverse
   proxy!)
-* `$OOREP_APP_DOMAIN`: your domain name, e.g., `oorep.com`, but do not set when, for
-  example, you're merely using `localhost` as hostname
 * `$OOREP_APP_SECRET`: application-specific password you need to set if you run the 
   application server using `https` instead of `http` (which I don't, since I use a
   reverse proxy that does end-to-end encryption)

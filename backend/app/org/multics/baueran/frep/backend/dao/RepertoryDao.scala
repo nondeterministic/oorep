@@ -94,28 +94,35 @@ class RepertoryDao(dbContext: db.db.DBContext) {
 
   def getRepsAndRemedies(isUserLoggedIn: Boolean): List[InfoExtended] = {
 
-    // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // There is also this helpful view here in the DB which we query here and which needs REFRESHING,
     // when the DB data changes (e.g., when new repertory is added or rubrics modified manually):
     //
     // (TODO: Can we automatically trigger such a refresh within PostgreSQL, say, tied to modifications  in table 'rubricremedy' or multiple tables?)
     //
-    // CREATE MATERIALIZED VIEW repertoriesAndRemedies AS SELECT abbrev, array_agg(id) AS remedy_ids
-    //    FROM (SELECT DISTINCT remedy.id, rubricremedy.abbrev
+    // CREATE MATERIALIZED VIEW repertoriesAndRemedies AS
+    //       SELECT abbrev, array_agg(id) AS remedy_ids
+    //       FROM (SELECT DISTINCT remedy.id, rubricremedy.abbrev
     //             FROM remedy
     //             JOIN rubricremedy ON remedyid=remedy.id
-    //             JOIN info ON rubricremedy.abbrev=info.abbrev AND access<>'Protected'
-    //                ORDER BY remedy.id) AS x GROUP BY (abbrev);
+    //             JOIN info ON rubricremedy.abbrev=info.abbrev
+    //             ORDER BY remedy.id)
+    //       AS x GROUP BY (abbrev);
     //
     // ===> or rather, the new, udpated version, here:
     //
-    // CREATE MATERIALIZED VIEW repertoriesandremedies AS SELECT info.abbrev, title, languag, authorlastname, authorfirstname, yearr, publisher, license, edition, access, displaytitle,
-    //                                                           ARRAY_AGG(DISTINCT remedy.id) AS remedy_ids // TODO: Delete: ', CARDINALITY(ARRAY_AGG(DISTINCT rubricremedy.rubricid)) AS nonemptyrubrics'
-    //                                                       FROM info
-    //                                                       JOIN rubricremedy ON rubricremedy.abbrev=info.abbrev
-    //                                                       JOIN remedy ON remedy.id=rubricremedy.remedyid
-    //                                                          GROUP BY(info.abbrev, title, languag, authorlastname, authorfirstname, yearr, publisher, license, edition, access, displaytitle);
-    // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // CREATE MATERIALIZED VIEW repertoriesandremedies AS
+    //       SELECT info.abbrev, title, languag, authorlastname, authorfirstname, yearr, publisher, license, edition, access, displaytitle,
+    //              ARRAY_AGG(DISTINCT remedy.id) AS remedy_ids // TODO: Delete: ', CARDINALITY(ARRAY_AGG(DISTINCT rubricremedy.rubricid)) AS nonemptyrubrics'
+    //       FROM info
+    //       JOIN rubricremedy ON rubricremedy.abbrev=info.abbrev
+    //       JOIN remedy ON remedy.id=rubricremedy.remedyid
+    //       GROUP BY(info.abbrev, title, languag, authorlastname, authorfirstname, yearr, publisher, license, edition, access, displaytitle);
+    //
+    // Or simply refresh a materialized view: `REFRESH MATERIALIZED VIEW repertoriesandremedies;`
+    // cf. https://www.postgresql.org/docs/current/sql-refreshmaterializedview.html
+    //
+    // ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     case class TmpRepsAndRemedies(abbrev: String, title: String, languag: String,
                                   authorLastName: Option[String], authorFirstName: Option[String],
@@ -143,10 +150,12 @@ class RepertoryDao(dbContext: db.db.DBContext) {
     }
 
     if (isUserLoggedIn) {
+      // Show Public, Default and Protected.
       if (_extendedInfosLoggedIn.length == 0)
-        _extendedInfosLoggedIn = tmpResults.filter(_.info.access != ResourceAccessLvl.Protected)
+        _extendedInfosLoggedIn = tmpResults.filter(_.info.access != ResourceAccessLvl.Private)
       _extendedInfosLoggedIn
     } else {
+      // Show Public and Default.
       if (_extendedInfosAnonymous.length == 0)
         _extendedInfosAnonymous = tmpResults.filter(extendedInfo => extendedInfo.info.access == ResourceAccessLvl.Public || extendedInfo.info.access == ResourceAccessLvl.Default)
       _extendedInfosAnonymous
@@ -333,8 +342,12 @@ class RepertoryDao(dbContext: db.db.DBContext) {
       }
     }
 
-    def getWeightedRemedies(rubric: Rubric) =
-      tmpRubricRemedies.filter(_.rubricId == rubric.id).map(rr => WeightedRemedy(tmpRemedies.filter(_.id == rr.remedyId).head, rr.weight))
+    println(s"tmpRemedies: #${tmpRemedies.length}")
+
+    def getWeightedRemedies(rubric: Rubric) = {
+      tmpRubricRemedies.filter(_.rubricId == rubric.id).map(rr =>
+        WeightedRemedy(tmpRemedies.filter(_.id == rr.remedyId).head, rr.weight))
+    }
 
     // Compute the to be returned results...
     val caseRubrics = tmpRubricsTruncated.map(rubric => CaseRubric(rubric, abbrev, 1, None, getWeightedRemedies(rubric)))

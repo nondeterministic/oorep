@@ -62,18 +62,16 @@
 
     @if(org.multics.baueran.frep.backend.controllers.getAuthenticatedUser(request) == None) {
 
-        <script src="/assets/frontend-opt.js"></script>
+        <script id="main_script" data-landing="lookup_mm"
+                data-mm="@materiaMedica" data-symptom="@symptom" data-page="@page" data-hidesections="@hideSections" data-remedystring="@remedyString"
+                src="/assets/frontend-opt.js"></script>
 
     } else {
 
-        <script src="/assets/sec_frontend-opt.js"></script>
+        <script id="main_script" data-landing="lookup_mm"
+                data-mm="@materiaMedica" data-symptom="@symptom" data-page="@page" data-hidesections="@hideSections" data-remedystring="@remedyString"
+                src="/assets/sec_frontend-opt.js"></script>
 
     }
-
-    <script>
-        $(document).ready(function(){
-          MateriaMedicaView.doLookup("@materiaMedica", decodeURIComponent("@symptom").replace( /\+/g, ' ' ), @page, @hideSections, "@remedyString");
-        });
-    </script>
 
 }

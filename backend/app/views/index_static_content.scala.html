@@ -26,11 +26,11 @@
 
   @if(org.multics.baueran.frep.backend.controllers.getAuthenticatedUser(request) == None) {
 
-    <script async src="/assets/frontend-opt.js"></script>
+    <script async id="main_script" src="/assets/frontend-opt.js"></script>
 
   } else {
 
-    <script async src="/assets/sec_frontend-opt.js"></script>
+    <script async id="main_script" src="/assets/sec_frontend-opt.js"></script>
 
   }
 

@@ -22,7 +22,6 @@ import scala.scalajs.js.annotation._
 import scala.scalajs.js.URIUtils._
 import scala.language.implicitConversions
 
-@JSExportTopLevel("RepertoryView")
 object RepertoryView extends TabView {
   
   private val _currResultShareLink = Var(s"${serverUrl()}")
@@ -127,7 +126,7 @@ object RepertoryView extends TabView {
   private def showCase() = {
     if (Case.size() > 0) {
       MainView.CaseDiv.empty()
-      MainView.CaseDiv.append(Case.toHTML(_remedyFormat.now).render)
+      MainView.CaseDiv.append(new Case.HtmlRepresentation(_remedyFormat.now)().render)
       Case.updateCaseViewAndDataStructures()
       Case.updateCaseHeaderView()
     }
@@ -529,7 +528,6 @@ object RepertoryView extends TabView {
     buttonDiv.replaceChild(advancedButton, basicButton)
   }
 
-  @JSExport("doLookup")
   def jsDoLookup(abbrev: String, symptom: String, page: Int, remedyString: String, minWeight: Int) = {
     // Hide navbar initially, while the spinner shows. (Later, the code in this file will show it again.)
     dom.document.getElementById("nav_bar").asInstanceOf[dom.html.Div].classList.add("d-none")

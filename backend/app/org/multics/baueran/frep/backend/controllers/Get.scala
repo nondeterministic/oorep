@@ -52,11 +52,13 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
         Logger.error("Get: login() not completed successfully: sending user to logout to be safe.")
         Redirect(sys.env.get("OOREP_URL_LOGOUT").getOrElse(""))
       case Some(uid) =>
+        memberDao.increaseLoginCounter(uid)
+        memberDao.setLastSeen(uid, new MyDate())
         Logger.debug(s"Get: login() completed for user ${uid.toString}.")
         Redirect(serverUrl(request))
           .withCookies(
-            Cookie(CookieFields.id.toString, uid.toString, httpOnly = false),
-            Cookie(CookieFields.cookiePopupAccepted.toString, "1", httpOnly = false)
+            Cookie(CookieFields.id.toString, uid.toString, secure = true, httpOnly = false),
+            Cookie(CookieFields.cookiePopupAccepted.toString, "1", secure = true, httpOnly = false)
           )
     }
   }
@@ -103,7 +105,6 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
       case "faq" => Ok(views.html.index_static_content(request, views.html.partial.faq.render, "OOREP - Frequently asked questions and answers"))
       case "forgot_password" => Ok(views.html.index_static_content(request, views.html.partial.forgot_password.render, s"OOREP ${xml.Utility.escape("—")} open online homeopathic repertory"))
       case "impressum" => Ok(views.html.index_static_content(request, views.html.partial.impressum.render, "OOREP - Impressum", "de"))
-      case "pricing" => Ok(views.html.index_static_content(request, views.html.partial.pricing.render, "OOREP - Pricing"))
       case "register" => Ok(views.html.index_static_content(request, views.html.partial.register.render, "OOREP - Registration"))
       case _ => NotFound(views.html.defaultpages.notFound("GET", page))
     }
@@ -138,9 +139,9 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
 
   def apiStoreCookie(name: String, value: String) = Action { request: Request[AnyContent] =>
     if (name == CookieFields.cookiePopupAccepted.toString)
-      Ok.withCookies(Cookie(CookieFields.cookiePopupAccepted.toString, value, httpOnly = false))
+      Ok.withCookies(Cookie(CookieFields.cookiePopupAccepted.toString, value, secure = true, httpOnly = false))
     else if (name == CookieFields.theme.toString)
-      Ok.withCookies(Cookie(CookieFields.theme.toString, value, httpOnly = false))
+      Ok.withCookies(Cookie(CookieFields.theme.toString, value, secure = true, httpOnly = false))
     else {
       Logger.error(s"Get: apiStoreCookie(${name}, ${value}): failed")
       BadRequest
@@ -171,7 +172,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
   }
 
   /**
-    * Won't actually return files with associated cases, but a list of tuples, (file ID, file header).
+    * Won't actually return files with associated cases, but a list of tuples, (file ID, file header, file creation date).
     */
   def apiSecAvailableFiles(memberId: Int) = Action { request: Request[AnyContent] =>
     getAuthenticatedUser(request) match {
@@ -186,7 +187,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
           Forbidden(err)
         } else {
           val dbFiles = fileDao.getDbFilesForMember(memberId)
-          Ok(dbFiles.map(dbFile => (dbFile.id, dbFile.header)).asJson.toString)
+          Ok(dbFiles.asJson.toString())
         }
     }
   }
@@ -246,6 +247,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     * but JSON-encoded, of course.  (Descr, None, None) if no cases
     * are associated.
     */
+  // TODO: This, unfortunately, is a super slow method and needs improvement!! (or rather, it needs improvement inside FileDao.scala)
   def apiSecFileOverview(fileId: String) = Action { request: Request[AnyContent] =>
     getAuthenticatedUser(request) match {
       case Some(_) if (fileId.forall(_.isDigit)) =>
@@ -288,12 +290,20 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
       val searchTerms = new SearchTerms(symptom.trim)
       val cleanedUpAbbrev = repertoryAbbrev.replaceAll("[^0-9A-Za-z\\-]", "")
 
-      repertoryDao.queryRepertory(cleanedUpAbbrev, searchTerms, page, remedyString.trim, minWeight, getRemedies != 0) match {
-        case Some((ResultsCaseRubrics(totalNumberOfRepertoryRubrics, totalNumberOfResults, totalNumberOfPages, page, results), remedyStats)) if (totalNumberOfPages > 0) =>
-          Ok((ResultsCaseRubrics(totalNumberOfRepertoryRubrics, totalNumberOfResults, totalNumberOfPages, page, results), remedyStats).asJson.toString())
-        case _ =>
-          Logger.info(s"Get: apiLookupRep(abbrev: ${repertoryAbbrev}, symptom: ${symptom}, page: ${page}, remedy: ${remedyString}, weight: ${minWeight}): no results found")
-          NoContent
+      // Check if user is allowed to access the resource at all (might be Private or Protected and user not logged in)
+      if (repertoryDao.getRepsAndRemedies(getAuthenticatedUser(request) != None).find(_.info.abbrev == cleanedUpAbbrev) == None) {
+        Logger.info(s"Get: apiLookupRep(abbrev: ${repertoryAbbrev}, symptom: ${symptom}, page: ${page}, remedy: ${remedyString}, weight: ${minWeight}): user not allowed to access ressource.")
+        NoContent
+      }
+      else {
+        // Do actual look-up and return results in case of success.
+        repertoryDao.queryRepertory(cleanedUpAbbrev, searchTerms, page, remedyString.trim, minWeight, getRemedies != 0) match {
+          case Some((ResultsCaseRubrics(totalNumberOfRepertoryRubrics, totalNumberOfResults, totalNumberOfPages, page, results), remedyStats)) if (totalNumberOfPages > 0) =>
+            Ok((ResultsCaseRubrics(totalNumberOfRepertoryRubrics, totalNumberOfResults, totalNumberOfPages, page, results), remedyStats).asJson.toString())
+          case _ =>
+            Logger.info(s"Get: apiLookupRep(abbrev: ${repertoryAbbrev}, symptom: ${symptom}, page: ${page}, remedy: ${remedyString}, weight: ${minWeight}): no results found")
+            NoContent
+        }
       }
     }
   }
@@ -306,12 +316,20 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
       val searchTerms = new SearchTerms(symptom.trim)
       val cleanedUpAbbrev = mmAbbrev.replaceAll("[^0-9A-Za-z\\-]", "")
 
-      mmDao.getSectionHits(cleanedUpAbbrev, searchTerms, page, Some(remedyString)) match {
-        case Some(sectionHits) if (sectionHits.results.length > 0 || sectionHits.numberOfMatchingSectionsPerChapter.length > 0) =>
-          Ok(sectionHits.asJson.toString())
-        case _ =>
-          Logger.info(s"Get: apiLookupMM(abbrev: ${mmAbbrev}, symptom: ${symptom}, page: ${page}, remedy: ${remedyString}): no results found")
-          NoContent
+      // Check if user is allowed to access the resource at all (might be Private or Protected and user not logged in)
+      if (mmDao.getMMsAndRemedies(getAuthenticatedUser(request) != None).find(_.mminfo.abbrev == cleanedUpAbbrev) == None) {
+        Logger.info(s"Get: apiLookupMM(abbrev: ${mmAbbrev}, symptom: ${symptom}, page: ${page}, remedy: ${remedyString}): user not allowed to access ressource.")
+        NoContent
+      }
+      else {
+        // Do actual look-up and return results in case of success.
+        mmDao.getSectionHits(cleanedUpAbbrev, searchTerms, page, Some(remedyString)) match {
+          case Some(sectionHits) if (sectionHits.results.length > 0 || sectionHits.numberOfMatchingSectionsPerChapter.length > 0) =>
+            Ok(sectionHits.asJson.toString())
+          case _ =>
+            Logger.info(s"Get: apiLookupMM(abbrev: ${mmAbbrev}, symptom: ${symptom}, page: ${page}, remedy: ${remedyString}): no results found")
+            NoContent
+        }
       }
     }
   }

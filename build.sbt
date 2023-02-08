@@ -5,7 +5,6 @@ val scalaTestPlusVersion = "5.1.0"
 val scalaJsDomVersion  = "1.0.0"
 val scalaTagsVersion   = "0.8.6"
 val scalatagsrxVersion = "0.5.0"
-val scalaJQueryVersion = "2.0"
 val circeVersion       = "0.13.0"
 val rosHttpVersion     = "3.0.0"
 val quillVersion       = "3.5.2"
@@ -25,7 +24,6 @@ lazy val backend = (project in file("backend")).settings(commonSettings).setting
   scalaJSProjects := Seq(frontend, sec_frontend),
   pipelineStages in Assets := Seq(scalaJSPipeline),
   pipelineStages := Seq(scalaJSProd, gzip),
-  // triggers scalaJSPipeline when using compile or continuous compilation
   compile in Compile := ((compile in Compile) dependsOn scalaJSPipeline).value,
   isDevMode in scalaJSPipeline := false,
   libraryDependencies ++= Seq(
@@ -51,7 +49,6 @@ lazy val frontend = (project in file("frontend")).settings(commonSettings).setti
   libraryDependencies ++= Seq(
     "org.scala-js" %%% "scalajs-dom" % scalaJsDomVersion,
     "com.lihaoyi" %%% "scalatags" % scalaTagsVersion,
-    "org.querki" %%% "jquery-facade" % scalaJQueryVersion,
     "io.circe" %%% "circe-core" % circeVersion,
     "io.circe" %%% "circe-generic" % circeVersion,
     "io.circe" %%% "circe-parser" % circeVersion,
@@ -67,7 +64,6 @@ lazy val sec_frontend = (project in file("sec_frontend")).settings(commonSetting
   libraryDependencies ++= Seq(
     "org.scala-js" %%% "scalajs-dom" % scalaJsDomVersion,
     "com.lihaoyi" %%% "scalatags" % scalaTagsVersion,
-    "org.querki" %%% "jquery-facade" % scalaJQueryVersion,
     "io.circe" %%% "circe-core" % circeVersion,
     "io.circe" %%% "circe-generic" % circeVersion,
     "io.circe" %%% "circe-parser" % circeVersion,
@@ -87,7 +83,6 @@ lazy val shared = crossProject(JSPlatform, JVMPlatform)
       "io.circe" %% "circe-parser" % circeVersion,
       "org.scala-js" %%% "scalajs-dom" % scalaJsDomVersion,
       "com.lihaoyi" %%% "scalatags" % scalaTagsVersion,
-      "org.querki" %%% "jquery-facade" % scalaJQueryVersion,
       "com.github.nondeterministic" %%% "roshttp" % rosHttpVersion,
       "com.timushev" %%% "scalatags-rx" % scalatagsrxVersion,
       "org.scalatestplus.play" %% "scalatestplus-play" % scalaTestPlusVersion % "test",
@@ -109,7 +104,7 @@ lazy val commonSettings = Seq(
   scalaVersion := myScalaVersion,
   organization := "org.multics.baueran.frep",
   maintainer := "baueran@gmail.com",
-  version := "0.14.1"
+  version := "0.14.2"
 )
 
 // TODO: This doesn't work, and I can't be bothered to get it to work.

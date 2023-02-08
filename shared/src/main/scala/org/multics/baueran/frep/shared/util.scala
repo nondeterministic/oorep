@@ -11,7 +11,6 @@ import scalatags.JsDom.all._
 
 import java.text.SimpleDateFormat
 import java.util.Date
-import scala.scalajs.js.annotation.JSExportTopLevel
 import scala.util.Success
 import scala.util.matching.Regex
 
@@ -154,12 +153,13 @@ class MyDate(isoDateString: String) {
     diff(new MyDate())
   }
 
+  def toHumanReadable() = isoDateString.substring(0,10)
+
   override def toString() = isoDateString
 }
 
 object TopLevelUtilCode {
 
-  @JSExportTopLevel("deleteCookies")
   def deleteCookies() = {
     val cookieNames = CookieFields.values.map(_.toString)
     dom.document.cookie = "PLAY_SESSION=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT"
@@ -168,7 +168,6 @@ object TopLevelUtilCode {
     )
   }
 
-  @JSExportTopLevel("sendAcceptCookies")
   def sendAcceptCookies() = {
     HttpRequest(s"${serverUrl()}/${apiPrefix()}/store_cookie")
       .withQueryParameters("name" -> CookieFields.cookiePopupAccepted.toString, "value" -> "1")
@@ -182,7 +181,6 @@ object TopLevelUtilCode {
       })
   }
 
-  @JSExportTopLevel("loadMainPageAndJumpToAnchor")
   def loadMainPageAndJumpToAnchor(anchor: String) = {
     if (dom.document.getElementById(anchor) != null) {
       dom.document.getElementById(anchor).scrollIntoView(true)
@@ -192,7 +190,6 @@ object TopLevelUtilCode {
     }
   }
 
-  @JSExportTopLevel("toggleTheme")
   def toggleTheme() = {
     def storeThemeInCookie(theme: String) =
       HttpRequest(s"${serverUrl()}/${apiPrefix()}/store_cookie")

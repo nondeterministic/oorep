@@ -10,7 +10,7 @@
     <div class="navbar-header pull-right">
         <form class="form-inline">
             <div class="nav-item custom-control custom-switch mr-sm-2" style="line-height: 7px; padding-right: 0rem; padding-left: 3rem;">
-                <input type="checkbox" class="navbar-toggler form-control custom-control-input" onclick="toggleTheme()" id="transparency" checked>
+                <input type="checkbox" class="navbar-toggler form-control custom-control-input" id="transparency" checked>
                 <label class="navbar-text custom-control-label p-0 small" for="transparency">
                     <span class="oi oi-moon" style="font-size: 18px; padding-top: 0px;" title="Dark mode"></span>
                 </label>
@@ -21,10 +21,10 @@
         <div class="ml-auto">
             <ul class="navbar-nav mr-auto">
                 <li class="navbar-item">
-                    <a class="nav-link py-0" onclick="loadMainPageAndJumpToAnchor('about')" href="@{org.multics.baueran.frep.backend.controllers.Get.staticServerUrl}/#about">About</a>
+                    <a class="nav-link py-0" id="about_link" href="@{org.multics.baueran.frep.backend.controllers.Get.staticServerUrl}/#about">About</a>
                 </li>
                 <li class="navbar-item">
-                    <a class="nav-link py-0" onclick="loadMainPageAndJumpToAnchor('features')" href="@{org.multics.baueran.frep.backend.controllers.Get.staticServerUrl}/#features">Features</a>
+                    <a class="nav-link py-0" id="features_link" href="@{org.multics.baueran.frep.backend.controllers.Get.staticServerUrl}/#features">Features</a>
                 </li>
                 <li class="navbar-item">
                     <a class="nav-link py-0" href="/faq">FAQ</a>
@@ -63,7 +63,7 @@
     <div class="navbar-header pull-right">
         <form class="form-inline">
             <div class="nav-item custom-control custom-switch mr-sm-2" style="line-height: 7px; padding-right: 0rem; padding-left: 3rem;">
-                <input type="checkbox" class="navbar-toggler form-control custom-control-input" onclick="toggleTheme()" id="transparency" checked>
+                <input type="checkbox" class="navbar-toggler form-control custom-control-input" id="transparency" checked>
                 <label class="navbar-text custom-control-label p-0 small" for="transparency">
                     <span class="oi oi-moon" style="font-size: 18px; padding-top: 0px;" title="Dark mode"></span>
                 </label>
@@ -71,32 +71,45 @@
         </form>
     </div>
     <div class="collapse navbar-collapse" id="navbarToggler">
-        <div>
-            <ul class="navbar-nav">
-                <li class="navbar-item dropdown">
-                    <a class="nav-link dropdown-toggle py-0" href="#" data-toggle="dropdown">Repertories</a>
-                    <div class="dropdown-menu" id="secNavBarRepertories"></div>
-                </li>
-                <li class="navbar-item dropdown">
-                    <a class="nav-link dropdown-toggle py-0" href="#" data-toggle="dropdown">Materia Medicas</a>
-                    <div class="dropdown-menu" id="secNavBarMMs"></div>
-                </li>
-                <li class="navbar-item dropdown">
-                    <a class="nav-link dropdown-toggle py-0" href="#" data-toggle="dropdown">File</a>
-                    <div class="dropdown-menu">
-                        <a class="dropdown-item" href="#" data-toggle="modal" data-target="#newFileModal">New...</a>
-                        <a class="dropdown-item" href="#" data-toggle="modal" data-target="#openFileModal">Open...</a>
-                    </div>
-                </li>
-            </ul>
-        </div>
         <div class="ml-auto">
             <ul class="navbar-nav">
                 <li class="navbar-item">
-                    <a class="nav-link py-0" href="#">Settings</a>
+                    <a class="nav-link py-0" href="@{org.multics.baueran.frep.backend.controllers.Get.staticServerUrl}/">
+                        <span class="oi oi-home" style="font-size: 18px; padding-top: 0px;" title="Home"></span>
+                    </a>
                 </li>
                 <li class="navbar-item">
-                    <a class="nav-link py-0" href="/logout" target="_self" onclick="deleteCookies()">Log-out</a>
+                    <a class="nav-link py-0" href="/faq">FAQ</a>
+                </li>
+                <li class="navbar-item">
+                    <a class="nav-link py-0" href="#disclaimer_div">Contact</a>
+                </li>
+                <li class="navbar-item dropdown">
+                    <a class="nav-link dropdown-toggle py-0" href="#" data-toggle="dropdown">File</a>
+                    <div class="dropdown-menu dropdown-menu-right">
+                        <a class="dropdown-item" href="#" data-toggle="modal" data-target="#@(org.multics.baueran.frep.shared.sec_frontend.NewFileModal.getId())">New...</a>
+                        <a id="navbar_open_file" class="dropdown-item" href="#" data-toggle="modal" data-target="#@(org.multics.baueran.frep.shared.sec_frontend.OpenFileModal.MainModal.getId())">Open...</a>
+                    </div>
+                </li>
+                <li class="navbar-item dropdown">
+                    <a class="nav-link py-0" href="#" data-toggle="dropdown">
+                        <p class="btn btn-sm btn-light my-auto text-nowrap">
+                            <span class="oi oi-person" style="font-size: 18px; padding-top: 0px;" title="Account"></span>
+                        </p>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-right">
+                        <a class="dropdown-item text-nowrap disabled" href="#" data-toggle="modal" data-target="#TODO">
+                            <span class="oi oi-cog" title="Settings..." aria-hidden="true"></span>
+                            &nbsp;
+                            Settings...
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item text-nowrap" id="navbar_logout" href="/logout" target="_self">
+                            <span class="oi oi-account-logout" title="Logout" aria-hidden="true"></span>
+                            &nbsp;
+                            Logout
+                        </a>
+                    </div>
                 </li>
             </ul>
         </div>

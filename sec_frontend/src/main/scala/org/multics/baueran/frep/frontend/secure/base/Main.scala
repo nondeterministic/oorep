@@ -3,103 +3,21 @@ package org.multics.baueran.frep.frontend.secure.base
 import scala.scalajs.js.annotation.JSExportTopLevel
 import org.multics.baueran.frep.shared._
 import frontend.{CaseModals, LoadingSpinner, MainView, apiPrefix, serverUrl}
-import sec_frontend.{AddToFileModal, EditFileModal, FileModalCallbacks, NewFileModal, OpenFileModal, RepertoryModal, MMModal}
+import TopLevelUtilCode.{deleteCookies, toggleTheme}
+import sec_frontend.{AddToFileModal, EditFileModal, FileModalCallbacks, MMModal, NewFileModal, OpenFileModal, RepertoryModal}
 import fr.hmil.roshttp.HttpRequest
 import fr.hmil.roshttp.response.SimpleHttpResponse
-import io.circe.parser.parse
 
 import scala.util.{Failure, Success}
 import scalatags.JsDom.all.{id, _}
 import monix.execution.Scheduler.Implicits.global
 import org.scalajs.dom
-import dom.Event
-import org.multics.baueran.frep.shared.TopLevelUtilCode.deleteCookies
+import org.scalajs.dom.Event
 
 import scala.scalajs.js.URIUtils.encodeURI
 
 @JSExportTopLevel("MainSecure")
 object Main extends MainUtil {
-
-  private val loadingSpinner = new LoadingSpinner("content")
-
-  // See MainUtil trait!
-  override def updateDataStructuresFromBackendData() = {
-
-    def getMMs() = {
-      HttpRequest(s"${serverUrl()}/${apiPrefix()}/available_rems_and_mms")
-        .send()
-        .onComplete({
-          case response: Success[SimpleHttpResponse] => {
-            parse(response.get.body) match {
-              case Right(json) => {
-                val cursor = json.hcursor
-                cursor.as[List[MMAndRemedyIds]] match {
-                  case Right(mmAndRemedyIds) => {
-                    mmAndRemedyIds
-                      .sortBy(_.mminfo.abbrev)
-                      .foreach(mmAndRemedyId =>
-                        dom.document
-                          .getElementById("secNavBarMMs").asInstanceOf[dom.html.Div]
-                          .appendChild(a(cls := "dropdown-item", href := "#", data.toggle := "modal",
-                            onclick := { (e: Event) =>
-                              MMModal.info() = Some(mmAndRemedyId.mminfo)
-                            },
-                            data.target := "#mmInfoModal")(s"${mmAndRemedyId.mminfo.abbrev} - ${mmAndRemedyId.mminfo.displaytitle.getOrElse("")}").render)
-                      )
-                  }
-                  case Left(err) =>
-                    println(s"ERROR: secure.Main: JSON mm decoding error: $err")
-                }
-              }
-              case Left(err) =>
-                println(s"ERROR: secure.Main: JSON mm parsing error: $err")
-            }
-          }
-          case failure: Failure[_] =>
-            println(s"ERROR: secure.Main: available_rems_and_mms failed: ${failure.toString}")
-
-        })
-    }
-
-    def getRepertories() = {
-      HttpRequest(s"${serverUrl()}/${apiPrefix()}/available_rems_and_reps")
-        .send()
-        .onComplete({
-          case response: Success[SimpleHttpResponse] => {
-            parse(response.get.body) match {
-              case Right(json) => {
-                val cursor = json.hcursor
-                cursor.as[List[InfoExtended]] match {
-                  case Right(extendedRepertoryInfos) => {
-                    extendedRepertoryInfos
-                      .sortBy(_.info.abbrev)
-                      .foreach(extendedInfo =>
-                        dom.document
-                          .getElementById("secNavBarRepertories").asInstanceOf[dom.html.Div]
-                          .appendChild(a(cls := "dropdown-item", href := "#", data.toggle := "modal",
-                            onclick := { (e: Event) =>
-                              RepertoryModal.info() = Some(extendedInfo.info)
-                            },
-                            data.target := "#repertoryInfoModal")(s"${extendedInfo.info.abbrev} - ${extendedInfo.info.displaytitle.getOrElse("")}").render)
-                      )
-                  }
-                  case Left(err) =>
-                    println(s"ERROR: secure.Main: JSON decoding error: $err")
-                }
-              }
-              case Left(err) =>
-                println(s"ERROR: secure.Main: JSON parsing error: $err")
-            }
-          }
-          case failure: Failure[_] =>
-            println(s"ERROR: secure.Main: available_rems_and_reps failed: ${failure.toString}")
-        })
-    }
-
-    getRepertories()
-    getMMs()
-    MainView.updateDataStructuresFromBackendData()
-  }
 
   private def authenticateAndPrepare(): Unit = {
     HttpRequest(s"${serverUrl()}/${apiPrefix()}/authenticate")
@@ -158,22 +76,45 @@ object Main extends MainUtil {
     dom.document.body.appendChild(AddToFileModal().render)
     dom.document.body.appendChild(OpenFileModal().render)
     dom.document.body.appendChild(EditFileModal().render)
-
-    // Not so nice but not so terrible either: we need to wait until modal exists to attach event-handler to it...
     dom.document.body.appendChild(NewFileModal().render)
-    dom.document.getElementById("new_file_form").asInstanceOf[dom.html.Form].addEventListener("submit", NewFileModal.onSubmit, false)
-
     dom.document.body.appendChild(RepertoryModal().render)
     dom.document.body.appendChild(MMModal().render)
-    dom.document.body.appendChild(CaseModals.Repertorisation().render)
-    dom.document.body.appendChild(CaseModals.EditDescription().render)
+    dom.document.body.appendChild(CaseModals.RepertorisationModal().render)
+    dom.document.body.appendChild(CaseModals.EditModal().render)
+
+    // Some event handlers for the navbar here
+    dom.document.getElementById("navbar_open_file") match {
+      case null => println("Could not set navbar event handler. Is the navbar loaded?")
+      case anchr => anchr.asInstanceOf[dom.html.Anchor].onclick = (ev: Event) => {
+        OpenFileModal.unselectAll()
+      }
+    }
+
+    dom.window.addEventListener("scroll", onScroll)
+
+    dom.document.getElementById("navbar_logout") match {
+      case null => ;
+      case elem => elem.addEventListener("click", (ev: dom.Event) => deleteCookies())
+    }
 
     if (!dom.window.location.toString.contains("/show"))
       authenticateAndPrepare()
     else
       dom.document.getElementById("disclaimer_div").asInstanceOf[dom.html.Div].style.setProperty("display", "none")
 
-    showNavBar()
+    dom.document.getElementById("transparency") match {
+      case null => ;
+      case elem => elem.addEventListener("click", (ev: dom.Event) => toggleTheme())
+    }
+
+    // This is to handle all the index_... pages, which do something after the main script has been loaded,
+    // e.g. look something up or display the password-change dialog.
+    handleCallsWithURIencodedParameters()
+  }
+
+  // See MainUtil trait!
+  override def updateDataStructuresFromBackendData() = {
+    MainView.updateDataStructuresFromBackendData()
   }
 
 }
