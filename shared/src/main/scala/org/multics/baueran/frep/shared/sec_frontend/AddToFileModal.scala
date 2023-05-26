@@ -1,16 +1,12 @@
 package org.multics.baueran.frep.shared.sec_frontend
 
 import org.scalajs.dom
-import org.multics.baueran.frep.shared.frontend.{Case, OorepHtmlButton, OorepHtmlElement, apiPrefix, getCookieData, serverUrl}
+import org.multics.baueran.frep.shared.frontend.{Case, OorepHtmlButton, OorepHtmlElement, getCookieData}
 import org.multics.baueran.frep.shared.Defs.CookieFields
-import fr.hmil.roshttp.HttpRequest
-import fr.hmil.roshttp.body.{MultiPartBody, PlainTextBody}
-import fr.hmil.roshttp.response.SimpleHttpResponse
+import org.multics.baueran.frep.shared.HttpRequest2
 import scalatags.JsDom.all.{id, _}
 import org.scalajs.dom.Event
-import monix.execution.Scheduler.Implicits.global
 
-import scala.util.{Failure, Success}
 import io.circe.syntax._
 
 object AddToFileModal extends FileModal with OorepHtmlElement {
@@ -32,25 +28,20 @@ object AddToFileModal extends FileModal with OorepHtmlElement {
         "Submit",
         onclick := { (event: Event) =>
           Case.descr match {
-            case Some(caze) => {
-              HttpRequest(s"${serverUrl()}/${apiPrefix()}/sec/save_case")
-                .withHeader("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
-                .post(MultiPartBody(
-                  "fileId" -> PlainTextBody(selected_file_id.now.getOrElse(-1).toString()),
-                  "case" -> PlainTextBody(caze.asJson.toString())))
-                .onComplete({
-                  case response: Success[SimpleHttpResponse] => {
-                    Case.updateCurrOpenCaseId(response.get.body.toInt)
-                    Case.updateCurrOpenFile(selected_file_id.now)
-                    Case.updateCaseViewAndDataStructures()
-                    Case.updateCaseHeaderView()
-                    AddToFileModal.CloseButton.click()
-                  }
-                  case response: Failure[SimpleHttpResponse] => {
-                    println("ERROR: AddToFileModal: " + response.get.body)
-                  }
+            case Some(caze) =>
+              HttpRequest2("sec/save_case")
+                .withHeaders("Csrf-Token" -> getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
+                .onSuccess((response: String) => {
+                  Case.updateCurrOpenCaseId(response.toInt)
+                  Case.updateCurrOpenFile(selected_file_id.now)
+                  Case.updateCaseViewAndDataStructures()
+                  Case.updateCaseHeaderView()
+                  AddToFileModal.CloseButton.click()
                 })
-            }
+                .post(
+                  "fileId" -> selected_file_id.now.getOrElse(-1).toString(),
+                  "case" -> caze.asJson.toString()
+                )
             case None =>
               println("ERROR: AddToFileModal: no case description available to complete operation. This should never have happened.")
           }

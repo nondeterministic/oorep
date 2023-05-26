@@ -1,8 +1,41 @@
-  ___   ___  ____  _____ ____    _   _ _______        ______  
- / _ \ / _ \|  _ \| ____|  _ \  | \ | | ____\ \      / / ___| 
-| | | | | | | |_) |  _| | |_) | |  \| |  _|  \ \ /\ / /\___ \ 
-| |_| | |_| |  _ <| |___|  __/  | |\  | |___  \ V  V /  ___) |
- \___/ \___/|_| \_\_____|_|     |_| \_|_____|  \_/\_/  |____/ 
+
+   ██████╗  ██████╗ ██████╗ ███████╗██████╗
+  ██╔═══██╗██╔═══██╗██╔══██╗██╔════╝██╔══██╗
+  ██║   ██║██║   ██║██████╔╝█████╗  ██████╔╝
+  ██║   ██║██║   ██║██╔══██╗██╔══╝  ██╔═══╝
+  ╚██████╔╝╚██████╔╝██║  ██║███████╗██║
+   ╚═════╝  ╚═════╝ ╚═╝  ╚═╝╚══════╝╚═╝
+     ███╗   ██╗███████╗██╗    ██╗███████╗
+     ████╗  ██║██╔════╝██║    ██║██╔════╝
+     ██╔██╗ ██║█████╗  ██║ █╗ ██║███████╗
+     ██║╚██╗██║██╔══╝  ██║███╗██║╚════██║
+     ██║ ╚████║███████╗╚███╔███╔╝███████║
+     ╚═╝  ╚═══╝╚══════╝ ╚══╝╚══╝ ╚══════╝
+
+v0.15.0                    Sa 16. Sep 13:36:29 CEST 2023
+--------------------------------------------------------
+- Main features:
+  - Change of database schema (not a user visible one, but
+    warrants for a new version number)
+
+- Minor improvements and changes:
+  - Add "Clone case" button for logged-in users
+  - Add icons to case buttons for logged-in users
+  - Replace deprecated OpenJDK docker image with Eclipse Temurin image
+  - Update to ScalaJS 1.13.2 and Scala 2.13.11
+  - Update a lot of other library and plugin versions (too many to
+    mention them all explicitly here; cf. a diff, if you care)
+  - New light-weight wrapper around the ScalaJS networking code
+    as to reduce dependencies to third-party networking libraries
+  - Define access level for users to determine which resources
+    (repositories, materia medicas) they have access to
+
+- Bug fixes:
+  - Opening of LARGE cases did not work
+  - Edit new case dialog would not enable or disable the
+    submit and cancel buttons appropriately
+  - OOREP would often crash after any kind of network transmission
+    error, whereas now it fails more gracefully
 
 v0.14.2                    Mo 15. Mai 18:31:05 CEST 2023
 --------------------------------------------------------

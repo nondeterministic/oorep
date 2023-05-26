@@ -1,31 +1,31 @@
 import sbt.Keys.libraryDependencies
 
-val myScalaVersion     = "2.13.1"
+val myScalaVersion     = "2.13.11"
 val scalaTestPlusVersion = "5.1.0"
-val scalaJsDomVersion  = "1.0.0"
-val scalaTagsVersion   = "0.8.6"
+val scalaJsDomVersion  = "1.2.0"
+val scalaTagsVersion   = "0.9.4" // Can't seem to go higher than that as ScalaTagsRx then breaks...
 val scalatagsrxVersion = "0.5.0"
-val circeVersion       = "0.13.0"
+val circeVersion       = "0.14.5"
 val rosHttpVersion     = "3.0.0"
-val quillVersion       = "3.5.2"
-val pgDriverVersion    = "42.2.5"
-val scriptsVersion     = "1.1.4"
+val quillVersion       = "4.6.1"
+val pgDriverVersion    = "42.5.4"
+val scriptsVersion     = "1.2.0"
 val apacheCommonsMailV = "1.5"
-
-// resolvers in ThisBuild += "fr.hmil" at "https://files.hmil.fr/maven"
 
 useJCenter := true
 
-scalaVersion in ThisBuild := myScalaVersion
+ThisBuild / scalaVersion := myScalaVersion
 
 scalaJSStage in Global := FullOptStage
 
 lazy val backend = (project in file("backend")).settings(commonSettings).settings(
   scalaJSProjects := Seq(frontend, sec_frontend),
-  pipelineStages in Assets := Seq(scalaJSPipeline),
+  Assets / pipelineStages := Seq(scalaJSPipeline),
   pipelineStages := Seq(scalaJSProd, gzip),
-  compile in Compile := ((compile in Compile) dependsOn scalaJSPipeline).value,
-  isDevMode in scalaJSPipeline := false,
+  Compile / compile := ((Compile / compile) dependsOn scalaJSPipeline).value,
+  scalaJSStage := FullOptStage,
+  scalaJSPipeline / isDevMode := false,
+
   libraryDependencies ++= Seq(
     "com.vmunier" %% "scalajs-scripts" % scriptsVersion,
     jdbc,
@@ -45,6 +45,7 @@ lazy val backend = (project in file("backend")).settings(commonSettings).setting
 
 lazy val frontend = (project in file("frontend")).settings(commonSettings).settings(
   scalaJSUseMainModuleInitializer := true,
+  scalaJSStage := FullOptStage,
 
   libraryDependencies ++= Seq(
     "org.scala-js" %%% "scalajs-dom" % scalaJsDomVersion,
@@ -94,17 +95,11 @@ lazy val shared = crossProject(JSPlatform, JVMPlatform)
 
 lazy val sharedJvm = shared.jvm
 lazy val sharedJs = shared.js
-
-// This works only if you also do `export SBT_OPTS="-Dconfig.file=backend/conf/application.conf"`
-// prior to running sbt!
-// val restConfig = ConfigFactory.load()
-// val oorepVersion = restConfig.getString("oorep_version")
-
 lazy val commonSettings = Seq(
   scalaVersion := myScalaVersion,
   organization := "org.multics.baueran.frep",
   maintainer := "baueran@gmail.com",
-  version := "0.14.2"
+  version := "0.15.0"
 )
 
 // TODO: This doesn't work, and I can't be bothered to get it to work.

@@ -1,18 +1,13 @@
 package org.multics.baueran.frep.shared.sec_frontend
 
 import org.multics.baueran.frep.shared.Defs.CookieFields
-import org.multics.baueran.frep.shared.FIle
+import org.multics.baueran.frep.shared.{FIle, HttpRequest2}
 import org.multics.baueran.frep.shared.frontend.{Case, Notify, OorepHtmlButton, OorepHtmlElement, OorepHtmlInput, OorepHtmlTextArea, apiPrefix, getCookieData, serverUrl}
-import fr.hmil.roshttp.HttpRequest
-import fr.hmil.roshttp.body.PlainTextBody
-import fr.hmil.roshttp.response.SimpleHttpResponse
 import scalatags.JsDom.all.{id, input, _}
 import org.scalajs.dom
 import org.scalajs.dom.Event
-import monix.execution.Scheduler.Implicits.global
 
 import scala.scalajs.js
-import scala.util.Success
 import io.circe.syntax._
 
 object NewFileModal extends OorepHtmlElement {
@@ -47,21 +42,19 @@ object NewFileModal extends OorepHtmlElement {
         else {
           val currFIle = Some(FIle(None, HeaderInput.getText().trim, memberId, (new js.Date()).toISOString(), DescriptionTextArea.getText(), List.empty))
 
-          HttpRequest(s"${serverUrl()}/${apiPrefix()}/sec/save_file")
-            .withHeader("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
-            .post(PlainTextBody(currFIle.get.asJson.toString()))
-            .onComplete({
-              case _: Success[SimpleHttpResponse] => {
-                Case.updateCaseViewAndDataStructures()
-                HeaderInput.setText("")
-                DescriptionTextArea.setText("")
-                NewFileModal.CloseButton.click()
-              }
-              case _ => {
-                if (Notify.noAlertsVisible())
-                  new Notify("tempFeedbackAlert", "Saving file failed. Make sure file ID is unique!")
-              }
+          HttpRequest2("sec/save_file")
+            .withHeaders("Csrf-Token" -> getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
+            .onSuccess((_) => {
+              Case.updateCaseViewAndDataStructures()
+              HeaderInput.setText("")
+              DescriptionTextArea.setText("")
+              NewFileModal.CloseButton.click()
             })
+            .onFailure((_) => {
+              if (Notify.noAlertsVisible())
+                new Notify("tempFeedbackAlert", "Saving file failed. Make sure file ID is unique!")
+            })
+            .post(currFIle.get.asJson.toString())
         }
       }
 

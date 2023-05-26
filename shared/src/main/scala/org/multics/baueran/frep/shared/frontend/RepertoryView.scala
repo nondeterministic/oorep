@@ -5,20 +5,14 @@ import org.scalajs.dom
 import dom.Event
 import dom.raw.{HTMLButtonElement, HTMLInputElement, Node}
 import io.circe.parser.parse
-import rx.{Rx, Var}
+import rx.Var
 import rx.Ctx.Owner.Unsafe._
-import scalatags.rx.all._
 
-import scala.util.{Failure, Success}
-import fr.hmil.roshttp.{BackendConfig, HttpRequest}
-import fr.hmil.roshttp.response.SimpleHttpResponse
-import monix.execution.Scheduler.Implicits.global
 import org.multics.baueran.frep.shared._
 import org.multics.baueran.frep.shared.Defs.{maxLengthOfSymptoms, maxNumberOfResultsPerPage, maxNumberOfSymptoms}
 import org.multics.baueran.frep.shared.Defs.ResourceAccessLvl
 import scalatags.JsDom
 
-import scala.scalajs.js.annotation._
 import scala.scalajs.js.URIUtils._
 import scala.language.implicitConversions
 
@@ -32,7 +26,7 @@ object RepertoryView extends TabView {
   private var _defaultRepertory = ""
   private var _showMaxSearchResultsAlert = true
   private var _showMultiOccurrences = false
-  private val _remedyFormat = Var(RemedyFormat.Abbreviated)
+  val _remedyFormat = Var(RemedyFormat.Abbreviated)
   private val _repertorisationResults: Var[Option[ResultsCaseRubrics]] = Var(None)
   private val _resultRemedyStats: Var[List[ResultsRemedyStats]] = Var(List())
   private val _prefix = "repertoryView"
@@ -123,7 +117,7 @@ object RepertoryView extends TabView {
   })
 
   // ------------------------------------------------------------------------------------------------------------------
-  private def showCase() = {
+  private def showCase(): Unit = {
     if (Case.size() > 0) {
       MainView.CaseDiv.empty()
       MainView.CaseDiv.append(new Case.HtmlRepresentation(_remedyFormat.now)().render)
@@ -334,7 +328,7 @@ object RepertoryView extends TabView {
   }
 
   // ------------------------------------------------------------------------------------------------------------------
-  def toggleRemedyFormat() = {
+  def toggleRemedyFormat(): Unit = {
     if (_remedyFormat.now == RemedyFormat.Fullname)
       _remedyFormat() = RemedyFormat.Abbreviated
     else
@@ -672,8 +666,6 @@ object RepertoryView extends TabView {
       val cachedRemedies = _pageCache.getRemedies(abbrev, symptom, if (remedyString.length == 0) None else Some(remedyString), minWeight)
       val getRemedies = if (cachedRemedies.length == 0) "1" else "0"
 
-      val req = HttpRequest(s"${serverUrl()}/${apiPrefix()}/lookup_rep")
-
       // If no results were found, either tell the user in the input screen,
       // or, if search was invoked via static /show-link (i.e., there is no input screen), then display
       // clean error page.
@@ -686,7 +678,7 @@ object RepertoryView extends TabView {
           showRepertorisationResultsError(symptom, remedyString, minWeight)
       }
 
-      val serverResponseFuture = req
+      HttpRequest2("lookup_rep")
         .withQueryParameters(
           ("symptom", symptom),
           ("repertory", abbrev),
@@ -695,46 +687,43 @@ object RepertoryView extends TabView {
           ("minWeight", minWeight.toString),
           ("getRemedies", getRemedies)
         )
-        .withBackendConfig(BackendConfig(
-          // 1 MB maxChunkSize; see also build.sbt where the same is set for the Akka backend!
-          // It only works, so long as server's chunks are not larger than maxChunkSize below,
-          // or if the reply fits well within one chunk and no second, third, etc. is sent at
-          // all.  An interesting test case is "schmerz*" in kent-de as this is the longest
-          // reply, I have found from the backend yet.  So, it used to crash on "schmerz*" in
-          // kent-de, if the chunk size was too small.
-          maxChunkSize = 1048576
-        ))
-        .send()
-        .onComplete({
-          case response: Success[SimpleHttpResponse] => {
-            parse(response.get.body) match {
-              case Right(json) => {
-                val cursor = json.hcursor
-                cursor.as[(ResultsCaseRubrics, List[ResultsRemedyStats])] match {
-                  case Right((rcr, remedyStats)) => {
-                    cachedRemedies match {
-                      case Nil => {
-                        if (getRemedies == "1")
-                          _resultRemedyStats() = remedyStats
-                        showRepertorisationResults(rcr, remedyStats)
-                      }
-                      case cachedRemedies =>
-                        showRepertorisationResults(rcr, cachedRemedies)
+        // 1 MB maxChunkSize; see also build.sbt where the same is set for the Akka backend!
+        // It only works, so long as server's chunks are not larger than maxChunkSize below,
+        // or if the reply fits well within one chunk and no second, third, etc. is sent at
+        // all.  An interesting test case is "schmerz*" in kent-de as this is the longest
+        // reply, I have found from the backend yet.  So, it used to crash on "schmerz*" in
+        // kent-de, if the chunk size was too small.
+        .withChunkSize(1048576)
+        .onSuccess((response: String) =>
+          parse(response) match {
+            case Right(json) => {
+              val cursor = json.hcursor
+              cursor.as[(ResultsCaseRubrics, List[ResultsRemedyStats])] match {
+                case Right((rcr, remedyStats)) => {
+                  cachedRemedies match {
+                    case Nil => {
+                      if (getRemedies == "1")
+                        _resultRemedyStats() = remedyStats
+                      showRepertorisationResults(rcr, remedyStats)
                     }
+                    case cachedRemedies =>
+                      showRepertorisationResults(rcr, cachedRemedies)
                   }
-                  case Left(err) =>
-                    println(s"Parsing of lookup as RepertoryLookup failed: $err")
-                    handleNoResultsFound()
                 }
+                case Left(err) =>
+                  println(s"Parsing of lookup as RepertoryLookup failed: $err")
+                  handleNoResultsFound()
               }
-              case Left(err) =>
-                println(s"Parsing of lookup failed (is it JSON?): $err")
-                handleNoResultsFound()
             }
+            case Left(err) =>
+              println(s"Parsing of lookup failed (is it JSON?): $err")
+              handleNoResultsFound()
           }
-          case _: Failure[SimpleHttpResponse] =>
-            handleNoResultsFound()
-        })
+        )
+        .onFailure((_) =>
+          handleNoResultsFound()
+        )
+        .send()
     }
 
     // TODO: Right now, we do additional error- and sanity checking only when the app wasn't called via /show direct link.
@@ -795,59 +784,56 @@ object RepertoryView extends TabView {
     if (_remedies.isEmpty()) {
       _remedies = new Remedies(remedies)
 
-      HttpRequest(s"${serverUrl()}/${apiPrefix()}/available_rems_and_reps")
-        .send()
-        .onComplete({
-          case response: Success[SimpleHttpResponse] => {
-            parse(response.get.body) match {
-              case Right(json) => {
-                val cursor = json.hcursor
-                cursor.as[List[InfoExtended]] match {
-                  case Right(extendedRepertoryInfos) => {
-                    // Update the default repertory, if one was transmitted from backend (which should ALWAYS be the case)
-                    extendedRepertoryInfos.toList.filter(_.info.access == ResourceAccessLvl.Default) match {
-                      case rep :: Nil => _defaultRepertory = rep.info.abbrev
-                      case _ => println("WARNING: Not setting default repertory; none was transmitted")
-                    }
+      HttpRequest2("available_rems_and_reps")
+        .onSuccess((response: String) => {
+          parse(response) match {
+            case Right(json) => {
+              val cursor = json.hcursor
+              cursor.as[List[InfoExtended]] match {
+                case Right(extendedRepertoryInfos) => {
+                  // Update the default repertory, if one was transmitted from backend (which should ALWAYS be the case)
+                  extendedRepertoryInfos.toList.filter(_.info.access == ResourceAccessLvl.Default) match {
+                    case rep :: Nil => _defaultRepertory = rep.info.abbrev
+                    case _ => println("WARNING: Not setting default repertory; none was transmitted")
+                  }
 
-                    for (rep <- extendedRepertoryInfos) {
-                      val repRemedies = rep.remedyIds.map(_remedies.get(_)).flatten
-                      _repertories.put(rep, new Remedies(repRemedies))
-                    }
+                  for (rep <- extendedRepertoryInfos) {
+                    val repRemedies = rep.remedyIds.map(_remedies.get(_)).flatten
+                    _repertories.put(rep, new Remedies(repRemedies))
+                  }
 
-                    // Update available repertories in repertory dropdown button
-                    if (dom.document.getElementById("repSelectionDropDown") != null && dom.document.getElementById("repSelectionDropDown").childNodes.length == 0) {
-                      extendedRepertoryInfos.map(_.info)
-                        .sortBy(_.abbrev)
-                        .foreach {
-                          case currRep => {
-                            dom.document.getElementById("repSelectionDropDown")
-                              .appendChild(a(cls := "dropdown-item", href := "#", data.value := currRep.abbrev,
-                                onclick := { (event: Event) =>
-                                  _selectedRepertory() = currRep.abbrev
-                                  dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[HTMLButtonElement].textContent = "Repertory: " + _selectedRepertory.now
-                                }, s"${currRep.abbrev} - ${currRep.displaytitle.getOrElse("")}").render)
+                  // Update available repertories in repertory dropdown button
+                  if (dom.document.getElementById("repSelectionDropDown") != null && dom.document.getElementById("repSelectionDropDown").childNodes.length == 0) {
+                    extendedRepertoryInfos.map(_.info)
+                      .sortBy(_.abbrev)
+                      .foreach {
+                        case currRep => {
+                          dom.document.getElementById("repSelectionDropDown")
+                            .appendChild(a(cls := "dropdown-item", href := "#", data.value := currRep.abbrev,
+                              onclick := { (event: Event) =>
+                                _selectedRepertory() = currRep.abbrev
+                                dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[HTMLButtonElement].textContent = "Repertory: " + _selectedRepertory.now
+                              }, s"${currRep.abbrev} - ${currRep.displaytitle.getOrElse("")}").render)
 
-                            if (_selectedRepertory.now.length > 0)
-                              dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[HTMLButtonElement].textContent = "Repertory: " + _selectedRepertory.now
-                            else {
-                              _selectedRepertory() = _defaultRepertory
-                              dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[HTMLButtonElement].textContent = "Repertory: " + _selectedRepertory.now
-                            }
+                          if (_selectedRepertory.now.length > 0)
+                            dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[HTMLButtonElement].textContent = "Repertory: " + _selectedRepertory.now
+                          else {
+                            _selectedRepertory() = _defaultRepertory
+                            dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[HTMLButtonElement].textContent = "Repertory: " + _selectedRepertory.now
                           }
                         }
-                    }
-
-                    runAfterUpdate()
+                      }
                   }
-                  case Left(t) => println("Parsing of available repertories failed: " + t)
+
+                  runAfterUpdate()
                 }
+                case Left(t) => println("Parsing of available repertories failed: " + t)
               }
-              case Left(_) => println("Parsing of available repertories failed (is it JSON?).")
             }
+            case Left(_) => println("Parsing of available repertories failed (is it JSON?).")
           }
-          case error: Failure[SimpleHttpResponse] => println("Available repertories failed: " + error.toString)
         })
+        .send()
     }
     // This branch is executed, for example, for redrawing drop down when search results are being shown
     // TODO: Is this still true? Is this branch EVER executed? I doubt it.

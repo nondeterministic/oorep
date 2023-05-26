@@ -1,19 +1,15 @@
 package org.multics.baueran.frep.shared.frontend
 
-import fr.hmil.roshttp.HttpRequest
-import fr.hmil.roshttp.response.SimpleHttpResponse
 import io.circe.parser.parse
 import org.multics.baueran.frep.shared.Defs.CookieFields
-import org.multics.baueran.frep.shared.Remedy
+import org.multics.baueran.frep.shared.{HttpRequest2, Remedy}
 import org.multics.baueran.frep.shared.sec_frontend.FileModalCallbacks.updateMemberFiles
 import scalatags.JsDom.all._
 import org.scalajs.dom
 import scalatags.JsDom
-import monix.execution.Scheduler.Implicits.global
 import org.scalajs.dom.raw.BeforeUnloadEvent
 
 import scala.scalajs.js.annotation.JSExportTopLevel
-import scala.util.Success
 
 @JSExportTopLevel("MainView")
 object MainView {
@@ -25,7 +21,7 @@ object MainView {
     def append(element: dom.html.Element) = dom.document.getElementById(caseDivId).appendChild(element)
   }
 
-  protected var _loadingSpinner: Option[LoadingSpinner] = None
+  private var _loadingSpinner: Option[LoadingSpinner] = None
 
   // Register tab views: order is relevant. First element is first tab, and so on...
   private val _tabViews = List(RepertoryView, MateriaMedicaView)
@@ -39,25 +35,22 @@ object MainView {
 
   private def getAvailableRemedies(): List[Remedy] = {
     if (_remedies.length == 0) {
-      HttpRequest(s"${serverUrl()}/${apiPrefix()}/available_remedies")
-        .send()
-        .onComplete({
-          case response: Success[SimpleHttpResponse] => {
-            parse(response.get.body) match {
-              case Right(json) => {
-                val cursor = json.hcursor
-                cursor.as[List[Remedy]] match {
-                  case Right(allRemedies) =>
-                    _remedies = allRemedies
-                    _tabViews.map(_.updateDataStructures(_remedies))  // Update also the tab views' datastructures!
-                  case Left(err) => println("Parsing of remedies failed: " + err)
-                }
+      HttpRequest2("available_remedies")
+        .onSuccess((response: String) =>
+          parse(response) match {
+            case Right(json) => {
+              val cursor = json.hcursor
+              cursor.as[List[Remedy]] match {
+                case Right(allRemedies) =>
+                  _remedies = allRemedies
+                  _tabViews.map(_.updateDataStructures(_remedies)) // Update also the tab views' datastructures!
+                case Left(err) => println("Parsing of remedies failed: " + err)
               }
-              case Left(err) => println("Parsing of remedies failed: is it JSON? " + err)
             }
+            case Left(err) => println("Parsing of remedies failed: is it JSON? " + err)
           }
-          case _ => println("MainView didn't receive available remedies from backend.")
-        })
+        )
+        .send()
     }
 
     _remedies

@@ -5,17 +5,17 @@
 # GET     /                                   controllers.Assets.at(path="/public/html", file="index.html")
 
 
-GET   	/login                              org.multics.baueran.frep.backend.controllers.Get.login
-GET   	/logout                             org.multics.baueran.frep.backend.controllers.Get.logout
+GET   	/login                              org.multics.baueran.frep.backend.controllers.Get.login()
+GET   	/logout                             org.multics.baueran.frep.backend.controllers.Get.logout()
 
-GET		/api/authenticate                   org.multics.baueran.frep.backend.controllers.Get.apiAuthenticate
+GET		/api/authenticate                   org.multics.baueran.frep.backend.controllers.Get.apiAuthenticate()
 GET		/api/lookup_rep				        org.multics.baueran.frep.backend.controllers.Get.apiLookupRep(repertory: String, symptom: String, page: Int, remedyString: String, minWeight: Int, getRemedies: Int)
 GET     /api/lookup_mm                      org.multics.baueran.frep.backend.controllers.Get.apiLookupMM(mmAbbrev: String, symptom: String, page: Int, remedyString: String)
 GET     /api/display_error_page             org.multics.baueran.frep.backend.controllers.Get.apiDisplayGetErrorPage(message: String)
 GET     /api/store_cookie                   org.multics.baueran.frep.backend.controllers.Get.apiStoreCookie(name: String, value: String)
-GET     /api/available_remedies             org.multics.baueran.frep.backend.controllers.Get.apiAvailableRemedies
-GET     /api/available_rems_and_mms         org.multics.baueran.frep.backend.controllers.Get.apiAvailableMateriaMedicasAndRemedies
-GET     /api/available_rems_and_reps        org.multics.baueran.frep.backend.controllers.Get.apiAvailableRepertoriesAndRemedies
+GET     /api/available_remedies             org.multics.baueran.frep.backend.controllers.Get.apiAvailableRemedies()
+GET     /api/available_rems_and_mms         org.multics.baueran.frep.backend.controllers.Get.apiAvailableMateriaMedicasAndRemedies()
+GET     /api/available_rems_and_reps        org.multics.baueran.frep.backend.controllers.Get.apiAvailableRepertoriesAndRemedies()
 GET     /api/sec/available_files            org.multics.baueran.frep.backend.controllers.Get.apiSecAvailableFiles(memberId: Int)
 GET     /api/sec/file_overview              org.multics.baueran.frep.backend.controllers.Get.apiSecFileOverview(fileId: String)
 GET     /api/sec/file                       org.multics.baueran.frep.backend.controllers.Get.apiSecGetFile(fileId: String)
@@ -33,22 +33,22 @@ GET     /                                   org.multics.baueran.frep.backend.con
 GET     /:page                              org.multics.baueran.frep.backend.controllers.Get.serve_static_html(page:String)
 
 
-POST    /api/sec/add_caserubrics_to_case    org.multics.baueran.frep.backend.controllers.Post.addCaseRubricsToCaze
-POST   	/api/sec/save_case                  org.multics.baueran.frep.backend.controllers.Post.saveCaze
-POST   	/api/sec/save_file                  org.multics.baueran.frep.backend.controllers.Post.saveFile
+POST    /api/sec/add_caserubrics_to_case    org.multics.baueran.frep.backend.controllers.Post.addCaseRubricsToCaze()
+POST   	/api/sec/save_case                  org.multics.baueran.frep.backend.controllers.Post.saveCaze()
+POST   	/api/sec/save_file                  org.multics.baueran.frep.backend.controllers.Post.saveFile()
 + nocsrf
-POST    /api/request_password_change        org.multics.baueran.frep.backend.controllers.Post.requestPasswordChange
+POST    /api/request_password_change        org.multics.baueran.frep.backend.controllers.Post.requestPasswordChange()
 + nocsrf
-POST    /api/request_username               org.multics.baueran.frep.backend.controllers.Post.requestUsername
+POST    /api/request_username               org.multics.baueran.frep.backend.controllers.Post.requestUsername()
 + nocsrf
-POST    /api/submit_new_password            org.multics.baueran.frep.backend.controllers.Post.submitNewPassword
+POST    /api/submit_new_password            org.multics.baueran.frep.backend.controllers.Post.submitNewPassword()
 
 
-PUT     /api/sec/update_caserubrics_userdef org.multics.baueran.frep.backend.controllers.Put.updateCaseRubricsUserDefinedValues
-PUT   	/api/sec/update_file_description    org.multics.baueran.frep.backend.controllers.Put.updateFileDescription
-PUT   	/api/sec/update_case_description    org.multics.baueran.frep.backend.controllers.Put.updateCaseDescription
+PUT     /api/sec/update_caserubrics_userdef org.multics.baueran.frep.backend.controllers.Put.updateCaseRubricsUserDefinedValues()
+PUT   	/api/sec/update_file_description    org.multics.baueran.frep.backend.controllers.Put.updateFileDescription()
+PUT   	/api/sec/update_case_description    org.multics.baueran.frep.backend.controllers.Put.updateCaseDescription()
 
 
-DELETE  /api/sec/del_caserubrics_from_case  org.multics.baueran.frep.backend.controllers.Delete.apiSecDelCaseRubricsFromCaze
-DELETE  /api/sec/del_case                   org.multics.baueran.frep.backend.controllers.Delete.apiSecDelCaze
-DELETE 	/api/sec/del_file_and_cases         org.multics.baueran.frep.backend.controllers.Delete.apiSecDelFileAndCases
+DELETE  /api/sec/del_caserubrics_from_case  org.multics.baueran.frep.backend.controllers.Delete.apiSecDelCaseRubricsFromCaze()
+DELETE  /api/sec/del_case                   org.multics.baueran.frep.backend.controllers.Delete.apiSecDelCaze()
+DELETE 	/api/sec/del_file_and_cases         org.multics.baueran.frep.backend.controllers.Delete.apiSecDelFileAndCases()

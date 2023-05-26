@@ -7,7 +7,7 @@ import javax.inject._
 
 // https://tutel.me/c/programming/questions/49075152/register.html
 
-package object db {
+object db {
   // class DBContext(db: Database) extends PostgresJdbcContext(SnakeCase, db.dataSource.asInstanceOf[HikariDataSource])
 
   @Singleton

@@ -119,7 +119,7 @@ class FileDao(dbContext: db.db.DBContext) {
           // Add case id to file
           val rawQuery = quote {
             (localId: Int, localCazeId: Int) =>
-              infix"""UPDATE file SET case_ids=case_ids || $localCazeId WHERE id=$localId"""
+              sql"""UPDATE file SET case_ids=case_ids || $localCazeId WHERE id=$localId"""
                 .as[Update[Caze]]
           }
           if (run(rawQuery(lift(fileId), lift(foundCase.id))) > 0) {

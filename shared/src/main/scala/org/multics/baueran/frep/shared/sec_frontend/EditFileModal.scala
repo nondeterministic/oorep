@@ -1,12 +1,8 @@
 package org.multics.baueran.frep.shared.sec_frontend
 
-import fr.hmil.roshttp.{HttpRequest, Method}
-import fr.hmil.roshttp.body.{MultiPartBody, PlainTextBody}
-import fr.hmil.roshttp.response.SimpleHttpResponse
 import io.circe.parser.parse
-import monix.execution.Scheduler.Implicits.global
 import org.multics.baueran.frep.shared.Defs.CookieFields
-import org.multics.baueran.frep.shared.Caze
+import org.multics.baueran.frep.shared.{Caze, HttpRequest2}
 import org.multics.baueran.frep.shared.frontend.{Case, OorepHtmlButton, OorepHtmlElement, RepertoryView, apiPrefix, getCookieData, serverUrl}
 import org.scalajs.dom
 import org.scalajs.dom.{Event, document}
@@ -18,7 +14,6 @@ import scalatags.rx.all._
 import org.scalajs.dom.html
 
 import scala.math.{max, min}
-import scala.util.{Failure, Success, Try}
 import scala.language.implicitConversions
 
 object EditFileModal extends OorepHtmlElement {
@@ -42,21 +37,19 @@ object EditFileModal extends OorepHtmlElement {
               button(`type` := "button", cls := "btn btn-secondary", data.dismiss := "modal", "Cancel"),
               button(`type` := "button", cls := "btn btn-primary", data.dismiss := "modal",
                 onclick := { (event: Event) =>
-                  HttpRequest(s"${serverUrl()}/${apiPrefix()}/sec/del_case")
-                    .withMethod(Method.DELETE)
-                    .withHeader("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
-                    .withBody(MultiPartBody(
-                      "caseId" -> PlainTextBody(currentlySelectedCaseId.now.toString()),
-                      "memberId" -> PlainTextBody(getCookieData(dom.document.cookie, CookieFields.id.toString).getOrElse(""))))
-                    .send()
-                    .onComplete({
-                      case _: Success[SimpleHttpResponse] =>
-                        getCookieData(dom.document.cookie, CookieFields.id.toString) match {
-                          case Some(memberId) => FileModalCallbacks.updateMemberFiles(memberId.toInt)
-                          case None => println("EditFileModal: Deleting of case failed.")
-                        }
-                      case _ => ;
+                  HttpRequest2("sec/del_case")
+                    .withMethod("DELETE")
+                    .withHeaders(("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse("")))
+                    .withBody(
+                      ("caseId" -> currentlySelectedCaseId.now.toString()),
+                      ("memberId" -> getCookieData(dom.document.cookie, CookieFields.id.toString).getOrElse("")))
+                    .onSuccess((_: String) => {
+                      getCookieData(dom.document.cookie, CookieFields.id.toString) match {
+                        case Some(memberId) => FileModalCallbacks.updateMemberFiles(memberId.toInt)
+                        case None => println("EditFileModal: Deleting of case failed.")
+                      }
                     })
+                    .send()
 
                   // If the deleted case is currently opened, update current view by basically removing that case.
                   if (Case.descr.isDefined && (Case.descr.get.id == currentlySelectedCaseId.now))
@@ -119,29 +112,27 @@ object EditFileModal extends OorepHtmlElement {
           onclick := { (event: Event) =>
             AvailableCasesList.setCurrCaseFromSelection()
 
-            HttpRequest(s"${serverUrl()}/${apiPrefix()}/sec/case")
-              .withQueryParameter("caseId", currentlySelectedCaseId.now.toString())
-              .send()
-              .onComplete({
-                case response: Success[SimpleHttpResponse] => {
-                  parse(response.get.body) match {
-                    case Right(json) => {
-                      val cursor = json.hcursor
-                      cursor.as[Caze] match {
-                        case Right(caze) => {
-                          Case.descr = Some(caze)
-                          Case.cRubrics = caze.results
-                          RepertoryView.showResults()
-                          Case.updateCaseHeaderView() // So that the buttons Add, Edit, etc. are redrawn properly
-                        }
-                        case Left(err) => println("Decoding of case failed: " + err)
+            HttpRequest2("sec/case")
+              .withQueryParameters(("caseId", currentlySelectedCaseId.now.toString()))
+              .withChunkSize(1048576) // Necessary, or LARGE cases won't load
+              .onSuccess((response: String) => {
+                parse(response) match {
+                  case Right(json) => {
+                    val cursor = json.hcursor
+                    cursor.as[Caze] match {
+                      case Right(caze) => {
+                        Case.descr = Some(caze)
+                        Case.cRubrics = caze.results
+                        RepertoryView.showResults()
+                        Case.updateCaseHeaderView() // So that the buttons Add, Edit, etc. are redrawn properly
                       }
+                      case Left(err) => println("Decoding of case failed: " + err)
                     }
-                    case Left(err) => println("Parsing of case (is it JSON?): " + err)
                   }
+                  case Left(err) => println("Parsing of case (is it JSON?): " + err)
                 }
-                case error: Failure[SimpleHttpResponse] => println("Lookup of case failed: " + error.toString())
               })
+              .send()
           },
           "Open")
       }
@@ -191,11 +182,11 @@ object EditFileModal extends OorepHtmlElement {
           onclick := { (event: Event) =>
             fileName_fileId.now match {
               case (fileName, fileId) if fileId.forall(_.isDigit) =>
-                HttpRequest(s"${serverUrl()}/${apiPrefix()}/sec/update_file_description")
-                  .withHeader("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
-                  .put(MultiPartBody(
-                    "filedescr" -> PlainTextBody(FileDescriptionTextArea.getTextValue().trim()),
-                    "fileId" -> PlainTextBody(fileId)))
+                HttpRequest2("sec/update_file_description")
+                  .withHeaders(("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse("")))
+                  .put(
+                    ("filedescr" -> FileDescriptionTextArea.getTextValue().trim()),
+                    ("fileId" -> fileId))
               case _ => ;
             }
             disable()
@@ -290,49 +281,42 @@ object EditFileModal extends OorepHtmlElement {
     MainModal.HtmlButtonCaseDelete.disable()
 
     // Callback function for http request below...
-    def updateModal(response: Try[SimpleHttpResponse]) = {
+    def updateModal(response: String) = {
       document.body.style.cursor = "default"
 
-      response match {
-        case response: Success[SimpleHttpResponse] => {
-          parse(response.get.body) match {
-            case Right(json) => {
-              json.hcursor.as[Seq[(String, Option[Int], Option[String])]] match {
-                case Right(results) =>
-                  currentlyAssociatedCaseHeaders() =
-                    results.toList.map(result =>
-                      result match {
-                        case (_, Some(caseId), Some(caseEnrichedHdr)) => Some(caseId, caseEnrichedHdr)
-                        case _ => None
-                      }
-                    ).flatten
+      parse(response) match {
+        case Right(json) => {
+          json.hcursor.as[Seq[(String, Option[Int], Option[String])]] match {
+            case Right(results) =>
+              currentlyAssociatedCaseHeaders() =
+                results.toList.map(result =>
+                  result match {
+                    case (_, Some(caseId), Some(caseEnrichedHdr)) => Some(caseId, caseEnrichedHdr)
+                    case _ => None
+                  }
+                ).flatten
 
-                  if (results.length > 0)
-                    currentFileDescription = Some(results.head._1)
-                  MainModal.FileDescriptionTextArea.setTextValue(currentFileDescription.getOrElse(""))
-
-                case Left(err) =>
-                  println("Decoding of cases' ids and headers failed: " + err + "; " + response.get.body)
-              }
-            }
-            case Left(msg) =>
-              println(s"INFO: No file information received as there probably aren't any (or an error occurred): $msg")
-              currentlyAssociatedCaseHeaders() = List()
+              if (results.length > 0)
+                currentFileDescription = Some(results.head._1)
               MainModal.FileDescriptionTextArea.setTextValue(currentFileDescription.getOrElse(""))
+
+            case Left(err) =>
+              println("Decoding of cases' ids and headers failed: " + err + "; " + response)
           }
         }
-        case error: Failure[SimpleHttpResponse] => println("ERROR: " + error.get.body)
+        case Left(msg) =>
+          println(s"INFO: No file information received as there probably aren't any (or an error occurred): $msg")
+          currentlyAssociatedCaseHeaders() = List()
+          MainModal.FileDescriptionTextArea.setTextValue(currentFileDescription.getOrElse(""))
       }
     }
 
     // The call-back is defined right above this if-condition!
     if (fileName.length() > 0 && fileId.forall(_.isDigit)) {
-      HttpRequest(s"${serverUrl()}/${apiPrefix()}/sec/file_overview")
+      HttpRequest2("sec/file_overview")
         .withQueryParameters("fileId" -> fileId)
+        .onSuccess((response: String) => updateModal(response))
         .send()
-        .onComplete((r: Try[SimpleHttpResponse]) => {
-          updateModal(r)
-        })
     }
   }
 

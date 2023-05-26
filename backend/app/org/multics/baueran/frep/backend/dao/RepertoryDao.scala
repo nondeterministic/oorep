@@ -26,7 +26,8 @@ class RepertoryDao(dbContext: db.db.DBContext) {
 
   private var _remedies: List[Remedy] = List()
   private val _repertories = new Repertories()
-  private var _extendedInfosLoggedIn: List[InfoExtended] = List()
+  private var _extendedInfosLoggedInUpToPrivate: List[InfoExtended] = List()
+  private var _extendedInfosLoggedInUpToProtected: List[InfoExtended] = List()
   private var _extendedInfosAnonymous: List[InfoExtended] = List()
   private val _numberOfRubricsInRep = new mutable.HashMap[String, Int]()
 
@@ -70,7 +71,7 @@ class RepertoryDao(dbContext: db.db.DBContext) {
         val remedies = {
           run {
             quote {
-              infix"""select remedy.id, remedy.nameabbrev, remedy.namelong, remedy.namealt
+              sql"""select remedy.id, remedy.nameabbrev, remedy.namelong, remedy.namealt
                      from remedy
                         join repertoriesandremedies on abbrev='#${cleanAbbrev}' and remedy.id = any(remedy_ids::int[])"""
                 .as[Query[Remedy]]
@@ -78,7 +79,7 @@ class RepertoryDao(dbContext: db.db.DBContext) {
           }
         }
 
-        (_extendedInfosAnonymous ::: _extendedInfosLoggedIn).find(_.info.abbrev == cleanAbbrev) match {
+        (_extendedInfosAnonymous ::: _extendedInfosLoggedInUpToPrivate).find(_.info.abbrev == cleanAbbrev) match {
           case Some(extInfo) => _repertories.put(extInfo, new Remedies(remedies))
           case None => Logger.error("RepertoryDao: tried to add repertory remedies to data structure, but couldn't find extended repertory info.")
         }
@@ -92,7 +93,7 @@ class RepertoryDao(dbContext: db.db.DBContext) {
     }
   }
 
-  def getRepsAndRemedies(isUserLoggedIn: Boolean): List[InfoExtended] = {
+  def getRepsAndRemedies(loggedinMember: Option[Member]): List[InfoExtended] = {
 
     // ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // There is also this helpful view here in the DB which we query here and which needs REFRESHING,
@@ -139,7 +140,7 @@ class RepertoryDao(dbContext: db.db.DBContext) {
 
     val tmpResults = run {
       quote {
-        infix"""SELECT * FROM repertoriesandremedies"""
+        sql"""SELECT * FROM repertoriesandremedies"""
           .as[Query[TmpRepsAndRemedies]]
       }
     }.map { res =>
@@ -149,16 +150,24 @@ class RepertoryDao(dbContext: db.db.DBContext) {
       )
     }
 
-    if (isUserLoggedIn) {
-      // Show Public, Default and Protected.
-      if (_extendedInfosLoggedIn.length == 0)
-        _extendedInfosLoggedIn = tmpResults.filter(_.info.access != ResourceAccessLvl.Private)
-      _extendedInfosLoggedIn
-    } else {
-      // Show Public and Default.
-      if (_extendedInfosAnonymous.length == 0)
-        _extendedInfosAnonymous = tmpResults.filter(extendedInfo => extendedInfo.info.access == ResourceAccessLvl.Public || extendedInfo.info.access == ResourceAccessLvl.Default)
-      _extendedInfosAnonymous
+    loggedinMember match {
+      case Some(member) =>
+        // Show Public, Default, and Protected if `access` permits it.
+        if (member.access.getOrElse("") == ResourceAccessLvl.Private.toString) {
+          if (_extendedInfosLoggedInUpToPrivate.length == 0)
+            _extendedInfosLoggedInUpToPrivate = tmpResults
+          _extendedInfosLoggedInUpToPrivate
+        }
+        else {
+          if (_extendedInfosLoggedInUpToProtected.length == 0)
+            _extendedInfosLoggedInUpToProtected = tmpResults.filter(_.info.access != ResourceAccessLvl.Private)
+          _extendedInfosLoggedInUpToProtected
+        }
+      case None =>
+        // Show Public and Default.
+        if (_extendedInfosAnonymous.length == 0)
+          _extendedInfosAnonymous = tmpResults.filter(extendedInfo => extendedInfo.info.access == ResourceAccessLvl.Public || extendedInfo.info.access == ResourceAccessLvl.Default)
+        _extendedInfosAnonymous
     }
   }
 
@@ -308,7 +317,7 @@ class RepertoryDao(dbContext: db.db.DBContext) {
     val remedyStats = new ArrayBuffer[ResultsRemedyStats]()
     if (getRemedies == true) {
       val rawQuery = quote {
-        infix"""SELECT rem.nameabbrev, count(rem.nameabbrev), sum(rr.weight) AS cumulativeweight FROM rubric AS rub
+        sql"""SELECT rem.nameabbrev, count(rem.nameabbrev), sum(rr.weight) AS cumulativeweight FROM rubric AS rub
                  JOIN rubricremedy AS rr ON rub.id = rr.rubricid AND rr.abbrev='#${abbrev}' AND rr.rubricid IN (#${tmpRubricsAll.map(_.id).mkString(",")})
                  JOIN remedy AS rem ON rem.id=rr.remedyid AND rub.abbrev=rr.abbrev
                  GROUP BY rem.nameabbrev ORDER BY count DESC"""

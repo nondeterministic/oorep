@@ -2,9 +2,9 @@ package org.multics.baueran.frep.shared.frontend
 
 import org.scalajs.dom
 import dom.Event
-import scalatags.JsDom.all._
-import scala.scalajs.js
+import scalatags.JsDom.all.{onkeydown, _}
 
+import scala.scalajs.js
 import org.multics.baueran.frep.shared
 import shared.Defs.CookieFields
 
@@ -118,7 +118,7 @@ object CaseModals {
 
       def apply() = {
         input(cls := "form-control", id := getId(), placeholder := "A simple, unique case identifier", required,
-          onkeydown := { (event: dom.KeyboardEvent) =>
+          onkeyup := { (event: dom.KeyboardEvent) =>
             if (getText().trim.length > 0) {
               SubmitButton.enable()
 
@@ -127,7 +127,8 @@ object CaseModals {
             } else {
               SubmitButton.disable()
             }
-          })
+          }
+        )
       }
     }
 
@@ -139,9 +140,9 @@ object CaseModals {
           onkeyup := { (event: Event) =>
             val currTextAreaText = getText()
 
-            if (currTextAreaText.trim.length > 0 && Case.descr.isDefined && currTextAreaText.trim != Case.descr.get.description)
+            if (currTextAreaText.trim.length > 0 && getText().trim.length > 0 && Case.descr.isDefined && currTextAreaText.trim != Case.descr.get.description)
               SubmitButton.enable()
-            else
+            else if (currTextAreaText.trim.length > 0 && Case.descr.isDefined && currTextAreaText.trim == Case.descr.get.description)
               SubmitButton.disable()
           }
         )

@@ -1,7 +1,7 @@
 package org.multics.baueran.frep.backend.dao
 
 import io.getquill.Query
-import org.multics.baueran.frep.shared.{HitsPerRemedy, MMAllSearchResults, MMAndRemedyIds, MMChapter, MMInfo, MMSearchResult, MMSection, MyDate, Remedies, Remedy, RemedyEntered, SearchTerms}
+import org.multics.baueran.frep.shared.{HitsPerRemedy, MMAllSearchResults, MMAndRemedyIds, MMChapter, MMInfo, MMSearchResult, MMSection, Member, MyDate, Remedies, Remedy, RemedyEntered, SearchTerms}
 import org.multics.baueran.frep.backend.db
 import org.multics.baueran.frep.shared.Defs.{ResourceAccessLvl, maxNumberOfResultsPerMMPage, maxNumberOfSymptoms}
 
@@ -19,7 +19,7 @@ class MMDao(dbContext: db.db.DBContext) {
       return List()
 
     run {
-      infix"""SELECT remedy.id, remedy.nameabbrev, remedy.namelong, remedy.namealt
+      sql"""SELECT remedy.id, remedy.nameabbrev, remedy.namelong, remedy.namealt
                  FROM remedy
                     JOIN mmchapter ON remedy_id=remedy.id
                     JOIN mminfo ON mminfo_id=mminfo.id AND mminfo.abbrev='#${cleanedAbbrev}'
@@ -37,7 +37,7 @@ class MMDao(dbContext: db.db.DBContext) {
     * So a translator class TmpMMsAndRemedies was necessary - and needs to be adapted, in
     * case the content of the other tables changes, of course.)
     */
-  def getMMsAndRemedies(isUserLoggedIn: Boolean): List[MMAndRemedyIds] = {
+  def getMMsAndRemedies(loggedInMember: Option[Member]): List[MMAndRemedyIds] = {
     case class TmpMMsAndRemedies(id: Int,
                               abbrev: String,
                               lang: Option[String],
@@ -60,7 +60,7 @@ class MMDao(dbContext: db.db.DBContext) {
 
     val tmpResults = run {
       quote {
-        infix"""SELECT mminfo.id, mminfo.abbrev, mminfo.lang, mminfo.fulltitle, mminfo.authorlastname, mminfo.authorfirstname,
+        sql"""SELECT mminfo.id, mminfo.abbrev, mminfo.lang, mminfo.fulltitle, mminfo.authorlastname, mminfo.authorfirstname,
                        mminfo.publisher, mminfo.yearr, mminfo.license, mminfo.access, mminfo.displaytitle, ARRAY_AGG(remedy_id) remedy_ids
                  FROM mmchapter
                     JOIN mminfo ON mmchapter.mminfo_id = mminfo.id GROUP BY (mminfo.abbrev, mminfo.access)"""
@@ -74,10 +74,17 @@ class MMDao(dbContext: db.db.DBContext) {
         r.remedy_ids)
     )
 
-    if (isUserLoggedIn)
-      tmpResults.filter(result => result.mminfo.access != ResourceAccessLvl.Private.toString)
-    else
-      tmpResults.filter(result => result.mminfo.access == ResourceAccessLvl.Public.toString || result.mminfo.access == ResourceAccessLvl.Default.toString)
+    loggedInMember match {
+      case Some(member) =>
+        if (member.access.getOrElse("") == ResourceAccessLvl.Private.toString)
+          tmpResults
+        else if (member.access.getOrElse("") == ResourceAccessLvl.Protected.toString)
+          tmpResults.filter(result => result.mminfo.access != ResourceAccessLvl.Private.toString)
+        else
+          tmpResults.filter(result => result.mminfo.access == ResourceAccessLvl.Public.toString || result.mminfo.access == ResourceAccessLvl.Default.toString)
+      case None =>
+        tmpResults.filter(result => result.mminfo.access == ResourceAccessLvl.Public.toString || result.mminfo.access == ResourceAccessLvl.Default.toString)
+    }
   }
 
   /**
@@ -193,7 +200,7 @@ class MMDao(dbContext: db.db.DBContext) {
             .join(query[MMInfo]).on({ case ((s, c), i) => i.id == c.mminfo_id && i.abbrev == lift(abbrev) })
             .join(query[Remedy]).on({ case (((s,c), i), r) => r.id == c.remedy_id &&
             ( r.nameLong.toLowerCase.startsWith(lift(lowerRemedyName)) ||
-              infix"""lower(array_to_string(${r.namealt}, ', '))""".as[String].like(lift(s"%${lowerRemedyName}%")) ) })
+              sql"""lower(array_to_string(${r.namealt}, ', '))""".as[String].like(lift(s"%${lowerRemedyName}%")) ) })
             .filter { case (((s, c), i), r) =>
               s.content.getOrElse("").toLowerCase.like(lift(s"%${approximateSearchTerm}%")) || s.heading.getOrElse("").toLowerCase.like(lift(s"%${approximateSearchTerm}%"))
             }
@@ -215,7 +222,7 @@ class MMDao(dbContext: db.db.DBContext) {
             .join(query[MMInfo]).on({ case ((s, c), i) => i.id == c.mminfo_id && i.abbrev == lift(abbrev) })
             .join(query[Remedy]).on({ case (((s,c), i), r) => r.id == c.remedy_id &&
             ( r.nameLong.toLowerCase.startsWith(lift(lowerRemedyName)) ||
-              infix"""lower(array_to_string(${r.namealt}, ', '))""".as[String].like(lift(s"%${lowerRemedyName}%")) ) })
+              sql"""lower(array_to_string(${r.namealt}, ', '))""".as[String].like(lift(s"%${lowerRemedyName}%")) ) })
             .filter(_ => true)
         }).collect { case (((s, c), i), r) => (s, c)}
       }

@@ -2,6 +2,7 @@ package org.multics.baueran.frep.backend
 
 import play.api.mvc._
 import org.multics.baueran.frep.backend.dao.{CazeDao, EmailHistoryDao, FileDao, MMDao, MemberDao, PasswordChangeRequestDao, RepertoryDao}
+import org.multics.baueran.frep.shared.Member
 
 package object controllers {
 
@@ -34,11 +35,11 @@ package object controllers {
     *         as in the DB.  This indicates that the user has prior logged in to the system.
     */
 
-  def getAuthenticatedUser(request: Request[AnyContent]): Option[Int] = {
+  def getAuthenticatedUser(request: Request[AnyContent]): Option[Member] = {
     request.headers.get("X-Remote-User") match {
       case Some(uidStr) if (uidStr.length > 0 && uidStr.forall(_.isDigit)) =>
         Logger.debug(s"getAuthenticatedUser: SUCCESS: uid: ${uidStr}.")
-        return Some(uidStr.toInt)
+        return memberDao.get(uidStr.toInt)
       case Some(uidStr) if (uidStr.length == 0) =>
         Logger.debug(s"getAuthenticatedUser: DEBUG: uid: ${uidStr}.")
       case _ =>
@@ -60,7 +61,7 @@ package object controllers {
 
   def isUserAuthorized(request: Request[AnyContent], tries_to_access_data_of_member_id: Int) = {
     getAuthenticatedUser(request) match {
-      case Some(uid) => uid == tries_to_access_data_of_member_id
+      case Some(member) => member.member_id == tries_to_access_data_of_member_id
       case None => false
     }
   }

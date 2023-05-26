@@ -58,8 +58,7 @@ object ChangePasswordForm {
         case Some((pass1, pass2)) if (pass1.length > 0 && pass2.length > 0) =>
           val button = dom.document.getElementById("submitButton").asInstanceOf[HTMLButtonElement]
           button.removeAttribute("disabled")
-
-        case None =>
+        case _ =>
           val button = dom.document.getElementById("submitButton").asInstanceOf[HTMLButtonElement]
           button.setAttribute("disabled", "true")
       }

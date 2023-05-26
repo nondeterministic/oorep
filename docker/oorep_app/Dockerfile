@@ -1,4 +1,4 @@
-FROM openjdk:11.0.16-jdk
+FROM eclipse-temurin:11
 
 ARG VERSION
 ARG PLAYDIR=/usr/local

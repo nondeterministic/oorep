@@ -4,7 +4,6 @@ import java.util.Date
 import java.text.SimpleDateFormat
 
 import io.circe._
-import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.{ Decoder, Encoder }
 
 case class Member(member_id: Int,
@@ -13,20 +12,19 @@ case class Member(member_id: Int,
                   realname: String,
                   email: String,
                   country: String,
+                  numberoflogins: Int,
                   company: Option[String] = None,
                   title: Option[String] = None,
                   student_until: Option[Date] = None,
                   profession: Option[String] = None,
+                  access: Option[String] = None,
                   lastseen: Option[String] = None,
-                  numberoflogins: Int)
-
-//object Member {
-//  implicit val memberDecoder: Decoder[Member] = deriveDecoder[Member]
-//  implicit val memberEncoder: Encoder[Member] = deriveEncoder[Member]
-//}
+                  isadmin: Option[Boolean] = None,
+                  bannedsince: Option[String] = None
+                 )
 
 object Member {
-  val dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+  private val dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
 
   implicit val memberDecoder: Decoder[Member] = new Decoder[Member] {
     final def apply(c: HCursor): Decoder.Result[Member] = {
@@ -61,6 +59,7 @@ object Member {
         case _ => None
       }
       val profession = c.downField("profession").as[String].toOption
+      val access = c.downField("access").as[String].toOption
       val lastseen = c.downField("lastseen").as[String] match {
         case Right(date) => Some(date)
         case _ => None
@@ -69,8 +68,13 @@ object Member {
         case Right(d) => d
         case _ => return Left(DecodingFailure("Member decoding failed: numberoflogins.", c.history))
       }
+      val isadmin = c.downField("isadmin").as[Boolean].toOption
+      val bannedsince = c.downField("bannedsince").as[String] match {
+        case Right(date) => Some(date)
+        case _ => None
+      }
 
-      Right(Member(member_id, member_name, hash, realname, email, country, company, title, student_until, profession, lastseen, numberoflogins))
+      Right(Member(member_id, member_name, hash, realname, email, country, numberoflogins, company, title, student_until, profession, access, lastseen, isadmin, bannedsince))
     }
   }
 
@@ -98,11 +102,23 @@ object Member {
         case Some(d) => Json.fromString(d)
         case None => Json.Null
       }),
+      ("access", m.access match {
+        case Some(d) => Json.fromString(d)
+        case None => Json.Null
+      }),
       ("lastseen", m.lastseen match {
         case Some(d) => Json.fromString(dateFormat.format(d))
         case None => Json.Null
       }),
-      ("numberoflogins", Json.fromInt(m.numberoflogins))
+      ("numberoflogins", Json.fromInt(m.numberoflogins)),
+      ("isadmin", m.isadmin match {
+        case Some(d) => Json.fromBoolean(d)
+        case None => Json.Null
+      }),
+      ("bannedsince", m.bannedsince match {
+        case Some(d) => Json.fromString(dateFormat.format(d))
+        case None => Json.Null
+      })
     )
   }
 

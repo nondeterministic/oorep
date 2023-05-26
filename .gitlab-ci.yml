@@ -1,4 +1,4 @@
-image: openjdk:11.0.14.1-jdk
+image: eclipse-temurin:11
 
 services: 
   - postgres:11

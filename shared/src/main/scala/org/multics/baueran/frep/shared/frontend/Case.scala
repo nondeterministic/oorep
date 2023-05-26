@@ -2,9 +2,6 @@ package org.multics.baueran.frep.shared.frontend
 
 import org.scalajs.dom
 import dom.Event
-import fr.hmil.roshttp.{HttpRequest, Method}
-import fr.hmil.roshttp.body.{MultiPartBody, PlainTextBody}
-import monix.execution.Scheduler.Implicits.global
 import scalatags.JsDom
 import scalatags.JsDom.all._
 import io.circe.syntax._
@@ -31,7 +28,7 @@ object Case {
   private val remedyScores = mutable.HashMap[String,Integer]()
   private var prevCase: Option[shared.Caze] = None
 
-  object SortCaseBy extends Enumeration {
+  private object SortCaseBy extends Enumeration {
     type SortCaseBy = Value
     val Weight = Value("Weight")
     val Abbrev = Value("Abbrev")
@@ -40,7 +37,7 @@ object Case {
   }
   import SortCaseBy._
   private var sortCaseBy = Abbrev
-  private var sortReverse = Var(false)
+  private val sortReverse = Var(false)
   sortReverse.triggerLater(updateCaseViewAndDataStructures())
 
   // This is not really necessary for proper functioning, but when deleting a case/file which is currently shown,
@@ -55,14 +52,15 @@ object Case {
     def apply() = {
       button(cls := "btn btn-sm btn-secondary", id := getId(), `type` := "button", data.toggle := "modal", data.target := s"#${CaseModals.EditModal.getId()}",
         style := "margin-left:5px; margin-bottom: 5px;",
-        onclick := { (event: Event) => {
+        onclick := { (_: Event) => {
           CaseModals.EditModal.CaseIdInput.setEditable()
           CaseModals.EditModal.CaseIdInput.setText("")
           CaseModals.EditModal.CaseDescriptionTextArea.setText("")
           CaseModals.EditModal.SubmitButton.disable()
         }
         },
-        "Open new case")
+        span(cls := "oi oi-document", title := "Create a new case", aria.hidden := "true"),
+        " New...")
     }
   }
 
@@ -81,7 +79,8 @@ object Case {
             case None => ;
           }
         },
-        "Edit case description"
+        span(cls := "oi oi-pencil", title := "Edit case description", aria.hidden := "true"),
+        " Edit description..."
       )
     }
   }
@@ -91,10 +90,25 @@ object Case {
 
     def apply() = {
       button(cls := "btn btn-sm btn-secondary", id := getId(), `type` := "button", style := "display: none; margin-left:5px; margin-bottom: 5px;",
-        onclick := { (event: Event) =>
+        onclick := { (_: Event) =>
           removeFromMemory()
         },
-        "Close case"
+        span(cls := "oi oi-x", title := "Close case", aria.hidden := "true"),
+        " Close"
+      )
+    }
+  }
+
+  object CloneCaseButton extends OorepHtmlButton {
+    def getId() = "cloneCaseButton"
+
+    def apply() = {
+      button(cls := "btn btn-sm btn-secondary", id := getId(), `type` := "button", style := "display: none; margin-left:5px; margin-bottom: 5px;",
+        onclick := { (event: Event) =>
+          cloneCase()
+        },
+        span(cls := "oi oi-tags", title := "Clone case", aria.hidden := "true"),
+        " Clone"
       )
     }
   }
@@ -109,7 +123,8 @@ object Case {
           updateCaseViewAndDataStructures()
           AddToFileModal.unselectAll()
         },
-        "Add case to file"
+        span(cls := "oi oi-plus", title := "Add case to file", aria.hidden := "true"),
+        " Add to file..."
       )
     }
   }
@@ -122,12 +137,9 @@ object Case {
         style := "margin-left:5px; margin-bottom: 5px;",
         onclick := { (event: Event) => {
           updateCaseViewAndDataStructures()
-
-          // TODO: Ugly work-around to activate tooltips as recommended by Bootstrap documentation. :-(
-          // TODO: Interestingly, it seems, it works without.  In fact, turning this on and then closing a HUGE repertorisation, slows down the browser dramatically!
-          // js.eval("""$ ('[data-toggle="tooltip"]').tooltip();""")
         }},
-        "Repertorise"
+        span(cls := "oi oi-grid-three-up", title := "Repertorise", aria.hidden := "true"),
+        " Repertorise..."
       )
     }
   }
@@ -143,30 +155,34 @@ object Case {
     }
 
     def apply() = {
+      def header = "CASE"
+
       getCookieData(dom.document.cookie, CookieFields.id.toString) match {
         case Some(_) =>
           if (descr != None) {
             div(
-              b(id := getId(), "Case '" + descr.get.header + "': "),
+              b(id := getId(), s"$header '" + descr.get.header + "': "),
               EditDescrButton(),
               CloseCaseButton(),
+              CloneCaseButton(),
               AddToFileButton(),
               RepertoriseButton()
             )
           }
           else {
             div(
-              b(id := getId(), "Case: "),
+              b(id := getId(), s"$header: "),
               EditDescrButton(),
               OpenNewCaseButton(),
               CloseCaseButton(),
+              CloneCaseButton(),
               AddToFileButton(),
               RepertoriseButton()
             )
           }
         case None =>
           div(
-            b(id := getId(), "Case: "),
+            b(id := getId(), s"$header: "),
             RepertoriseButton()
           )
       }
@@ -199,17 +215,17 @@ object Case {
     class CaseRow(crub: CaseRubric) extends OorepHtmlElement {
       def getId() = "crub_" + crub.rubric.id + crub.repertoryAbbrev
 
-      implicit def crToCR(cr: CaseRubric) = new BetterCaseRubric(cr)
+      implicit def crToCR(cr: CaseRubric): BetterCaseRubric = new BetterCaseRubric(cr)
 
       val remedies = crub.getFormattedRemedyNames(remedyFormat)
       val weight = Var(crub.rubricWeight) // The weight label on the drop-down button, which needs to change automatically on new user choice
-      val printWeight = Rx {
+      private val printWeight = Rx {
         weight().toString()
       }
 
       // Same for label
       val label = Var(crub.rubricLabel)
-      val printLabel = Rx {
+      private val printLabel = Rx {
         label().getOrElse("")
       }
 
@@ -363,13 +379,31 @@ object Case {
   }
 
   // ------------------------------------------------------------------------------------------------------------------
+  private def cloneCase(): Unit = {
+    descr match {
+      case Some(c) =>
+        descr = None
+        prevCase = None
+        updateCurrOpenFile(None)
+
+        MainView.CaseDiv.empty()
+        MainView.toggleOnBeforeUnload()
+        MainView.CaseDiv.append(new Case.HtmlRepresentation(RepertoryView._remedyFormat.now)().render)
+        updateCaseViewAndDataStructures()
+        updateCaseHeaderView()
+      case None =>
+        println("Case: cloneCase(): failed.")
+    }
+  }
+
+  // ------------------------------------------------------------------------------------------------------------------
   def getCurrOpenFileId() = {
     currOpenFileId
   }
 
   // ------------------------------------------------------------------------------------------------------------------
   // Return the full remedy name for nameabbrev from a list of caseRubrics
-  def getFullNameFromCasRubrics(remedies: List[Remedy], nameabbrev: String) = {
+  private def getFullNameFromCasRubrics(remedies: List[Remedy], nameabbrev: String) = {
     remedies.find(_.nameAbbrev == nameabbrev) match {
       case Some(remedy) => Some(remedy.nameLong)
       case None => None
@@ -417,42 +451,42 @@ object Case {
           if (descr.get.isSupersetOf(prevCase.get).length > 0) { // Add additional case rubrics to DB
             val diff = descr.get.isSupersetOf(prevCase.get)
 
-            HttpRequest(s"${serverUrl()}/${apiPrefix()}/sec/add_caserubrics_to_case")
-              .withHeader("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
-              .post(MultiPartBody(
-                "memberID" -> PlainTextBody(memberId.toString),
-                "caseID" -> PlainTextBody(descr.get.id.toString),
-                "caserubrics" -> PlainTextBody(diff.asJson.toString)))
+            HttpRequest2("sec/add_caserubrics_to_case")
+              .withHeaders(("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse("")))
+              .post(
+                ("memberID" -> memberId.toString),
+                ("caseID" -> descr.get.id.toString),
+                ("caserubrics" -> diff.asJson.toString))
           }
           else if (prevCase.get.isSupersetOf(descr.get).length > 0) { // Delete the removed case rubrics in DB
             val diff = prevCase.get.isSupersetOf(descr.get)
 
-            HttpRequest(s"${serverUrl()}/${apiPrefix()}/sec/del_caserubrics_from_case")
-              .withMethod(Method.DELETE)
-              .withHeader("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
-              .withBody(MultiPartBody(
-                "memberID" -> PlainTextBody(memberId.toString),
-                "caseID" -> PlainTextBody(descr.get.id.toString),
-                "caserubrics" -> PlainTextBody(diff.asJson.toString)))
+            HttpRequest2("sec/del_caserubrics_from_case")
+              .withMethod("DELETE")
+              .withHeaders(("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse("")))
+              .withBody(
+                ("memberID" -> memberId.toString),
+                ("caseID" -> descr.get.id.toString),
+                ("caserubrics" -> diff.asJson.toString))
               .send()
           }
           else if (descr.get.isEqualExceptUserDefinedValues(prevCase.get).length > 0) { // Update user defined case rubric values only in DB
             val diff = prevCase.get.isEqualExceptUserDefinedValues(descr.get) // These are the user-changed ones, which we'll need to update in the DB, too.
 
-            HttpRequest(s"${serverUrl()}/${apiPrefix()}/sec/update_caserubrics_userdef")
-              .withHeader("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
-              .put(MultiPartBody(
-                "memberID" -> PlainTextBody(memberId.toString),
-                "caseID" -> PlainTextBody(descr.get.id.toString),
-                "caserubrics" -> PlainTextBody(diff.asJson.toString)))
+            HttpRequest2("sec/update_caserubrics_userdef")
+              .withHeaders(("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse("")))
+              .put(
+                ("memberID" -> memberId.toString),
+                ("caseID" -> descr.get.id.toString),
+                ("caserubrics" -> diff.asJson.toString))
           }
           else if (descr.get.description != prevCase.get.description) {
-            HttpRequest(s"${serverUrl()}/${apiPrefix()}/sec/update_case_description")
-              .withHeader("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
-              .put(MultiPartBody(
-                "memberID" -> PlainTextBody(memberId.toString),
-                "caseID" -> PlainTextBody(descr.get.id.toString),
-                "casedescription" -> PlainTextBody(descr.get.description)))
+            HttpRequest2("sec/update_case_description")
+              .withHeaders(("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse("")))
+              .put(
+                ("memberID" -> memberId.toString),
+                ("caseID" -> descr.get.id.toString),
+                ("casedescription" -> descr.get.description))
           }
           else {
             println("Case: updateFileModalDataStructures(): NOT saving case, although something indicates it may have changed. " +
@@ -468,12 +502,12 @@ object Case {
       // Delete not only view but entire case from DB, when user removed all of its rubrics...
       if (cRubrics.size == 0) {
         if (descr != None && descr.get.id != 0)
-          HttpRequest(s"${serverUrl()}/${apiPrefix()}/sec/del_case")
-            .withMethod(Method.DELETE)
-            .withHeader("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
-            .withBody(MultiPartBody(
-              "caseId" -> PlainTextBody(descr.get.id.toString()),
-              "memberId" -> PlainTextBody(memberId.toString())))
+          HttpRequest2("sec/del_case")
+            .withMethod("DELETE")
+            .withHeaders(("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse("")))
+            .withBody(
+              ("caseId" -> descr.get.id.toString()),
+              ("memberId" -> memberId.toString()))
             .send()
 
         CaseModals.EditModal.CaseIdInput.setEditable()
@@ -532,12 +566,12 @@ object Case {
               cr.repertoryAbbrev + cr.rubricLabel.getOrElse("") + cr.rubric.fullPath
             else
               cr.rubricLabel.getOrElse("") + cr.repertoryAbbrev + cr.rubric.fullPath
-          })(if (sortReverse.now) Ordering[String].reverse else Ordering[String].key))
+          })(if (sortReverse.now) Ordering[String].reverse else Ordering[String]))
         {
           val trId = cr.rubric.fullPath.replaceAll("[^A-Za-z0-9]", "") + "_" + cr.repertoryAbbrev
 
           // Construct table row entries
-          var tableRowEntries = new ListBuffer[JsDom.TypedTag[dom.html.TableCell]]()
+          val tableRowEntries = new ListBuffer[JsDom.TypedTag[dom.html.TableCell]]()
           if (caseUsesWeights)
             tableRowEntries += td(cr.rubricWeight.toString())
           tableRowEntries += td(cr.repertoryAbbrev)
@@ -563,13 +597,14 @@ object Case {
     }
   }
 
-  def updateCaseHeaderView() = {
+  def updateCaseHeaderView(): Unit = {
     getCookieData(dom.document.cookie, CookieFields.id.toString) match {
       // Not logged in...
       case None =>
         OpenNewCaseButton.hide()
         EditDescrButton.hide()
         CloseCaseButton.hide()
+        CloneCaseButton.hide()
       // Logged in...
       case Some(_) =>
         descr match {
@@ -578,12 +613,14 @@ object Case {
             OpenNewCaseButton.show()
             EditDescrButton.hide()
             CloseCaseButton.hide()
+            CloneCaseButton.hide()
             AddToFileButton.disable()
           // Case exists...
           case Some(currCase) =>
             OpenNewCaseButton.hide()
             EditDescrButton.show()
             CloseCaseButton.show()
+            CloneCaseButton.show()
 
             // Id is > 0, if the case has been already added to DB.  We disallow readding.
             if (currCase.id <= 0) {

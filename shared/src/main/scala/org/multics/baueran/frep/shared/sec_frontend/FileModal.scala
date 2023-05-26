@@ -18,7 +18,7 @@ abstract class FileModal {
 
   var selected_file_header: Var[Option[String]] = Var(None)
   var selected_file_id: Var[Option[Int]] = Var(None)
-  val divs: Var[List[dom.html.Div]] = Var(List.empty)
+  private val divs: Var[List[dom.html.Div]] = Var(List.empty)
   private var sortAscending = true
 
   def unselectAll() = {

@@ -87,8 +87,16 @@
                 <li class="navbar-item dropdown">
                     <a class="nav-link dropdown-toggle py-0" href="#" data-toggle="dropdown">File</a>
                     <div class="dropdown-menu dropdown-menu-right">
-                        <a class="dropdown-item" href="#" data-toggle="modal" data-target="#@(org.multics.baueran.frep.shared.sec_frontend.NewFileModal.getId())">New...</a>
-                        <a id="navbar_open_file" class="dropdown-item" href="#" data-toggle="modal" data-target="#@(org.multics.baueran.frep.shared.sec_frontend.OpenFileModal.MainModal.getId())">Open...</a>
+                        <a class="dropdown-item" href="#" data-toggle="modal" data-target="#@(org.multics.baueran.frep.shared.sec_frontend.NewFileModal.getId())">
+                            <span class="oi oi-envelope-closed" title="New..." aria-hidden="true"></span>
+                            &nbsp;
+                            New...
+                        </a>
+                        <a id="navbar_open_file" class="dropdown-item" href="#" data-toggle="modal" data-target="#@(org.multics.baueran.frep.shared.sec_frontend.OpenFileModal.MainModal.getId())">
+                            <span class="oi oi-envelope-open" title="Open..." aria-hidden="true"></span>
+                            &nbsp;
+                            Open...
+                        </a>
                     </div>
                 </li>
                 <li class="navbar-item dropdown">

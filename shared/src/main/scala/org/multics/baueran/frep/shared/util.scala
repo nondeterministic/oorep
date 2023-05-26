@@ -1,9 +1,6 @@
 package org.multics.baueran.frep.shared
 
-import fr.hmil.roshttp.HttpRequest
-import fr.hmil.roshttp.response.SimpleHttpResponse
-import monix.execution.Scheduler.Implicits.global
-import org.multics.baueran.frep.shared.Defs.{CookieFields}
+import org.multics.baueran.frep.shared.Defs.CookieFields
 import org.multics.baueran.frep.shared.frontend.{RemedyFormat, apiPrefix, serverUrl}
 import org.multics.baueran.frep.shared.frontend.RemedyFormat._
 import org.scalajs.dom
@@ -11,7 +8,7 @@ import scalatags.JsDom.all._
 
 import java.text.SimpleDateFormat
 import java.util.Date
-import scala.util.Success
+import scala.annotation.tailrec
 import scala.util.matching.Regex
 
 class BetterString(val s: String) {
@@ -53,6 +50,7 @@ class SearchTerms(val symptom: String) {
   private def unexactSearchStringsOnly(rawSymptom: String): List[String] = {
     val exactSymptoms = exactSearchStringsOnly(rawSymptom)
 
+    @tailrec
     def removeExactSymptoms(input: String, exactsSymptoms: List[String]): String = {
       if (exactsSymptoms.length == 0)
         input
@@ -169,16 +167,13 @@ object TopLevelUtilCode {
   }
 
   def sendAcceptCookies() = {
-    HttpRequest(s"${serverUrl()}/${apiPrefix()}/store_cookie")
+    HttpRequest2("store_cookie")
       .withQueryParameters("name" -> CookieFields.cookiePopupAccepted.toString, "value" -> "1")
-      .send()
-      .onComplete({
-        case _: Success[SimpleHttpResponse] =>
-          dom.document.getElementById("cookiePopup").asInstanceOf[dom.html.Div].classList.remove("show")
-          dom.document.getElementById("cookiePopup").asInstanceOf[dom.html.Div].style.setProperty("display", "none")
-        case _ =>
-          println("Error: Cookie popup not destroyed.")
+      .onSuccess((response: String) => {
+        dom.document.getElementById("cookiePopup").asInstanceOf[dom.html.Div].classList.remove("show")
+        dom.document.getElementById("cookiePopup").asInstanceOf[dom.html.Div].style.setProperty("display", "none")
       })
+      .send()
   }
 
   def loadMainPageAndJumpToAnchor(anchor: String) = {
@@ -192,7 +187,7 @@ object TopLevelUtilCode {
 
   def toggleTheme() = {
     def storeThemeInCookie(theme: String) =
-      HttpRequest(s"${serverUrl()}/${apiPrefix()}/store_cookie")
+      HttpRequest2("store_cookie")
         .withQueryParameters("name" -> CookieFields.theme.toString, "value" -> theme)
         .send()
 

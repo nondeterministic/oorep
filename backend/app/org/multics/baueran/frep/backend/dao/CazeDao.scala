@@ -3,7 +3,7 @@ package org.multics.baueran.frep.backend.dao
 import org.multics.baueran.frep._
 import backend.db
 import shared.{BetterString, CaseRubric, Caze}
-import io.getquill.{ActionReturning, Query, Update}
+import io.getquill.{ActionReturning, Query, Quoted, Update}
 
 class CazeDao(dbContext: db.db.DBContext) {
 
@@ -34,7 +34,7 @@ class CazeDao(dbContext: db.db.DBContext) {
       // Insert case result IDs
       val rawQuery = quote {
         (id: Int, crs: List[Int]) =>
-          infix"""UPDATE caze SET results=$crs WHERE id=$id"""
+          sql"""UPDATE caze SET results=$crs WHERE id=$id"""
             .as[Update[Caze]]
       }
       run(rawQuery(lift(newId), lift(caseResultIds)))
@@ -59,7 +59,7 @@ class CazeDao(dbContext: db.db.DBContext) {
     else {
       val rawQuery = quote {
         // Notice the '#' in front for dynamic infix queries! It is, sort of, the alternative to lift(...).
-        infix"""SELECT id, header, member_id, date_, description, results FROM caze WHERE id IN (#${ids.mkString(", ")})"""
+        sql"""SELECT id, header, member_id, date_, description, results FROM caze WHERE id IN (#${ids.mkString(", ")})"""
           .as[Query[RawCaze]]
       }
 
@@ -198,7 +198,7 @@ class CazeDao(dbContext: db.db.DBContext) {
         // Add case result ids to case
         val rawQuery = quote {
           (id: Int, crs: List[Int]) =>
-            infix"""UPDATE caze SET results=results || $crs WHERE id=$id"""
+            sql"""UPDATE caze SET results=results || $crs WHERE id=$id"""
               .as[Update[Caze]]
         }
         val numberOfUpdates = run(rawQuery(lift(caseId), lift(caseResultIds)))
@@ -228,7 +228,7 @@ class CazeDao(dbContext: db.db.DBContext) {
         val leftOverCaseResultIds: List[Int] = caze.results.toSet.filterNot(deletedCaseResultIds.toSet).asInstanceOf[Set[Int]].toList
         val rawQuery = quote {
           (id: Int, crs: List[Int]) =>
-            infix"""UPDATE caze SET results=$crs WHERE id=$id"""
+            sql"""UPDATE caze SET results=$crs WHERE id=$id"""
               .as[Update[Caze]]
         }
 

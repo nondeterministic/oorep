@@ -5,12 +5,8 @@ import org.multics.baueran.frep.shared._
 import frontend.{CaseModals, LoadingSpinner, MainView, apiPrefix, serverUrl}
 import TopLevelUtilCode.{deleteCookies, toggleTheme}
 import sec_frontend.{AddToFileModal, EditFileModal, FileModalCallbacks, MMModal, NewFileModal, OpenFileModal, RepertoryModal}
-import fr.hmil.roshttp.HttpRequest
-import fr.hmil.roshttp.response.SimpleHttpResponse
 
-import scala.util.{Failure, Success}
 import scalatags.JsDom.all.{id, _}
-import monix.execution.Scheduler.Implicits.global
 import org.scalajs.dom
 import org.scalajs.dom.Event
 
@@ -20,29 +16,27 @@ import scala.scalajs.js.URIUtils.encodeURI
 object Main extends MainUtil {
 
   private def authenticateAndPrepare(): Unit = {
-    HttpRequest(s"${serverUrl()}/${apiPrefix()}/authenticate")
-      .send()
-      .onComplete({
-        case response: Success[SimpleHttpResponse] => {
-          if (dom.document.getElementById("static_content") == null) {
-            dom.document.getElementById("content").appendChild(MainView().render)
-          }
-
-          try {
-            val memberId = response.get.body.toInt
-            FileModalCallbacks.updateMemberFiles(memberId)
-          } catch {
-            case exception: Throwable =>
-              dom.document.location.replace(s"${serverUrl()}/${apiPrefix()}/display_error_page?message=${encodeURI("Not authenticated or cookie expired")}")
-              println("Exception: could not convert member-id '" + exception + "'. Deleting the cookies now!")
-              deleteCookies()
-          }
+    HttpRequest2("authenticate")
+      .onSuccess((response: String) => {
+        if (dom.document.getElementById("static_content") == null) {
+          dom.document.getElementById("content").appendChild(MainView().render)
         }
-        case _: Failure[SimpleHttpResponse] => {
-          dom.document.location.replace(s"${serverUrl()}/${apiPrefix()}/display_error_page?message=${encodeURI("Not authenticated or cookie expired")}")
-          deleteCookies()
+
+        try {
+          val memberId = response.toInt
+          FileModalCallbacks.updateMemberFiles(memberId)
+        } catch {
+          case exception: Throwable =>
+            dom.document.location.replace(s"${serverUrl()}/${apiPrefix()}/display_error_page?message=${encodeURI("Not authenticated or cookie expired")}")
+            println("Exception: could not convert member-id '" + exception + "'. Deleting the cookies now!")
+            deleteCookies()
         }
       })
+      .onFailure((_) => {
+        dom.document.location.replace(s"${serverUrl()}/${apiPrefix()}/display_error_page?message=${encodeURI("Not authenticated or cookie expired")}")
+        deleteCookies()
+      })
+      .send()
   }
 
   def main(args: Array[String]): Unit = {

@@ -37,7 +37,7 @@ object WeightedRemedy {
   // TODO: This seems a bit stupid: I provide a custom keyDe/Encoder, which
   // uses the derived Remedy de/encoder.  Is this really necessary?
 
-  implicit val keyRemedyDecoder = new KeyDecoder[Remedy] {
+  implicit val keyRemedyDecoder: KeyDecoder[Remedy] = new KeyDecoder[Remedy] {
     def apply(key: String): Option[Remedy] = {
       parse(key) match {
         case Right(json) => {
@@ -52,7 +52,7 @@ object WeightedRemedy {
     }
   }
 
-  implicit val keyRemedyEncoder = new KeyEncoder[Remedy] {
+  implicit val keyRemedyEncoder: KeyEncoder[Remedy] = new KeyEncoder[Remedy] {
     override def apply(remedy: Remedy): String = {
       remedy.asJson.toString()
     }

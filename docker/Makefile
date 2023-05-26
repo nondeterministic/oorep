@@ -10,14 +10,14 @@ SHELL:=/bin/bash
 branch:=master
 version:=$(shell cat ../build.sbt | grep 'version :=' | sed -n -r 's/.*\"([^\"]+)\"/\1/p')
 playapp:=backend-$(version)
-sbt:=sbt-1.3.4
+sbt:=1.6.2
 
 all: oorep_app/$(playapp).zip oorep_db/oorep.sql .env
 	@echo "**************************************"
 	@echo "All done. Now, do docker-compose build"
 	@echo "**************************************"
 
-oorep_app/$(playapp).zip: tmp/$(sbt).zip tmp/oorep/LICENSE .env
+oorep_app/$(playapp).zip: tmp/sbt-$(sbt).zip tmp/oorep/LICENSE .env
 	cd tmp/oorep && git pull
 	cd tmp/oorep/backend/public/html && wget -nc http://pspace.org/a/third-party-v3.tar.gz && tar xzf third-party-v3.tar.gz && rm third-party-v3.tar.gz
 	cd tmp/oorep && ../sbt/bin/sbt compile && ../sbt/bin/sbt dist
@@ -29,12 +29,12 @@ oorep_app/$(playapp).zip: tmp/$(sbt).zip tmp/oorep/LICENSE .env
 .env:
 	echo "VERSION=$(version)" > ./.env
 
-tmp/$(sbt).zip:
+tmp/sbt-$(sbt).zip:
 	mkdir -p tmp
-	cd tmp && wget -nc https://github.com/sbt/sbt/releases/download/v1.3.4/$(sbt).zip
-	cd tmp && unzip $(sbt).zip
+	cd tmp && wget -nc https://github.com/sbt/sbt/releases/download/v$(sbt)/sbt-$(sbt).zip
+	cd tmp && unzip sbt-$(sbt).zip
 
-tmp/oorep/LICENSE: tmp/$(sbt).zip
+tmp/oorep/LICENSE: tmp/sbt-$(sbt).zip
 	cd tmp && git clone -b $(branch) git@github.com:nondeterministic/oorep.git
 
 oorep_db/oorep.sql:

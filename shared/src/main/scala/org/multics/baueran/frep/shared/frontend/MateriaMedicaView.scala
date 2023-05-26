@@ -1,21 +1,17 @@
 package org.multics.baueran.frep.shared.frontend
 
-import scalatags.rx.all._
 import scalatags.JsDom
-import org.scalajs.dom.raw.HTMLInputElement
 import JsDom.all._
-import fr.hmil.roshttp.{BackendConfig, HttpRequest}
-import fr.hmil.roshttp.response.SimpleHttpResponse
+import scalatags.rx.all._
+import org.scalajs.dom.raw.HTMLInputElement
 import io.circe.parser.parse
 import org.scalajs.dom
 import dom.html.{Div, Element}
 import dom.Event
-import monix.execution.Scheduler.Implicits.global
 import rx.{Rx, Var}
 import rx.Ctx.Owner.Unsafe._
 
-import scala.util.{Failure, Success}
-import org.multics.baueran.frep.shared.{HitsPerRemedy, MMAllSearchResults, MMAndRemedyIds, MMSearchResult, MateriaMedicas, Paginator, Remedies, Remedy}
+import org.multics.baueran.frep.shared.{HitsPerRemedy, HttpRequest2, MMAllSearchResults, MMAndRemedyIds, MMSearchResult, MateriaMedicas, Paginator, Remedies, Remedy}
 import org.multics.baueran.frep.shared.Defs.{maxLengthOfSymptoms, maxNumberOfResultsPerMMPage}
 import org.multics.baueran.frep.shared.Defs.ResourceAccessLvl
 
@@ -416,48 +412,45 @@ object MateriaMedicaView extends TabView {
     _remedies = new Remedies(remedies)
 
     if (_materiaMedicas.now.size() == 0) {
-      HttpRequest(s"${serverUrl()}/${apiPrefix()}/available_rems_and_mms")
-        .send()
-        .onComplete({
-          case response: Success[SimpleHttpResponse] => {
-            parse(response.get.body) match {
-              case Right(json) => {
-                val cursor = json.hcursor
-                cursor.as[List[MMAndRemedyIds]] match {
-                  case Right(mmsAndRemedies) => {
-                    // Fill dropdown menu by triggering the corresponding RX...
-                    _materiaMedicas() = new MateriaMedicas(
-                      mmsAndRemedies.map{ case MMAndRemedyIds(mminfo, remedyIds) =>
-                        (mminfo, remedyIds.map(_remedies.get(_)).flatten)
-                      }
-                    )
-
-                    // Determine default materia medica...
-                    if (_selectedMateriaMedicaAbbrev.now == None) {
-                      mmsAndRemedies.filter(_.mminfo.access == ResourceAccessLvl.Default.toString) match {
-                        case defaultMateriaMedica :: _ =>
-                          _selectedMateriaMedicaAbbrev() = Some(defaultMateriaMedica.mminfo.abbrev)
-                          dom.document.getElementById(s"${_prefix}mmSelectionDropDownButton") match {
-                            case null => ; // Do nothing: this triggers, e.g., when user calls direct link to repertorisation results (/show?)
-                            case dropDownButton =>
-                              dropDownButton.asInstanceOf[dom.html.Button].textContent =
-                                s"M. Medica: ${defaultMateriaMedica.mminfo.abbrev}"
-                          }
-                          _defaultMMAbbrev = Some(defaultMateriaMedica.mminfo.abbrev)
-                        case Nil => ;
-                      }
+      HttpRequest2("available_rems_and_mms")
+        .onSuccess((response: String) =>
+          parse(response) match {
+            case Right(json) => {
+              val cursor = json.hcursor
+              cursor.as[List[MMAndRemedyIds]] match {
+                case Right(mmsAndRemedies) => {
+                  // Fill dropdown menu by triggering the corresponding RX...
+                  _materiaMedicas() = new MateriaMedicas(
+                    mmsAndRemedies.map{ case MMAndRemedyIds(mminfo, remedyIds) =>
+                      (mminfo, remedyIds.map(_remedies.get(_)).flatten)
                     }
+                  )
 
-                    runAfterUpdate()
+                  // Determine default materia medica...
+                  if (_selectedMateriaMedicaAbbrev.now == None) {
+                    mmsAndRemedies.filter(_.mminfo.access == ResourceAccessLvl.Default.toString) match {
+                      case defaultMateriaMedica :: _ =>
+                        _selectedMateriaMedicaAbbrev() = Some(defaultMateriaMedica.mminfo.abbrev)
+                        dom.document.getElementById(s"${_prefix}mmSelectionDropDownButton") match {
+                          case null => ; // Do nothing: this triggers, e.g., when user calls direct link to repertorisation results (/show?)
+                          case dropDownButton =>
+                            dropDownButton.asInstanceOf[dom.html.Button].textContent =
+                              s"M. Medica: ${defaultMateriaMedica.mminfo.abbrev}"
+                        }
+                        _defaultMMAbbrev = Some(defaultMateriaMedica.mminfo.abbrev)
+                      case Nil => ;
+                    }
                   }
-                  case Left(error) => println(s"Materia medica decoding failed: $error")
+
+                  runAfterUpdate()
                 }
+                case Left(error) => println(s"Materia medica decoding failed: $error")
               }
-              case Left(error) => println(s"Materia medica parsing failed: $error")
             }
+            case Left(error) => println(s"Materia medica parsing failed: $error")
           }
-          case error: Failure[SimpleHttpResponse] => println(s"Materia medica information not received from backend: ${error.toString}")
-        })
+        )
+        .send()
     }
     else
       refreshMMDropDownButtonLabel()
@@ -795,52 +788,46 @@ object MateriaMedicaView extends TabView {
         updateDataAndView(cachePage.content)
       }
       case None => {
-        HttpRequest(s"${serverUrl()}/${apiPrefix()}/lookup_mm")
+        HttpRequest2("lookup_mm")
           .withQueryParameters(
             ("mmAbbrev", abbrev),
             ("symptom", symptom),
             ("page", page.getOrElse(0).toString),
             ("remedyString", remedyStringOpt.getOrElse(""))
           )
-          .withBackendConfig(BackendConfig(
-            // 1 MB maxChunkSize; see also build.sbt where the same is set for the Akka backend!
-            // It only works, so long as server's chunks are not larger than maxChunkSize below,
-            // or if the reply fits well within one chunk and no second, third, etc. is sent at
-            // all.  An interesting test case is "schmerz*" in kent-de as this is the longest
-            // reply, I have found from the backend yet.  So, it used to crash on "schmerz*" in
-            // kent-de, if the chunk size was too small.
-            maxChunkSize = 1048576
-          ))
-          .send()
-          .onComplete({
-            case response: Success[SimpleHttpResponse] => {
-              parse(response.get.body) match {
-                case Right(json) => {
-                  val cursor = json.hcursor
-                  cursor.as[MMAllSearchResults] match {
-                    case Right(MMAllSearchResults(results, numberOfMatchingSectionsPerChapter)) =>
-                      if (results.length > 0) {
-                        _latestSymptomString() = Some(symptom)
-                        _latestRemedyString() = remedyStringOpt
+          // 1 MB maxChunkSize; see also build.sbt where the same is set for the Akka backend!
+          // It only works, so long as server's chunks are not larger than maxChunkSize below,
+          // or if the reply fits well within one chunk and no second, third, etc. is sent at
+          // all.  An interesting test case is "schmerz*" in kent-de as this is the longest
+          // reply, I have found from the backend yet.  So, it used to crash on "schmerz*" in
+          // kent-de, if the chunk size was too small.
+          .withChunkSize(1048576)
+          .onSuccess((response: String) =>
+            parse(response) match {
+              case Right(json) => {
+                val cursor = json.hcursor
+                cursor.as[MMAllSearchResults] match {
+                  case Right(MMAllSearchResults(results, numberOfMatchingSectionsPerChapter)) =>
+                    if (results.length > 0) {
+                      _latestSymptomString() = Some(symptom)
+                      _latestRemedyString() = remedyStringOpt
 
-                        _pageCache.addPage(CachePageMM(abbrev, symptom, remedyStringOpt, page.getOrElse(0), MMAllSearchResults(results, numberOfMatchingSectionsPerChapter)))
-                        _selectedMateriaMedicaAbbrev() = Some(abbrev)
-                        updateDataAndView(MMAllSearchResults(results, numberOfMatchingSectionsPerChapter))
-                      }
-                      else
-                        showErrorMessage(None)
-                    case Left(error) =>
-                      println(error) // Malformed JSON - shouldn't happen at all
-                  }
-                }
-                case Left(_) => {
-                  showErrorMessage(None) // No results returned, most likely from entering incorrect remedy name
+                      _pageCache.addPage(CachePageMM(abbrev, symptom, remedyStringOpt, page.getOrElse(0), MMAllSearchResults(results, numberOfMatchingSectionsPerChapter)))
+                      _selectedMateriaMedicaAbbrev() = Some(abbrev)
+                      updateDataAndView(MMAllSearchResults(results, numberOfMatchingSectionsPerChapter))
+                    }
+                    else
+                      showErrorMessage(None)
+                  case Left(error) =>
+                    println(error) // Malformed JSON - shouldn't happen at all
                 }
               }
+              case Left(_) => {
+                showErrorMessage(None) // No results returned, most likely from entering incorrect remedy name
+              }
             }
-            // TODO: Backend did not send success response. Do we need to handle this at all?
-            case _ => println("TODO")
-          })
+          )
+          .send()
       }
     }
   }

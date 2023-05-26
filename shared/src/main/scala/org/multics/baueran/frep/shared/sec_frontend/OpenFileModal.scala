@@ -1,9 +1,7 @@
 package org.multics.baueran.frep.shared.sec_frontend
 
-import fr.hmil.roshttp.{HttpRequest, Method}
-import fr.hmil.roshttp.body.{MultiPartBody, PlainTextBody}
-import monix.execution.Scheduler.Implicits.global
 import org.multics.baueran.frep.shared.Defs.CookieFields
+import org.multics.baueran.frep.shared.HttpRequest2
 import org.multics.baueran.frep.shared.frontend.{Case, MainView, OorepHtmlButton, OorepHtmlElement, apiPrefix, getCookieData, serverUrl}
 import org.scalajs.dom
 import org.scalajs.dom.{Event, document}
@@ -14,16 +12,14 @@ object OpenFileModal extends FileModal {
   private def requestFileDeletion() = {
     getCookieData(dom.document.cookie, CookieFields.id.toString) match {
       case Some(memberId) => {
-        HttpRequest(s"${serverUrl()}/${apiPrefix()}/sec/del_file_and_cases")
-          .withMethod(Method.DELETE)
-          .withHeader("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
-          .withBody(MultiPartBody(
-            "memberId" -> PlainTextBody(memberId.toString()),
-            "fileId" -> PlainTextBody(selected_file_id.now.getOrElse(-1).toString)))
+        HttpRequest2("sec/del_file_and_cases")
+          .withMethod("DELETE")
+          .withHeaders("Csrf-Token" -> getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
+          .withBody(
+            ("memberId" -> memberId.toString()),
+            ("fileId" -> selected_file_id.now.getOrElse(-1).toString))
+          .onSuccess((_) => { FileModalCallbacks.updateMemberFiles(memberId.toInt) })
           .send()
-          .onComplete({ case _ =>
-            FileModalCallbacks.updateMemberFiles(memberId.toInt)
-          })
 
         // If the file had currently a case opened in the case view,
         // remove it from screen to avoid weird database behaviour,

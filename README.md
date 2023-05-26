@@ -39,7 +39,7 @@ intended for any production environments or the like without further modificatio
 
 #### Prerequisites
 
-* Java SDK >= 8
+* Java SDK versions 8 or 11
 * Scala Build Tool SBT >= 1.3.0
 * A PostgreSQL database server >= 9.6
 

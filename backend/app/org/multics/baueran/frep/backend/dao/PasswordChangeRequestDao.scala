@@ -10,7 +10,7 @@ class PasswordChangeRequestDao(dbContext: db.db.DBContext) {
 
   def insert(pcr: PasswordChangeRequest) = {
     val rawInsert = quote {
-      infix"""INSERT INTO passwordchangerequest(id, date_, member_id) VALUES(crypt('#${pcr.id}', gen_salt('bf')), '#${pcr.date_}', #${pcr.member_id});"""
+      sql"""INSERT INTO passwordchangerequest(id, date_, member_id) VALUES(crypt('#${pcr.id}', gen_salt('bf')), '#${pcr.date_}', #${pcr.member_id});"""
         .as[Insert[PasswordChangeRequest]]
     }
     run(rawInsert)
@@ -31,7 +31,7 @@ class PasswordChangeRequestDao(dbContext: db.db.DBContext) {
     val cleanId = id.replaceAll("[ ;']", "")
 
     val rawSelect = quote {
-      infix"""SELECT * FROM
+      sql"""SELECT * FROM
              (SELECT CASE WHEN (id=crypt('#${cleanId}', id))='t' THEN '#${cleanId}' ELSE 'f' END AS id, date_, member_id FROM passwordchangerequest)
              AS foobar WHERE id='#${cleanId}'"""
         .as[Query[PasswordChangeRequest]]

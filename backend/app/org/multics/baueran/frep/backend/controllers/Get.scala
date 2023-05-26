@@ -51,13 +51,13 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
       case None =>
         Logger.error("Get: login() not completed successfully: sending user to logout to be safe.")
         Redirect(sys.env.get("OOREP_URL_LOGOUT").getOrElse(""))
-      case Some(uid) =>
-        memberDao.increaseLoginCounter(uid)
-        memberDao.setLastSeen(uid, new MyDate())
-        Logger.debug(s"Get: login() completed for user ${uid.toString}.")
+      case Some(member) =>
+        memberDao.increaseLoginCounter(member.member_id)
+        memberDao.setLastSeen(member.member_id, new MyDate())
+        Logger.debug(s"Get: login() completed for user ${member.member_id.toString}.")
         Redirect(serverUrl(request))
           .withCookies(
-            Cookie(CookieFields.id.toString, uid.toString, secure = true, httpOnly = false),
+            Cookie(CookieFields.id.toString, member.member_id.toString, secure = true, httpOnly = false),
             Cookie(CookieFields.cookiePopupAccepted.toString, "1", secure = true, httpOnly = false)
           )
     }
@@ -99,13 +99,13 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
   def serve_static_html(page: String) = Action { implicit request: Request[AnyContent] =>
     page match {
       case "index" => Ok(views.html.index_landing(request))
-      case "cookies" => Ok(views.html.index_static_content(request, views.html.partial.cookies.render, "OOREP - Privacy policy"))
-      case "contact" => Ok(views.html.index_static_content(request, views.html.partial.contact.render, "OOREP - Contact"))
-      case "datenschutz" => Ok(views.html.index_static_content(request, views.html.partial.datenschutz.render, "OOREP - Datenschutzerklärung"))
-      case "faq" => Ok(views.html.index_static_content(request, views.html.partial.faq.render, "OOREP - Frequently asked questions and answers"))
-      case "forgot_password" => Ok(views.html.index_static_content(request, views.html.partial.forgot_password.render, s"OOREP ${xml.Utility.escape("—")} open online homeopathic repertory"))
-      case "impressum" => Ok(views.html.index_static_content(request, views.html.partial.impressum.render, "OOREP - Impressum", "de"))
-      case "register" => Ok(views.html.index_static_content(request, views.html.partial.register.render, "OOREP - Registration"))
+      case "cookies" => Ok(views.html.index_static_content(request, views.html.partial.cookies.render(), "OOREP - Privacy policy"))
+      case "contact" => Ok(views.html.index_static_content(request, views.html.partial.contact.render(), "OOREP - Contact"))
+      case "datenschutz" => Ok(views.html.index_static_content(request, views.html.partial.datenschutz.render(), "OOREP - Datenschutzerklärung"))
+      case "faq" => Ok(views.html.index_static_content(request, views.html.partial.faq.render(), "OOREP - Frequently asked questions and answers"))
+      case "forgot_password" => Ok(views.html.index_static_content(request, views.html.partial.forgot_password.render(), s"OOREP ${xml.Utility.escape("—")} open online homeopathic repertory"))
+      case "impressum" => Ok(views.html.index_static_content(request, views.html.partial.impressum.render(), "OOREP - Impressum", "de"))
+      case "register" => Ok(views.html.index_static_content(request, views.html.partial.register.render(), "OOREP - Registration"))
       case _ => NotFound(views.html.defaultpages.notFound("GET", page))
     }
   }
@@ -150,8 +150,8 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
 
   def apiAuthenticate() = Action { request: Request[AnyContent] =>
     getAuthenticatedUser(request) match {
-      case Some(uid) =>
-        Ok(uid.toString)
+      case Some(member) =>
+        Ok(member.member_id.toString)
       case None =>
         val errStr = s"Get: apiAuthenticate(): User cannot be authenticated."
         Logger.error(errStr)
@@ -164,11 +164,11 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
   }
 
   def apiAvailableRepertoriesAndRemedies() = Action { request: Request[AnyContent] =>
-    Ok((repertoryDao.getRepsAndRemedies(getAuthenticatedUser(request) != None).asJson.toString))
+    Ok((repertoryDao.getRepsAndRemedies(getAuthenticatedUser(request)).asJson.toString))
   }
 
   def apiAvailableMateriaMedicasAndRemedies() = Action { request: Request[AnyContent] =>
-    Ok(mmDao.getMMsAndRemedies(getAuthenticatedUser(request) != None).asJson.toString())
+    Ok(mmDao.getMMsAndRemedies(getAuthenticatedUser(request)).asJson.toString())
   }
 
   /**
@@ -180,7 +180,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
         val errStr = "Get: apiSecAvailableFiles() failed: not authenticated"
         Logger.error(errStr)
         Unauthorized(errStr)
-      case Some(uid) =>
+      case Some(_) =>
         if (!isUserAuthorized(request, memberId)) {
           val err = s"Get: apiSecAvailableFiles() failed: not authorised"
           Logger.error(err)
@@ -218,9 +218,9 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
 
   def apiSecGetCase(caseId: String) = Action { request: Request[AnyContent] =>
     getAuthenticatedUser(request) match {
-      case Some(uid) if (caseId.forall(_.isDigit)) => {
+      case Some(member) if (caseId.forall(_.isDigit)) => {
         cazeDao.get(caseId.toInt) match {
-          case Right(caze) if (caze.member_id == uid) =>
+          case Right(caze) if (caze.member_id == member.member_id) =>
             if (!isUserAuthorized(request, caze.member_id)) {
               val err = s"Get: apiSecGetCase() failed: not authorised."
               Logger.error(err)
@@ -291,7 +291,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
       val cleanedUpAbbrev = repertoryAbbrev.replaceAll("[^0-9A-Za-z\\-]", "")
 
       // Check if user is allowed to access the resource at all (might be Private or Protected and user not logged in)
-      if (repertoryDao.getRepsAndRemedies(getAuthenticatedUser(request) != None).find(_.info.abbrev == cleanedUpAbbrev) == None) {
+      if (repertoryDao.getRepsAndRemedies(getAuthenticatedUser(request)).find(_.info.abbrev == cleanedUpAbbrev) == None) {
         Logger.info(s"Get: apiLookupRep(abbrev: ${repertoryAbbrev}, symptom: ${symptom}, page: ${page}, remedy: ${remedyString}, weight: ${minWeight}): user not allowed to access ressource.")
         NoContent
       }
@@ -317,7 +317,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
       val cleanedUpAbbrev = mmAbbrev.replaceAll("[^0-9A-Za-z\\-]", "")
 
       // Check if user is allowed to access the resource at all (might be Private or Protected and user not logged in)
-      if (mmDao.getMMsAndRemedies(getAuthenticatedUser(request) != None).find(_.mminfo.abbrev == cleanedUpAbbrev) == None) {
+      if (mmDao.getMMsAndRemedies(getAuthenticatedUser(request)).find(_.mminfo.abbrev == cleanedUpAbbrev) == None) {
         Logger.info(s"Get: apiLookupMM(abbrev: ${mmAbbrev}, symptom: ${symptom}, page: ${page}, remedy: ${remedyString}): user not allowed to access ressource.")
         NoContent
       }
