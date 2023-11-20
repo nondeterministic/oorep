@@ -4,6 +4,8 @@ import io.circe.parser.parse
 import org.multics.baueran.frep.shared.Defs.CookieFields
 import org.multics.baueran.frep.shared.{HttpRequest2, Remedy}
 import org.multics.baueran.frep.shared.sec_frontend.FileModalCallbacks.updateMemberFiles
+import org.multics.baueran.frep.shared.frontend.views.materiamedica.MateriaMedicaView
+import org.multics.baueran.frep.shared.frontend.views.repertory.RepertoryView
 import scalatags.JsDom.all._
 import org.scalajs.dom
 import scalatags.JsDom

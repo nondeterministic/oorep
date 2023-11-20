@@ -1,7 +1,9 @@
 package org.multics.baueran.frep.shared
 
 import org.multics.baueran.frep.shared.Defs.CookieFields
-import org.multics.baueran.frep.shared.frontend.{ChangePasswordForm, MainView, MateriaMedicaView, RepertoryView, getCookieData, serverUrl}
+import org.multics.baueran.frep.shared.frontend.{ChangePasswordForm, MainView, getCookieData, serverUrl}
+import org.multics.baueran.frep.shared.frontend.views.materiamedica.MateriaMedicaView
+import org.multics.baueran.frep.shared.frontend.views.repertory.RepertoryView
 import org.scalajs.dom
 import scalatags.JsDom.all._
 import monix.execution.Scheduler.Implicits.global

@@ -187,7 +187,7 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
   def saveCaze() = Action { request: Request[AnyContent] =>
     getAuthenticatedUser(request) match {
       case Some(_) => {
-        val requestData = request.body.asMultipartFormData.get.dataParts
+        val requestData = request.body.asFormUrlEncoded.get
         (requestData("fileId"), requestData("case").toList) match {
           case (Seq(fileId), cazeJson :: Nil) => {
             Caze.decode(cazeJson.toString) match {
@@ -223,7 +223,7 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
   def addCaseRubricsToCaze() = Action { request: Request[AnyContent] =>
     getAuthenticatedUser(request) match {
       case Some(_) => {
-        val requestData = request.body.asMultipartFormData.get.dataParts
+        val requestData = request.body.asFormUrlEncoded.get
 
         (requestData("memberID"), requestData("caseID"), requestData("caserubrics")) match {
           case (Seq(memberIdStr), Seq(cazeIDStr), Seq(caserubricsJson)) if (cazeIDStr.forall(_.isDigit) && (memberIdStr.forall(_.isDigit))) =>

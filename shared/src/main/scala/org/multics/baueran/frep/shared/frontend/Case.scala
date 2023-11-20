@@ -5,16 +5,16 @@ import dom.Event
 import scalatags.JsDom
 import scalatags.JsDom.all._
 import io.circe.syntax._
-
 import scala.scalajs.js
 import scala.collection.mutable
 import mutable.ListBuffer
-import rx.{Rx, Var}
+import rx.Var
 import rx.Ctx.Owner.Unsafe._
-import scalatags.rx.all._
+
 import org.multics.baueran.frep.shared
 import org.multics.baueran.frep.shared.sec_frontend.AddToFileModal
 import shared._
+import shared.frontend.views.repertory.RepertoryView
 import shared.Defs.CookieFields
 import shared.frontend.RemedyFormat.RemedyFormat
 import shared.sec_frontend.FileModalCallbacks._
@@ -219,20 +219,28 @@ object Case {
 
       val remedies = crub.getFormattedRemedyNames(remedyFormat)
       val weight = Var(crub.rubricWeight) // The weight label on the drop-down button, which needs to change automatically on new user choice
-      private val printWeight = Rx {
-        weight().toString()
+      weight.triggerLater {
+        dom.document.getElementById(s"${getId()}_Button.Weight") match {
+          case null => ;
+          case button: dom.html.Button =>
+            button.textContent = weight.now.toString
+        }
       }
 
       // Same for label
       val label = Var(crub.rubricLabel)
-      private val printLabel = Rx {
-        label().getOrElse("")
+      label.triggerLater {
+        dom.document.getElementById(s"${getId()}_Button.Label") match {
+          case null => ;
+          case button: dom.html.Button =>
+            button.textContent = label.now.getOrElse("")
+        }
       }
 
       def apply() = {
         tr(scalatags.JsDom.attrs.id := getId(),
           td(
-            button(`type` := "button", cls := "btn dropdown-toggle btn-sm btn-secondary", style := "width:45px;", data.toggle := "dropdown", printWeight),
+            button(`type` := "button", id := s"${getId()}_Button.Weight", cls := "btn dropdown-toggle btn-sm btn-secondary", style := "width:45px;", data.toggle := "dropdown", weight.now.toString),
             div(cls := "dropdown-menu",
               a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricWeight = 0; weight() = 0; updateCaseViewAndDataStructures() }, "0 (ignore)"),
               a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricWeight = 1; weight() = 1; updateCaseViewAndDataStructures() }, "1 (normal)"),
@@ -243,7 +251,7 @@ object Case {
           ),
           td(crub.repertoryAbbrev),
           td(
-            button(`type` := "button", cls := "btn dropdown-toggle btn-sm btn-secondary", style := "width:45px;", data.toggle := "dropdown", printLabel),
+            button(`type` := "button", id := s"${getId()}_Button.Label", cls := "btn dropdown-toggle btn-sm btn-secondary", style := "width:45px;", data.toggle := "dropdown", s"${label.now.getOrElse("")}"),
             div(cls := "dropdown-menu", style := "max-height:250px; overflow-y:auto;",
               a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = None; label() = None; updateCaseViewAndDataStructures() }, "none"),
               a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("A"); label() = Some("A"); updateCaseViewAndDataStructures() }, "A"),

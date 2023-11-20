@@ -9,7 +9,7 @@ import org.scalajs.dom.Event
 
 import io.circe.syntax._
 
-object AddToFileModal extends FileModal with OorepHtmlElement {
+object AddToFileModal extends FileModal("AddToFileModal__") with OorepHtmlElement {
   def getId() = "addToFileModal"
 
   object CloseButton extends OorepHtmlButton {
@@ -33,13 +33,13 @@ object AddToFileModal extends FileModal with OorepHtmlElement {
                 .withHeaders("Csrf-Token" -> getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
                 .onSuccess((response: String) => {
                   Case.updateCurrOpenCaseId(response.toInt)
-                  Case.updateCurrOpenFile(selected_file_id.now)
+                  Case.updateCurrOpenFile(selected_file_id)
                   Case.updateCaseViewAndDataStructures()
                   Case.updateCaseHeaderView()
                   AddToFileModal.CloseButton.click()
                 })
                 .post(
-                  "fileId" -> selected_file_id.now.getOrElse(-1).toString(),
+                  "fileId" -> selected_file_id.getOrElse(-1).toString(),
                   "case" -> caze.asJson.toString()
                 )
             case None =>
@@ -54,7 +54,9 @@ object AddToFileModal extends FileModal with OorepHtmlElement {
   def apply() = {
     div(cls:="modal fade", tabindex:="-1", role:="dialog", id:=getId(),
       onshow := { (event: Event) =>
-        if (selected_file_id.now == None)
+        updateData()
+
+        if (selected_file_id == None)
           SubmitButton.disable()
       },
       div(cls:="modal-dialog modal-dialog-centered", role:="document", style:="min-width: 80%;",

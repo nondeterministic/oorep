@@ -13,7 +13,7 @@ class Delete @Inject()(cc: ControllerComponents, dbContext: DBContext) extends A
   def apiSecDelCaseRubricsFromCaze() = Action { request: Request[AnyContent] =>
     getAuthenticatedUser(request) match {
       case Some(_) => {
-        val requestData = request.body.asMultipartFormData.get.dataParts
+        val requestData = request.body.asFormUrlEncoded.get
 
         (requestData("memberID"), requestData("caseID"), requestData("caserubrics")) match {
           case (Seq(memberIdStr), Seq(cazeIDStr), Seq(caserubricsJson)) if (cazeIDStr.forall(_.isDigit) && (memberIdStr.forall(_.isDigit))) =>
@@ -50,7 +50,7 @@ class Delete @Inject()(cc: ControllerComponents, dbContext: DBContext) extends A
   def apiSecDelCaze() = Action { request: Request[AnyContent] =>
     getAuthenticatedUser(request) match {
       case Some(_) => {
-        val requestData = request.body.asMultipartFormData.get.dataParts
+        val requestData = request.body.asFormUrlEncoded.get
 
         (requestData("caseId"), requestData("memberId")) match {
           case (Seq(caseIdStr), Seq(memberIdStr)) if (caseIdStr.forall(_.isDigit) && (memberIdStr.forall(_.isDigit))) =>
@@ -73,7 +73,7 @@ class Delete @Inject()(cc: ControllerComponents, dbContext: DBContext) extends A
   def apiSecDelFileAndCases() = Action { request: Request[AnyContent] =>
     getAuthenticatedUser(request) match {
       case Some(_) => {
-        val requestData = request.body.asMultipartFormData.get.dataParts
+        val requestData = request.body.asFormUrlEncoded.get
 
         (requestData("memberId"), requestData("fileId")) match {
           case (Seq(memberIdStr), Seq(fileIdStr)) if (fileIdStr.forall(_.isDigit) && (memberIdStr.forall(_.isDigit))) => {

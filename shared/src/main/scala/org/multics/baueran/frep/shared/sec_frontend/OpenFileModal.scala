@@ -7,7 +7,7 @@ import org.scalajs.dom
 import org.scalajs.dom.{Event, document}
 import scalatags.JsDom.all._
 
-object OpenFileModal extends FileModal {
+object OpenFileModal extends FileModal("OpenFileModal__") {
 
   private def requestFileDeletion() = {
     getCookieData(dom.document.cookie, CookieFields.id.toString) match {
@@ -17,14 +17,14 @@ object OpenFileModal extends FileModal {
           .withHeaders("Csrf-Token" -> getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
           .withBody(
             ("memberId" -> memberId.toString()),
-            ("fileId" -> selected_file_id.now.getOrElse(-1).toString))
+            ("fileId" -> selected_file_id.getOrElse(-1).toString))
           .onSuccess((_) => { FileModalCallbacks.updateMemberFiles(memberId.toInt) })
           .send()
 
         // If the file had currently a case opened in the case view,
         // remove it from screen to avoid weird database behaviour,
         // in case the user then modifies the case...
-        if (Case.getCurrOpenFileId() == selected_file_id.now) {
+        if (Case.getCurrOpenFileId() == selected_file_id) {
           Case.removeFromMemory()
           MainView.CaseDiv.empty()
         }
@@ -71,9 +71,8 @@ object OpenFileModal extends FileModal {
           data.toggle := "modal", data.dismiss := "modal", data.target := s"#${EditFileModal.getId()}",
           onclick := { (event: Event) =>
             document.body.style.cursor = "wait"
-            EditFileModal.fileName_fileId() = (selected_file_header.now.getOrElse("SOMETHING WENT WRONG"), selected_file_id.now.getOrElse(-1).toString)
-            Case.updateCurrOpenFile(selected_file_id.now)
-            EditFileModal.fileName_fileId.recalc()
+            EditFileModal.update(selected_file_header.getOrElse("SOMETHING WENT WRONG"), selected_file_id.getOrElse(-1).toString)
+            Case.updateCurrOpenFile(selected_file_id)
           },
           "Open"
         )
@@ -90,7 +89,7 @@ object OpenFileModal extends FileModal {
             // Set file header in the AreYouSureModal before displaying it
             dom.document.getElementById(AreYouSureModal.getModalHeaderId()) match {
               case null => ;
-              case modal => modal.asInstanceOf[dom.html.Heading].textContent = s"Really delete file ${selected_file_header.now.getOrElse("")}?"
+              case modal => modal.asInstanceOf[dom.html.Heading].textContent = s"Really delete file ${selected_file_header.getOrElse("")}?"
             }
           },
           "Delete"
@@ -101,7 +100,9 @@ object OpenFileModal extends FileModal {
     def apply() = {
       div(cls := "modal fade", tabindex := "-1", role := "dialog", id := getId(),
         onshow := { (event: Event) =>
-          if (selected_file_id.now == None) {
+          updateData()
+
+          if (selected_file_id == None) {
             DeleteButton.disable()
             SubmitButton.disable()
           }

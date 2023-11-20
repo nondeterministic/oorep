@@ -1,7 +1,7 @@
 package org.multics.baueran.frep.shared
 
 import org.multics.baueran.frep.shared.Defs.CookieFields
-import org.multics.baueran.frep.shared.frontend.{RemedyFormat, apiPrefix, serverUrl}
+import org.multics.baueran.frep.shared.frontend.{RemedyFormat, serverUrl}
 import org.multics.baueran.frep.shared.frontend.RemedyFormat._
 import org.scalajs.dom
 import scalatags.JsDom.all._
@@ -180,7 +180,7 @@ object TopLevelUtilCode {
     if (dom.document.getElementById(anchor) != null) {
       dom.document.getElementById(anchor).scrollIntoView(true)
     } else {
-      dom.window.location.reload(true)
+      dom.window.location.reload()
       dom.window.location.assign(s"${serverUrl()}/#${anchor}")
     }
   }

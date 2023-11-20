@@ -1,16 +1,13 @@
 package org.multics.baueran.frep.shared
 
-// Stuff that RosHTTP needs...
-import fr.hmil.roshttp.{BackendConfig, HttpRequest, Method}
-import fr.hmil.roshttp.body.{MultiPartBody, PlainTextBody}
-import fr.hmil.roshttp.response.SimpleHttpResponse
-import monix.execution.Scheduler.Implicits.global
-import org.multics.baueran.frep.shared.frontend.Notify
 import org.scalajs.dom
-
+import sttp.client4._
+import sttp.model.Header
+import sttp.model.Method
 import scala.util.{Failure, Success, Try}
+import monix.execution.Scheduler.Implicits.global
 
-// Local imports...
+import org.multics.baueran.frep.shared.frontend.Notify
 import org.multics.baueran.frep.shared.frontend.{apiPrefix, serverUrl}
 
 /** Minimal wrapper around a networking library (in this case: RosHTTP)
@@ -25,7 +22,6 @@ case class HttpRequest2(apiEndPoint: String) {
   private val _headers = scala.collection.mutable.Map[String, String]()
   private val _qParams = scala.collection.mutable.Map[String, String]()
   private val _bParams = scala.collection.mutable.Map[String, String]()
-  private var _bConfig = BackendConfig()
   private var _method = Method("GET")
 
   // This will ensure the app stays response after a network transmission error
@@ -56,11 +52,6 @@ case class HttpRequest2(apiEndPoint: String) {
     this
   }
 
-  def withChunkSize(value: Int): HttpRequest2 = {
-    _bConfig = BackendConfig(maxChunkSize = value)
-    this
-  }
-
   def withMethod(method: String): HttpRequest2 = {
     _method = Method(method)
     this
@@ -71,91 +62,84 @@ case class HttpRequest2(apiEndPoint: String) {
     this
   }
 
-  private def onComplete(future: Try[SimpleHttpResponse]) = {
-    future match {
-      case response: Success[SimpleHttpResponse] =>
-        if (_onSuccessCallback != null)
-          _onSuccessCallback(response.get.body)
-      case response: Failure[SimpleHttpResponse] =>
-        if (_onFailureCallback == null) {  // Default error handler
-          println(s"HttpRequest2: call to ${serverUrl()}/${apiPrefix()}/$apiEndPoint failed: ${response.get.body}")
-          afterException()
+  private def onComplete(response: Try[Response[Either[String, String]]], apiURI: String): Unit = {
+    response match {
+      case Success(response) =>
+        response.body match {
+          case Right(body) =>
+            if (_onSuccessCallback != null)
+              _onSuccessCallback(body)
+          case Left(message) =>
+            if (_onFailureCallback == null) { // Default error handler
+              println(s"HttpRequest2: failed to parse ${apiURI}: ${message.substring(0,20)}")
+              afterException()
+            }
+            else
+              _onFailureCallback(message)
         }
-        else
-          _onFailureCallback(response.get.body)
-      case _ =>
-        println(s"HttpRequest2: call to ${serverUrl()}/${apiPrefix()}/$apiEndPoint failed for unknown reason.")
+      case Failure(message) =>
+        println(s"HttpRequest2: call to ${apiURI} failed: ${message}")
         afterException()
     }
   }
 
-  private def createRequest(): HttpRequest = {
-    var req = HttpRequest(s"${serverUrl()}/${apiPrefix()}/$apiEndPoint")
+  private def createRequest(): PartialRequest[Either[String,String]] = {
+    var req = basicRequest
 
+    // https://sttp.softwaremill.com/en/stable/requests/basics.html#query-parameters-and-uris
     if (!_headers.isEmpty)
-      req = req.withHeaders((_headers.toSeq): _*)
-    if (!_qParams.isEmpty)
-      req = req.withQueryParameters((_qParams.toSeq): _*)
+      req = req.withHeaders(_headers.toSeq.map(h => Header(h._1,h._2)))
     if (!_bParams.isEmpty)
-      req = req.withBody(MultiPartBody((_bParams.map { case (v, k) => (v, PlainTextBody(k)) }).toList: _*))
+      req = req.body(_bParams.toMap)
 
     req
-      .withBackendConfig(_bConfig)
-      .withMethod(_method) // GET is default
   }
 
   def send(): Unit = {
-    val req = createRequest().send()
+    var apiURI = uri"${serverUrl()}/${apiPrefix()}/${apiEndPoint.split('/').toList}"
+    if (!_qParams.isEmpty)
+      apiURI = uri"${serverUrl()}/${apiPrefix()}/${apiEndPoint.split('/').toList}?${_qParams.toMap}"
 
-    req.recover {
-      case e: Exception =>
-        println(s"HttpRequest2: send() to ${serverUrl()}/${apiPrefix()}/$apiEndPoint failed: ${e.getMessage}")
-        afterException()
+    val response = {
+      createRequest()
+        .method(_method, apiURI)
+        .send(DefaultFutureBackend())
     }
 
-    req.onComplete({ onComplete(_) })
+    response.onComplete(onComplete(_, apiURI.toString()))
   }
 
-  def put(multiPartBody: (String, String)*): Unit = {
-    val req = createRequest()
-      .withMethod(Method.PUT) // GET is default
-      .put(MultiPartBody(multiPartBody.map { case (v, k) => (v -> PlainTextBody(k)) }.toList: _*))
+  def put(body: (String, String)*): Unit = {
+    val apiURI = uri"${serverUrl()}/${apiPrefix()}/${apiEndPoint.split('/').toList}"
+    val response =
+      createRequest()
+        .put(apiURI)
+        .body(body.toMap)
+        .send(DefaultFutureBackend())
 
-    req.recover {
-      case e: Exception =>
-        println(s"HttpRequest2: put() to ${serverUrl()}/${apiPrefix()}/$apiEndPoint failed: ${e.getMessage}")
-        afterException()
-    }
-
-    req.onComplete({ onComplete(_) })
+    response.onComplete(onComplete(_, apiURI.toString()))
   }
 
-  def post(multiPartBody: (String, String)*): Unit = {
-    val req = createRequest()
-      .withMethod(Method.POST) // GET is default
-      .post(MultiPartBody(multiPartBody.map { case (v, k) => (v -> PlainTextBody(k)) }.toList: _*))
+  def post(body: (String, String)*): Unit = {
+    val apiURI = uri"${serverUrl()}/${apiPrefix()}/${apiEndPoint.split('/').toList}"
+    val response =
+      createRequest()
+        .post(apiURI)
+        .body(body.toMap)
+        .send(DefaultFutureBackend())
 
-    req.recover {
-      case e: Exception =>
-        println(s"HttpRequest2: post() to ${serverUrl()}/${apiPrefix()}/$apiEndPoint failed: ${e.getMessage}")
-        afterException()
-    }
-
-    req.onComplete({ onComplete(_) })
+    response.onComplete(onComplete(_, apiURI.toString()))
   }
 
-  def post(plainTextBody: String): Unit = {
-    val req = createRequest()
-      .withMethod(Method.POST) // GET is default
-      .post(PlainTextBody(plainTextBody))
+  def post(body: String): Unit = {
+    val apiURI = uri"${serverUrl()}/${apiPrefix()}/${apiEndPoint.split('/').toList}"
+    val response =
+      createRequest()
+        .post(apiURI)
+        .body(body)
+        .send(DefaultFutureBackend())
 
-    req.recover {
-      case e: Exception =>
-        println(s"HttpRequest2: post() to ${serverUrl()}/${apiPrefix()}/$apiEndPoint failed: ${e.getMessage}")
-        afterException()
-    }
-
-    req.onComplete({ onComplete(_) })
+    response.onComplete(onComplete(_, apiURI.toString()))
   }
 
 }

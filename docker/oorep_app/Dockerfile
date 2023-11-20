@@ -1,4 +1,4 @@
-FROM eclipse-temurin:11
+FROM eclipse-temurin:17
 
 ARG VERSION
 ARG PLAYDIR=/usr/local

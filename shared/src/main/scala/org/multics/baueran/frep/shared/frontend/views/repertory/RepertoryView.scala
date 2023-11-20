@@ -1,20 +1,19 @@
-package org.multics.baueran.frep.shared.frontend
+package org.multics.baueran.frep.shared.frontend.views.repertory
 
 import scalatags.JsDom.all._
 import org.scalajs.dom
 import dom.Event
-import dom.raw.{HTMLButtonElement, HTMLInputElement, Node}
 import io.circe.parser.parse
+import scalatags.JsDom
+import scala.scalajs.js.URIUtils._
+import scala.language.implicitConversions
 import rx.Var
 import rx.Ctx.Owner.Unsafe._
 
 import org.multics.baueran.frep.shared._
 import org.multics.baueran.frep.shared.Defs.{maxLengthOfSymptoms, maxNumberOfResultsPerPage, maxNumberOfSymptoms}
 import org.multics.baueran.frep.shared.Defs.ResourceAccessLvl
-import scalatags.JsDom
-
-import scala.scalajs.js.URIUtils._
-import scala.language.implicitConversions
+import org.multics.baueran.frep.shared.frontend._
 
 object RepertoryView extends TabView {
   
@@ -148,7 +147,7 @@ object RepertoryView extends TabView {
                 event.stopPropagation()
                 Case.addRepertoryLookup(result)
                 Case.updateCaseViewAndDataStructures()
-                dom.document.getElementById("button_" + result.repertoryAbbrev + "_" + result.rubric.id).asInstanceOf[HTMLButtonElement].setAttribute("disabled", "1")
+                dom.document.getElementById("button_" + result.repertoryAbbrev + "_" + result.rubric.id).asInstanceOf[dom.html.Button].setAttribute("disabled", "1")
                 showCase()
                 MainView.toggleOnBeforeUnload()
               }
@@ -359,19 +358,19 @@ object RepertoryView extends TabView {
   private def onSymptomEntered(): Unit = {
     val remedyQuery = dom.document.getElementById("inputRemedy") match {
       case null => None
-      case element => element.asInstanceOf[HTMLInputElement].value.trim match {
+      case element => element.asInstanceOf[dom.html.Input].value.trim match {
         case "" => None
         case otherwise => Some(otherwise)
       }
     }
     val remedyMinWeight = dom.document.getElementById("minWeightDropdown") match {
       case null => 0
-      case element => element.asInstanceOf[HTMLButtonElement].textContent.trim match {
+      case element => element.asInstanceOf[dom.html.Button].textContent.trim match {
         case "" => 0
         case otherwise => otherwise.toInt
       }
     }
-    val symptom = dom.document.getElementById("inputField").asInstanceOf[HTMLInputElement].value
+    val symptom = dom.document.getElementById("inputField").asInstanceOf[dom.html.Input].value
 
     doLookup(_selectedRepertory.now, symptom, None, remedyQuery, remedyMinWeight)
   }
@@ -390,7 +389,7 @@ object RepertoryView extends TabView {
               onShowAdvancedSearchOptionsMainView(true, false)
         }
 
-        dom.document.getElementById("inputField").asInstanceOf[HTMLInputElement].focus()
+        dom.document.getElementById("inputField").asInstanceOf[dom.html.Input].focus()
       case _ =>
         println("RepertoryView: onSymptomListRedoPressed failed.")
     }
@@ -492,7 +491,7 @@ object RepertoryView extends TabView {
   }
 
   // ------------------------------------------------------------------------------------------------------------------
-  private def onHideAdvancedSearchOptionsMainView(event: Event, landingPageView: Boolean): Node = {
+  private def onHideAdvancedSearchOptionsMainView(event: Event, landingPageView: Boolean): Unit = {
     event.stopPropagation()
     val theDiv = dom.document.getElementById("advancedSearchControlsDiv").asInstanceOf[dom.html.Div]
 
@@ -687,13 +686,6 @@ object RepertoryView extends TabView {
           ("minWeight", minWeight.toString),
           ("getRemedies", getRemedies)
         )
-        // 1 MB maxChunkSize; see also build.sbt where the same is set for the Akka backend!
-        // It only works, so long as server's chunks are not larger than maxChunkSize below,
-        // or if the reply fits well within one chunk and no second, third, etc. is sent at
-        // all.  An interesting test case is "schmerz*" in kent-de as this is the longest
-        // reply, I have found from the backend yet.  So, it used to crash on "schmerz*" in
-        // kent-de, if the chunk size was too small.
-        .withChunkSize(1048576)
         .onSuccess((response: String) =>
           parse(response) match {
             case Right(json) => {
@@ -812,14 +804,14 @@ object RepertoryView extends TabView {
                             .appendChild(a(cls := "dropdown-item", href := "#", data.value := currRep.abbrev,
                               onclick := { (event: Event) =>
                                 _selectedRepertory() = currRep.abbrev
-                                dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[HTMLButtonElement].textContent = "Repertory: " + _selectedRepertory.now
+                                dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[dom.html.Button].textContent = "Repertory: " + _selectedRepertory.now
                               }, s"${currRep.abbrev} - ${currRep.displaytitle.getOrElse("")}").render)
 
                           if (_selectedRepertory.now.length > 0)
-                            dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[HTMLButtonElement].textContent = "Repertory: " + _selectedRepertory.now
+                            dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[dom.html.Button].textContent = "Repertory: " + _selectedRepertory.now
                           else {
                             _selectedRepertory() = _defaultRepertory
-                            dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[HTMLButtonElement].textContent = "Repertory: " + _selectedRepertory.now
+                            dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[dom.html.Button].textContent = "Repertory: " + _selectedRepertory.now
                           }
                         }
                       }
@@ -845,14 +837,14 @@ object RepertoryView extends TabView {
             .appendChild(a(cls := "dropdown-item", href := "#", data.value := currRep.abbrev,
               onclick := { (event: Event) =>
                 _selectedRepertory() = currRep.abbrev
-                dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[HTMLButtonElement].textContent = "Repertory: " + _selectedRepertory.now
+                dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[dom.html.Button].textContent = "Repertory: " + _selectedRepertory.now
               }, s"${currRep.abbrev} - ${currRep.displaytitle.getOrElse("")}").render)
         }
       }
 
       if (_selectedRepertory.now.length == 0)
         _selectedRepertory() = _defaultRepertory
-      dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[HTMLButtonElement].textContent = "Repertory: " + _selectedRepertory.now
+      dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[dom.html.Button].textContent = "Repertory: " + _selectedRepertory.now
     }
   }
 
@@ -930,7 +922,7 @@ object RepertoryView extends TabView {
               .appendChild(a(cls := "dropdown-item", href := "#", data.value := currRep.abbrev,
                 onclick := { (event: Event) =>
                   _selectedRepertory() = currRep.abbrev
-                  dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[HTMLButtonElement].textContent = "Repertory: " + _selectedRepertory.now
+                  dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[dom.html.Button].textContent = "Repertory: " + _selectedRepertory.now
                 }, s"${currRep.abbrev} - ${currRep.displaytitle.getOrElse("")}").render)
           }
         }

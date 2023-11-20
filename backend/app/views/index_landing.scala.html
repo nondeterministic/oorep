@@ -40,7 +40,7 @@
 
     @if(org.multics.baueran.frep.backend.controllers.getAuthenticatedUser(request) == None) {
 
-      <script async id="main_script" src="/assets/frontend-opt.js"></script>
+      <script async id="main_script" src="/assets/frontend-opt/main.js"></script>
 
       @partial.about()
 
@@ -48,7 +48,7 @@
 
     } else {
 
-      <script async id="main_script" src="/assets/sec_frontend-opt.js"></script>
+      <script async id="main_script" src="/assets/sec_frontend-opt/main.js"></script>
 
     }
 

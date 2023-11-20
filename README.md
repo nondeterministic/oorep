@@ -8,7 +8,7 @@ can also be found at https://www.oorep.com/.
 ## Current status / what's new
 
 Besides the aforementioned homepage, check out the [NEWS](NEWS) file for the
-latest development updates.
+latest development updates. (You may want to to focus on releases marked as 'stable'.)
 
 ## Running the program
 
@@ -39,9 +39,9 @@ intended for any production environments or the like without further modificatio
 
 #### Prerequisites
 
-* Java SDK versions 8 or 11
-* Scala Build Tool SBT >= 1.3.0
-* A PostgreSQL database server >= 9.6
+* Java SDK >= v17
+* Scala Build Tool SBT >= v1.9.7
+* A PostgreSQL database server >= v11
 
 Before executing SBT, the database (which is provided here as an SQL dump) needs
 to be up and running and PostgreSQL's pgcrypto-extension created (e.g., as

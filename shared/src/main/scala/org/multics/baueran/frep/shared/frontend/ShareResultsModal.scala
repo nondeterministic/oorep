@@ -2,7 +2,6 @@ package org.multics.baueran.frep.shared.frontend
 
 import org.scalajs.dom
 import org.scalajs.dom.Event
-import org.scalajs.dom.raw.HTMLInputElement
 import scalatags.JsDom.all.{onclick, _}
 
 class ShareResultsModal(dialogId: String, resultsLink: () => String) {
@@ -10,7 +9,7 @@ class ShareResultsModal(dialogId: String, resultsLink: () => String) {
   def updateResultsLink(update: String) = {
     dom.document.getElementById(s"${dialogId}shareResultsModalLink") match {
       case null => println(s"ERROR: ShareResultsModal ${dialogId} failed.")
-      case element => element.asInstanceOf[HTMLInputElement].value = update
+      case element => element.asInstanceOf[dom.html.Input].value = update
     }
   }
 

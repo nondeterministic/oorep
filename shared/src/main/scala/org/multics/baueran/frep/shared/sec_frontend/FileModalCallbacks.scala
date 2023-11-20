@@ -3,7 +3,6 @@ package org.multics.baueran.frep.shared.sec_frontend
 import org.scalajs.dom
 import io.circe.parser.parse
 import org.multics.baueran.frep.shared.{HttpRequest2, dbFile}
-import org.multics.baueran.frep.shared.frontend.{apiPrefix, serverUrl}
 
 object FileModalCallbacks {
 
@@ -27,14 +26,14 @@ object FileModalCallbacks {
       dbFiles.sortBy(_.header).reverse.map(fileIdHeaderTuple => {
 
         AddToFileModal.appendItem(fileIdHeaderTuple, (event: dom.Event) => {
-          AddToFileModal.selected_file_id() = Some(fileIdHeaderTuple.id)
-          AddToFileModal.selected_file_header() = Some(fileIdHeaderTuple.header)
+          AddToFileModal.selected_file_id = Some(fileIdHeaderTuple.id)
+          AddToFileModal.selected_file_header = Some(fileIdHeaderTuple.header)
           AddToFileModal.SubmitButton.enable()
         })
 
         OpenFileModal.appendItem(fileIdHeaderTuple, (event: dom.Event) => {
-          OpenFileModal.selected_file_id() = Some(fileIdHeaderTuple.id)
-          OpenFileModal.selected_file_header() = Some(fileIdHeaderTuple.header)
+          OpenFileModal.selected_file_id = Some(fileIdHeaderTuple.id)
+          OpenFileModal.selected_file_header = Some(fileIdHeaderTuple.header)
           OpenFileModal.enableButtons()
         })
 
@@ -54,21 +53,10 @@ object FileModalCallbacks {
       }
     }
 
-    // TODO: with the error handling code, we get type erasure problems in the onComplete part. Not sure why, and more importantly, not sure if error handling code still relevant - I think, after SAML 2.0, it isn't.
-
     HttpRequest2("sec/available_files")
       .withQueryParameters("memberId" -> memberId.toString)
       .onSuccess((response: String) => updateMemberFiles(response))
       .send()
-      //      .recover {
-      //        case HttpException(e: SimpleHttpResponse) =>
-      //          dom.window.location.replace(serverUrl())
-      //          println(s"ERROR: updateMemberFiles: HttpException occurred: ${e.statusCode}")
-      //        case e: IOException =>
-      //          dom.window.location.replace(serverUrl())
-      //          println(s"ERROR: updateMemberFiles: IOException occurred: There was a network issue, perhaps try again: ${e.getMessage}")
-      //      }
-
   }
 
 }

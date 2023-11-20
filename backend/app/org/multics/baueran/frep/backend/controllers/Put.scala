@@ -13,7 +13,7 @@ class Put @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
   def updateCaseRubricsUserDefinedValues() = Action { implicit request: Request[AnyContent] =>
     getAuthenticatedUser(request) match {
       case Some(_) => {
-        val requestData = request.body.asMultipartFormData.get.dataParts
+        val requestData = request.body.asFormUrlEncoded.get
 
         (requestData("memberID"), requestData("caseID"), requestData("caserubrics")) match {
           case (Seq(memberIdStr), Seq(cazeIDStr), Seq(caserubricsJson)) if (cazeIDStr.forall(_.isDigit) && (memberIdStr.forall(_.isDigit))) =>
@@ -51,7 +51,7 @@ class Put @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
   def updateCaseDescription() = Action { implicit request =>
     getAuthenticatedUser(request) match {
       case Some(_) => {
-        val requestData = request.body.asMultipartFormData.get.dataParts
+        val requestData = request.body.asFormUrlEncoded.get
 
         (requestData("memberID"), requestData("caseID"), requestData("casedescription")) match {
           case (Seq(memberIdStr), Seq(cazeIDStr), Seq(casedescription)) if (cazeIDStr.forall(_.isDigit) && (memberIdStr.forall(_.isDigit))) =>
@@ -80,7 +80,8 @@ class Put @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
   def updateFileDescription() = Action { implicit request =>
     getAuthenticatedUser(request) match {
       case Some(_) => {
-        val requestData = request.body.asMultipartFormData.get.dataParts
+        val requestData = request.body.asFormUrlEncoded.get
+
         (requestData("filedescr"), requestData("fileId")) match {
           case (Seq(filedescr), Seq(fileId)) if (fileId.forall(_.isDigit)) =>
             // Get file from DB to extract a memberId for authorisation
