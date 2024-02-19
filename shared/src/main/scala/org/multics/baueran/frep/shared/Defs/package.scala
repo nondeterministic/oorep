@@ -23,4 +23,9 @@ package object Defs {
     val id, csrfCookie, cookiePopupAccepted, theme = Value
   }
 
+  object HeaderFields extends Enumeration {
+    type HeaderFields = Value
+    val csrfToken = "Csrf-Token"
+  }
+
 }

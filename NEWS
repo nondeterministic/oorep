@@ -12,6 +12,17 @@
      ██║ ╚████║███████╗╚███╔███╔╝███████║
      ╚═╝  ╚═══╝╚══════╝ ╚══╝╚══╝ ╚══════╝
 
+v0.16.1 (development)    Sun Mar 24 10:36:47 AM CET 2024
+--------------------------------------------------------
+- Minor features:
+  - Protect the two main lookup pages with a cookie check against
+    leeching attacks
+  - Update to Play 2.9.2, ScalaJS 1.16.0 and Scala 2.13.13
+
+- Bug fixes:
+  - Sorting in file modal dialogue broke with the removal of RX
+    libraries and is fixed now
+
 v0.16.0 (development)       Sa 13. Jan 14:28:21 CET 2024
 --------------------------------------------------------
 - Main features:

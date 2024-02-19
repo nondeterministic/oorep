@@ -1,6 +1,6 @@
 import sbt.Keys.libraryDependencies
 
-val myScalaVersion     = "2.13.12"
+val myScalaVersion     = "2.13.13"
 val scalaTestPlusVersion = "5.1.0"
 val scalaJsDomVersion  = "2.3.0"
 val scalaTagsVersion   = "0.12.0"
@@ -98,7 +98,7 @@ lazy val commonSettings = Seq(
   scalaVersion := myScalaVersion,
   organization := "org.multics.baueran.frep",
   maintainer := "baueran@gmail.com",
-  version := "0.16.0"
+  version := "0.16.1"
 )
 
 // loads the frontend project at sbt startup

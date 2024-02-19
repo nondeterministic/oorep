@@ -1,7 +1,8 @@
 package org.multics.baueran.frep.shared.sec_frontend
 
-import org.multics.baueran.frep.shared.Defs.CookieFields
+import org.multics.baueran.frep.shared.Defs.{CookieFields, HeaderFields}
 import org.multics.baueran.frep.shared.HttpRequest2
+import org.multics.baueran.frep.shared.TopLevelUtilCode.getDocumentCsrfCookie
 import org.multics.baueran.frep.shared.frontend.{Case, MainView, OorepHtmlButton, OorepHtmlElement, apiPrefix, getCookieData, serverUrl}
 import org.scalajs.dom
 import org.scalajs.dom.{Event, document}
@@ -14,7 +15,7 @@ object OpenFileModal extends FileModal("OpenFileModal__") {
       case Some(memberId) => {
         HttpRequest2("sec/del_file_and_cases")
           .withMethod("DELETE")
-          .withHeaders("Csrf-Token" -> getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
+          .withHeaders((HeaderFields.csrfToken.toString(), getDocumentCsrfCookie().getOrElse("")))
           .withBody(
             ("memberId" -> memberId.toString()),
             ("fileId" -> selected_file_id.getOrElse(-1).toString))

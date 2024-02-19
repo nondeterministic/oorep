@@ -1,6 +1,6 @@
 package org.multics.baueran.frep.shared.sec_frontend
 
-import org.multics.baueran.frep.shared.Defs.CookieFields
+import org.multics.baueran.frep.shared.Defs.{CookieFields, HeaderFields}
 import org.multics.baueran.frep.shared.{FIle, HttpRequest2}
 import org.multics.baueran.frep.shared.frontend.{Case, Notify, OorepHtmlButton, OorepHtmlElement, OorepHtmlInput, OorepHtmlTextArea, apiPrefix, getCookieData, serverUrl}
 import scalatags.JsDom.all.{id, input, _}
@@ -9,6 +9,7 @@ import org.scalajs.dom.Event
 
 import scala.scalajs.js
 import io.circe.syntax._
+import org.multics.baueran.frep.shared.TopLevelUtilCode.getDocumentCsrfCookie
 
 object NewFileModal extends OorepHtmlElement {
   def getId() = "NewFileModal_EEEdsfakjDD345nmbv8f89HG34jkdf8934RSCjfr8943jkarsklfg"
@@ -43,7 +44,7 @@ object NewFileModal extends OorepHtmlElement {
           val currFIle = Some(FIle(None, HeaderInput.getText().trim, memberId, (new js.Date()).toISOString(), DescriptionTextArea.getText(), List.empty))
 
           HttpRequest2("sec/save_file")
-            .withHeaders("Csrf-Token" -> getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
+            .withHeaders((HeaderFields.csrfToken.toString(), getDocumentCsrfCookie().getOrElse("")))
             .onSuccess((_) => {
               Case.updateCaseViewAndDataStructures()
               HeaderInput.setText("")

@@ -2,12 +2,12 @@ package org.multics.baueran.frep.shared.sec_frontend
 
 import org.scalajs.dom
 import org.multics.baueran.frep.shared.frontend.{Case, OorepHtmlButton, OorepHtmlElement, getCookieData}
-import org.multics.baueran.frep.shared.Defs.CookieFields
+import org.multics.baueran.frep.shared.Defs.{CookieFields, HeaderFields}
 import org.multics.baueran.frep.shared.HttpRequest2
 import scalatags.JsDom.all.{id, _}
 import org.scalajs.dom.Event
-
 import io.circe.syntax._
+import org.multics.baueran.frep.shared.TopLevelUtilCode.getDocumentCsrfCookie
 
 object AddToFileModal extends FileModal("AddToFileModal__") with OorepHtmlElement {
   def getId() = "addToFileModal"
@@ -30,7 +30,7 @@ object AddToFileModal extends FileModal("AddToFileModal__") with OorepHtmlElemen
           Case.descr match {
             case Some(caze) =>
               HttpRequest2("sec/save_case")
-                .withHeaders("Csrf-Token" -> getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse(""))
+                .withHeaders((HeaderFields.csrfToken.toString(), getDocumentCsrfCookie().getOrElse("")))
                 .onSuccess((response: String) => {
                   Case.updateCurrOpenCaseId(response.toInt)
                   Case.updateCurrOpenFile(selected_file_id)

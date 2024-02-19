@@ -1,7 +1,7 @@
 package org.multics.baueran.frep.shared
 
 import org.multics.baueran.frep.shared.Defs.CookieFields
-import org.multics.baueran.frep.shared.frontend.{RemedyFormat, serverUrl}
+import org.multics.baueran.frep.shared.frontend.{RemedyFormat, getCookieData, serverUrl}
 import org.multics.baueran.frep.shared.frontend.RemedyFormat._
 import org.scalajs.dom
 import scalatags.JsDom.all._
@@ -157,6 +157,17 @@ class MyDate(isoDateString: String) {
 }
 
 object TopLevelUtilCode {
+
+  def getDocumentCsrfCookie(): Option[String] = {
+    getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString)
+    //    dom.document.cookie.split(";").foreach { cookie =>
+    //      cookie.split("=").toList match {
+    //        case name :: content :: Nil if (name.toLowerCase() == CookieFields.csrfCookie.toString.toLowerCase) => return Some(content)
+    //        case _ => ;
+    //      }
+    //    }
+    //    None
+  }
 
   def deleteCookies() = {
     val cookieNames = CookieFields.values.map(_.toString)

@@ -11,8 +11,8 @@ import rx.Ctx.Owner.Unsafe._
 
 import scala.scalajs.js.URIUtils.encodeURI
 import org.multics.baueran.frep.shared.{HitsPerRemedy, HttpRequest2, MMAllSearchResults, MMAndRemedyIds, MMSearchResult, MateriaMedicas, Paginator, Remedies, Remedy}
-import org.multics.baueran.frep.shared.Defs.{maxLengthOfSymptoms, maxNumberOfResultsPerMMPage}
-import org.multics.baueran.frep.shared.Defs.ResourceAccessLvl
+import org.multics.baueran.frep.shared.Defs.{HeaderFields, ResourceAccessLvl, maxLengthOfSymptoms, maxNumberOfResultsPerMMPage}
+import org.multics.baueran.frep.shared.TopLevelUtilCode.getDocumentCsrfCookie
 import org.multics.baueran.frep.shared.frontend.views.materiamedica.uielements._
 import org.multics.baueran.frep.shared.frontend._
 
@@ -485,6 +485,7 @@ object MateriaMedicaView extends TabView {
             ("page", page.getOrElse(0).toString),
             ("remedyString", remedyStringOpt.getOrElse(""))
           )
+          .withHeaders((HeaderFields.csrfToken.toString(), getDocumentCsrfCookie().getOrElse("")))
           .onSuccess((response: String) =>
             parse(response) match {
               case Right(json) => {
@@ -541,6 +542,7 @@ object MateriaMedicaView extends TabView {
 
       if (_materiaMedicas.size() == 0) {
         HttpRequest2("available_rems_and_mms")
+          .withHeaders((HeaderFields.csrfToken.toString(), getDocumentCsrfCookie().getOrElse("")))
           .onSuccess((response: String) =>
             parse(response) match {
               case Right(json) => {

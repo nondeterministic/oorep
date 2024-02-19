@@ -2,6 +2,7 @@ package org.multics.baueran.frep.backend
 
 import play.api.mvc._
 import org.multics.baueran.frep.backend.dao.{CazeDao, EmailHistoryDao, FileDao, MMDao, MemberDao, PasswordChangeRequestDao, RepertoryDao}
+import org.multics.baueran.frep.shared.Defs.{CookieFields, HeaderFields}
 import org.multics.baueran.frep.shared.Member
 
 package object controllers {

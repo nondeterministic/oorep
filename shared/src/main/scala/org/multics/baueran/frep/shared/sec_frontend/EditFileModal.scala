@@ -1,12 +1,13 @@
 package org.multics.baueran.frep.shared.sec_frontend
 
 import io.circe.parser.parse
-import org.multics.baueran.frep.shared.Defs.CookieFields
+import org.multics.baueran.frep.shared.Defs.{CookieFields, HeaderFields}
+import org.multics.baueran.frep.shared.TopLevelUtilCode.getDocumentCsrfCookie
 import org.multics.baueran.frep.shared.{Caze, HttpRequest2}
 import org.multics.baueran.frep.shared.frontend.{Case, OorepHtmlButton, OorepHtmlElement, getCookieData}
 import org.multics.baueran.frep.shared.frontend.views.repertory.RepertoryView
 import org.scalajs.dom
-import org.scalajs.dom.{html, Event, document}
+import org.scalajs.dom.{Event, document, html}
 import scalatags.JsDom.all.{onclick, _}
 
 object EditFileModal extends OorepHtmlElement {
@@ -40,7 +41,7 @@ object EditFileModal extends OorepHtmlElement {
                 onclick := { (event: Event) =>
                   HttpRequest2("sec/del_case")
                     .withMethod("DELETE")
-                    .withHeaders(("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse("")))
+                    .withHeaders((HeaderFields.csrfToken.toString(), getDocumentCsrfCookie().getOrElse("")))
                     .withBody(
                       ("caseId" -> currentlySelectedCaseId.toString()),
                       ("memberId" -> getCookieData(dom.document.cookie, CookieFields.id.toString).getOrElse("")))
@@ -214,7 +215,7 @@ object EditFileModal extends OorepHtmlElement {
             fileName_fileId match {
               case (fileName, fileId) if fileId.forall(_.isDigit) =>
                 HttpRequest2("sec/update_file_description")
-                  .withHeaders(("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse("")))
+                  .withHeaders((HeaderFields.csrfToken.toString(), getDocumentCsrfCookie().getOrElse("")))
                   .put(
                     ("filedescr" -> FileDescriptionTextArea.getTextValue().trim()),
                     ("fileId" -> fileId))

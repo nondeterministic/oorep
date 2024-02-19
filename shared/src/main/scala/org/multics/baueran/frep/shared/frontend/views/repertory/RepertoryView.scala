@@ -5,14 +5,14 @@ import org.scalajs.dom
 import dom.Event
 import io.circe.parser.parse
 import scalatags.JsDom
+
 import scala.scalajs.js.URIUtils._
 import scala.language.implicitConversions
 import rx.Var
 import rx.Ctx.Owner.Unsafe._
-
 import org.multics.baueran.frep.shared._
-import org.multics.baueran.frep.shared.Defs.{maxLengthOfSymptoms, maxNumberOfResultsPerPage, maxNumberOfSymptoms}
-import org.multics.baueran.frep.shared.Defs.ResourceAccessLvl
+import org.multics.baueran.frep.shared.Defs.{CookieFields, HeaderFields, ResourceAccessLvl, maxLengthOfSymptoms, maxNumberOfResultsPerPage, maxNumberOfSymptoms}
+import org.multics.baueran.frep.shared.TopLevelUtilCode.getDocumentCsrfCookie
 import org.multics.baueran.frep.shared.frontend._
 
 object RepertoryView extends TabView {
@@ -138,7 +138,7 @@ object RepertoryView extends TabView {
         tr(
           td(result.rubric.fullPath, style:="width:35%;"),
           td(remedies.take(remedies.size - 1).map(l => span(l, ", ")) ::: List(remedies.last)),
-          td(cls := "text-right",
+          td(cls := "text-right", style := "white-space:nowrap;",
             button(cls := "btn btn-sm btn-secondary", `type` := "button", id := ("button_" + result.repertoryAbbrev + "_" + result.rubric.id),
               style := "vertical-align: middle; display: inline-block",
               (if (Case.cRubrics.filter(_.equalsIgnoreWeight(result)).size > 0) attr("disabled") := "disabled" else ""),
@@ -686,6 +686,7 @@ object RepertoryView extends TabView {
           ("minWeight", minWeight.toString),
           ("getRemedies", getRemedies)
         )
+        .withHeaders((HeaderFields.csrfToken.toString(), getDocumentCsrfCookie().getOrElse("")))
         .onSuccess((response: String) =>
           parse(response) match {
             case Right(json) => {
@@ -777,6 +778,7 @@ object RepertoryView extends TabView {
       _remedies = new Remedies(remedies)
 
       HttpRequest2("available_rems_and_reps")
+        .withHeaders((HeaderFields.csrfToken.toString(), getDocumentCsrfCookie().getOrElse("")))
         .onSuccess((response: String) => {
           parse(response) match {
             case Right(json) => {

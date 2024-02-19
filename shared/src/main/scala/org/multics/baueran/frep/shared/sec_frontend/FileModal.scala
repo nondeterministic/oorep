@@ -81,6 +81,7 @@ abstract class FileModal(idPrefix: String) {
                 else
                   divs = divs.sortBy(_.getElementsByClassName(headersClass).item(0).asInstanceOf[dom.html.Div].innerHTML).reverse
                 sortAscending = !sortAscending
+                updateData()
               }
             } }, span(cls := "oi oi-elevator", title := "Sort by creation date", aria.hidden := "true")),
             b(style:="margin-left:10px;", "Name")
@@ -93,6 +94,7 @@ abstract class FileModal(idPrefix: String) {
                 else
                   divs = divs.sortBy(_.getElementsByClassName("col-3").item(0).asInstanceOf[dom.html.Div].innerHTML).reverse
                 sortAscending = !sortAscending
+                updateData()
               }
             } }, span(cls := "oi oi-elevator", title := "Sort by creation date", aria.hidden := "true")),
             b(style:="margin-left:10px;", "Created")
@@ -105,6 +107,7 @@ abstract class FileModal(idPrefix: String) {
                 else
                   divs = divs.sortBy(_.getElementsByClassName("col-3").item(1).asInstanceOf[dom.html.Div].innerHTML.toInt).reverse
                 sortAscending = !sortAscending
+                updateData()
               }
             } }, span(cls := "oi oi-elevator", title := "Sort by creation date", aria.hidden := "true")),
             b(style:="margin-left:10px;", "Cases")

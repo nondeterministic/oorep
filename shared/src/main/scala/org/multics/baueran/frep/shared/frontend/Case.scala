@@ -5,17 +5,18 @@ import dom.Event
 import scalatags.JsDom
 import scalatags.JsDom.all._
 import io.circe.syntax._
+
 import scala.scalajs.js
 import scala.collection.mutable
 import mutable.ListBuffer
 import rx.Var
 import rx.Ctx.Owner.Unsafe._
-
 import org.multics.baueran.frep.shared
+import org.multics.baueran.frep.shared.TopLevelUtilCode.getDocumentCsrfCookie
 import org.multics.baueran.frep.shared.sec_frontend.AddToFileModal
 import shared._
 import shared.frontend.views.repertory.RepertoryView
-import shared.Defs.CookieFields
+import shared.Defs.{CookieFields, HeaderFields}
 import shared.frontend.RemedyFormat.RemedyFormat
 import shared.sec_frontend.FileModalCallbacks._
 
@@ -284,7 +285,7 @@ object Case {
           ),
           td(style := "width:28%;", crub.rubric.fullPath),
           td(cls := "d-none d-sm-table-cell", remedies.take(remedies.size - 1).map(l => span(l, ", ")) ::: List(remedies.last)),
-          td(cls := "text-right",
+          td(cls := "text-right", style := "white-space:nowrap;",
             button(cls := "btn btn-sm btn-secondary", `type` := "button",
               scalatags.JsDom.attrs.id := ("rmBut_" + crub.rubric.id + crub.repertoryAbbrev),
               style := "vertical-align: middle; display: inline-block",
@@ -460,7 +461,7 @@ object Case {
             val diff = descr.get.isSupersetOf(prevCase.get)
 
             HttpRequest2("sec/add_caserubrics_to_case")
-              .withHeaders(("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse("")))
+              .withHeaders((HeaderFields.csrfToken.toString(), getDocumentCsrfCookie().getOrElse("")))
               .post(
                 ("memberID" -> memberId.toString),
                 ("caseID" -> descr.get.id.toString),
@@ -471,7 +472,7 @@ object Case {
 
             HttpRequest2("sec/del_caserubrics_from_case")
               .withMethod("DELETE")
-              .withHeaders(("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse("")))
+              .withHeaders((HeaderFields.csrfToken.toString(), getDocumentCsrfCookie().getOrElse("")))
               .withBody(
                 ("memberID" -> memberId.toString),
                 ("caseID" -> descr.get.id.toString),
@@ -482,7 +483,7 @@ object Case {
             val diff = prevCase.get.isEqualExceptUserDefinedValues(descr.get) // These are the user-changed ones, which we'll need to update in the DB, too.
 
             HttpRequest2("sec/update_caserubrics_userdef")
-              .withHeaders(("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse("")))
+              .withHeaders((HeaderFields.csrfToken.toString(), getDocumentCsrfCookie().getOrElse("")))
               .put(
                 ("memberID" -> memberId.toString),
                 ("caseID" -> descr.get.id.toString),
@@ -490,7 +491,7 @@ object Case {
           }
           else if (descr.get.description != prevCase.get.description) {
             HttpRequest2("sec/update_case_description")
-              .withHeaders(("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse("")))
+              .withHeaders((HeaderFields.csrfToken.toString(), getDocumentCsrfCookie().getOrElse("")))
               .put(
                 ("memberID" -> memberId.toString),
                 ("caseID" -> descr.get.id.toString),
@@ -512,7 +513,7 @@ object Case {
         if (descr != None && descr.get.id != 0)
           HttpRequest2("sec/del_case")
             .withMethod("DELETE")
-            .withHeaders(("Csrf-Token", getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString).getOrElse("")))
+            .withHeaders((HeaderFields.csrfToken.toString(), getDocumentCsrfCookie().getOrElse("")))
             .withBody(
               ("caseId" -> descr.get.id.toString()),
               ("memberId" -> memberId.toString()))
