@@ -435,7 +435,7 @@ object Case {
     def updateFileModalDataStructures(): Unit = {
       val memberId = getCookieData(dom.document.cookie, CookieFields.id.toString) match {
         case Some(id) => updateMemberFiles(id.toInt); id.toInt
-        case None => println("WARNING: updateFileModalDataStructures() failed. Could not get memberID from cookie."); -1
+        case None => -1
       }
 
       remedyScores.clear()
