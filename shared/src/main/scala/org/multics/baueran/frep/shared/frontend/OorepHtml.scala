@@ -1,18 +1,21 @@
 package org.multics.baueran.frep.shared.frontend
 
 import org.scalajs.dom
-import org.scalajs.dom.html
-import scalatags.JsDom
+import org.scalajs.dom.html.TextArea
+import org.scalajs.dom.{Element, HTMLButtonElement, html}
+import scalatags.JsDom.all.*
 
 trait OorepHtmlElement {
   def getId(): String
 
-  def getNode(): Option[dom.html.Element] = {
+  def getNode() = {
     dom.document.getElementById(getId()) match {
       case null => None
-      case elem => Some(elem.asInstanceOf[dom.html.Element])
+      case elem => Some(elem)
     }
   }
+
+  def apply(): scalatags.JsDom.TypedTag[html.Element]
 
   def rmAllChildren(): Unit = {
     getNode() match {
@@ -24,28 +27,29 @@ trait OorepHtmlElement {
   }
 
   // https://stackoverflow.com/questions/6242976/javascript-hide-show-element
-  def hide() = {
+  def hide(): Unit = {
     getNode() match {
       case None => ;
-      case Some(elem) => elem.style.display = "none"
+      case Some(elem) =>
+        elem.asInstanceOf[dom.html.Element].style.display = "none"
     }
   }
 
-  def show() = {
+  def show(): Unit = {
     getNode() match {
       case None => ;
-      case Some(elem) => elem.style.display = ""
+      case Some(elem) =>
+        elem.asInstanceOf[dom.html.Element].style.display = ""
     }
   }
 
   def focus(): Unit = {
     getNode() match {
       case None => ;
-      case Some(elem) => elem.focus()
+      case Some(elem) =>
+        elem.asInstanceOf[dom.html.Element].focus()
     }
   }
-
-  def apply(): JsDom.TypedTag[html.Element]
 }
 
 trait OorepHtmlInput extends OorepHtmlElement {

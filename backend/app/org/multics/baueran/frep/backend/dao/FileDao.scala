@@ -2,7 +2,7 @@ package org.multics.baueran.frep.backend.dao
 
 import org.multics.baueran.frep._
 import backend.db
-import io.getquill.Update
+import io.getquill._
 import shared.{Caze, FIle, dbFile}
 
 class FileDao(dbContext: db.db.DBContext) {
@@ -96,13 +96,14 @@ class FileDao(dbContext: db.db.DBContext) {
   }
 
   /**
-    * Note: Does not create a case, if case doesn't already exist.
+    * Note: Does not create a case, if case doesn't already exist in the DB!
     *
-    * @return True on success, false otherwise. Case needs to be already existing in DB!
+    * @return True on success, false otherwise.
     */
 
   def addCaseIdToFile(cazeId: Int, fileId: Int): Boolean = {
     val cazeDao = new CazeDao(dbContext)
+    var updateSucceeded = false
 
     transaction {
       cazeDao.get(cazeId) match {
@@ -124,14 +125,16 @@ class FileDao(dbContext: db.db.DBContext) {
           }
           if (run(rawQuery(lift(fileId), lift(foundCase.id))) > 0) {
             Logger.debug(s"FileDao: ADDCASEIDTOFILE($cazeId, $fileId) succeeded.")
-            return true
+            updateSucceeded = true
           }
+
         case _ => ;
       }
     }
 
-    Logger.error(s"FileDao: ADDCASEIDTOFILE($cazeId, $fileId) failed.")
-    false
+    if (!updateSucceeded)
+      Logger.error(s"FileDao: ADDCASEIDTOFILE($cazeId, $fileId) failed.")
+    updateSucceeded
   }
 
   /**

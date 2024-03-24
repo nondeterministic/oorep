@@ -1,6 +1,7 @@
 package org.multics.baueran.frep.shared
 
 import scala.collection.mutable
+import scala.util.boundary, boundary.break
 
 case class RemedyEntered(id: Option[Int], fullname: Option[String])
 
@@ -36,8 +37,9 @@ class Remedies(remedies: List[Remedy]) {
 
     // Is there a remedy-altname match?
     _remediesMap.values.foreach{ remedy =>
-      if (remedy.namealt.exists(_.toLowerCase == enteredRemedyStringLower))
-        return RemedyEntered(Some(remedy.id), None)
+      boundary:
+        if (remedy.namealt.exists(_.toLowerCase == enteredRemedyStringLower))
+          break(RemedyEntered(Some(remedy.id), None))
     }
 
     // Is there a remedy-fullname partial match?
@@ -47,8 +49,9 @@ class Remedies(remedies: List[Remedy]) {
 
     // Is there a remedy-altname partial match?
     _remediesMap.values.foreach{ remedy =>
-      if (remedy.namealt.exists(_.toLowerCase.startsWith(enteredRemedyStringLower)))
-        return RemedyEntered(None, Some(enteredRemedyStringLower.trim.replace("  ", " ")))
+      boundary:
+        if (remedy.namealt.exists(_.toLowerCase.startsWith(enteredRemedyStringLower)))
+          break(RemedyEntered(None, Some(enteredRemedyStringLower.trim.replace("  ", " "))))
     }
 
     // No match found :-(
@@ -90,14 +93,15 @@ class Remedies(remedies: List[Remedy]) {
     // Altname(s) in brackets were entered, e.g., "[AltName1, AltName2 & AltName3]"
     if (enteredRemedyStringLower.contains("[") || enteredRemedyStringLower.contains("]")) {
       val pattern = (".+\\[([^\\]]+)\\].*").r
-      enteredRemedyStringLower match {
-        case pattern(altnames) =>
-          altnames.split(',').map(_.trim).map(doSearch(_)).foreach{ case RemedyEntered(id, fullname) =>
-            if (id != None || fullname != None)
-              return RemedyEntered(id, fullname)
-          }
-        case _ => ;
-      }
+      boundary:
+        enteredRemedyStringLower match {
+          case pattern(altnames) =>
+            altnames.split(',').map(_.trim).map(doSearch(_)).foreach{ case RemedyEntered(id, fullname) =>
+              if (id != None || fullname != None)
+                break(RemedyEntered(id, fullname))
+            }
+          case _ => ;
+        }
     }
 
     // No altnames or abbrev recognisable in input, try matching the whole entered string...

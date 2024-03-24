@@ -4,6 +4,7 @@ import org.multics.baueran.frep.shared.{MyDate, dbFile}
 import org.scalajs.dom
 import org.scalajs.dom.Event
 import scalatags.JsDom.all.{cls, _}
+import scala.util.boundary, boundary.break
 
 // ----------------------------------------------------------------------------------------------------------------------------------------
 // Common class to be used by modal dialogs which host a list of a user's files.
@@ -38,10 +39,11 @@ abstract class FileModal(idPrefix: String) {
     * @return a list of file headers, stored in this FileModal
     */
   def headers(): List[String] = {
-    divs.map(_.getElementsByClassName(headersClass) match {
-      case null => return List.empty
-      case hdrs => hdrs.item(0).asInstanceOf[dom.html.Div].innerHTML
-    })
+    boundary:
+      divs.map(_.getElementsByClassName(headersClass) match {
+        case null => break(List.empty)
+        case hdrs => hdrs.item(0).asInstanceOf[dom.html.Div].innerHTML
+      })
   }
 
   def appendItem(dbFile: dbFile, onClick: (dom.Event) => Unit): Unit = {

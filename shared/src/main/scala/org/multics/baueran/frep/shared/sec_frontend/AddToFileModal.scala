@@ -5,7 +5,7 @@ import org.multics.baueran.frep.shared.frontend.{Case, OorepHtmlButton, OorepHtm
 import org.multics.baueran.frep.shared.Defs.{CookieFields, HeaderFields}
 import org.multics.baueran.frep.shared.HttpRequest2
 import scalatags.JsDom.all.{id, _}
-import org.scalajs.dom.Event
+import org.scalajs.dom.{Event, html}
 import io.circe.syntax._
 import org.multics.baueran.frep.shared.TopLevelUtilCode.getDocumentCsrfCookie
 
@@ -54,8 +54,6 @@ object AddToFileModal extends FileModal("AddToFileModal__") with OorepHtmlElemen
   def apply() = {
     div(cls:="modal fade", tabindex:="-1", role:="dialog", id:=getId(),
       onshow := { (event: Event) =>
-        updateData()
-
         if (selected_file_id == None)
           SubmitButton.disable()
       },

@@ -1,6 +1,6 @@
 package org.multics.baueran.frep.backend.dao
 
-import io.getquill.{Insert, Update}
+import io.getquill._
 import org.multics.baueran.frep.shared.{Member, MyDate}
 import org.multics.baueran.frep.backend.db
 

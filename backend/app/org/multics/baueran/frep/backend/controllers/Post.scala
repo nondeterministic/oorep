@@ -14,7 +14,7 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
 
   private val Logger = play.api.Logger(this.getClass)
 
-  def submitNewPassword() = Action { implicit request =>
+  def submitNewPassword() = Action { implicit request: Request[AnyContent] =>
     val errorMessage = s"Update of password failed. Please go back to main page ${serverUrl(request)} and try again, if you still want to change your password."
     val password = request.body.asFormUrlEncoded.get("pass1").head
     val pcrId = request.body.asFormUrlEncoded.get("pcrId").head
@@ -40,7 +40,7 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
     }
   }
 
-  def requestUsername() = Action { implicit request =>
+  def requestUsername() = Action { implicit request: Request[AnyContent] =>
     val inputEmail: String =
       request.body.asFormUrlEncoded.get("inputEmail").head
         .replaceAll("[ ;']", "")
@@ -62,7 +62,7 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
         emailHistoryDao.insert(emailHistoryItem)
 
         val f = Future {
-          send a new Mail(
+          send `a` new Mail(
             from = ("info@" + serverDomain(request), "OOREP-Support"),
             to = member.email,
             subject = "Username",
@@ -99,7 +99,7 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
     *         exists or not.
     */
 
-  def requestPasswordChange() = Action { implicit request =>
+  def requestPasswordChange() = Action { implicit request: Request[AnyContent] =>
     def genRandomString(length: Int) = {
       val chars = ('A' to 'Z').toList ::: ('a' to 'z').toList ::: (0 to 9).toList.map(_.toString).map(_.head)
       scala.util.Random.shuffle(chars ::: chars).take(length).mkString
@@ -150,7 +150,7 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
           emailHistoryDao.insert(emailHistoryItem)
 
           val f = Future {
-            send a new Mail(
+            send `a` new Mail(
               from = ("info@" + serverDomain(request), "OOREP-Support"),
               to = member.email,
               subject = "Password reset",
@@ -184,7 +184,7 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
     *         or BadRequest(error string) if something went wrong.
     */
 
-  def saveCaze() = Action { request: Request[AnyContent] =>
+  def saveCaze() = Action { (request: Request[AnyContent]) =>
     getAuthenticatedUser(request) match {
       case Some(_) => {
         val requestData = request.body.asFormUrlEncoded.get
@@ -220,7 +220,7 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
     }
   }
 
-  def addCaseRubricsToCaze() = Action { request: Request[AnyContent] =>
+  def addCaseRubricsToCaze() = Action { (request: Request[AnyContent]) =>
     getAuthenticatedUser(request) match {
       case Some(_) => {
         val requestData = request.body.asFormUrlEncoded.get
@@ -261,7 +261,7 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
     }
   }
 
-  def saveFile() = Action { request: Request[AnyContent] =>
+  def saveFile() = Action { (request: Request[AnyContent]) =>
     getAuthenticatedUser(request) match {
       case Some(_) => {
         FIle.decode(request.body.asText.get) match {

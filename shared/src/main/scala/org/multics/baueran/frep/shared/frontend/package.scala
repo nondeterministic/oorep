@@ -1,6 +1,7 @@
 package org.multics.baueran.frep.shared
 
 import org.scalajs.dom
+import scala.util.boundary, boundary.break
 
 package object frontend {
 
@@ -15,13 +16,14 @@ package object frontend {
   def apiPrefix() = "api"
 
   def getCookieData(cookie: String, elementName: String): Option[String] = {
-    cookie.split(";").map(_.trim).foreach({ c: String =>
-      c.split("=").map(_.trim).toList match {
-        case name :: argument :: Nil => if (name.toLowerCase() == elementName.toLowerCase()) return Some(argument)
-        case _ => ; // Do nothing
-      }
-    })
-    None
+    boundary:
+      cookie.split(";").map(_.trim).foreach({ c =>
+        c.split("=").map(_.trim).toList match {
+          case name :: argument :: Nil => if (name.toLowerCase() == elementName.toLowerCase()) break(Some(argument))
+          case _ => ; // Do nothing
+        }
+      })
+      None
   }
 
 }

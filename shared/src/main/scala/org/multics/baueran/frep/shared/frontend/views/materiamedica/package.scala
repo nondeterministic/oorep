@@ -4,7 +4,7 @@ import scalatags.JsDom
 import JsDom.all.{datalist, _}
 import org.scalajs.dom
 import dom.html.{Button, DataList, Div, Input}
-import dom.Event
+import dom.{ Event, html }
 
 import org.multics.baueran.frep.shared.frontend._
 
@@ -60,7 +60,8 @@ package object uielements {
       _advancedSearchOptionsVisible = false
     }
 
-    def apply(): JsDom.TypedTag[Button] = {
+    // def apply(): JsDom.TypedTag[Button] = {
+    def apply() = {
       if (!MainView.someResultsHaveBeenShown())
         WithoutResults.SearchButtonsDiv.BasicSearchOptionsButton()
       else
@@ -100,7 +101,7 @@ package object uielements {
       _advancedSearchOptionsVisible = true
     }
 
-    def apply(): JsDom.TypedTag[Button] = {
+    def apply() = {
       if (!MainView.someResultsHaveBeenShown())
         WithoutResults.SearchButtonsDiv.AdvancedSearchOptionsButton()
       else
@@ -111,7 +112,7 @@ package object uielements {
   object InputSearchTerms extends OorepHtmlInput {
     override def getId(): String = s"${MateriaMedicaView.getPrefix()}inputField"
 
-    override def apply(): JsDom.TypedTag[Input] = {
+    override def apply() = {
       input(cls := "form-control", `id` := getId(),
         onkeydown := { (event: dom.KeyboardEvent) =>
           if (event.keyCode == 13) {
@@ -132,7 +133,7 @@ package object uielements {
     object AdvancedSearchControlsDiv extends OorepHtmlElement {
       override def getId(): String = uielements.AdvancedSearchControlsDiv.getId()
 
-      override def apply(): JsDom.TypedTag[Div] = div(cls := "col-sm-10", id := getId())
+      override def apply() = div(cls := "col-sm-10", id := getId())
     }
 
     object SearchButtonsDiv extends OorepHtmlElement {
@@ -141,7 +142,7 @@ package object uielements {
       object FindButton extends OorepHtmlButton {
         override def getId(): String = s"${MateriaMedicaView.getPrefix()}_findButton"
 
-        override def apply(): JsDom.TypedTag[Button] = {
+        override def apply() = {
           button(cls := "btn btn-primary text-nowrap", style := "width: 140px; margin:5px;", `type` := "button",
             onclick := { (event: Event) =>
               event.stopPropagation()
@@ -157,7 +158,7 @@ package object uielements {
       object BasicSearchOptionsButton extends OorepHtmlButton {
         override def getId(): String = uielements.BasicSearchOptionsButton.getId()
 
-        override def apply(): JsDom.TypedTag[Button] = {
+        override def apply() = {
           button(id := getId(), cls := "btn btn-secondary text-nowrap", style := "width: 140px; margin: 5px;", `type` := "button",
             onclick := { (event: Event) =>
               event.stopPropagation()
@@ -169,7 +170,7 @@ package object uielements {
       object AdvancedSearchOptionsButton extends OorepHtmlButton {
         override def getId(): String = uielements.AdvancedSearchOptionsButton.getId()
 
-        override def apply(): JsDom.TypedTag[Button] = {
+        override def apply() = {
           button(id := getId(), cls := "btn btn-secondary text-nowrap", style := "width: 140px; margin: 5px;", `type` := "button",
             onclick := { (event: Event) =>
               event.stopPropagation()
@@ -178,7 +179,7 @@ package object uielements {
         }
       }
 
-      override def apply(): JsDom.TypedTag[Div] = {
+      override def apply() = {
         div(id := getId(), cls := "col-sm-12 text-center", style := "margin-top:20px;",
           FindButton(),
           AdvancedSearchOptionsButton()
@@ -189,10 +190,10 @@ package object uielements {
     object ResultStatusAlertsDiv extends OorepHtmlElement {
       override def getId(): String = s"${MateriaMedicaView.getPrefix()}_resultStatusAlerts"
 
-      override def apply(): JsDom.TypedTag[Div] = div(id := getId(), cls := "container-fluid", style := "margin-top:23px;")
+      override def apply() = div(id := getId(), cls := "container-fluid", style := "margin-top:23px;")
     }
 
-    override def apply(): JsDom.TypedTag[Div] = {
+    override def apply() = {
       div(cls := "container-fluid text-center",
         div(cls := "row justify-content-center",
           MMSelectionDropdown(),
@@ -215,7 +216,7 @@ package object uielements {
     object AdvancedSearchControlsDiv extends OorepHtmlElement {
       override def getId(): String = uielements.AdvancedSearchControlsDiv.getId()
 
-      override def apply(): JsDom.TypedTag[Div] = div(cls := "col-md-12 text-center", id := getId())
+      override def apply() = div(cls := "col-md-12 text-center", id := getId())
     }
 
     object SearchButtonsDiv extends OorepHtmlElement {
@@ -224,7 +225,7 @@ package object uielements {
       object FindButton extends OorepHtmlButton {
         override def getId(): String = s"${MateriaMedicaView.getPrefix()}_findButton"
 
-        override def apply(): JsDom.TypedTag[Button] = {
+        override def apply() = {
           button(cls := "btn btn-primary text-nowrap", style := "width: 80px; margin-right:5px;", `type` := "button",
             onclick := { (event: Event) =>
               event.stopPropagation()
@@ -241,7 +242,7 @@ package object uielements {
       object BasicSearchOptionsButton extends OorepHtmlButton {
         override def getId(): String = uielements.BasicSearchOptionsButton.getId()
 
-        override def apply(): JsDom.TypedTag[Button] = {
+        override def apply() = {
           button(`id` := getId(), cls := "btn btn-secondary text-nowrap", style := "width: 70px; margin-right:5px;", `type` := "button",
             onclick := { (event: Event) =>
               event.stopPropagation()
@@ -255,7 +256,7 @@ package object uielements {
       object AdvancedSearchOptionsButton extends OorepHtmlButton {
         override def getId(): String = uielements.AdvancedSearchOptionsButton.getId()
 
-        override def apply(): JsDom.TypedTag[Button] = {
+        override def apply() = {
           button(id := getId(), cls := "btn btn-secondary text-nowrap", style := "width: 70px; margin-right: 5px;", `type` := "button",
             onclick := { (event: Event) =>
               event.stopPropagation()
@@ -267,7 +268,7 @@ package object uielements {
       object FindAgainButton extends OorepHtmlButton {
         override def getId(): String = s"${MateriaMedicaView.getPrefix()}_buttonMainViewFindAgain"
 
-        override def apply(): JsDom.TypedTag[Button] = {
+        override def apply() = {
           button(cls := "btn btn-secondary text-nowrap", style := "width: 70px;", `type` := "button",
             onclick := { (event: Event) =>
               event.stopPropagation()
@@ -292,7 +293,7 @@ package object uielements {
         }
       }
 
-      override def apply(): JsDom.TypedTag[Div] = {
+      override def apply() = {
         div(id := getId(), cls := "col-md-auto text-center center-block", style := "margin-top:20px;",
           FindButton(),
           AdvancedSearchOptionsButton(),
@@ -301,7 +302,7 @@ package object uielements {
       }
     }
 
-    override def apply(): JsDom.TypedTag[Div] = {
+    override def apply() = {
       div(cls := "container-fluid", style := "padding-bottom:20px",
         div(cls := "col-md-12 justify-content-md-center",
           div(cls := "row justify-content-center",
@@ -333,13 +334,13 @@ package object uielements {
     object RemedyList extends OorepHtmlElement {
       override def getId(): String = s"${MateriaMedicaView.getPrefix()}_remedyDataList"
 
-      override def apply(): JsDom.TypedTag[DataList] = datalist(`id` := getId())
+      override def apply() = datalist(`id` := getId())
     }
 
     object RemedyInput extends OorepHtmlInput {
       override def getId(): String = s"${MateriaMedicaView.getPrefix()}_inputRemedy"
 
-      override def apply(): JsDom.TypedTag[Input] = {
+      override def apply() = {
         input(cls := "form-control", `id` := getId(), list := RemedyList.getId(),
           onkeydown := { (event: dom.KeyboardEvent) =>
             if (event.keyCode == 13) {
@@ -354,7 +355,7 @@ package object uielements {
       }
     }
 
-    override def apply(): JsDom.TypedTag[Div] = {
+    override def apply() = {
       div(id := getId(), cls := "row justify-content-center", style := "margin-top:15px;",
         div(cls := "col-md-10",
           div(cls := "row",
@@ -373,7 +374,7 @@ package object uielements {
     object Button extends OorepHtmlButton {
       override def getId(): String = s"${MateriaMedicaView.getPrefix()}mmSelectionDropDownButton"
 
-      override def apply(): JsDom.TypedTag[Button] = {
+      override def apply() = {
         button(`type` := "button",
           style := "min-width: 195px;",
           cls := "text-nowrap btn btn-block dropdown-toggle btn-secondary",
@@ -403,7 +404,7 @@ package object uielements {
     object Menu extends OorepHtmlElement {
       override def getId(): String = s"${MateriaMedicaView.getPrefix()}mmSelectionDropDownMenu"
 
-      override def apply(): JsDom.TypedTag[Div] = div(cls := "dropdown-menu", `id` := getId())
+      override def apply() = div(cls := "dropdown-menu", `id` := getId())
 
       def refresh(): Unit = {
         getNode() match {
@@ -430,7 +431,7 @@ package object uielements {
 
     override def getId(): String = s"${MateriaMedicaView.getPrefix()}mmSelection_sdfjhsdljkhsdkjhsdjkhsdkjfhsdkfjhsdf"
 
-    override def apply(): JsDom.TypedTag[Div] = {
+    override def apply() = {
       div(cls := "dropdown col-md-2", style := "min-width:200px; margin-top:20px;", `id` := getId(),
         Button(), Menu()
       )

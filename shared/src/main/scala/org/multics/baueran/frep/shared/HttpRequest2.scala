@@ -1,18 +1,16 @@
 package org.multics.baueran.frep.shared
 
-import org.scalajs.dom
-import sttp.client4._
+import sttp.client4.*
 import sttp.model.Header
 import sttp.model.Method
+
 import scala.util.{Failure, Success, Try}
 import monix.execution.Scheduler.Implicits.global
-
-import org.multics.baueran.frep.shared.frontend.Notify
 import org.multics.baueran.frep.shared.frontend.{apiPrefix, serverUrl}
 
-/** Minimal wrapper around a networking library (in this case: RosHTTP)
-  * so that eventually the networking library can be replaced more easily
-  * if need be.
+/** Minimal wrapper around a networking library so that eventually the
+  * networking library can be replaced more easily if need be.
+  * (used to be RosHTTP is now sttp; so API is RosHTTP-inspired)
   */
 
 case class HttpRequest2(apiEndPoint: String) {
@@ -24,12 +22,9 @@ case class HttpRequest2(apiEndPoint: String) {
   private val _bParams = scala.collection.mutable.Map[String, String]()
   private var _method = Method("GET")
 
-  // This will ensure the app stays response after a network transmission error
-  // A bit clumsy, as this is some kind of side-effect, but OK for now...
-  private def afterException() = {
-    if (Notify.noAlertsVisible())
-      new Notify("tempFeedbackAlert", "ERROR: Network failure. Please, try again!")
-    dom.document.body.classList.remove("wait")
+  // -1 is the response code if there wasn't in fact any response from the backend
+  private def afterException(apiURI: String, responseCode: Int = -1) = {
+    new HttpRequest2DefaultExceptionHandler(apiURI, responseCode)()
   }
 
   def onSuccess(callback: (String) => Unit): HttpRequest2 = {
@@ -71,15 +66,15 @@ case class HttpRequest2(apiEndPoint: String) {
               _onSuccessCallback(body)
           case Left(message) =>
             if (_onFailureCallback == null) { // Default error handler
-              println(s"HttpRequest2: failed to parse ${apiURI}: ${message.substring(0,20)}")
-              afterException()
+              println(s"HttpRequest2: failed to parse ${apiURI}: ${message}")
+              afterException(apiURI, response.code.code)
             }
             else
               _onFailureCallback(message)
         }
       case Failure(message) =>
         println(s"HttpRequest2: call to ${apiURI} failed: ${message}")
-        afterException()
+        afterException(apiURI)
     }
   }
 

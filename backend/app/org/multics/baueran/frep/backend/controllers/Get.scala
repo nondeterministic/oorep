@@ -1,7 +1,8 @@
 package org.multics.baueran.frep.backend.controllers
 
-import javax.inject._
-import io.circe.syntax._
+import javax.inject.*
+import io.circe.syntax.*
+import io.circe.Json
 import play.api.mvc._
 import org.multics.baueran.frep.backend.dao.{CazeDao, EmailHistoryDao, FileDao, MMDao, MemberDao, PasswordChangeRequestDao, RepertoryDao}
 import org.multics.baueran.frep.shared._
@@ -46,7 +47,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     * see @logout
     */
 
-  def login() = Action { implicit request =>
+  def login() = Action { implicit request: Request[AnyContent] =>
     getAuthenticatedUser(request) match {
       case None =>
         Logger.error("Get: login() not completed successfully: sending user to logout to be safe.")
@@ -73,7 +74,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     * see @login
     */
 
-  def logout() = Action { implicit request =>
+  def logout() = Action { implicit request: Request[AnyContent] =>
     Redirect(sys.env.get("OOREP_URL_LOGOUT").getOrElse(""))
   }
 
@@ -94,7 +95,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     }
   }
 
-  def showMM(materiaMedica: String, symptom: String, page: Int, hideSections: Boolean, remedyString: String) = Action { implicit request: Request[AnyContent] =>
+  def showMM(materiaMedica: String, symptom: String, page: Int, hideSections: Boolean, remedyString: String) = Action { implicit (request: Request[AnyContent]) =>
     try {
       getAuthenticatedUser(request) match {
         case None =>
@@ -148,11 +149,11 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     }
   }
 
-  def apiDisplayGetErrorPage(message: String) = Action { implicit request: Request[AnyContent] =>
+  def apiDisplayGetErrorPage(message: String) = Action { implicit (request: Request[AnyContent]) =>
     BadRequest(views.html.defaultpages.badRequest("GET", request.uri, message))
   }
 
-  def apiStoreCookie(name: String, value: String) = Action { request: Request[AnyContent] =>
+  def apiStoreCookie(name: String, value: String) = Action { (request: Request[AnyContent]) =>
     if (name == CookieFields.cookiePopupAccepted.toString)
       Ok.withCookies(Cookie(CookieFields.cookiePopupAccepted.toString, value, secure = true, httpOnly = false))
     else if (name == CookieFields.theme.toString)
@@ -163,7 +164,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     }
   }
 
-  def apiAuthenticate() = Action { request: Request[AnyContent] =>
+  def apiAuthenticate() = Action { (request: Request[AnyContent]) =>
     getAuthenticatedUser(request) match {
       case Some(member) =>
         Ok(member.member_id.toString)
@@ -174,7 +175,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     }
   }
 
-  def apiAvailableRemedies() = Action { request: Request[AnyContent] =>
+  def apiAvailableRemedies() = Action { (request: Request[AnyContent]) =>
     getAuthenticatedUser(request) match {
       case Some(member) =>
         Ok(repertoryDao.getRemedies().asJson.toString())
@@ -185,7 +186,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     }
   }
 
-  def apiAvailableRepertoriesAndRemedies() = Action { request: Request[AnyContent] =>
+  def apiAvailableRepertoriesAndRemedies() = Action { (request: Request[AnyContent]) =>
     getAuthenticatedUser(request) match {
       case Some(member) =>
         Ok((repertoryDao.getRepsAndRemedies(getAuthenticatedUser(request)).asJson.toString))
@@ -196,7 +197,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     }
   }
 
-  def apiAvailableMateriaMedicasAndRemedies() = Action { request: Request[AnyContent] =>
+  def apiAvailableMateriaMedicasAndRemedies() = Action { (request: Request[AnyContent]) =>
     getAuthenticatedUser(request) match {
       case Some(member) =>
         Ok(mmDao.getMMsAndRemedies(getAuthenticatedUser(request)).asJson.toString())
@@ -210,7 +211,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
   /**
     * Won't actually return files with associated cases, but a list of tuples, (file ID, file header, file creation date).
     */
-  def apiSecAvailableFiles(memberId: Int) = Action { request: Request[AnyContent] =>
+  def apiSecAvailableFiles(memberId: Int) = Action { (request: Request[AnyContent]) =>
     getAuthenticatedUser(request) match {
       case None =>
         val errStr = "Get: apiSecAvailableFiles() failed: not authenticated"
@@ -228,7 +229,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     }
   }
 
-  def apiSecGetFile(fileId: String) = Action { request: Request[AnyContent] =>
+  def apiSecGetFile(fileId: String) = Action { (request: Request[AnyContent]) =>
     getAuthenticatedUser(request) match {
       case None =>
         Logger.error("Get: apiSecGetFile(): not authenticated")
@@ -252,7 +253,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     }
   }
 
-  def apiSecGetCase(caseId: String) = Action { request: Request[AnyContent] =>
+  def apiSecGetCase(caseId: String) = Action { (request: Request[AnyContent]) =>
     getAuthenticatedUser(request) match {
       case Some(member) if (caseId.forall(_.isDigit)) => {
         cazeDao.get(caseId.toInt) match {
@@ -284,7 +285,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     * are associated.
     */
   // TODO: This, unfortunately, is a super slow method and needs improvement!! (or rather, it needs improvement inside FileDao.scala)
-  def apiSecFileOverview(fileId: String) = Action { request: Request[AnyContent] =>
+  def apiSecFileOverview(fileId: String) = Action { implicit (request: Request[AnyContent]) =>
     getAuthenticatedUser(request) match {
       case Some(_) if (fileId.forall(_.isDigit)) =>
         val files = fileDao.getFIle(fileId.toInt)
@@ -294,8 +295,8 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
             files
               .flatMap(f =>
                 f.cazes match {
-                  case Nil => List((f.description, None, None))
-                  case cazes => cazes.map(c => (f.description, Some(c.id), Some(s"[${c.date.take(10)}] '${c.header}'")))
+                  case Nil => List(FileOverviewRow(f.description, None, None))
+                  case cazes => cazes.map(c => FileOverviewRow(f.description, Some(c.id), Some(s"[${c.date.take(10)}] '${c.header}'")))
                 }
               )
 
@@ -303,9 +304,9 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
             val err = s"Get: apiSecFileOverview() failed: not authorised"
             Logger.error(err)
             Forbidden(err)
-          } else {
-            Ok(results.asJson.toString())
           }
+          else
+            Ok(results.asJson.toString())
         }
         else {
           Logger.warn(s"Get: apiSecFileOverview(${fileId}): nothing found.")
@@ -319,11 +320,15 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
   }
 
   private def isCrossSiteRequest(request: Request[AnyContent]): Boolean = {
-    request.session.get("id") == None && getAuthenticatedUser(request) == None
+    // We allow "cookie-less" look-ups from localhost for testing purposes. TODO: Is this a security problem?!
+    if (request.remoteAddress == "127.0.0.1")
+      false
+    else
+      request.session.get("id") == None && getAuthenticatedUser(request) == None
   }
 
   def apiLookupRep(repertoryAbbrev: String, symptom: String, page: Int, remedyString: String, minWeight: Int, getRemedies: Int): Action[AnyContent] =
-    Action { request: Request[AnyContent] =>
+    Action { (request: Request[AnyContent]) =>
       if (isCrossSiteRequest(request)) {
         val errStr = (s"ERROR: request to ${request.uri} not authorized. Make sure your browser allows cookies. (IP: ${request.remoteAddress})")
         Logger.error(errStr)
@@ -356,7 +361,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     }
 
   def apiLookupMM(mmAbbrev: String, symptom: String, page: Int, remedyString: String): Action[AnyContent] =
-    Action { request: Request[AnyContent] =>
+    Action { (request: Request[AnyContent]) =>
       if (isCrossSiteRequest(request)) {
         val errStr = (s"ERROR: request to ${request.uri} not authorized. Make sure your browser allows cookies. (IP: ${request.remoteAddress})")
         Logger.error(errStr)

@@ -3,7 +3,7 @@ package org.multics.baueran.frep.frontend.secure.base
 import scala.scalajs.js.annotation.JSExportTopLevel
 import org.multics.baueran.frep.shared._
 import frontend.{CaseModals, LoadingSpinner, MainView, apiPrefix, serverUrl}
-import TopLevelUtilCode.{deleteCookies, toggleTheme}
+import TopLevelUtilCode.{deleteAllCookies, toggleTheme}
 import sec_frontend.{AddToFileModal, EditFileModal, FileModalCallbacks, NewFileModal, OpenFileModal}
 
 import scalatags.JsDom.all.{id, _}
@@ -29,12 +29,12 @@ object Main extends MainUtil {
           case exception: Throwable =>
             dom.document.location.replace(s"${serverUrl()}/${apiPrefix()}/display_error_page?message=${encodeURI("Not authenticated or cookie expired")}")
             println("Exception: could not convert member-id '" + exception + "'. Deleting the cookies now!")
-            deleteCookies()
+            deleteAllCookies()
         }
       })
       .onFailure((_) => {
         dom.document.location.replace(s"${serverUrl()}/${apiPrefix()}/display_error_page?message=${encodeURI("Not authenticated or cookie expired")}")
-        deleteCookies()
+        deleteAllCookies()
       })
       .send()
   }
@@ -86,7 +86,7 @@ object Main extends MainUtil {
 
     dom.document.getElementById("navbar_logout") match {
       case null => ;
-      case elem => elem.addEventListener("click", (ev: dom.Event) => deleteCookies())
+      case elem => elem.addEventListener("click", (ev: dom.Event) => deleteAllCookies())
     }
 
     if (!dom.window.location.toString.contains("/show"))

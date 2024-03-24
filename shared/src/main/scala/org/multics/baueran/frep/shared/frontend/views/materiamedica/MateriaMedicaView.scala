@@ -6,8 +6,7 @@ import io.circe.parser.parse
 import org.scalajs.dom
 import dom.html.{Div, Element}
 import dom.Event
-import rx.Var
-import rx.Ctx.Owner.Unsafe._
+import org.scalajs.dom.{Event, html}
 
 import scala.scalajs.js.URIUtils.encodeURI
 import org.multics.baueran.frep.shared.{HitsPerRemedy, HttpRequest2, MMAllSearchResults, MMAndRemedyIds, MMSearchResult, MateriaMedicas, Paginator, Remedies, Remedy}
@@ -25,8 +24,8 @@ object MateriaMedicaView extends TabView {
   private var _materiaMedicas: MateriaMedicas = new MateriaMedicas(List())
   private var _collapsedMultiOccurrencesSpans = true
 
-  private val _sectionHits: Var[List[MMSearchResult]] = Var(List.empty)
-  private val _allSectionsHide = Var(true)
+  private var _sectionHits: List[MMSearchResult] = List.empty
+  private val _allSectionsHide = com.raquo.laminar.api.L.Var(true)
 
   private var _totalNumberOfResultRemedies = 0
   private var _page: Option[Int] = None
@@ -35,31 +34,7 @@ object MateriaMedicaView extends TabView {
   private[materiamedica] def defaultMMAbbrev(): Option[String] = _defaultMMAbbrev
   private[materiamedica] def materiaMedicas(): MateriaMedicas = _materiaMedicas
 
-  _sectionHits.triggerLater {
-    dom.document.getElementById(s"${_prefix}_result_div") match {
-      case null =>
-        println("ERROR: _sectionHits.triggerLater failed")
-      case element =>
-        element.innerHTML = ""
-        element.appendChild(getResultsHtml().render)
-        element.appendChild(div(cls := "container-fluid", id := s"${_prefix}_paginationDiv").render)
-    }
-
-    MMSelectionDropdown.refresh()
-    renderMultiOccurrencesDiv()
-
-    // TODO: If we, one day, actually want to show the case under the MM view as well, we only should have to uncomment those lines here (more or less)...
-    // MainView.CaseDiv.empty()
-    // MainView.CaseDiv.append(Case.toHTML(RemedyFormat.Abbreviated).render)
-
-    getPaginatorHtml() match {
-      case None => ;
-      case Some(resultDiv) => dom.document.getElementById(s"${_prefix}_paginationDiv").appendChild(resultDiv.render)
-    }
-    ()
-  }
-
-  private def resultsLink(): String = encodeURI(_currResultShareLink + s"&hideSections=${_allSectionsHide.now}")
+  private def resultsLink(): String = encodeURI(_currResultShareLink + s"&hideSections=${_allSectionsHide.now()}")
 
   private[materiamedica] def refreshRemedyDataList(): Unit = {
     val selectedAbbrev = _selectedMateriaMedicaAbbrev.getOrElse("")
@@ -130,7 +105,7 @@ object MateriaMedicaView extends TabView {
     }
   }
 
-  private[materiamedica] def getPaginatorHtml(): Option[JsDom.TypedTag[Element]] = {
+  private[materiamedica] def getPaginatorHtml(): Option[scalatags.JsDom.TypedTag[html.Element]] = {
     if (_totalNumberOfResultRemedies <= maxNumberOfResultsPerMMPage)
       return None
 
@@ -147,7 +122,7 @@ object MateriaMedicaView extends TabView {
   }
 
   private[materiamedica] def getResultsHtml(): JsDom.TypedTag[Div] = {
-    if (_sectionHits.now.length > 0) {
+    if (_sectionHits.length > 0) {
 
       // These are the onclick-handlers for unfolding or collapsing all result sections at once
       def hideLinksHandler(event: Event) = {
@@ -162,7 +137,7 @@ object MateriaMedicaView extends TabView {
           val currSpan = allMMSectionChevronSpans.item(i).asInstanceOf[dom.html.Div]
           currSpan.setAttribute("class", "oi oi-chevron-right")
         }
-        _allSectionsHide() = true
+        _allSectionsHide.set(true)
       }
 
       def showLinksHandler(event: Event) = {
@@ -177,7 +152,7 @@ object MateriaMedicaView extends TabView {
           val currSpan = allMMSectionChevronSpans.item(i).asInstanceOf[dom.html.Div]
           currSpan.setAttribute("class", "oi oi-chevron-bottom")
         }
-        _allSectionsHide() = false
+        _allSectionsHide.set(false)
       }
 
       val shareResultsModal = new ShareResultsModal(_prefix, resultsLink)
@@ -258,7 +233,7 @@ object MateriaMedicaView extends TabView {
           ),
         ),
 
-        _sectionHits.now.map(_.render(_prefix, _allSectionsHide, _latestSymptomString.getOrElse(""), _materiaMedicas, doLookup))
+        _sectionHits.map(_.render(_prefix, _allSectionsHide, _latestSymptomString.getOrElse(""), _materiaMedicas, doLookup))
 
       )
     }
@@ -353,16 +328,16 @@ object MateriaMedicaView extends TabView {
       "Materia Medica")
   }
 
-  override def drawWithoutResults(): JsDom.TypedTag[Div] = WithoutResults()
+  override def drawWithoutResults() = WithoutResults()
 
-  override def drawWithResults(): JsDom.TypedTag[dom.html.Div] = WithResults()
+  override def drawWithResults() = WithResults()
 
   def jsDoLookup(abbrev: String, symptom: String, page: Int, hideSections: Boolean, remedyString: String): Unit = {
     // Hide navbar initially, while the spinner shows. (Later, the code in this file will show it again.)
     dom.document.getElementById("nav_bar").asInstanceOf[dom.html.Div].classList.add("d-none")
 
     _selectedMateriaMedicaAbbrev = Some(abbrev)
-    _allSectionsHide() = hideSections
+    _allSectionsHide.set(hideSections)
 
     doLookup(abbrev, symptom,
       if (page > 0) Some(page) else None,
@@ -379,10 +354,25 @@ object MateriaMedicaView extends TabView {
 
       _totalNumberOfResultRemedies = searchResults.numberOfMatchingSectionsPerChapter.length
       _page = page
-      _sectionHits() = List()
-      _sectionHits() = searchResults.results
+      _sectionHits = searchResults.results
+
+      dom.document.getElementById(s"${_prefix}_result_div") match {
+        case null =>
+          println("ERROR: updateDataAndView() cannot access results-div")
+        case element =>
+          element.innerHTML = ""
+          element.appendChild(getResultsHtml().render)
+          element.appendChild(div(cls := "container-fluid", id := s"${_prefix}_paginationDiv").render)
+      }
+
+      renderMultiOccurrencesDiv()
 
       MMSelectionDropdown.refresh()
+
+      getPaginatorHtml() match {
+        case None => ;
+        case Some(resultDiv) => dom.document.getElementById(s"${_prefix}_paginationDiv").appendChild(resultDiv.render)
+      }
 
       if (advancedSearchOptionsVisible())
         AdvancedSearchOptionsButton.onShowAdvancedSearchOptions()
@@ -522,7 +512,7 @@ object MateriaMedicaView extends TabView {
   }
 
   override def containsAnyResults(): Boolean =
-    _sectionHits.now.length > 0 || _latestRemedyString != None
+    _sectionHits.length > 0 || _latestRemedyString != None
 
   override def containsUnsavedResults(): Boolean = false
 

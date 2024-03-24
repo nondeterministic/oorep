@@ -4,16 +4,17 @@ import play.api.mvc._
 import org.multics.baueran.frep.backend.dao.{CazeDao, EmailHistoryDao, FileDao, MMDao, MemberDao, PasswordChangeRequestDao, RepertoryDao}
 import org.multics.baueran.frep.shared.Defs.{CookieFields, HeaderFields}
 import org.multics.baueran.frep.shared.Member
+import scala.compiletime.uninitialized
 
 package object controllers {
 
-  var memberDao: MemberDao = _
-  var cazeDao: CazeDao = _
-  var fileDao: FileDao = _
-  var passwordDao: PasswordChangeRequestDao = _
-  var emailHistoryDao: EmailHistoryDao = _
-  var repertoryDao: RepertoryDao = _
-  var mmDao: MMDao = _
+  var memberDao: MemberDao = uninitialized
+  var cazeDao: CazeDao = uninitialized
+  var fileDao: FileDao = uninitialized
+  var passwordDao: PasswordChangeRequestDao = uninitialized
+  var emailHistoryDao: EmailHistoryDao = uninitialized
+  var repertoryDao: RepertoryDao = uninitialized
+  var mmDao: MMDao = uninitialized
 
   private val Logger = play.api.Logger(this.getClass)
 

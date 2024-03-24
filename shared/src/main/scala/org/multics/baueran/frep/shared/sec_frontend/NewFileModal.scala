@@ -5,7 +5,7 @@ import org.multics.baueran.frep.shared.{FIle, HttpRequest2}
 import org.multics.baueran.frep.shared.frontend.{Case, Notify, OorepHtmlButton, OorepHtmlElement, OorepHtmlInput, OorepHtmlTextArea, apiPrefix, getCookieData, serverUrl}
 import scalatags.JsDom.all.{id, input, _}
 import org.scalajs.dom
-import org.scalajs.dom.Event
+import org.scalajs.dom.{Event, html}
 
 import scala.scalajs.js
 import io.circe.syntax._

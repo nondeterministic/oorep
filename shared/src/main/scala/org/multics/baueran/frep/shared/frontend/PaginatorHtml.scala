@@ -10,7 +10,7 @@ import org.scalajs.dom.Event
 class PaginatorHtml(paginationDivName: String, pagination: PaginationResult) {
 
   // currPage starts at 0 for the first page of results.
-  private def doToHtml(abbrev: String, symptom: String, remedyString: Option[String], minWeight: Int, callBack: (String, String, Option[Int], Option[String], Int) => Unit) = {
+  private def doToHtml(abbrev: String, symptom: String, remedyString: Option[String], minWeight: Int, callBack: (String, String, Option[Int], Option[String], Int) => Unit): JsDom.TypedTag[html.Element] = {
     var links: List[JsDom.TypedTag[html.Element]]  = List.empty
     val currPage = pagination.currPage - 1
 
@@ -53,18 +53,17 @@ class PaginatorHtml(paginationDivName: String, pagination: PaginationResult) {
     if (pagination.left.size > 0)
       links = createLinks(pagination.left) ::: links
 
-    nav(ul(cls:="pagination justify-content-center",
-      minus10, links, plus10))
+    div(nav(ul(cls:="pagination justify-content-center", minus10, links, plus10)))
   }
 
   // Called for/by MM
-  def toHtml(abbrev: String, symptom: String, remedyString: Option[String], callBack: (String, String, Option[Int], Option[String]) => Unit) = {
+  def toHtml(abbrev: String, symptom: String, remedyString: Option[String], callBack: (String, String, Option[Int], Option[String]) => Unit): JsDom.TypedTag[html.Element] = {
     def tmpCallBack(abbrev: String, symptom: String, page: Option[Int], remedyStringOpt: Option[String], IGNORE: Int): Unit = { callBack(abbrev, symptom, page, remedyStringOpt) }
     doToHtml(abbrev, symptom, remedyString, -1, tmpCallBack)
   }
 
   // Called for/by Rep
-  def toHtml(abbrev: String, symptom: String, remedyString: Option[String], minWeight: Int, callBack: (String, String, Option[Int], Option[String], Int) => Unit) =
+  def toHtml(abbrev: String, symptom: String, remedyString: Option[String], minWeight: Int, callBack: (String, String, Option[Int], Option[String], Int) => Unit): JsDom.TypedTag[html.Element] =
     doToHtml(abbrev, symptom, remedyString, minWeight, callBack)
 
 }

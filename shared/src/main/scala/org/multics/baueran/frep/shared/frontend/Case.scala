@@ -9,8 +9,6 @@ import io.circe.syntax._
 import scala.scalajs.js
 import scala.collection.mutable
 import mutable.ListBuffer
-import rx.Var
-import rx.Ctx.Owner.Unsafe._
 import org.multics.baueran.frep.shared
 import org.multics.baueran.frep.shared.TopLevelUtilCode.getDocumentCsrfCookie
 import org.multics.baueran.frep.shared.sec_frontend.AddToFileModal
@@ -19,6 +17,7 @@ import shared.frontend.views.repertory.RepertoryView
 import shared.Defs.{CookieFields, HeaderFields}
 import shared.frontend.RemedyFormat.RemedyFormat
 import shared.sec_frontend.FileModalCallbacks._
+import org.scalajs.dom.{Event, html}
 
 import scala.language.implicitConversions
 
@@ -38,8 +37,7 @@ object Case {
   }
   import SortCaseBy._
   private var sortCaseBy = Abbrev
-  private val sortReverse = Var(false)
-  sortReverse.triggerLater(updateCaseViewAndDataStructures())
+  private var sortReverse = false
 
   // This is not really necessary for proper functioning, but when deleting a case/file which is currently shown,
   // the user could, by pressing add or remove again, mess up the database as we're trying to write to a file/case,
@@ -50,7 +48,7 @@ object Case {
   object OpenNewCaseButton extends OorepHtmlButton {
     def getId() = "openNewCaseButton"
 
-    def apply() = {
+    override def apply() = {
       button(cls := "btn btn-sm btn-secondary", id := getId(), `type` := "button", data.toggle := "modal", data.target := s"#${CaseModals.EditModal.getId()}",
         style := "margin-left:5px; margin-bottom: 5px;",
         onclick := { (_: Event) => {
@@ -147,7 +145,6 @@ object Case {
 
   object CaseHeader extends OorepHtmlElement {
     def getId() = "caseHeader"
-
     def setHeaderText(newHeaderText: String) = {
       getNode() match {
         case None => ;
@@ -219,68 +216,75 @@ object Case {
       implicit def crToCR(cr: CaseRubric): BetterCaseRubric = new BetterCaseRubric(cr)
 
       val remedies = crub.getFormattedRemedyNames(remedyFormat)
-      val weight = Var(crub.rubricWeight) // The weight label on the drop-down button, which needs to change automatically on new user choice
-      weight.triggerLater {
-        dom.document.getElementById(s"${getId()}_Button.Weight") match {
-          case null => ;
-          case button: dom.html.Button =>
-            button.textContent = weight.now.toString
+
+      class WeightRx(weight: Int) extends Rx(weight) {
+        override def triggerLater() = {
+          dom.document.getElementById(s"${getId()}_Button.Weight") match {
+            case null => ;
+            case button: dom.html.Button => button.textContent = value.toString
+          }
+          updateCaseViewAndDataStructures()
         }
+
       }
+      // The weight label on the drop-down button, which needs to change automatically on new user choice
+      val weight = new WeightRx(crub.rubricWeight)
 
       // Same for label
-      val label = Var(crub.rubricLabel)
-      label.triggerLater {
-        dom.document.getElementById(s"${getId()}_Button.Label") match {
-          case null => ;
-          case button: dom.html.Button =>
-            button.textContent = label.now.getOrElse("")
+      class LabelRx(label: Option[String]) extends Rx(label) {
+        override def triggerLater() = {
+          dom.document.getElementById(s"${getId()}_Button.Label") match {
+            case null => ;
+            case button: dom.html.Button => button.textContent = value.getOrElse("")
+          }
+          updateCaseViewAndDataStructures()
         }
       }
+      val label = new LabelRx(crub.rubricLabel)
 
       def apply() = {
         tr(scalatags.JsDom.attrs.id := getId(),
           td(
-            button(`type` := "button", id := s"${getId()}_Button.Weight", cls := "btn dropdown-toggle btn-sm btn-secondary", style := "width:45px;", data.toggle := "dropdown", weight.now.toString),
+            button(`type` := "button", id := s"${getId()}_Button.Weight", cls := "btn dropdown-toggle btn-sm btn-secondary", style := "width:45px;", data.toggle := "dropdown", weight.get().toString),
             div(cls := "dropdown-menu",
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricWeight = 0; weight() = 0; updateCaseViewAndDataStructures() }, "0 (ignore)"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricWeight = 1; weight() = 1; updateCaseViewAndDataStructures() }, "1 (normal)"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricWeight = 2; weight() = 2; updateCaseViewAndDataStructures() }, "2 (important)"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricWeight = 3; weight() = 3; updateCaseViewAndDataStructures() }, "3 (very important)"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricWeight = 4; weight() = 4; updateCaseViewAndDataStructures() }, "4 (essential)")
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricWeight = 0; weight.set(0) }, "0 (ignore)"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricWeight = 1; weight.set(1) }, "1 (normal)"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricWeight = 2; weight.set(2) }, "2 (important)"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricWeight = 3; weight.set(3) }, "3 (very important)"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricWeight = 4; weight.set(4) }, "4 (essential)")
             )
           ),
           td(crub.repertoryAbbrev),
           td(
-            button(`type` := "button", id := s"${getId()}_Button.Label", cls := "btn dropdown-toggle btn-sm btn-secondary", style := "width:45px;", data.toggle := "dropdown", s"${label.now.getOrElse("")}"),
+            button(`type` := "button", id := s"${getId()}_Button.Label", cls := "btn dropdown-toggle btn-sm btn-secondary", style := "width:45px;", data.toggle := "dropdown", s"${label.get().getOrElse("")}"),
             div(cls := "dropdown-menu", style := "max-height:250px; overflow-y:auto;",
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = None; label() = None; updateCaseViewAndDataStructures() }, "none"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("A"); label() = Some("A"); updateCaseViewAndDataStructures() }, "A"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("B"); label() = Some("B"); updateCaseViewAndDataStructures() }, "B"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("C"); label() = Some("C"); updateCaseViewAndDataStructures() }, "C"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("D"); label() = Some("D"); updateCaseViewAndDataStructures() }, "D"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("E"); label() = Some("E"); updateCaseViewAndDataStructures() }, "E"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("F"); label() = Some("F"); updateCaseViewAndDataStructures() }, "F"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("G"); label() = Some("G"); updateCaseViewAndDataStructures() }, "G"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("H"); label() = Some("H"); updateCaseViewAndDataStructures() }, "H"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("I"); label() = Some("I"); updateCaseViewAndDataStructures() }, "I"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("J"); label() = Some("J"); updateCaseViewAndDataStructures() }, "J"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("K"); label() = Some("K"); updateCaseViewAndDataStructures() }, "K"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("L"); label() = Some("L"); updateCaseViewAndDataStructures() }, "L"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("M"); label() = Some("M"); updateCaseViewAndDataStructures() }, "M"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("N"); label() = Some("N"); updateCaseViewAndDataStructures() }, "N"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("O"); label() = Some("O"); updateCaseViewAndDataStructures() }, "O"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("P"); label() = Some("P"); updateCaseViewAndDataStructures() }, "P"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("Q"); label() = Some("Q"); updateCaseViewAndDataStructures() }, "Q"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("R"); label() = Some("R"); updateCaseViewAndDataStructures() }, "R"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("S"); label() = Some("S"); updateCaseViewAndDataStructures() }, "S"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("T"); label() = Some("T"); updateCaseViewAndDataStructures() }, "T"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("U"); label() = Some("U"); updateCaseViewAndDataStructures() }, "U"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("V"); label() = Some("V"); updateCaseViewAndDataStructures() }, "V"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("W"); label() = Some("W"); updateCaseViewAndDataStructures() }, "W"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("X"); label() = Some("X"); updateCaseViewAndDataStructures() }, "X"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("Y"); label() = Some("Y"); updateCaseViewAndDataStructures() }, "Y"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("Z"); label() = Some("Z"); updateCaseViewAndDataStructures() }, "Z")
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = None; label.set(None); updateCaseViewAndDataStructures() }, "none"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("A"); label.set(Some("A")) }, "A"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("B"); label.set(Some("B")) }, "B"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("C"); label.set(Some("C")) }, "C"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("D"); label.set(Some("D")) }, "D"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("E"); label.set(Some("E")) }, "E"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("F"); label.set(Some("F")) }, "F"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("G"); label.set(Some("G")) }, "G"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("H"); label.set(Some("H")) }, "H"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("I"); label.set(Some("I")) }, "I"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("J"); label.set(Some("J")) }, "J"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("K"); label.set(Some("K")) }, "K"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("L"); label.set(Some("L")) }, "L"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("M"); label.set(Some("M")) }, "M"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("N"); label.set(Some("N")) }, "N"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("O"); label.set(Some("O")) }, "O"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("P"); label.set(Some("P")) }, "P"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("Q"); label.set(Some("Q")) }, "Q"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("R"); label.set(Some("R")) }, "R"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("S"); label.set(Some("S")) }, "S"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("T"); label.set(Some("T")) }, "T"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("U"); label.set(Some("U")) }, "U"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("V"); label.set(Some("V")) }, "V"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("W"); label.set(Some("W")) }, "W"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("X"); label.set(Some("X")) }, "X"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("Y"); label.set(Some("Y")) }, "Y"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("Z"); label.set(Some("Z")) }, "Z")
             )
           ),
           td(style := "width:28%;", crub.rubric.fullPath),
@@ -325,7 +329,7 @@ object Case {
         tbody(scalatags.JsDom.attrs.id := getId(),
           cRubrics
             .sortBy(cr => (cr.repertoryAbbrev + cr.rubric.fullPath))
-            .map(crub => new CaseRow(crub)()))
+            .map(crub => new CaseRow(crub)())) //.asInstanceOf[html.Html]
       }
     }
 
@@ -397,7 +401,7 @@ object Case {
 
         MainView.CaseDiv.empty()
         MainView.toggleOnBeforeUnload()
-        MainView.CaseDiv.append(new Case.HtmlRepresentation(RepertoryView._remedyFormat.now)().render)
+        MainView.CaseDiv.append(new Case.HtmlRepresentation(RepertoryView._remedyFormat.get())().render)
         updateCaseViewAndDataStructures()
         updateCaseHeaderView()
       case None =>
@@ -435,7 +439,7 @@ object Case {
     def updateFileModalDataStructures(): Unit = {
       val memberId = getCookieData(dom.document.cookie, CookieFields.id.toString) match {
         case Some(id) => updateMemberFiles(id.toInt); id.toInt
-        case None => println("WARNING: updateFileModalDataStructures() failed. Could not get memberID from cookie."); -1
+        case None => -1
       }
 
       remedyScores.clear()
@@ -545,11 +549,31 @@ object Case {
       case Some(tableHead) =>
         CaseModals.RepertorisationModal.TableHead.rmAllChildren()
         if (caseUsesWeights)
-          tableHead.appendChild(th(attr("scope") := "col", a(href := s"#${HtmlRepresentation.TableHead.getId()}", cls := "underline", onclick := { (event: Event) => sortCaseBy = Weight; sortReverse() = !sortReverse.now }, "W.")).render)
-        tableHead.appendChild(th(attr("scope") := "col", a(href := s"#${HtmlRepresentation.TableHead.getId()}", cls := "underline", onclick := { (event: Event) => sortCaseBy = Abbrev; sortReverse() = !sortReverse.now }, "Rep.")).render)
+          tableHead.appendChild(th(attr("scope") := "col", a(href := s"#${HtmlRepresentation.TableHead.getId()}", cls := "underline",
+            onclick := { (event: Event) =>
+              sortCaseBy = Weight
+              sortReverse = !sortReverse
+              updateCaseViewAndDataStructures()
+            }, "W.")).render)
+        tableHead.appendChild(th(attr("scope") := "col", a(href := s"#${HtmlRepresentation.TableHead.getId()}", cls := "underline",
+          onclick := { (event: Event) =>
+            sortCaseBy = Abbrev
+            sortReverse = !sortReverse
+            updateCaseViewAndDataStructures()
+          }, "Rep.")).render)
         if (caseUsesLabels)
-          tableHead.appendChild(th(attr("scope") := "col", a(href := s"#${HtmlRepresentation.TableHead.getId()}", cls := "underline", onclick := { (event: Event) => sortCaseBy = Label; sortReverse() = !sortReverse.now }, "L.")).render)
-        tableHead.appendChild(th(attr("scope") := "col", a(href := s"#${HtmlRepresentation.TableHead.getId()}", cls := "underline", onclick := { (event: Event) => sortCaseBy = Path; sortReverse() = !sortReverse.now }, "Rubric")).render)
+          tableHead.appendChild(th(attr("scope") := "col", a(href := s"#${HtmlRepresentation.TableHead.getId()}", cls := "underline",
+            onclick := { (event: Event) =>
+              sortCaseBy = Label
+              sortReverse = !sortReverse
+              updateCaseViewAndDataStructures()
+          }, "L.")).render)
+        tableHead.appendChild(th(attr("scope") := "col", a(href := s"#${HtmlRepresentation.TableHead.getId()}", cls := "underline",
+          onclick := { (event: Event) =>
+            sortCaseBy = Path
+            sortReverse = !sortReverse
+            updateCaseViewAndDataStructures()
+          }, "Rubric")).render)
         val allRemediesInCase = cRubrics.map(_.weightedRemedies.map(_.remedy)).flatten.distinct
         remedyScores.toList.sortWith(_._2 > _._2).map(_._1).foreach(nameabbrev =>
           tableHead.appendChild(th(attr("scope") := "col",
@@ -559,7 +583,7 @@ object Case {
     }
 
     // Redraw table body
-    implicit def stringToString(s: String) = new BetterString(s) // For 'shorten'.
+    implicit def stringToString(s: String): BetterString = new BetterString(s) // For 'shorten'.
 
     CaseModals.RepertorisationModal.TableBody.getNode() match {
       case None => println("Case: Redrawing of table body failed.")
@@ -575,7 +599,7 @@ object Case {
               cr.repertoryAbbrev + cr.rubricLabel.getOrElse("") + cr.rubric.fullPath
             else
               cr.rubricLabel.getOrElse("") + cr.repertoryAbbrev + cr.rubric.fullPath
-          })(if (sortReverse.now) Ordering[String].reverse else Ordering[String]))
+          })(if (sortReverse) Ordering[String].reverse else Ordering[String]))
         {
           val trId = cr.rubric.fullPath.replaceAll("[^A-Za-z0-9]", "") + "_" + cr.repertoryAbbrev
 

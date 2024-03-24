@@ -12,9 +12,23 @@
      ██║ ╚████║███████╗╚███╔███╔╝███████║
      ╚═╝  ╚═══╝╚══════╝ ╚══╝╚══╝ ╚══════╝
 
-v0.16.1 (development)    Sun Mar 24 10:36:47 AM CET 2024
+v0.17.0                  Sat Dec 14 03:05:54 PM CET 2024 
 --------------------------------------------------------
-- Minor features:
+- Main features:
+  - Update to Play >= 3 and Scala >= 3
+
+- Minor improvements and changes:
+  - Update many other library versions
+  - Remove remaining dependencies on unmaintained scala.rx library
+  - Display source version information in the disclaimer
+
+- Bug fixes:
+  - Detect and delete stale cookies from a previous login
+    resulting in repeated notifications of network errors
+
+v0.16.1                  Sun Mar 24 10:36:47 AM CET 2024
+--------------------------------------------------------
+- Features:
   - Protect the two main lookup pages with a cookie check against
     leeching attacks
   - Update to Play 2.9.2, ScalaJS 1.16.0 and Scala 2.13.13
@@ -23,20 +37,20 @@ v0.16.1 (development)    Sun Mar 24 10:36:47 AM CET 2024
   - Sorting in file modal dialogue broke with the removal of RX
     libraries and is fixed now
 
-v0.16.0 (development)       Sa 13. Jan 14:28:21 CET 2024
+v0.16.0                     Sa 13. Jan 14:28:21 CET 2024
 --------------------------------------------------------
 - Main features:
   - Update to Java 17, Play 2.9 and sbt 1.9
   - Update to ScalaJS 1.15.0 and Scala 2.13.12
-  - Replaced unmaintained RosHTTP library with sttp
-  - Removed unmaintained scalatags-rx library (as we want to use
+  - Replace unmaintained RosHTTP library with sttp
+  - Remove unmaintained scalatags-rx library (as we want to use
     Laminar in the future)
 
 - Minor improvements and changes:
-  - Routinely updated a bunch of other library versions, where it
+  - Routinely update a bunch of other library versions, where it
     didn't hurt or require huge code restructurings
 
-v0.15.0 (stable)           Sa 16. Sep 13:36:29 CEST 2023
+v0.15.0                    Sa 16. Sep 13:36:29 CEST 2023
 --------------------------------------------------------
 - Main features:
   - Change of database schema (not a user visible one, but
@@ -61,7 +75,7 @@ v0.15.0 (stable)           Sa 16. Sep 13:36:29 CEST 2023
   - OOREP would often crash after any kind of network transmission
     error, whereas now it fails more gracefully
 
-v0.14.2 (stable)           Mo 15. Mai 18:31:05 CEST 2023
+v0.14.2                    Mo 15. Mai 18:31:05 CEST 2023
 --------------------------------------------------------
 - Minor improvements and changes:
   - Prevent anonymous users from accessing protected materia medicas
@@ -79,7 +93,7 @@ v0.14.2 (stable)           Mo 15. Mai 18:31:05 CEST 2023
   - Logged-in users can now access "protected" but not "private" resources
     (useful for preview of resources to selected testers, etc.)
 
-v0.14.1 (stable)            Sat Jan 21 11:11:56 CET 2023
+v0.14.1                     Sat Jan 21 11:11:56 CET 2023
 --------------------------------------------------------
 - Minor improvements and changes:
   - Update FAQ with example searches
@@ -90,7 +104,7 @@ v0.14.1 (stable)            Sat Jan 21 11:11:56 CET 2023
     search
   - Sharing of search link would fail when quotation marks were used
 
-v0.14.0 (stable)            Wed Dec 28 17:39:17 CET 2022
+v0.14.0                     Wed Dec 28 17:39:17 CET 2022
 --------------------------------------------------------
 - Main features:
   - Buttons for sharing repertory search results and opening them in
@@ -110,7 +124,7 @@ v0.14.0 (stable)            Wed Dec 28 17:39:17 CET 2022
   - Fix race condition that would prevent public link to repertory
     search from loading
 
-v0.13.0 (stable)        Thu May 26 12:13:11 PM CEST 2022
+v0.13.0                 Thu May 26 12:13:11 PM CEST 2022
 --------------------------------------------------------
 - Main features:
   - Not really a user-visible one: but now would require

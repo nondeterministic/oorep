@@ -1,3 +1,5 @@
+@import java.io.File
+
 <div style="width:100%;" id="content_bottom">
     <div id="disclaimer_div" class="jumbotron jumbo-dark text-center center-block" style="position: relative;">
 
@@ -14,14 +16,26 @@
                 Sie ist nicht geeignet zur Selbstmedikation oder ersetzt den Besuch eines Arztes oder Apothekers.
                 Die Wirksamkeit von Homöopathie ist wissenschaftlich nicht bewiesen!
                 Der Autor dieser Website übernimmt keine Verantwortung für die Richtigkeit der Ergebnisse oder die Folgen,
-                die aus einem unsachgemäßen Gebrauch resultieren.
+                die aus einem unsachgemäßen Gebrauch resultieren. Diese Website basiert aktuell auf Version
+                @if(File("./conf/version.txt").exists()) {
+                @{scala.io.Source.fromFile("./conf/version.txt").mkString}
+                } else {
+                @{scala.io.Source.fromFile("./backend/conf/version.txt").mkString}
+                }
+                des OOREP Quell-Codes.
             </p>
             <p style="text-align:justify;">
                 This homeopathy web site is intended for information purposes only.
                 It is not suitable for self-medication or can replace the visit of a medical doctor/GP.
                 Scientifically, homeopathy was never proven to actually work!
                 The author of this web site does not take responsibility for the correctness of this site's
-                results or the consequences of misusing them.
+                results or the consequences of misusing them. This website is currently based upon version
+                @if(File("./conf/version.txt").exists()) {
+                @{scala.io.Source.fromFile("./conf/version.txt").mkString}
+                } else {
+                @{scala.io.Source.fromFile("./backend/conf/version.txt").mkString}
+                }
+                of the OOREP source code.
             </p>
         </div>
 

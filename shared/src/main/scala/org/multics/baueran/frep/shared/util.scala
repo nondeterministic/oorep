@@ -169,12 +169,20 @@ object TopLevelUtilCode {
     //    None
   }
 
-  def deleteCookies() = {
+  // Only delete cookies that OOREP set itself in order to store data
+  def deleteCustomCookies() = {
+    println("DEBUG: Deleting custom cookies...")
     val cookieNames = CookieFields.values.map(_.toString)
-    dom.document.cookie = "PLAY_SESSION=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT"
     cookieNames.foreach(cookieName =>
       dom.document.cookie = s"${cookieName}=; path=/; expires='Thu, 01 Jan 1970 00:00:01 GMT"
     )
+  }
+
+  // Delete also the PLAY session cookie
+  def deleteAllCookies() = {
+    dom.document.cookie = "PLAY_SESSION=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT"
+    println("DEBUG: Deleted play session cookie")
+    deleteCustomCookies()
   }
 
   def sendAcceptCookies() = {
@@ -210,7 +218,7 @@ object TopLevelUtilCode {
         normaltheme.removeAttribute("disabled")
         darktheme.setAttribute("disabled", "disabled")
         storeThemeInCookie("normal")
-      case _ =>
+      case null =>
         darktheme.removeAttribute("disabled")
         normaltheme.setAttribute("disabled", "disabled")
         storeThemeInCookie("dark")

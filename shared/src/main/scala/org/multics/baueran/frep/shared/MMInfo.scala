@@ -6,7 +6,6 @@ import org.multics.baueran.frep.shared.frontend.{ShareResultsModal, serverUrl}
 import org.scalajs.dom
 import org.scalajs.dom.Event
 import scalatags.JsDom.all._
-import rx.Var
 
 import scala.scalajs.js.URIUtils.encodeURI
 
@@ -38,7 +37,7 @@ case class MMSearchResult(abbrev: String, remedy_id: Int, remedy_fullname: Strin
 
   private val _prefix = "MMSearchResult"
 
-  def render(prefix: String, hideSections: Var[Boolean], symptomString: String, materiaMedicas: MateriaMedicas, doLookup: (String, String, Option[Int], Option[String]) => Unit) = {
+  def render(prefix: String, hideSections: com.raquo.laminar.api.L.Var[Boolean], symptomString: String, materiaMedicas: MateriaMedicas, doLookup: (String, String, Option[Int], Option[String]) => Unit) = {
 
     def getTopMostSection() = result_sections.find(sec => sec.parent_sec_id == None)
     def getChildren(currSec: MMSection) = {
@@ -65,14 +64,14 @@ case class MMSearchResult(abbrev: String, remedy_id: Int, remedy_fullname: Strin
           )
         else
           div(
-            currSec.render(prefix, hideSections.now, symptomString, indent),
-            div(name:=s"parent_${currSec.id}", cls:=s"collapse ${if (hideSections.now) "hide" else "show"}", `type`:=s"${prefix}_mm_section_span",
+            currSec.render(prefix, hideSections.now(), symptomString, indent),
+            div(name:=s"parent_${currSec.id}", cls:=s"collapse ${if (hideSections.now()) "hide" else "show"}", `type`:=s"${prefix}_mm_section_span",
               div(style:="padding-left:20px;", children.map(renderEntireChapterFromRoot(_, indent + 1)))
             )
           )
       }
       else
-        currSec.render(prefix, hideSections.now, symptomString, indent)
+        currSec.render(prefix, hideSections.now(), symptomString, indent)
     }
 
     val remedy = materiaMedicas.get(abbrev) match {
@@ -146,7 +145,7 @@ case class MMSearchResult(abbrev: String, remedy_id: Int, remedy_fullname: Strin
                 case Some(remedy) =>
 
                   def resultsLink() =
-                    s"${serverUrl()}/show_mm?materiaMedica=${abbrev}&symptom=&page=1&hideSections=${hideSections.now}&remedyString=${remedy.nameAbbrev}"
+                    s"${serverUrl()}/show_mm?materiaMedica=${abbrev}&symptom=&page=1&hideSections=${hideSections.now()}&remedyString=${remedy.nameAbbrev}"
 
                   val shareResultsModal = new ShareResultsModal(_prefix, resultsLink)
 
@@ -181,7 +180,7 @@ case class MMSearchResult(abbrev: String, remedy_id: Int, remedy_fullname: Strin
       div(cls:="card-body",
         // Some symptom search...
         if (getTopMostSection() == None) {
-          result_sections.sortBy(_.id).map(_.render(prefix, hideSections.now, symptomString, 0))
+          result_sections.sortBy(_.id).map(_.render(prefix, hideSections.now(), symptomString, 0))
         }
         // Displaying a remedy chapter in its entirety...
         else

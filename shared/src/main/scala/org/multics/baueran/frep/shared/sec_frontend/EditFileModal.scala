@@ -3,12 +3,12 @@ package org.multics.baueran.frep.shared.sec_frontend
 import io.circe.parser.parse
 import org.multics.baueran.frep.shared.Defs.{CookieFields, HeaderFields}
 import org.multics.baueran.frep.shared.TopLevelUtilCode.getDocumentCsrfCookie
-import org.multics.baueran.frep.shared.{Caze, HttpRequest2}
+import org.multics.baueran.frep.shared.{Caze, HttpRequest2, FileOverviewRow}
 import org.multics.baueran.frep.shared.frontend.{Case, OorepHtmlButton, OorepHtmlElement, getCookieData}
 import org.multics.baueran.frep.shared.frontend.views.repertory.RepertoryView
 import org.scalajs.dom
 import org.scalajs.dom.{Event, document, html}
-import scalatags.JsDom.all.{onclick, _}
+import scalatags.JsDom.all.{onclick, *}
 
 object EditFileModal extends OorepHtmlElement {
   def getId() = "editFileModal"
@@ -21,7 +21,7 @@ object EditFileModal extends OorepHtmlElement {
       def set(newHeader: String) = getNode().get.asInstanceOf[html.Heading].innerText = s"Really delete case '${newHeader}'?"
 
       // Before this element is drawn, set() will actually set the h5() tag to a meaningful value. Otherwise it'd be empty...
-      def apply() = h5(cls := "modal-title", id := getId())
+      def apply() = h5(cls := "modal-title", id := getId()).asInstanceOf[scalatags.JsDom.TypedTag[html.Heading]]
     }
 
     def apply() = {
@@ -231,7 +231,7 @@ object EditFileModal extends OorepHtmlElement {
     object Header extends OorepHtmlElement {
       def getId() = EditFileModal.MainModal.getId() + "_sckj34kljhdsKJGjk34hg&h4rdfdfNBGHJG"
       def set(newHeader: String) = getNode().get.asInstanceOf[html.Heading].innerText = newHeader
-      def apply() = h5(cls := "modal-title", id := getId())
+      def apply() = scalatags.JsDom.tags.h5(cls := "modal-title", id := getId()).asInstanceOf[scalatags.JsDom.TypedTag[html.Heading]]
     }
 
     def apply() = {
@@ -309,12 +309,13 @@ object EditFileModal extends OorepHtmlElement {
 
       parse(response) match {
         case Right(json) => {
-          json.hcursor.as[Seq[(String, Option[Int], Option[String])]] match {
+          val cursor = json.hcursor
+          cursor.as[Seq[FileOverviewRow]] match {
             case Right(results) =>
               currentlyAssociatedCaseHeaders =
                 results.toList.map(result =>
                   result match {
-                    case (_, Some(caseId), Some(caseEnrichedHdr)) => Some(caseId, caseEnrichedHdr)
+                    case FileOverviewRow(_, Some(caseId), Some(caseEnrichedHdr)) => Some(caseId, caseEnrichedHdr)
                     case _ => None
                   }
                 ).flatten
@@ -324,7 +325,7 @@ object EditFileModal extends OorepHtmlElement {
               MainModal.FileDescriptionTextArea.setTextValue(currentFileDescription.getOrElse(""))
               MainModal.AvailableCasesList.update()
             case Left(err) =>
-              println("Decoding of cases' ids and headers failed: " + err + "; " + response)
+              println("Decoding of cases' ids and headers failed:\n`" + err + "'.\nResponse was:\n" + response)
           }
         }
         case Left(msg) =>

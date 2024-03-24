@@ -23,8 +23,8 @@ before_script:
 
 build:
   script:
-    - ./sbt/bin/sbt ++2.13.12 compile
-    - ./sbt/bin/sbt ++2.13.12 dist
+    - ./sbt/bin/sbt ++3.5.2 compile
+    - ./sbt/bin/sbt ++3.5.2 dist
 
 # Testing currently only works from within IntelliJ.
 # 

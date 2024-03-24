@@ -1,6 +1,6 @@
 package org.multics.baueran.frep.backend.dao
 
-import io.getquill.Query
+import io.getquill._
 import org.multics.baueran.frep.shared.{HitsPerRemedy, MMAllSearchResults, MMAndRemedyIds, MMChapter, MMInfo, MMSearchResult, MMSection, Member, MyDate, Remedies, Remedy, RemedyEntered, SearchTerms}
 import org.multics.baueran.frep.backend.db
 import org.multics.baueran.frep.shared.Defs.{ResourceAccessLvl, maxNumberOfResultsPerMMPage, maxNumberOfSymptoms}

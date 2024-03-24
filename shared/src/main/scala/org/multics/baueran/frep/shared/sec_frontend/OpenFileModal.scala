@@ -5,7 +5,7 @@ import org.multics.baueran.frep.shared.HttpRequest2
 import org.multics.baueran.frep.shared.TopLevelUtilCode.getDocumentCsrfCookie
 import org.multics.baueran.frep.shared.frontend.{Case, MainView, OorepHtmlButton, OorepHtmlElement, apiPrefix, getCookieData, serverUrl}
 import org.scalajs.dom
-import org.scalajs.dom.{Event, document}
+import org.scalajs.dom.{Event, document, html}
 import scalatags.JsDom.all._
 
 object OpenFileModal extends FileModal("OpenFileModal__") {

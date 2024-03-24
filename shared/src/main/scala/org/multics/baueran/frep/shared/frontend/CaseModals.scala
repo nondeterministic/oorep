@@ -3,6 +3,7 @@ package org.multics.baueran.frep.shared.frontend
 import org.scalajs.dom
 import dom.Event
 import scalatags.JsDom.all.{onkeydown, _}
+import org.scalajs.dom.{Event, html}
 
 import scala.scalajs.js
 import org.multics.baueran.frep.shared
@@ -33,7 +34,7 @@ object CaseModals {
       }
     }
 
-    def apply() = {
+    override def apply() = {
       div(cls := "modal fade", tabindex := "-1", role := "dialog", scalatags.JsDom.attrs.id := getId(),
         div(cls := "modal-dialog modal-dialog-centered", role := "document", style := "min-width: 80%;",
           div(cls := "modal-content",
@@ -86,7 +87,7 @@ object CaseModals {
       val caseDescrTxt = CaseDescriptionTextArea.getText ()
       val memberId = getCookieData (dom.document.cookie, CookieFields.id.toString) match {
         case Some (id) => id.toInt
-        case None => - 1 // TODO: Force user to relogin; the identification cookie has disappeared!!!!!!!!!!
+        case None => -1 // TODO: Force user to relogin; the identification cookie has disappeared!!!!!!!!!!
       }
 
       Case.descr = Some (shared.Caze ( // WHERE CAZE IS INITIALLY CREATED: WITH ID -1!
