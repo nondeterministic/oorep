@@ -8,35 +8,63 @@ import scalatags.JsDom
 
 import scala.scalajs.js.URIUtils._
 import scala.language.implicitConversions
-import rx.Var
-import rx.Ctx.Owner.Unsafe._
 import org.multics.baueran.frep.shared._
 import org.multics.baueran.frep.shared.Defs.{CookieFields, HeaderFields, ResourceAccessLvl, maxLengthOfSymptoms, maxNumberOfResultsPerPage, maxNumberOfSymptoms}
 import org.multics.baueran.frep.shared.TopLevelUtilCode.getDocumentCsrfCookie
 import org.multics.baueran.frep.shared.frontend._
 
 object RepertoryView extends TabView {
-  
-  private val _currResultShareLink = Var(s"${serverUrl()}")
+
+  private class SelectedRepertory(var abbrev: String) {
+    def set(newAbbrev: String) = {
+      abbrev = newAbbrev
+      refreshRemedyDataList(_repertories.getRemedies(abbrev))
+    }
+
+    override def toString() = abbrev
+  }
+  private val _selectedRepertory = new SelectedRepertory("")
+
+  private class ResultRemedyStats(var stats: List[ResultsRemedyStats]) {
+    def set(newStats: List[ResultsRemedyStats]) = {
+      stats = newStats
+      redrawMultiOccurringRemedies()
+    }
+
+    def get(): List[ResultsRemedyStats] = stats
+  }
+  private val _resultRemedyStats = new ResultRemedyStats(List())
+
+  class CurrentRemedyFormat(var format: RemedyFormat.Value) {
+    def set(newFormat: RemedyFormat.Value) = {
+      format = newFormat
+      _repertorisationResults match {
+        case Some(_) => showResults()
+        case None => ;
+      }
+    }
+
+    def get(): RemedyFormat.Value = format
+  }
+  val _remedyFormat = new CurrentRemedyFormat(RemedyFormat.Abbreviated)
+
+  private var _currResultShareLink = s"${serverUrl()}"
   private val _pageCache = new PageCache()
   private var _remedies = new Remedies(List())
   private val _repertories = new Repertories()
-  private val _selectedRepertory = Var("")
   private var _defaultRepertory = ""
   private var _showMaxSearchResultsAlert = true
   private var _showMultiOccurrences = false
-  val _remedyFormat = Var(RemedyFormat.Abbreviated)
-  private val _repertorisationResults: Var[Option[ResultsCaseRubrics]] = Var(None)
-  private val _resultRemedyStats: Var[List[ResultsRemedyStats]] = Var(List())
+  private var _repertorisationResults: Option[ResultsCaseRubrics] = None
   private val _prefix = "repertoryView"
   private var _advancedSearchOptionsVisible = false
 
   // ------------------------------------------------------------------------------------------------------------------
-  private def resultsLink(): String = encodeURI(_currResultShareLink.now)
+  private def resultsLink(): String = encodeURI(_currResultShareLink)
 
   // ------------------------------------------------------------------------------------------------------------------
   private def redrawMultiOccurringRemedies(): Unit = {
-    val multiRemedies = _resultRemedyStats.now.filter(_.count > 2).sortBy(-_.count)
+    val multiRemedies = _resultRemedyStats.get().filter(_.count > 2).sortBy(-_.count)
     val multiOccurrenceDiv = dom.document.getElementById("multiOccurrenceDiv").asInstanceOf[dom.html.Element]
     val collapseMultiOccurrences = dom.document.getElementById("collapseMultiOccurrences").asInstanceOf[dom.html.Element]
 
@@ -98,28 +126,18 @@ object RepertoryView extends TabView {
     }
   }
 
-  _resultRemedyStats.triggerLater {
-    redrawMultiOccurringRemedies()
+  private def repertorisationResultsTriggerLater() = {
+    _repertorisationResults match {
+      case Some(_) => showResults()
+      case None => ;
+    }
   }
-
-  _selectedRepertory.triggerLater {
-    refreshRemedyDataList(_repertories.getRemedies(_selectedRepertory.now))
-  }
-
-  _repertorisationResults.triggerLater(_repertorisationResults.now match {
-    case Some(_) => showResults()
-    case None => ;
-  })
-  _remedyFormat.triggerLater(_repertorisationResults.now match {
-    case Some(_) => showResults()
-    case None => ;
-  })
 
   // ------------------------------------------------------------------------------------------------------------------
   private def showCase(): Unit = {
     if (Case.size() > 0) {
       MainView.CaseDiv.empty()
-      MainView.CaseDiv.append(new Case.HtmlRepresentation(_remedyFormat.now)().render)
+      MainView.CaseDiv.append(new Case.HtmlRepresentation(_remedyFormat.get())().render)
       Case.updateCaseViewAndDataStructures()
       Case.updateCaseHeaderView()
     }
@@ -132,7 +150,7 @@ object RepertoryView extends TabView {
     def resultRow(result: CaseRubric) = {
       implicit def crToCR(cr: CaseRubric) = new BetterCaseRubric(cr)
 
-      val remedies = result.getFormattedRemedyNames(_remedyFormat.now)
+      val remedies = result.getFormattedRemedyNames(_remedyFormat.get())
 
       if (remedies.size > 0)
         tr(
@@ -165,7 +183,7 @@ object RepertoryView extends TabView {
     MainView.resetContentView()
     showCase()
 
-    (_repertorisationResults.now, _pageCache.latest) match {
+    (_repertorisationResults, _pageCache.latest) match {
       case (Some(ResultsCaseRubrics(totalNumberOfRepertoryRubrics, totalNumberOfResults, totalNumberOfPages, currPage, results)), Some(latestCachePage)) if (results.size > 0) => {
         dom.document.getElementById("resultStatus").innerHTML = ""
         dom.document.getElementById("resultStatus").appendChild(
@@ -212,7 +230,7 @@ object RepertoryView extends TabView {
             button(`type`:="button", cls:="btn btn-sm px-1 py-0 btn-outline-primary", data.toggle:="modal", data.dismiss:="modal", data.target:=s"#${_prefix}shareResultsModal",
               span(cls:="oi oi-link-intact", style:="font-size: 12px;", title:="Share link...", aria.hidden:="true")),
             span(raw("&nbsp;&nbsp;&nbsp;")),
-            button(`type`:="button", cls:="btn btn-sm px-1 py-0 btn-outline-primary", onclick:={ (_: Event) => dom.window.open(_currResultShareLink.now) },
+            button(`type`:="button", cls:="btn btn-sm px-1 py-0 btn-outline-primary", onclick:={ (_: Event) => dom.window.open(_currResultShareLink) },
               span(cls:="oi oi-external-link", style:="font-size: 12px;", title:="Open in new window...", aria.hidden:="true")),
             span(raw("&nbsp;&nbsp;"))
           ).render
@@ -252,7 +270,7 @@ object RepertoryView extends TabView {
     }
 
     // Display potentially useful hint, when max. number of search results was returned.
-    (_repertorisationResults.now, _pageCache.latest) match {
+    (_repertorisationResults, _pageCache.latest) match {
       case (Some(ResultsCaseRubrics(totalNumberOfRepertoryRubrics, totalNumberOfResults, totalNumberOfPages, _, results)), Some(latestCachePage)) => {
         // If the total number of results matches the total number of available rubrics in a repertory, the user either entered "*"
         // or, in fact, the repertory is a so called small repertory, which means, we show everything...
@@ -313,14 +331,14 @@ object RepertoryView extends TabView {
       case _ => ;
     }
 
-    _repertorisationResults.now match {
+    _repertorisationResults match {
       case Some(ResultsCaseRubrics(_, _, _, _, results)) =>
         results.foreach(result => dom.document.getElementById("resultsTBody").appendChild(resultRow(result).render))
       case _ => ;
     }
 
     // TODO: I'm not a 100% sure, this will work in all cases, but can't find a problem with it yet...
-    if (_resultRemedyStats.now.size > 1 && dom.document.getElementById("collapseMultiOccurrences") == null)
+    if (_resultRemedyStats.get().size > 1 && dom.document.getElementById("collapseMultiOccurrences") == null)
       redrawMultiOccurringRemedies()
 
     Case.updateCaseHeaderView()
@@ -328,10 +346,10 @@ object RepertoryView extends TabView {
 
   // ------------------------------------------------------------------------------------------------------------------
   def toggleRemedyFormat(): Unit = {
-    if (_remedyFormat.now == RemedyFormat.Fullname)
-      _remedyFormat() = RemedyFormat.Abbreviated
+    if (_remedyFormat.get() == RemedyFormat.Fullname)
+      _remedyFormat.set(RemedyFormat.Abbreviated)
     else
-      _remedyFormat() = RemedyFormat.Fullname
+      _remedyFormat.set(RemedyFormat.Fullname)
 
     if (Case.size() > 0)
       showCase()
@@ -348,9 +366,9 @@ object RepertoryView extends TabView {
   private def onSymptomLinkClicked(symptom: String): Unit = {
     _pageCache.latest() match {
       case Some(latestCachePage) =>
-        doLookup(_selectedRepertory.now, symptom, None, latestCachePage.remedy, latestCachePage.minWeight)
+        doLookup(_selectedRepertory.toString(), symptom, None, latestCachePage.remedy, latestCachePage.minWeight)
       case _ =>
-        doLookup(_selectedRepertory.now, symptom, None, None, 0)
+        doLookup(_selectedRepertory.toString(), symptom, None, None, 0)
     }
   }
 
@@ -372,7 +390,7 @@ object RepertoryView extends TabView {
     }
     val symptom = dom.document.getElementById("inputField").asInstanceOf[dom.html.Input].value
 
-    doLookup(_selectedRepertory.now, symptom, None, remedyQuery, remedyMinWeight)
+    doLookup(_selectedRepertory.toString(), symptom, None, remedyQuery, remedyMinWeight)
   }
 
   // ------------------------------------------------------------------------------------------------------------------
@@ -450,7 +468,7 @@ object RepertoryView extends TabView {
       } yield dom.document.getElementById("inputRemedy").asInstanceOf[dom.html.Input].value = remedyAbbrev
     }
 
-    refreshRemedyDataList(_repertories.getRemedies(_selectedRepertory.now))
+    refreshRemedyDataList(_repertories.getRemedies(_selectedRepertory.toString()))
 
     // Add possible weights for search (4 is only in hering, 0 is only in bogboen)
     val weightDropDownsDiv = dom.document.getElementById("weightDropDownsDiv").asInstanceOf[dom.html.Div]
@@ -525,7 +543,7 @@ object RepertoryView extends TabView {
     // Hide navbar initially, while the spinner shows. (Later, the code in this file will show it again.)
     dom.document.getElementById("nav_bar").asInstanceOf[dom.html.Div].classList.add("d-none")
 
-    _selectedRepertory() = abbrev
+    _selectedRepertory.set(abbrev)
 
     doLookup(abbrev,
       symptom,
@@ -554,16 +572,14 @@ object RepertoryView extends TabView {
     def showRepertorisationResults(results: ResultsCaseRubrics, remedyStats: List[ResultsRemedyStats]): Unit = {
       _pageCache.addPage(CachePage(abbrev, symptom, abbrevForRemedyEntered, minWeight, results, remedyStats))
 
-      _currResultShareLink() =
+      _currResultShareLink =
         s"${serverUrl()}/show?repertory=${abbrev}&symptom=${symptom}&page=${(pageOpt.getOrElse(0) + 1).toString}&remedyString=${abbrevForRemedyEntered.getOrElse("")}&minWeight=${minWeight.toString}"
 
-      _repertorisationResults() = None
-      _repertorisationResults.recalc()
-      _repertorisationResults() = Some(results)
+      _repertorisationResults = Some(results)
+      repertorisationResultsTriggerLater()
 
-      _resultRemedyStats() = List.empty
-      _resultRemedyStats.recalc()
-      _resultRemedyStats() = remedyStats
+      _resultRemedyStats.set(List())
+      _resultRemedyStats.set(remedyStats)
 
       if (Case.size() > 0)
         showCase()
@@ -696,7 +712,7 @@ object RepertoryView extends TabView {
                   cachedRemedies match {
                     case Nil => {
                       if (getRemedies == "1")
-                        _resultRemedyStats() = remedyStats
+                        _resultRemedyStats.set(remedyStats)
                       showRepertorisationResults(rcr, remedyStats)
                     }
                     case cachedRemedies =>
@@ -805,15 +821,15 @@ object RepertoryView extends TabView {
                           dom.document.getElementById("repSelectionDropDown")
                             .appendChild(a(cls := "dropdown-item", href := "#", data.value := currRep.abbrev,
                               onclick := { (event: Event) =>
-                                _selectedRepertory() = currRep.abbrev
-                                dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[dom.html.Button].textContent = "Repertory: " + _selectedRepertory.now
+                                _selectedRepertory.set(currRep.abbrev)
+                                dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[dom.html.Button].textContent = "Repertory: " + _selectedRepertory
                               }, s"${currRep.abbrev} - ${currRep.displaytitle.getOrElse("")}").render)
 
-                          if (_selectedRepertory.now.length > 0)
-                            dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[dom.html.Button].textContent = "Repertory: " + _selectedRepertory.now
+                          if (_selectedRepertory.toString().length > 0)
+                            dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[dom.html.Button].textContent = "Repertory: " + _selectedRepertory
                           else {
-                            _selectedRepertory() = _defaultRepertory
-                            dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[dom.html.Button].textContent = "Repertory: " + _selectedRepertory.now
+                            _selectedRepertory.set(_defaultRepertory)
+                            dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[dom.html.Button].textContent = "Repertory: " + _selectedRepertory
                           }
                         }
                       }
@@ -838,15 +854,15 @@ object RepertoryView extends TabView {
           dom.document.getElementById("repSelectionDropDown")
             .appendChild(a(cls := "dropdown-item", href := "#", data.value := currRep.abbrev,
               onclick := { (event: Event) =>
-                _selectedRepertory() = currRep.abbrev
-                dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[dom.html.Button].textContent = "Repertory: " + _selectedRepertory.now
+                _selectedRepertory.set(currRep.abbrev)
+                dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[dom.html.Button].textContent = "Repertory: " + _selectedRepertory
               }, s"${currRep.abbrev} - ${currRep.displaytitle.getOrElse("")}").render)
         }
       }
 
-      if (_selectedRepertory.now.length == 0)
-        _selectedRepertory() = _defaultRepertory
-      dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[dom.html.Button].textContent = "Repertory: " + _selectedRepertory.now
+      if (_selectedRepertory.toString().length == 0)
+        _selectedRepertory.set(_defaultRepertory)
+      dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[dom.html.Button].textContent = "Repertory: " + _selectedRepertory
     }
   }
 
@@ -878,7 +894,7 @@ object RepertoryView extends TabView {
       // refactor it. So, for now, we just call showResults() whenever a redraw event occurs, cause
       // then the dom certainly exists.
       onshow := { event: Event =>
-        if (_repertorisationResults.now != None || Case.size() > 0) {
+        if (_repertorisationResults != None || Case.size() > 0) {
           showResults()
         }
       },
@@ -923,15 +939,15 @@ object RepertoryView extends TabView {
             repSelectionDropDownDiv
               .appendChild(a(cls := "dropdown-item", href := "#", data.value := currRep.abbrev,
                 onclick := { (event: Event) =>
-                  _selectedRepertory() = currRep.abbrev
-                  dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[dom.html.Button].textContent = "Repertory: " + _selectedRepertory.now
+                  _selectedRepertory.set(currRep.abbrev)
+                  dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[dom.html.Button].textContent = "Repertory: " + _selectedRepertory
                 }, s"${currRep.abbrev} - ${currRep.displaytitle.getOrElse("")}").render)
           }
         }
     }
 
-    if (_selectedRepertory.now.length > 0)
-      repSelectionDropDownButton.textContent = "Repertory: " + _selectedRepertory.now
+    if (_selectedRepertory.toString().length > 0)
+      repSelectionDropDownButton.textContent = "Repertory: " + _selectedRepertory
     else
       repSelectionDropDownButton.textContent = "Repertory: " + _defaultRepertory
 
@@ -1046,8 +1062,8 @@ object RepertoryView extends TabView {
   }
 
   override def containsAnyResults(): Boolean = {
-    if (_repertorisationResults.now != None)
-      _repertorisationResults.now.size > 0
+    if (_repertorisationResults != None)
+      _repertorisationResults.size > 0
     else
       false
   }
@@ -1059,8 +1075,8 @@ object RepertoryView extends TabView {
   override def updateDataStructures(remedies: List[Remedy]): Unit = {
     // See also MateriaMedicaView.scala for a similar after-update-handler!
     def runAfterUpdate(): Unit = {
-      if (_selectedRepertory.now == "")
-        _selectedRepertory() = _defaultRepertory
+      if (_selectedRepertory.toString() == "")
+        _selectedRepertory.set(_defaultRepertory)
 
       // The following code would work as in MateriaMedicaView.scala, but we don't need to draw twice, unless we have to:
       //

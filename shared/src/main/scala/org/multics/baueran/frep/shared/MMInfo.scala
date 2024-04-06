@@ -6,7 +6,6 @@ import org.multics.baueran.frep.shared.frontend.{ShareResultsModal, serverUrl}
 import org.scalajs.dom
 import org.scalajs.dom.Event
 import scalatags.JsDom.all._
-import rx.Var
 
 import scala.scalajs.js.URIUtils.encodeURI
 
@@ -38,7 +37,7 @@ case class MMSearchResult(abbrev: String, remedy_id: Int, remedy_fullname: Strin
 
   private val _prefix = "MMSearchResult"
 
-  def render(prefix: String, hideSections: Var[Boolean], symptomString: String, materiaMedicas: MateriaMedicas, doLookup: (String, String, Option[Int], Option[String]) => Unit) = {
+  def render(prefix: String, hideSections: com.raquo.laminar.api.L.Var[Boolean], symptomString: String, materiaMedicas: MateriaMedicas, doLookup: (String, String, Option[Int], Option[String]) => Unit) = {
 
     def getTopMostSection() = result_sections.find(sec => sec.parent_sec_id == None)
     def getChildren(currSec: MMSection) = {
