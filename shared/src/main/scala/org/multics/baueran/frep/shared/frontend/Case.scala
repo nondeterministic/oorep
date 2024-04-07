@@ -216,68 +216,74 @@ object Case {
       implicit def crToCR(cr: CaseRubric): BetterCaseRubric = new BetterCaseRubric(cr)
 
       val remedies = crub.getFormattedRemedyNames(remedyFormat)
-      var weight = crub.rubricWeight // The weight label on the drop-down button, which needs to change automatically on new user choice
-      def weightTriggerLater() = {
-        dom.document.getElementById(s"${getId()}_Button.Weight") match {
-          case null => ;
-          case button: dom.html.Button => button.textContent = weight.toString
+
+      class WeightRx(weight: Int) extends Rx(weight) {
+        override def triggerLater() = {
+          dom.document.getElementById(s"${getId()}_Button.Weight") match {
+            case null => ;
+            case button: dom.html.Button => button.textContent = value.toString
+          }
+          updateCaseViewAndDataStructures()
         }
-        updateCaseViewAndDataStructures()
+
       }
+      val weight = new WeightRx(crub.rubricWeight) // The weight label on the drop-down button, which needs to change automatically on new user choice
 
       // Same for label
-      var label = crub.rubricLabel
-      def labelTriggerLater() = {
-        dom.document.getElementById(s"${getId()}_Button.Label") match {
-          case null => ;
-          case button: dom.html.Button => button.textContent = label.getOrElse("")
+      class LabelRx(label: Option[String]) extends Rx(label) {
+        override def triggerLater() = {
+          dom.document.getElementById(s"${getId()}_Button.Label") match {
+            case null => ;
+            case button: dom.html.Button => button.textContent = value.getOrElse("")
+          }
+          updateCaseViewAndDataStructures()
         }
-        updateCaseViewAndDataStructures()
       }
+      val label = new LabelRx(crub.rubricLabel)
 
       def apply() = {
         tr(scalatags.JsDom.attrs.id := getId(),
           td(
-            button(`type` := "button", id := s"${getId()}_Button.Weight", cls := "btn dropdown-toggle btn-sm btn-secondary", style := "width:45px;", data.toggle := "dropdown", weight.toString),
+            button(`type` := "button", id := s"${getId()}_Button.Weight", cls := "btn dropdown-toggle btn-sm btn-secondary", style := "width:45px;", data.toggle := "dropdown", weight.get().toString),
             div(cls := "dropdown-menu",
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricWeight = 0; weight = 0; weightTriggerLater() }, "0 (ignore)"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricWeight = 1; weight = 1; weightTriggerLater() }, "1 (normal)"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricWeight = 2; weight = 2; weightTriggerLater() }, "2 (important)"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricWeight = 3; weight = 3; weightTriggerLater() }, "3 (very important)"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricWeight = 4; weight = 4; weightTriggerLater() }, "4 (essential)")
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricWeight = 0; weight.set(0) }, "0 (ignore)"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricWeight = 1; weight.set(1) }, "1 (normal)"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricWeight = 2; weight.set(2) }, "2 (important)"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricWeight = 3; weight.set(3) }, "3 (very important)"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricWeight = 4; weight.set(4) }, "4 (essential)")
             )
           ),
           td(crub.repertoryAbbrev),
           td(
-            button(`type` := "button", id := s"${getId()}_Button.Label", cls := "btn dropdown-toggle btn-sm btn-secondary", style := "width:45px;", data.toggle := "dropdown", s"${label.getOrElse("")}"),
+            button(`type` := "button", id := s"${getId()}_Button.Label", cls := "btn dropdown-toggle btn-sm btn-secondary", style := "width:45px;", data.toggle := "dropdown", s"${label.get().getOrElse("")}"),
             div(cls := "dropdown-menu", style := "max-height:250px; overflow-y:auto;",
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = None; label = None; updateCaseViewAndDataStructures() }, "none"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("A"); label = Some("A"); labelTriggerLater() }, "A"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("B"); label = Some("B"); labelTriggerLater() }, "B"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("C"); label = Some("C"); labelTriggerLater() }, "C"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("D"); label = Some("D"); labelTriggerLater() }, "D"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("E"); label = Some("E"); labelTriggerLater() }, "E"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("F"); label = Some("F"); labelTriggerLater() }, "F"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("G"); label = Some("G"); labelTriggerLater() }, "G"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("H"); label = Some("H"); labelTriggerLater() }, "H"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("I"); label = Some("I"); labelTriggerLater() }, "I"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("J"); label = Some("J"); labelTriggerLater() }, "J"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("K"); label = Some("K"); labelTriggerLater() }, "K"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("L"); label = Some("L"); labelTriggerLater() }, "L"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("M"); label = Some("M"); labelTriggerLater() }, "M"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("N"); label = Some("N"); labelTriggerLater() }, "N"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("O"); label = Some("O"); labelTriggerLater() }, "O"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("P"); label = Some("P"); labelTriggerLater() }, "P"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("Q"); label = Some("Q"); labelTriggerLater() }, "Q"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("R"); label = Some("R"); labelTriggerLater() }, "R"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("S"); label = Some("S"); labelTriggerLater() }, "S"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("T"); label = Some("T"); labelTriggerLater() }, "T"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("U"); label = Some("U"); labelTriggerLater() }, "U"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("V"); label = Some("V"); labelTriggerLater() }, "V"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("W"); label = Some("W"); labelTriggerLater() }, "W"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("X"); label = Some("X"); labelTriggerLater() }, "X"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("Y"); label = Some("Y"); labelTriggerLater() }, "Y"),
-              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("Z"); label = Some("Z"); labelTriggerLater() }, "Z")
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = None; label.set(None); updateCaseViewAndDataStructures() }, "none"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("A"); label.set(Some("A")) }, "A"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("B"); label.set(Some("B")) }, "B"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("C"); label.set(Some("C")) }, "C"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("D"); label.set(Some("D")) }, "D"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("E"); label.set(Some("E")) }, "E"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("F"); label.set(Some("F")) }, "F"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("G"); label.set(Some("G")) }, "G"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("H"); label.set(Some("H")) }, "H"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("I"); label.set(Some("I")) }, "I"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("J"); label.set(Some("J")) }, "J"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("K"); label.set(Some("K")) }, "K"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("L"); label.set(Some("L")) }, "L"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("M"); label.set(Some("M")) }, "M"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("N"); label.set(Some("N")) }, "N"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("O"); label.set(Some("O")) }, "O"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("P"); label.set(Some("P")) }, "P"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("Q"); label.set(Some("Q")) }, "Q"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("R"); label.set(Some("R")) }, "R"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("S"); label.set(Some("S")) }, "S"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("T"); label.set(Some("T")) }, "T"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("U"); label.set(Some("U")) }, "U"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("V"); label.set(Some("V")) }, "V"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("W"); label.set(Some("W")) }, "W"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("X"); label.set(Some("X")) }, "X"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("Y"); label.set(Some("Y")) }, "Y"),
+              a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("Z"); label.set(Some("Z")) }, "Z")
             )
           ),
           td(style := "width:28%;", crub.rubric.fullPath),

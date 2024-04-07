@@ -15,38 +15,36 @@ import org.multics.baueran.frep.shared.frontend._
 
 object RepertoryView extends TabView {
 
-  private class SelectedRepertory(var abbrev: String) {
-    def set(newAbbrev: String) = {
-      abbrev = newAbbrev
-      refreshRemedyDataList(_repertories.getRemedies(abbrev))
-    }
-
-    override def toString() = abbrev
+  private class SelectedRepertoryRx(abbrev: String) extends Rx(abbrev) {
+    override def triggerLater(): Unit = refreshRemedyDataList(_repertories.getRemedies(value))
+    override def toString() = value
   }
-  private val _selectedRepertory = new SelectedRepertory("")
+  private val _selectedRepertory = new SelectedRepertoryRx("")
 
-  private class ResultRemedyStats(var stats: List[ResultsRemedyStats]) {
-    def set(newStats: List[ResultsRemedyStats]) = {
-      stats = newStats
-      redrawMultiOccurringRemedies()
-    }
-
-    def get(): List[ResultsRemedyStats] = stats
+  private class ResultRemedyStatsRx(stats: List[ResultsRemedyStats]) extends Rx(stats) {
+    override def triggerLater() = redrawMultiOccurringRemedies()
   }
-  private val _resultRemedyStats = new ResultRemedyStats(List())
+  private val _resultRemedyStats = new ResultRemedyStatsRx(List())
 
-  class CurrentRemedyFormat(var format: RemedyFormat.Value) {
-    def set(newFormat: RemedyFormat.Value) = {
-      format = newFormat
-      _repertorisationResults match {
+  class RemedyFormatRx(format: RemedyFormat.Value) extends Rx(format) {
+    override def triggerLater() = {
+      _repertorisationResults.get() match {
         case Some(_) => showResults()
         case None => ;
       }
     }
-
-    def get(): RemedyFormat.Value = format
   }
-  val _remedyFormat = new CurrentRemedyFormat(RemedyFormat.Abbreviated)
+  val _remedyFormat = new RemedyFormatRx(RemedyFormat.Abbreviated)
+
+  private class RepertorisationResultsRx(results: Option[ResultsCaseRubrics]) extends Rx(results) {
+    override def triggerLater() = {
+      value match {
+        case Some(_) => showResults()
+        case None => ;
+      }
+    }
+  }
+  private val _repertorisationResults = new RepertorisationResultsRx(None)
 
   private var _currResultShareLink = s"${serverUrl()}"
   private val _pageCache = new PageCache()
@@ -55,7 +53,6 @@ object RepertoryView extends TabView {
   private var _defaultRepertory = ""
   private var _showMaxSearchResultsAlert = true
   private var _showMultiOccurrences = false
-  private var _repertorisationResults: Option[ResultsCaseRubrics] = None
   private val _prefix = "repertoryView"
   private var _advancedSearchOptionsVisible = false
 
@@ -126,13 +123,6 @@ object RepertoryView extends TabView {
     }
   }
 
-  private def repertorisationResultsTriggerLater() = {
-    _repertorisationResults match {
-      case Some(_) => showResults()
-      case None => ;
-    }
-  }
-
   // ------------------------------------------------------------------------------------------------------------------
   private def showCase(): Unit = {
     if (Case.size() > 0) {
@@ -183,7 +173,7 @@ object RepertoryView extends TabView {
     MainView.resetContentView()
     showCase()
 
-    (_repertorisationResults, _pageCache.latest) match {
+    (_repertorisationResults.get(), _pageCache.latest) match {
       case (Some(ResultsCaseRubrics(totalNumberOfRepertoryRubrics, totalNumberOfResults, totalNumberOfPages, currPage, results)), Some(latestCachePage)) if (results.size > 0) => {
         dom.document.getElementById("resultStatus").innerHTML = ""
         dom.document.getElementById("resultStatus").appendChild(
@@ -270,7 +260,7 @@ object RepertoryView extends TabView {
     }
 
     // Display potentially useful hint, when max. number of search results was returned.
-    (_repertorisationResults, _pageCache.latest) match {
+    (_repertorisationResults.get(), _pageCache.latest) match {
       case (Some(ResultsCaseRubrics(totalNumberOfRepertoryRubrics, totalNumberOfResults, totalNumberOfPages, _, results)), Some(latestCachePage)) => {
         // If the total number of results matches the total number of available rubrics in a repertory, the user either entered "*"
         // or, in fact, the repertory is a so called small repertory, which means, we show everything...
@@ -331,7 +321,7 @@ object RepertoryView extends TabView {
       case _ => ;
     }
 
-    _repertorisationResults match {
+    _repertorisationResults.get() match {
       case Some(ResultsCaseRubrics(_, _, _, _, results)) =>
         results.foreach(result => dom.document.getElementById("resultsTBody").appendChild(resultRow(result).render))
       case _ => ;
@@ -575,8 +565,7 @@ object RepertoryView extends TabView {
       _currResultShareLink =
         s"${serverUrl()}/show?repertory=${abbrev}&symptom=${symptom}&page=${(pageOpt.getOrElse(0) + 1).toString}&remedyString=${abbrevForRemedyEntered.getOrElse("")}&minWeight=${minWeight.toString}"
 
-      _repertorisationResults = Some(results)
-      repertorisationResultsTriggerLater()
+      _repertorisationResults.set(Some(results))
 
       _resultRemedyStats.set(List())
       _resultRemedyStats.set(remedyStats)
@@ -894,7 +883,7 @@ object RepertoryView extends TabView {
       // refactor it. So, for now, we just call showResults() whenever a redraw event occurs, cause
       // then the dom certainly exists.
       onshow := { event: Event =>
-        if (_repertorisationResults != None || Case.size() > 0) {
+        if (_repertorisationResults.get() != None || Case.size() > 0) {
           showResults()
         }
       },
@@ -1062,8 +1051,8 @@ object RepertoryView extends TabView {
   }
 
   override def containsAnyResults(): Boolean = {
-    if (_repertorisationResults != None)
-      _repertorisationResults.size > 0
+    if (_repertorisationResults.get() != None)
+      _repertorisationResults.get().size > 0
     else
       false
   }
