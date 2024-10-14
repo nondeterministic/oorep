@@ -1,5 +1,6 @@
 package org.multics.baueran.frep.backend.dao
 
+import io.getquill._
 import scala.collection.mutable.HashMap
 import org.multics.baueran.frep.backend.db
 import org.multics.baueran.frep.shared.{CaseRubric, Caze, CazeResult, Remedy, Rubric, RubricRemedy, WeightedRemedy}

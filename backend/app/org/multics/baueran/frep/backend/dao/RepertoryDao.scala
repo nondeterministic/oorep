@@ -5,7 +5,7 @@ import org.multics.baueran.frep.backend.db
 import Defs.{ResourceAccessLvl, maxNumberOfResultsPerPage, maxNumberOfSymptoms, smallRepertoriesMaxSize}
 
 import scala.collection.mutable
-import io.getquill.Query
+import io.getquill._
 
 import scala.collection.mutable.ArrayBuffer
 

@@ -1,6 +1,6 @@
 package org.multics.baueran.frep.backend.dao
 
-import io.getquill.{Insert, Query}
+import io.getquill._
 import org.multics.baueran.frep.backend.db
 import org.multics.baueran.frep.shared.PasswordChangeRequest
 

@@ -48,7 +48,7 @@ class Put @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     }
   }
 
-  def updateCaseDescription() = Action { implicit request =>
+  def updateCaseDescription() = Action { implicit request: Request[AnyContent] =>
     getAuthenticatedUser(request) match {
       case Some(_) => {
         val requestData = request.body.asFormUrlEncoded.get
@@ -77,7 +77,7 @@ class Put @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     }
   }
 
-  def updateFileDescription() = Action { implicit request =>
+  def updateFileDescription() = Action { implicit request: Request[AnyContent] =>
     getAuthenticatedUser(request) match {
       case Some(_) => {
         val requestData = request.body.asFormUrlEncoded.get

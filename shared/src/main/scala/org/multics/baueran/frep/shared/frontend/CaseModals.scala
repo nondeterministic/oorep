@@ -3,6 +3,7 @@ package org.multics.baueran.frep.shared.frontend
 import org.scalajs.dom
 import dom.Event
 import scalatags.JsDom.all.{onkeydown, _}
+import org.scalajs.dom.{Event, html}
 
 import scala.scalajs.js
 import org.multics.baueran.frep.shared
@@ -22,14 +23,14 @@ object CaseModals {
           th(attr("scope") := "col", "W."),
           th(attr("scope") := "col", "Rep."),
           th(attr("scope") := "col", "Rubric")
-        )
+        ).asInstanceOf[html.Html]
       }
     }
 
     object TableBody extends OorepHtmlElement {
       def getId() = "analysisTBody"
       def apply() = {
-        tbody(scalatags.JsDom.attrs.id := getId())
+        tbody(scalatags.JsDom.attrs.id := getId()).asInstanceOf[html.Html]
       }
     }
 
@@ -51,7 +52,7 @@ object CaseModals {
             )
           )
         )
-      )
+      ).asInstanceOf[html.Html]
     }
   }
 
@@ -76,7 +77,7 @@ object CaseModals {
                 CaseDescriptionTextArea.setText("")
             }
           }
-        )
+        ).asInstanceOf[html.Html]
       }
     }
 
@@ -109,7 +110,7 @@ object CaseModals {
         button(id := getId(), cls := "btn btn-primary mb-2", style := "margin-left:8px;", `type` := "submit", disabled := true,
           data.toggle:="modal", data.dismiss:="modal", "Submit",
           onclick := onSubmit
-        )
+        ).asInstanceOf[html.Html]
       }
     }
 
@@ -128,7 +129,7 @@ object CaseModals {
               SubmitButton.disable()
             }
           }
-        )
+        ).asInstanceOf[html.Html]
       }
     }
 
@@ -145,7 +146,7 @@ object CaseModals {
             else if (currTextAreaText.trim.length > 0 && Case.descr.isDefined && currTextAreaText.trim == Case.descr.get.description)
               SubmitButton.disable()
           }
-        )
+        ).asInstanceOf[html.Html]
       }
     }
 
@@ -177,7 +178,7 @@ object CaseModals {
             )
           )
         )
-      )
+      ).asInstanceOf[html.Html]
     }
   }
 

@@ -6,6 +6,7 @@ import io.circe.parser.parse
 import org.scalajs.dom
 import dom.html.{Div, Element}
 import dom.Event
+import org.scalajs.dom.{Event, html}
 
 import scala.scalajs.js.URIUtils.encodeURI
 import org.multics.baueran.frep.shared.{HitsPerRemedy, HttpRequest2, MMAllSearchResults, MMAndRemedyIds, MMSearchResult, MateriaMedicas, Paginator, Remedies, Remedy}
@@ -33,7 +34,7 @@ object MateriaMedicaView extends TabView {
   private[materiamedica] def defaultMMAbbrev(): Option[String] = _defaultMMAbbrev
   private[materiamedica] def materiaMedicas(): MateriaMedicas = _materiaMedicas
 
-  private def resultsLink(): String = encodeURI(_currResultShareLink + s"&hideSections=${_allSectionsHide.now}")
+  private def resultsLink(): String = encodeURI(_currResultShareLink + s"&hideSections=${_allSectionsHide.now()}")
 
   private[materiamedica] def refreshRemedyDataList(): Unit = {
     val selectedAbbrev = _selectedMateriaMedicaAbbrev.getOrElse("")
@@ -104,7 +105,8 @@ object MateriaMedicaView extends TabView {
     }
   }
 
-  private[materiamedica] def getPaginatorHtml(): Option[JsDom.TypedTag[Element]] = {
+  // private[materiamedica] def getPaginatorHtml(): Option[JsDom.TypedTag[Element]] = {
+  private[materiamedica] def getPaginatorHtml(): Option[html.Html] = {
     if (_totalNumberOfResultRemedies <= maxNumberOfResultsPerMMPage)
       return None
 
@@ -114,7 +116,7 @@ object MateriaMedicaView extends TabView {
 
     _pageCache.latest() match {
       case Some(latestPageCache) =>
-        Some(htmlPg.toHtml(latestPageCache.abbrev, latestPageCache.symptom, latestPageCache.remedy, doLookup))
+        Some(htmlPg.toHtml(latestPageCache.abbrev, latestPageCache.symptom, latestPageCache.remedy, doLookup).asInstanceOf[html.Html])
       case _ =>
         None
     }
@@ -327,9 +329,9 @@ object MateriaMedicaView extends TabView {
       "Materia Medica")
   }
 
-  override def drawWithoutResults(): JsDom.TypedTag[Div] = WithoutResults()
+  override def drawWithoutResults() = WithoutResults()
 
-  override def drawWithResults(): JsDom.TypedTag[dom.html.Div] = WithResults()
+  override def drawWithResults() = WithResults()
 
   def jsDoLookup(abbrev: String, symptom: String, page: Int, hideSections: Boolean, remedyString: String): Unit = {
     // Hide navbar initially, while the spinner shows. (Later, the code in this file will show it again.)

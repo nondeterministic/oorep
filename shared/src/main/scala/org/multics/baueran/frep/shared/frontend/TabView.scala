@@ -13,8 +13,8 @@ trait TabView {
   def tabPaneId(): String
   def tabLinkId(): String
   def tabLink(): JsDom.TypedTag[html.Anchor]
-  def drawWithoutResults(): JsDom.TypedTag[dom.html.Div]
-  def drawWithResults(): JsDom.TypedTag[dom.html.Div]
+  def drawWithoutResults(): html.Html
+  def drawWithResults(): html.Html
   def onResultsDrawn(): Unit // This is an event handler which fires after tab views' results were rendered; e.g., to maniupulate the DOM afterwards
   def containsAnyResults(): Boolean
   def containsUnsavedResults(): Boolean

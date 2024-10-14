@@ -21,7 +21,7 @@ object EditFileModal extends OorepHtmlElement {
       def set(newHeader: String) = getNode().get.asInstanceOf[html.Heading].innerText = s"Really delete case '${newHeader}'?"
 
       // Before this element is drawn, set() will actually set the h5() tag to a meaningful value. Otherwise it'd be empty...
-      def apply() = h5(cls := "modal-title", id := getId())
+      def apply() = h5(cls := "modal-title", id := getId()).asInstanceOf[html.Html]
     }
 
     def apply() = {
@@ -63,7 +63,7 @@ object EditFileModal extends OorepHtmlElement {
             )
           )
         )
-      )
+      ).asInstanceOf[html.Html]
     }
   }
 
@@ -74,7 +74,7 @@ object EditFileModal extends OorepHtmlElement {
       def getId() = "EditFileModal_MainModal_CloseButton_sdfdgferw234"
 
       def apply() = {
-        button(id:=getId(), `type` := "button", cls := "close", data.dismiss := "modal", "\u00d7")
+        button(id:=getId(), `type` := "button", cls := "close", data.dismiss := "modal", "\u00d7").asInstanceOf[html.Html]
       }
     }
 
@@ -121,7 +121,7 @@ object EditFileModal extends OorepHtmlElement {
       def apply() = {
         div(cls := "col-12 list-group", role := "tablist", id := getId(), style := "height: 30vh; overflow-y: scroll;",
           caseAnchors
-        )
+        ).asInstanceOf[html.Html]
       }
     }
 
@@ -133,7 +133,7 @@ object EditFileModal extends OorepHtmlElement {
           onclick := { (event: Event) =>
             AvailableCasesList.setCurrCaseFromSelection()
           },
-          "Delete")
+          "Delete").asInstanceOf[html.Html]
       }
     }
 
@@ -166,7 +166,7 @@ object EditFileModal extends OorepHtmlElement {
               })
               .send()
           },
-          "Open")
+          "Open").asInstanceOf[html.Html]
       }
     }
 
@@ -202,7 +202,7 @@ object EditFileModal extends OorepHtmlElement {
                 else
                   MainModal.SaveFileDescriptionHtmlButton.enable()
             }
-          })
+          }).asInstanceOf[html.Html]
       }
     }
 
@@ -224,14 +224,14 @@ object EditFileModal extends OorepHtmlElement {
             disable()
             CloseButton.click()
           },
-          "Save")
+          "Save").asInstanceOf[html.Html]
       }
     }
 
     object Header extends OorepHtmlElement {
       def getId() = EditFileModal.MainModal.getId() + "_sckj34kljhdsKJGjk34hg&h4rdfdfNBGHJG"
       def set(newHeader: String) = getNode().get.asInstanceOf[html.Heading].innerText = newHeader
-      def apply() = h5(cls := "modal-title", id := getId())
+      def apply() = scalatags.JsDom.tags.h5(cls := "modal-title", id := getId()).asInstanceOf[html.Html]
     }
 
     def apply() = {
@@ -274,7 +274,7 @@ object EditFileModal extends OorepHtmlElement {
             )
           )
         )
-      )
+      ).asInstanceOf[html.Html]
     }
   }
 
@@ -346,7 +346,7 @@ object EditFileModal extends OorepHtmlElement {
   def apply() = {
     div(
       AreYouSureModalCase(), MainModal()
-    )
+    ).asInstanceOf[html.Html]
   }
 
 }

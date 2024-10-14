@@ -1,18 +1,22 @@
 package org.multics.baueran.frep.shared.frontend
 
 import org.scalajs.dom
-import org.scalajs.dom.html
-import scalatags.JsDom
+import org.scalajs.dom.html.TextArea
+import org.scalajs.dom.{Element, HTMLButtonElement, html}
+import scalatags.JsDom.all._
 
 trait OorepHtmlElement {
   def getId(): String
 
-  def getNode(): Option[dom.html.Element] = {
-    dom.document.getElementById(getId()) match {
+  def getNode() = {
+    dom.document.getElementById(getId()).asInstanceOf[html.Element] match {
       case null => None
-      case elem => Some(elem.asInstanceOf[dom.html.Element])
+      case elem => Some(elem)
     }
   }
+
+  // def apply(): JsDom.TypedTag[html.Element]
+  def apply(): html.Html
 
   def rmAllChildren(): Unit = {
     getNode() match {
@@ -24,17 +28,21 @@ trait OorepHtmlElement {
   }
 
   // https://stackoverflow.com/questions/6242976/javascript-hide-show-element
-  def hide() = {
+  def hide(): Unit = {
     getNode() match {
       case None => ;
-      case Some(elem) => elem.style.display = "none"
+      case Some(elem) =>
+        elem.setAttribute("display", "none")
+        // elem.style.display = "none"
     }
   }
 
-  def show() = {
+  def show(): Unit = {
     getNode() match {
       case None => ;
-      case Some(elem) => elem.style.display = ""
+      case Some(elem) =>
+        elem.setAttribute("display", "")
+        // elem.style.display = ""
     }
   }
 
@@ -44,8 +52,6 @@ trait OorepHtmlElement {
       case Some(elem) => elem.focus()
     }
   }
-
-  def apply(): JsDom.TypedTag[html.Element]
 }
 
 trait OorepHtmlInput extends OorepHtmlElement {
@@ -123,10 +129,12 @@ trait OorepHtmlTextArea extends OorepHtmlElement {
 }
 
 trait OorepHtmlButton extends OorepHtmlElement {
-  override def getNode(): Option[dom.html.Button] = {
+  override def getNode() = {
+    // override def getNode(): Option[dom.html.Button] = {
     dom.document.getElementById(getId()) match {
       case null => None
-      case elem => Some(elem.asInstanceOf[dom.html.Button])
+      // case elem => Some(elem.asInstanceOf[dom.html.Button])
+      case elem => Some(elem.asInstanceOf[html.Button])
     }
   }
 

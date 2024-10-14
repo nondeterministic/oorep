@@ -138,7 +138,7 @@ object RepertoryView extends TabView {
   def showResults(): Unit = {
 
     def resultRow(result: CaseRubric) = {
-      implicit def crToCR(cr: CaseRubric) = new BetterCaseRubric(cr)
+      implicit def crToCR(cr: CaseRubric): BetterCaseRubric = new BetterCaseRubric(cr)
 
       val remedies = result.getFormattedRemedyNames(_remedyFormat.get())
 
@@ -173,7 +173,7 @@ object RepertoryView extends TabView {
     MainView.resetContentView()
     showCase()
 
-    (_repertorisationResults.get(), _pageCache.latest) match {
+    (_repertorisationResults.get(), _pageCache.latest()) match {
       case (Some(ResultsCaseRubrics(totalNumberOfRepertoryRubrics, totalNumberOfResults, totalNumberOfPages, currPage, results)), Some(latestCachePage)) if (results.size > 0) => {
         dom.document.getElementById("resultStatus").innerHTML = ""
         dom.document.getElementById("resultStatus").appendChild(
@@ -260,7 +260,7 @@ object RepertoryView extends TabView {
     }
 
     // Display potentially useful hint, when max. number of search results was returned.
-    (_repertorisationResults.get(), _pageCache.latest) match {
+    (_repertorisationResults.get(), _pageCache.latest()) match {
       case (Some(ResultsCaseRubrics(totalNumberOfRepertoryRubrics, totalNumberOfResults, totalNumberOfPages, _, results)), Some(latestCachePage)) => {
         // If the total number of results matches the total number of available rubrics in a repertory, the user either entered "*"
         // or, in fact, the repertory is a so called small repertory, which means, we show everything...
@@ -882,10 +882,10 @@ object RepertoryView extends TabView {
       // doesn't render, it only returns the HTML.  Since showResults() is so HUGE, we can't simply
       // refactor it. So, for now, we just call showResults() whenever a redraw event occurs, cause
       // then the dom certainly exists.
-      onshow := { event: Event =>
-        if (_repertorisationResults.get() != None || Case.size() > 0) {
+      onshow := {( (event: Event) =>
+        if (_repertorisationResults.get() != None || Case.size() > 0)
           showResults()
-        }
+        )
       },
       "Repertory")
   }
@@ -940,12 +940,13 @@ object RepertoryView extends TabView {
     else
       repSelectionDropDownButton.textContent = "Repertory: " + _defaultRepertory
 
-    myHTML(ulRepertorySelection)
+    myHTML(ulRepertorySelection).asInstanceOf[dom.html.Html]
   }
 
   // ------------------------------------------------------------------------------------------------------------------
-  override def drawWithoutResults(): JsDom.TypedTag[dom.html.Div] = {
-    def myHTML(ulRepertorySelection: JsDom.TypedTag[dom.html.Div]): JsDom.TypedTag[dom.html.Div]  =
+  // override def drawWithoutResults(): JsDom.TypedTag[dom.html.Div] = {
+  override def drawWithoutResults() = {
+    def myHTML(ulRepertorySelection: JsDom.TypedTag[dom.html.Div]) =
       div(cls := "container-fluid text-center",
         div(cls := "row",
           div(cls := "col-sm-12",
@@ -991,7 +992,7 @@ object RepertoryView extends TabView {
   }
 
   // ------------------------------------------------------------------------------------------------------------------
-  override def drawWithResults(): JsDom.TypedTag[dom.html.Div] = {
+  override def drawWithResults() = {
     def myHTML(ulRepertorySelection: JsDom.TypedTag[dom.html.Div]): JsDom.TypedTag[dom.html.Div]  =
       div(cls := "container-fluid",
         new ShareResultsModal(_prefix, resultsLink).apply(),
@@ -1042,7 +1043,7 @@ object RepertoryView extends TabView {
         div(cls := "container-fluid", id := s"${_prefix}_paginationDiv"),
       )
 
-    createView(myHTML)
+    createView(myHTML).asInstanceOf[dom.html.Html]
   }
 
   override def onResultsDrawn() = {

@@ -64,14 +64,14 @@ case class MMSearchResult(abbrev: String, remedy_id: Int, remedy_fullname: Strin
           )
         else
           div(
-            currSec.render(prefix, hideSections.now, symptomString, indent),
-            div(name:=s"parent_${currSec.id}", cls:=s"collapse ${if (hideSections.now) "hide" else "show"}", `type`:=s"${prefix}_mm_section_span",
+            currSec.render(prefix, hideSections.now(), symptomString, indent),
+            div(name:=s"parent_${currSec.id}", cls:=s"collapse ${if (hideSections.now()) "hide" else "show"}", `type`:=s"${prefix}_mm_section_span",
               div(style:="padding-left:20px;", children.map(renderEntireChapterFromRoot(_, indent + 1)))
             )
           )
       }
       else
-        currSec.render(prefix, hideSections.now, symptomString, indent)
+        currSec.render(prefix, hideSections.now(), symptomString, indent)
     }
 
     val remedy = materiaMedicas.get(abbrev) match {
@@ -145,7 +145,7 @@ case class MMSearchResult(abbrev: String, remedy_id: Int, remedy_fullname: Strin
                 case Some(remedy) =>
 
                   def resultsLink() =
-                    s"${serverUrl()}/show_mm?materiaMedica=${abbrev}&symptom=&page=1&hideSections=${hideSections.now}&remedyString=${remedy.nameAbbrev}"
+                    s"${serverUrl()}/show_mm?materiaMedica=${abbrev}&symptom=&page=1&hideSections=${hideSections.now()}&remedyString=${remedy.nameAbbrev}"
 
                   val shareResultsModal = new ShareResultsModal(_prefix, resultsLink)
 
@@ -180,7 +180,7 @@ case class MMSearchResult(abbrev: String, remedy_id: Int, remedy_fullname: Strin
       div(cls:="card-body",
         // Some symptom search...
         if (getTopMostSection() == None) {
-          result_sections.sortBy(_.id).map(_.render(prefix, hideSections.now, symptomString, 0))
+          result_sections.sortBy(_.id).map(_.render(prefix, hideSections.now(), symptomString, 0))
         }
         // Displaying a remedy chapter in its entirety...
         else

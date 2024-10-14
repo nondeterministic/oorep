@@ -18,7 +18,7 @@ object Main extends MainUtil {
     if (dom.document.getElementById("temporary_content") != null)
       dom.document.body.removeChild(dom.document.getElementById("temporary_content"))
 
-    dom.document.body.appendChild(CaseModals.RepertorisationModal().render)
+    dom.document.body.appendChild(CaseModals.RepertorisationModal())
 
     if (dom.document.getElementById("static_content") == null) {
       val loadingSpinner = new LoadingSpinner("content")

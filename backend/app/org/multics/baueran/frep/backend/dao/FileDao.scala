@@ -2,7 +2,7 @@ package org.multics.baueran.frep.backend.dao
 
 import org.multics.baueran.frep._
 import backend.db
-import io.getquill.Update
+import io.getquill._
 import shared.{Caze, FIle, dbFile}
 
 class FileDao(dbContext: db.db.DBContext) {

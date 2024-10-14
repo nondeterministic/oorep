@@ -3,7 +3,7 @@ package org.multics.baueran.frep.backend.dao
 import org.multics.baueran.frep._
 import backend.db
 import shared.{BetterString, CaseRubric, Caze}
-import io.getquill.{ActionReturning, Query, Quoted, Update}
+import io.getquill._
 
 class CazeDao(dbContext: db.db.DBContext) {
 
@@ -153,7 +153,7 @@ class CazeDao(dbContext: db.db.DBContext) {
     */
 
   def replaceIfExists(caze: Caze) = {
-    implicit def stringToString(s: String) = new BetterString(s) // For 'shorten'.
+    implicit def stringToString(s: String): BetterString = new BetterString(s) // For 'shorten'.
     val fileDao = new FileDao(dbContext)
 
     get(caze.id) match {

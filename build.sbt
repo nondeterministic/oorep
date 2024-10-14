@@ -1,13 +1,13 @@
 import sbt.Keys.libraryDependencies
 
-val myScalaVersion     = "2.13.13"
+val myScalaVersion     = "3.3.3"
 val scalaTestPlusVersion = "7.0.1"
 val scalaJsDomVersion  = "2.3.0"
-val scalaTagsVersion   = "0.12.0"
-val circeVersion       = "0.14.5"
+val scalaTagsVersion   = "0.13.1"
+val circeVersion       = "0.14.10"
 val quillVersion       = "4.8.0"
 val pgDriverVersion    = "42.7.1"
-val scriptsVersion     = "1.2.0"
+val scriptsVersion     = "1.3.0"
 val apacheCommonsMailV = "1.5"
 val sttpVersion        = "4.0.0-M8"
 val monixVersion       = "3.4.1"
