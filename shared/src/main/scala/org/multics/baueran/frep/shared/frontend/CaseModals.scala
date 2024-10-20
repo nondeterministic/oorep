@@ -13,46 +13,47 @@ object CaseModals {
 
   // ------------------------------------------------------------------------------------------------------------------
   // The modal-dialog skeleton for the case repertorisation view
-  object RepertorisationModal extends OorepHtmlElement {
+  object RepertorisationModal extends OorepHtmlElement[scalatags.JsDom.TypedTag[html.Div]] {
     def getId() = "caseAnalysisModal"
 
-    object TableHead extends OorepHtmlElement {
+    object TableHead extends OorepHtmlElement[scalatags.JsDom.TypedTag[html.TableSection]] {
       def getId() = "analysisTHead"
       def apply() = {
         thead(scalatags.JsDom.attrs.id := getId(),
           th(attr("scope") := "col", "W."),
           th(attr("scope") := "col", "Rep."),
           th(attr("scope") := "col", "Rubric")
-        ).asInstanceOf[html.Html]
+        )
       }
     }
 
-    object TableBody extends OorepHtmlElement {
+    object TableBody extends OorepHtmlElement[scalatags.JsDom.TypedTag[html.TableSection]] {
       def getId() = "analysisTBody"
       def apply() = {
-        tbody(scalatags.JsDom.attrs.id := getId()).asInstanceOf[html.Html]
+        tbody(scalatags.JsDom.attrs.id := getId())
       }
     }
 
-    def apply() = {
-      div(cls := "modal fade", tabindex := "-1", role := "dialog", scalatags.JsDom.attrs.id := getId(),
-        div(cls := "modal-dialog modal-dialog-centered", role := "document", style := "min-width: 80%;",
-          div(cls := "modal-content",
-            div(cls := "modal-header",
-              h5(cls := "modal-title", "Case repertorisation"),
-              button(`type` := "button", cls := "close", data.dismiss := "modal", "\u00d7")
-            ),
-            div(cls := "modal-body",
-              div(cls := "table-responsive",
-                table(cls := "table case table-striped table-hover table-sm table-bordered",
-                  TableHead(),
-                  TableBody()
-                )
-              )
-            )
-          )
-        )
-      ).asInstanceOf[html.Html]
+    override def apply() = {
+      div(h1("Andi"))
+//      div(cls := "modal fade", tabindex := "-1", role := "dialog", scalatags.JsDom.attrs.id := getId(),
+//        div(cls := "modal-dialog modal-dialog-centered", role := "document", style := "min-width: 80%;",
+//          div(cls := "modal-content",
+//            div(cls := "modal-header",
+//              h5(cls := "modal-title", "Case repertorisation"),
+//              button(`type` := "button", cls := "close", data.dismiss := "modal", "\u00d7")
+//            ),
+//            div(cls := "modal-body",
+//              div(cls := "table-responsive",
+//                table(cls := "table case table-striped table-hover table-sm table-bordered",
+//                  TableHead(),
+//                  TableBody()
+//                )
+//              )
+//            )
+//          )
+//        )
+//      )
     }
   }
 
@@ -77,7 +78,7 @@ object CaseModals {
                 CaseDescriptionTextArea.setText("")
             }
           }
-        ).asInstanceOf[html.Html]
+        )
       }
     }
 
@@ -110,7 +111,7 @@ object CaseModals {
         button(id := getId(), cls := "btn btn-primary mb-2", style := "margin-left:8px;", `type` := "submit", disabled := true,
           data.toggle:="modal", data.dismiss:="modal", "Submit",
           onclick := onSubmit
-        ).asInstanceOf[html.Html]
+        )
       }
     }
 
@@ -129,7 +130,7 @@ object CaseModals {
               SubmitButton.disable()
             }
           }
-        ).asInstanceOf[html.Html]
+        )
       }
     }
 
@@ -146,7 +147,7 @@ object CaseModals {
             else if (currTextAreaText.trim.length > 0 && Case.descr.isDefined && currTextAreaText.trim == Case.descr.get.description)
               SubmitButton.disable()
           }
-        ).asInstanceOf[html.Html]
+        )
       }
     }
 
@@ -178,7 +179,7 @@ object CaseModals {
             )
           )
         )
-      ).asInstanceOf[html.Html]
+      )
     }
   }
 

@@ -2,11 +2,13 @@ package org.multics.baueran.frep.frontend.public.base
 
 import org.multics.baueran.frep.shared.MainUtil
 import org.multics.baueran.frep.shared.TopLevelUtilCode.{loadMainPageAndJumpToAnchor, sendAcceptCookies, toggleTheme}
+import org.multics.baueran.frep.shared.frontend.CaseModals.RepertorisationModal.getId
 import org.scalajs.dom
 
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSExportTopLevel
 import org.multics.baueran.frep.shared.frontend.{CaseModals, LoadingSpinner, MainView}
+import scalatags.JsDom.all.{cls, div, role, tabindex}
 
 @JSExportTopLevel("Main")
 object Main extends MainUtil {
@@ -18,7 +20,29 @@ object Main extends MainUtil {
     if (dom.document.getElementById("temporary_content") != null)
       dom.document.body.removeChild(dom.document.getElementById("temporary_content"))
 
-    dom.document.body.appendChild(CaseModals.RepertorisationModal())
+    // //////////////////////////////////////////////////////////////////////////////////////////
+    import org.scalajs.dom
+    import dom.Event
+    import scalatags.JsDom.all.{onkeydown, _}
+    import org.scalajs.dom.{Event, html}
+    import scala.scalajs.js
+    import org.multics.baueran.frep.shared
+    import shared.Defs.CookieFields
+    dom.document.body.appendChild(div(h1("Andi Bauer")).render)
+    dom.document.body.appendChild(div(h1("Andi Bauer")).render)
+    // //////////////////////////////////////////////////////////////////////////////////////////
+
+    val poo: scalatags.JsDom.TypedTag[html.Div] = div(h1("andi"))
+    dom.document.body.appendChild(poo.render)
+    def poo2(): scalatags.JsDom.TypedTag[html.Div] = div(h1("andi"))
+    dom.document.body.appendChild(poo2().render)
+    val poo3: scalatags.JsDom.TypedTag[html.Div] = CaseModals.RepertorisationModal().asInstanceOf[scalatags.JsDom.TypedTag[html.Div]]
+    println("lalala1")
+    println(poo3)
+    println("lalal2")
+    dom.document.body.appendChild(poo3.render)
+
+    dom.document.body.appendChild(CaseModals.RepertorisationModal().render)
 
     if (dom.document.getElementById("static_content") == null) {
       val loadingSpinner = new LoadingSpinner("content")

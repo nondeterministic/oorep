@@ -3,20 +3,24 @@ package org.multics.baueran.frep.shared.frontend
 import org.scalajs.dom
 import org.scalajs.dom.html.TextArea
 import org.scalajs.dom.{Element, HTMLButtonElement, html}
-import scalatags.JsDom.all._
+import scalatags.JsDom.all.*
 
-trait OorepHtmlElement {
+// trait OorepHtmlElement[E <: scalatags.JsDom.TypedTag[html.Element]] {
+trait OorepHtmlElement[E <: scalatags.JsDom.TypedTag[html.Element]] {
   def getId(): String
 
   def getNode() = {
-    dom.document.getElementById(getId()).asInstanceOf[html.Element] match {
+    dom.document.getElementById(getId()) match {
       case null => None
-      case elem => Some(elem)
+      case elem =>
+        // Some(elem.asInstanceOf[scalatags.JsDom.TypedTag[html.Element]])
+        Some(elem)
     }
   }
 
-  // def apply(): JsDom.TypedTag[html.Element]
-  def apply(): html.Html
+  // def apply(): E
+  def apply(): scalatags.JsDom.TypedTag[html.Element]
+  // def apply(): dom.html.Element
 
   def rmAllChildren(): Unit = {
     getNode() match {
@@ -49,12 +53,14 @@ trait OorepHtmlElement {
   def focus(): Unit = {
     getNode() match {
       case None => ;
-      case Some(elem) => elem.focus()
+      case Some(elem) =>
+        elem.asInstanceOf[dom.html.Element].focus()
     }
   }
 }
 
-trait OorepHtmlInput extends OorepHtmlElement {
+// trait OorepHtmlInput extends OorepHtmlElement[dom.html.Input] {
+trait OorepHtmlInput extends OorepHtmlElement[scalatags.JsDom.TypedTag[html.Input]] {
   override def getNode(): Option[dom.html.Input] = {
     dom.document.getElementById(getId()) match {
       case null => None
@@ -91,7 +97,8 @@ trait OorepHtmlInput extends OorepHtmlElement {
   }
 }
 
-trait OorepHtmlTextArea extends OorepHtmlElement {
+trait OorepHtmlTextArea extends OorepHtmlElement[scalatags.JsDom.TypedTag[html.TextArea]] {
+//trait OorepHtmlTextArea extends OorepHtmlElement[dom.html.TextArea] {
   override def getNode(): Option[dom.html.TextArea] = {
     dom.document.getElementById(getId()) match {
       case null => None
@@ -128,13 +135,12 @@ trait OorepHtmlTextArea extends OorepHtmlElement {
   }
 }
 
-trait OorepHtmlButton extends OorepHtmlElement {
-  override def getNode() = {
-    // override def getNode(): Option[dom.html.Button] = {
+// trait OorepHtmlButton extends OorepHtmlElement[dom.html.Button] {
+trait OorepHtmlButton extends OorepHtmlElement[scalatags.JsDom.TypedTag[html.Button]] {
+  override def getNode(): Option[dom.html.Button] = {
     dom.document.getElementById(getId()) match {
       case null => None
-      // case elem => Some(elem.asInstanceOf[dom.html.Button])
-      case elem => Some(elem.asInstanceOf[html.Button])
+      case elem => Some(elem.asInstanceOf[dom.html.Button])
     }
   }
 

@@ -17,7 +17,7 @@ object AddToFileModal extends FileModal("AddToFileModal__") with OorepHtmlElemen
 
     def apply() = {
       button(id:=getId(), `type` := "button", cls := "close", data.dismiss := "modal", "\u00d7")
-    }.asInstanceOf[html.Html]
+    }
   }
 
   object SubmitButton extends OorepHtmlButton {
@@ -47,7 +47,7 @@ object AddToFileModal extends FileModal("AddToFileModal__") with OorepHtmlElemen
           }
           CloseButton.click()
         }
-      ).asInstanceOf[html.Html]
+      )
     }
   }
 
@@ -78,7 +78,7 @@ object AddToFileModal extends FileModal("AddToFileModal__") with OorepHtmlElemen
           )
         )
       )
-    ).asInstanceOf[html.Html]
+    )
   }
 
 }

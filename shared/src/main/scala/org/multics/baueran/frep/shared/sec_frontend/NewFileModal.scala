@@ -19,7 +19,6 @@ object NewFileModal extends OorepHtmlElement {
 
     def apply() = {
       button(id := getId(), `type` := "button", cls := "close", data.dismiss := "modal", "\u00d7")
-        .asInstanceOf[html.Html]
     }
   }
 
@@ -63,7 +62,7 @@ object NewFileModal extends OorepHtmlElement {
       def apply() = {
         button(cls := "btn btn-primary mb-2", style := "margin-left:8px;", `type` := "submit", id := getId(), disabled := true,
           onclick := onSubmit,
-          "Submit").asInstanceOf[html.Html]
+          "Submit")
       }
     }
 
@@ -77,7 +76,7 @@ object NewFileModal extends OorepHtmlElement {
             event.preventDefault()
             HeaderInput.setText("")
             DescriptionTextArea.setText("")
-          }).asInstanceOf[html.Html]
+          })
       }
     }
 
@@ -95,7 +94,7 @@ object NewFileModal extends OorepHtmlElement {
             else
               SubmitButton.disable()
           }
-        ).asInstanceOf[html.Html]
+        )
       }
     }
     object DescriptionTextArea extends OorepHtmlTextArea {
@@ -103,7 +102,6 @@ object NewFileModal extends OorepHtmlElement {
 
       def apply() =
         textarea(cls := "form-control", id := getId(), rows := "3", placeholder := "A more verbose description of the file")
-          .asInstanceOf[html.Html]
     }
 
     def apply() = {
@@ -120,7 +118,7 @@ object NewFileModal extends OorepHtmlElement {
           SubmitButton(),
           CancelButton()
         )
-      ).asInstanceOf[html.Html]
+      )
     }
   }
 
@@ -140,6 +138,6 @@ object NewFileModal extends OorepHtmlElement {
           )
         )
       )
-    ).asInstanceOf[html.Html]
+    )
   }
 }

@@ -57,7 +57,7 @@ object OpenFileModal extends FileModal("OpenFileModal__") {
             )
           )
         )
-      ).asInstanceOf[html.Html]
+      )
     }
   }
 
@@ -76,7 +76,7 @@ object OpenFileModal extends FileModal("OpenFileModal__") {
             Case.updateCurrOpenFile(selected_file_id)
           },
           "Open"
-        ).asInstanceOf[html.Html]
+        )
       }
     }
 
@@ -94,7 +94,7 @@ object OpenFileModal extends FileModal("OpenFileModal__") {
             }
           },
           "Delete"
-        ).asInstanceOf[html.Html]
+        )
       }
     }
 
@@ -128,7 +128,7 @@ object OpenFileModal extends FileModal("OpenFileModal__") {
             )
           )
         )
-      ).asInstanceOf[html.Html]
+      )
     }
   }
 

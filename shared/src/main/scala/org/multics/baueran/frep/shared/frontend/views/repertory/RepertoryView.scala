@@ -940,7 +940,7 @@ object RepertoryView extends TabView {
     else
       repSelectionDropDownButton.textContent = "Repertory: " + _defaultRepertory
 
-    myHTML(ulRepertorySelection).asInstanceOf[dom.html.Html]
+    myHTML(ulRepertorySelection) // .asInstanceOf[dom.html.Html]
   }
 
   // ------------------------------------------------------------------------------------------------------------------
@@ -1043,7 +1043,7 @@ object RepertoryView extends TabView {
         div(cls := "container-fluid", id := s"${_prefix}_paginationDiv"),
       )
 
-    createView(myHTML).asInstanceOf[dom.html.Html]
+    createView(myHTML) // .asInstanceOf[dom.html.Html]
   }
 
   override def onResultsDrawn() = {

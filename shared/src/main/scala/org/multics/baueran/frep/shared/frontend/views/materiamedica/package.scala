@@ -123,7 +123,7 @@ package object uielements {
             MateriaMedicaView.doLookup(abbrev, symptom, None, remedyName)
           }
         }, `placeholder` := "Enter some search terms (for example: menses, night)"
-      ).asInstanceOf[html.Html]
+      )
     }
   }
 
@@ -133,7 +133,7 @@ package object uielements {
     object AdvancedSearchControlsDiv extends OorepHtmlElement {
       override def getId(): String = uielements.AdvancedSearchControlsDiv.getId()
 
-      override def apply() = div(cls := "col-sm-10", id := getId()).asInstanceOf[html.Html]
+      override def apply() = div(cls := "col-sm-10", id := getId())
     }
 
     object SearchButtonsDiv extends OorepHtmlElement {
@@ -151,7 +151,7 @@ package object uielements {
               val remedyName = Some(AdvancedSearchControls.RemedyInput.getText().trim)
               MateriaMedicaView.doLookup(abbrev, symptom, None, remedyName)
             }, span(cls := "oi oi-magnifying-glass", title := "Find", aria.hidden := "true"), " Find"
-          ).asInstanceOf[html.Html]
+          )
         }
       }
 
@@ -163,7 +163,7 @@ package object uielements {
             onclick := { (event: Event) =>
               event.stopPropagation()
               uielements.BasicSearchOptionsButton.onShowBasicSearchOptions()
-            }, span(cls := "oi oi-cog", title := "Toggle options", aria.hidden := "true"), " Basic").asInstanceOf[html.Html]
+            }, span(cls := "oi oi-cog", title := "Toggle options", aria.hidden := "true"), " Basic")
         }
       }
 
@@ -175,7 +175,7 @@ package object uielements {
             onclick := { (event: Event) =>
               event.stopPropagation()
               uielements.AdvancedSearchOptionsButton.onShowAdvancedSearchOptions()
-            }, span(cls := "oi oi-cog", title := "Toggle options", aria.hidden := "true"), " Advanced...").asInstanceOf[html.Html]
+            }, span(cls := "oi oi-cog", title := "Toggle options", aria.hidden := "true"), " Advanced...")
         }
       }
 
@@ -183,14 +183,14 @@ package object uielements {
         div(id := getId(), cls := "col-sm-12 text-center", style := "margin-top:20px;",
           FindButton(),
           AdvancedSearchOptionsButton()
-        ).asInstanceOf[html.Html]
+        )
       }
     }
 
     object ResultStatusAlertsDiv extends OorepHtmlElement {
       override def getId(): String = s"${MateriaMedicaView.getPrefix()}_resultStatusAlerts"
 
-      override def apply() = div(id := getId(), cls := "container-fluid", style := "margin-top:23px;").asInstanceOf[html.Html]
+      override def apply() = div(id := getId(), cls := "container-fluid", style := "margin-top:23px;")
     }
 
     override def apply() = {
@@ -206,7 +206,7 @@ package object uielements {
         ),
         SearchButtonsDiv(),
         ResultStatusAlertsDiv()
-      ).asInstanceOf[html.Html]
+      )
     }
   }
 
@@ -216,7 +216,7 @@ package object uielements {
     object AdvancedSearchControlsDiv extends OorepHtmlElement {
       override def getId(): String = uielements.AdvancedSearchControlsDiv.getId()
 
-      override def apply() = div(cls := "col-md-12 text-center", id := getId()).asInstanceOf[html.Html]
+      override def apply() = div(cls := "col-md-12 text-center", id := getId())
     }
 
     object SearchButtonsDiv extends OorepHtmlElement {
@@ -235,7 +235,7 @@ package object uielements {
               MateriaMedicaView.doLookup(abbrev, symptom, None, remedyName)
             },
             span(cls := "oi oi-magnifying-glass", title := "Find", aria.hidden := "true")
-          ).asInstanceOf[html.Html]
+          )
         }
       }
 
@@ -249,7 +249,7 @@ package object uielements {
               uielements.BasicSearchOptionsButton.onShowBasicSearchOptions()
             },
             span(cls := "oi oi-cog", title := "Toggle options", aria.hidden := "true")
-          ).asInstanceOf[html.Html]
+          )
         }
       }
 
@@ -261,7 +261,7 @@ package object uielements {
             onclick := { (event: Event) =>
               event.stopPropagation()
               uielements.AdvancedSearchOptionsButton.onShowAdvancedSearchOptions()
-            }, span(cls := "oi oi-cog", title := "Toggle options", aria.hidden := "true")).asInstanceOf[html.Html]
+            }, span(cls := "oi oi-cog", title := "Toggle options", aria.hidden := "true"))
         }
       }
 
@@ -289,7 +289,7 @@ package object uielements {
               }
             },
             span(cls := "oi oi-action-redo", title := "Find again", aria.hidden := "true")
-          ).asInstanceOf[html.Html]
+          )
         }
       }
 
@@ -298,7 +298,7 @@ package object uielements {
           FindButton(),
           AdvancedSearchOptionsButton(),
           FindAgainButton()
-        ).asInstanceOf[html.Html]
+        )
       }
     }
 
@@ -324,7 +324,7 @@ package object uielements {
             )
           )
         )
-      ).asInstanceOf[html.Html]
+      )
     }
   }
 
@@ -334,7 +334,7 @@ package object uielements {
     object RemedyList extends OorepHtmlElement {
       override def getId(): String = s"${MateriaMedicaView.getPrefix()}_remedyDataList"
 
-      override def apply() = datalist(`id` := getId()).asInstanceOf[html.Html]
+      override def apply() = datalist(`id` := getId())
     }
 
     object RemedyInput extends OorepHtmlInput {
@@ -351,7 +351,7 @@ package object uielements {
               MateriaMedicaView.doLookup(abbrev, symptom, None, remedyName)
             }
           }, `placeholder` := "Enter a remedy abbreviation or fullname (for example: Sil. or Silica)"
-        ).asInstanceOf[html.Html]
+        )
       }
     }
 
@@ -366,7 +366,7 @@ package object uielements {
             )
           )
         )
-      ).asInstanceOf[html.Html]
+      )
     }
   }
 
@@ -381,7 +381,7 @@ package object uielements {
           data.toggle := "dropdown",
           `id` := getId(),
           "Materia Medicas"
-        ).asInstanceOf[html.Html]
+        )
       }
 
       object Label {
@@ -404,7 +404,7 @@ package object uielements {
     object Menu extends OorepHtmlElement {
       override def getId(): String = s"${MateriaMedicaView.getPrefix()}mmSelectionDropDownMenu"
 
-      override def apply() = div(cls := "dropdown-menu", `id` := getId()).asInstanceOf[html.Html]
+      override def apply() = div(cls := "dropdown-menu", `id` := getId())
 
       def refresh(): Unit = {
         getNode() match {
@@ -434,7 +434,7 @@ package object uielements {
     override def apply() = {
       div(cls := "dropdown col-md-2", style := "min-width:200px; margin-top:20px;", `id` := getId(),
         Button(), Menu()
-      ).asInstanceOf[html.Html]
+      )
     }
 
     def refresh(): Unit = {

@@ -48,7 +48,7 @@ object Case {
   object OpenNewCaseButton extends OorepHtmlButton {
     def getId() = "openNewCaseButton"
 
-    def apply() = {
+    override def apply() = {
       button(cls := "btn btn-sm btn-secondary", id := getId(), `type` := "button", data.toggle := "modal", data.target := s"#${CaseModals.EditModal.getId()}",
         style := "margin-left:5px; margin-bottom: 5px;",
         onclick := { (_: Event) => {
@@ -59,7 +59,7 @@ object Case {
         }
         },
         span(cls := "oi oi-document", title := "Create a new case", aria.hidden := "true"),
-        " New...").asInstanceOf[html.Html]
+        " New...")
     }
   }
 
@@ -80,7 +80,7 @@ object Case {
         },
         span(cls := "oi oi-pencil", title := "Edit case description", aria.hidden := "true"),
         " Edit description..."
-      ).asInstanceOf[html.Html]
+      )
     }
   }
 
@@ -94,7 +94,7 @@ object Case {
         },
         span(cls := "oi oi-x", title := "Close case", aria.hidden := "true"),
         " Close"
-      ).asInstanceOf[html.Html]
+      )
     }
   }
 
@@ -108,7 +108,7 @@ object Case {
         },
         span(cls := "oi oi-tags", title := "Clone case", aria.hidden := "true"),
         " Clone"
-      ).asInstanceOf[html.Html]
+      )
     }
   }
 
@@ -124,7 +124,7 @@ object Case {
         },
         span(cls := "oi oi-plus", title := "Add case to file", aria.hidden := "true"),
         " Add to file..."
-      ).asInstanceOf[html.Html]
+      )
     }
   }
 
@@ -139,7 +139,7 @@ object Case {
         }},
         span(cls := "oi oi-grid-three-up", title := "Repertorise", aria.hidden := "true"),
         " Repertorise..."
-      ).asInstanceOf[html.Html]
+      )
     }
   }
 
@@ -165,7 +165,7 @@ object Case {
               CloneCaseButton(),
               AddToFileButton(),
               RepertoriseButton()
-            ).asInstanceOf[html.Html]
+            )
           }
           else {
             div(
@@ -176,13 +176,13 @@ object Case {
               CloneCaseButton(),
               AddToFileButton(),
               RepertoriseButton()
-            ).asInstanceOf[html.Html]
+            )
           }
         case None =>
           div(
             b(id := getId(), s"$header: "),
             RepertoriseButton()
-          ).asInstanceOf[html.Html]
+          )
       }
     }
   }
@@ -202,7 +202,7 @@ object Case {
             a(cls := "underline", href := s"#${getId()}", onclick := ((event: Event) => RepertoryView.toggleRemedyFormat()), "Remedies")
           ),
           th(attr("scope") := "col", " ")
-        ).asInstanceOf[html.Html]
+        )
       }
     }
   }
@@ -317,7 +317,7 @@ object Case {
               }
               }, b(raw("&nbsp;-&nbsp;")))
           )
-        ).asInstanceOf[html.Html]
+        )
       }
     }
 
@@ -328,7 +328,7 @@ object Case {
         tbody(scalatags.JsDom.attrs.id := getId(),
           cRubrics
             .sortBy(cr => (cr.repertoryAbbrev + cr.rubric.fullPath))
-            .map(crub => new CaseRow(crub)())).asInstanceOf[html.Html]
+            .map(crub => new CaseRow(crub)())) //.asInstanceOf[html.Html]
       }
     }
 
@@ -343,7 +343,7 @@ object Case {
             TableBody()
           )
         )
-      ).asInstanceOf[html.Html]
+      )
     }
   }
   // ==== </HtmlRepresentation> =======================================================================================
