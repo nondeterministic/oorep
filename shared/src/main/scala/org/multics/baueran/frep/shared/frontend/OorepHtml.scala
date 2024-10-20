@@ -18,8 +18,8 @@ trait OorepHtmlElement[E <: scalatags.JsDom.TypedTag[html.Element]] {
     }
   }
 
-  // def apply(): E
-  def apply(): scalatags.JsDom.TypedTag[html.Element]
+  def apply(): E
+  // def apply(): scalatags.JsDom.TypedTag[html.Element]
   // def apply(): dom.html.Element
 
   def rmAllChildren(): Unit = {

@@ -35,25 +35,24 @@ object CaseModals {
     }
 
     override def apply() = {
-      div(h1("Andi"))
-//      div(cls := "modal fade", tabindex := "-1", role := "dialog", scalatags.JsDom.attrs.id := getId(),
-//        div(cls := "modal-dialog modal-dialog-centered", role := "document", style := "min-width: 80%;",
-//          div(cls := "modal-content",
-//            div(cls := "modal-header",
-//              h5(cls := "modal-title", "Case repertorisation"),
-//              button(`type` := "button", cls := "close", data.dismiss := "modal", "\u00d7")
-//            ),
-//            div(cls := "modal-body",
-//              div(cls := "table-responsive",
-//                table(cls := "table case table-striped table-hover table-sm table-bordered",
-//                  TableHead(),
-//                  TableBody()
-//                )
-//              )
-//            )
-//          )
-//        )
-//      )
+      div(cls := "modal fade", tabindex := "-1", role := "dialog", scalatags.JsDom.attrs.id := getId(),
+        div(cls := "modal-dialog modal-dialog-centered", role := "document", style := "min-width: 80%;",
+          div(cls := "modal-content",
+            div(cls := "modal-header",
+              h5(cls := "modal-title", "Case repertorisation"),
+              button(`type` := "button", cls := "close", data.dismiss := "modal", "\u00d7")
+            ),
+            div(cls := "modal-body",
+              div(cls := "table-responsive",
+                table(cls := "table case table-striped table-hover table-sm table-bordered",
+                  TableHead(),
+                  TableBody()
+                )
+              )
+            )
+          )
+        )
+      )
     }
   }
 

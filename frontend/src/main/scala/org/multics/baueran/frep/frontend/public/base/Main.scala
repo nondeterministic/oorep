@@ -19,29 +19,7 @@ object Main extends MainUtil {
     // This is the static page which is shown when JS is disabled
     if (dom.document.getElementById("temporary_content") != null)
       dom.document.body.removeChild(dom.document.getElementById("temporary_content"))
-
-    // //////////////////////////////////////////////////////////////////////////////////////////
-    import org.scalajs.dom
-    import dom.Event
-    import scalatags.JsDom.all.{onkeydown, _}
-    import org.scalajs.dom.{Event, html}
-    import scala.scalajs.js
-    import org.multics.baueran.frep.shared
-    import shared.Defs.CookieFields
-    dom.document.body.appendChild(div(h1("Andi Bauer")).render)
-    dom.document.body.appendChild(div(h1("Andi Bauer")).render)
-    // //////////////////////////////////////////////////////////////////////////////////////////
-
-    val poo: scalatags.JsDom.TypedTag[html.Div] = div(h1("andi"))
-    dom.document.body.appendChild(poo.render)
-    def poo2(): scalatags.JsDom.TypedTag[html.Div] = div(h1("andi"))
-    dom.document.body.appendChild(poo2().render)
-    val poo3: scalatags.JsDom.TypedTag[html.Div] = CaseModals.RepertorisationModal().asInstanceOf[scalatags.JsDom.TypedTag[html.Div]]
-    println("lalala1")
-    println(poo3)
-    println("lalal2")
-    dom.document.body.appendChild(poo3.render)
-
+    
     dom.document.body.appendChild(CaseModals.RepertorisationModal().render)
 
     if (dom.document.getElementById("static_content") == null) {
