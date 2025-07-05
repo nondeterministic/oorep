@@ -7,6 +7,7 @@ case class FIle(dbId: Option[Int],
                 header: String,
                 member_id: Int,
                 date: String,
+                changed: String,
                 description: String,
                 cazes: List[Caze])
 

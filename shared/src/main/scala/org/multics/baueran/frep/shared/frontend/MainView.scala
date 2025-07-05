@@ -6,7 +6,7 @@ import org.multics.baueran.frep.shared.{HttpRequest2, Remedy}
 import org.multics.baueran.frep.shared.sec_frontend.FileModalCallbacks.updateMemberFiles
 import org.multics.baueran.frep.shared.frontend.views.materiamedica.MateriaMedicaView
 import org.multics.baueran.frep.shared.frontend.views.repertory.RepertoryView
-import scalatags.JsDom.all._
+import scalatags.JsDom.all.*
 import org.scalajs.dom
 import scalatags.JsDom
 import org.scalajs.dom.raw.BeforeUnloadEvent
@@ -100,7 +100,7 @@ object MainView {
     if (features != null)
       dom.document.body.removeChild(features)
 
-    getCookieData(dom.document.cookie, CookieFields.id.toString) match {
+    getTransientUserState(CookieFields.id) match {
       case Some(id) => updateMemberFiles(id.toInt)
       case None => ;
     }

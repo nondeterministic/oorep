@@ -1,6 +1,6 @@
 package org.multics.baueran.frep.shared.frontend
 
-import org.multics.baueran.frep.shared.{MMAllSearchResults, ResultsCaseRubrics, ResultsRemedyStats}
+import org.multics.baueran.frep.shared.{MMAllSearchResults, ResultsCazeRubrics, ResultsRemedyStats}
 import scala.collection.mutable
 import scala.util.boundary, boundary.break
 

@@ -1,12 +1,16 @@
 package org.multics.baueran.frep.shared.sec_frontend
 
 import org.scalajs.dom
-import org.multics.baueran.frep.shared.frontend.{Case, OorepHtmlButton, OorepHtmlElement, getCookieData}
+import org.multics.baueran.frep.shared.frontend.{CaseSection, MainView, OorepHtmlButton, OorepHtmlElement}
 import org.multics.baueran.frep.shared.Defs.{CookieFields, HeaderFields}
-import org.multics.baueran.frep.shared.HttpRequest2
-import scalatags.JsDom.all.{id, _}
+import org.multics.baueran.frep.shared.{Caze, HttpRequest2}
+import scalatags.JsDom.all.*
 import org.scalajs.dom.{Event, html}
-import io.circe.syntax._
+import io.circe.syntax.*
+import io.circe.*
+import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
+import io.circe.parser.*
+import io.circe.syntax.*
 import org.multics.baueran.frep.shared.TopLevelUtilCode.getDocumentCsrfCookie
 
 object AddToFileModal extends FileModal("AddToFileModal__") with OorepHtmlElement {
@@ -27,16 +31,31 @@ object AddToFileModal extends FileModal("AddToFileModal__") with OorepHtmlElemen
       button(cls := "btn btn-primary mb-2", style := "margin-left:8px;", `type` := "button", id := getId(), disabled := true,
         "Submit",
         onclick := { (event: Event) =>
-          Case.descr match {
+          CaseSection.descr match {
             case Some(caze) =>
               HttpRequest2("sec/save_case")
                 .withHeaders((HeaderFields.csrfToken.toString(), getDocumentCsrfCookie().getOrElse("")))
                 .onSuccess((response: String) => {
-                  Case.updateCurrOpenCaseId(response.toInt)
-                  Case.updateCurrOpenFile(selected_file_id)
-                  Case.updateCaseViewAndDataStructures()
-                  Case.updateCaseHeaderView()
-                  AddToFileModal.CloseButton.click()
+                  parse(response) match {
+                    case Right(jsonCase) => {
+                      val cursor = jsonCase.hcursor
+                      cursor.as[Caze] match {
+                        case Right(caze) => {
+                          CaseSection.descr = Some(caze)
+                          CaseSection.cRubrics = caze.rubrics.toSet
+                          CaseSection.updateCurrOpenFile(selected_file_id)
+                          MainView.toggleOnBeforeUnload()
+
+                          // TODO: Not sure if, after the above, we still need this costly call to updateCaseViewAndDatastructures()
+                          CaseSection.updateCaseViewAndDataStructures()
+                          CaseSection.updateCaseHeaderView()
+                          AddToFileModal.CloseButton.click()
+                        }
+                        case Left(err) => println("AddToFileModal: Decoding of case failed: " + err)
+                      }
+                    }
+                    case Left(err) => println("AddToFileModal: Parsing of case (is it JSON?): " + err)
+                  }
                 })
                 .post(
                   "fileId" -> selected_file_id.getOrElse(-1).toString(),

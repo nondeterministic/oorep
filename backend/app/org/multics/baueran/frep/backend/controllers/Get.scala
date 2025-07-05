@@ -57,11 +57,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
         memberDao.setLastSeen(member.member_id, new MyDate())
         Logger.debug(s"Get: login() completed for user ${member.member_id.toString}.")
         Redirect(serverUrl(request))
-          .withCookies(
-            Cookie(CookieFields.id.toString, member.member_id.toString, secure = true, httpOnly = false),
-            Cookie(CookieFields.cookiePopupAccepted.toString, "1", secure = true, httpOnly = false)
-          )
-          .withSession("id" -> member.member_id.toString)
+          .withCookies(Cookie(CookieFields.cookiePopupAccepted.toString, "1", secure = true, httpOnly = false))
     }
   }
 
@@ -79,37 +75,11 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
   }
 
   def show(repertory: String, symptom: String, page: Int, remedyString: String, minWeight: Int) = Action { implicit request: Request[AnyContent] =>
-    try {
-      getAuthenticatedUser(request) match {
-        case None =>
-          Ok(views.html.index_lookup(request, repertory, URLEncoder.encode(symptom, StandardCharsets.UTF_8.toString()), page - 1, remedyString, minWeight, s"OOREP - ${symptom} (${repertory})"))
-            .withSession("id" -> "-1")
-        case Some(member) =>
-          Ok(views.html.index_lookup(request, repertory, URLEncoder.encode(symptom, StandardCharsets.UTF_8.toString()), page - 1, remedyString, minWeight, s"OOREP - ${symptom} (${repertory})"))
-            .withSession("id" -> member.member_id.toString)
-      }
-    } catch {
-      case e: Exception =>
-        Logger.debug(s"GET: show() failed; most likely URLEncoder.encode(): ${e.toString}")
-        InternalServerError(views.html.defaultpages.badRequest("GET", request.uri, "Something went wrong. Go to main page, https://www.oorep.com/, and try again, or submit a bug report!"))
-    }
+    Ok(views.html.index_lookup(request, repertory, URLEncoder.encode(symptom, StandardCharsets.UTF_8.toString()), page - 1, remedyString, minWeight, s"OOREP - ${symptom} (${repertory})"))
   }
 
   def showMM(materiaMedica: String, symptom: String, page: Int, hideSections: Boolean, remedyString: String) = Action { implicit (request: Request[AnyContent]) =>
-    try {
-      getAuthenticatedUser(request) match {
-        case None =>
-          Ok(views.html.index_lookup_mm(request, materiaMedica, URLEncoder.encode(symptom, StandardCharsets.UTF_8.toString()), page - 1, hideSections, remedyString, s"OOREP - ${symptom} (${materiaMedica})"))
-            .withSession("id" -> "-1")
-        case Some(member) =>
-          Ok(views.html.index_lookup_mm(request, materiaMedica, URLEncoder.encode(symptom, StandardCharsets.UTF_8.toString()), page - 1, hideSections, remedyString, s"OOREP - ${symptom} (${materiaMedica})"))
-            .withSession("id" -> member.member_id.toString)
-      }
-    } catch {
-      case e: Exception =>
-        Logger.debug(s"GET: showMM() failed; most likely URLEncoder.encode(): ${e.toString}")
-        InternalServerError(views.html.defaultpages.badRequest("GET", request.uri, "Something went wrong. Go to main page, https://www.oorep.com/, and try again, or submit a bug report!"))
-    }
+    Ok(views.html.index_lookup_mm(request, materiaMedica, URLEncoder.encode(symptom, StandardCharsets.UTF_8.toString()), page - 1, hideSections, remedyString, s"OOREP - ${symptom} (${materiaMedica})"))
   }
 
   def serve_static_html(page: String) = Action { implicit request: Request[AnyContent] =>
@@ -148,7 +118,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
         BadRequest(views.html.defaultpages.badRequest("GET", request.uri, errorMessage))
     }
   }
-
+  
   def apiDisplayGetErrorPage(message: String) = Action { implicit (request: Request[AnyContent]) =>
     BadRequest(views.html.defaultpages.badRequest("GET", request.uri, message))
   }
@@ -176,35 +146,31 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
   }
 
   def apiAvailableRemedies() = Action { (request: Request[AnyContent]) =>
-    getAuthenticatedUser(request) match {
-      case Some(member) =>
-        Ok(repertoryDao.getRemedies().asJson.toString())
-          .withSession("id" -> member.member_id.toString)
-      case None =>
-        Ok(repertoryDao.getRemedies().asJson.toString())
-          .withSession("id" -> "-1")
-    }
+    Ok(repertoryDao.getRemedies().asJson.toString())
   }
 
   def apiAvailableRepertoriesAndRemedies() = Action { (request: Request[AnyContent]) =>
-    getAuthenticatedUser(request) match {
-      case Some(member) =>
-        Ok((repertoryDao.getRepsAndRemedies(getAuthenticatedUser(request)).asJson.toString))
-          .withSession("id" -> member.member_id.toString)
-      case None =>
-        Ok((repertoryDao.getRepsAndRemedies(getAuthenticatedUser(request)).asJson.toString))
-          .withSession("id" -> "-1")
-    }
+    Ok((repertoryDao.getRepsAndRemedies(getAuthenticatedUser(request)).asJson.toString))
   }
 
   def apiAvailableMateriaMedicasAndRemedies() = Action { (request: Request[AnyContent]) =>
+    Ok(mmDao.getMMsAndRemedies(getAuthenticatedUser(request)).asJson.toString())
+  }
+
+  def apiSecSettings(memberId: Int) = Action { implicit (request: Request[AnyContent]) =>
     getAuthenticatedUser(request) match {
-      case Some(member) =>
-        Ok(mmDao.getMMsAndRemedies(getAuthenticatedUser(request)).asJson.toString())
-          .withSession("id" -> member.member_id.toString)
       case None =>
-        Ok(mmDao.getMMsAndRemedies(getAuthenticatedUser(request)).asJson.toString())
-          .withSession("id" -> "-1")
+        val errStr = "Get: apiSecSettings() failed: not authenticated"
+        Logger.error(errStr)
+        Unauthorized(errStr)
+      case Some(member) =>
+        if (!isUserAuthorized(request, memberId)) {
+          val err = s"Get: apiSecSettings() failed: not authorised"
+          Logger.error(err)
+          Forbidden(err)
+        } else {
+          Ok(member.asJson.toString())
+        }
     }
   }
 
@@ -257,7 +223,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     getAuthenticatedUser(request) match {
       case Some(member) if (caseId.forall(_.isDigit)) => {
         cazeDao.get(caseId.toInt) match {
-          case Right(caze) if (caze.member_id == member.member_id) =>
+          case Some(caze) if (caze.member_id == member.member_id) =>
             if (!isUserAuthorized(request, caze.member_id)) {
               val err = s"Get: apiSecGetCase() failed: not authorised."
               Logger.error(err)
@@ -273,6 +239,25 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
       }
       case _ =>
         Unauthorized("apiSecGetCase() failed: not authenticated.")
+    }
+  }
+
+  def apiSecGetCaseRubrics(caseId: Int, caseMemberId: Int) = Action { (request: Request[AnyContent]) =>
+    getAuthenticatedUser(request) match {
+      case Some(member) if (caseMemberId == member.member_id) => {
+        cazeDao.getCaseRubrics(caseId) match {
+          case cazeRubrics  =>
+            if (!isUserAuthorized(request, caseMemberId)) {
+              val err = s"Get: apiSecGetCaseRubrics() failed: not authorised."
+              Logger.error(err)
+              Forbidden(err)
+            } else {
+              Ok(cazeRubrics.asJson.toString())
+            }
+        }
+      }
+      case _ =>
+        Unauthorized("apiSecGetCaseRubrics() failed: not authenticated or authorized.")
     }
   }
 
@@ -349,8 +334,8 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
           else {
             // Do actual look-up and return results in case of success.
             repertoryDao.queryRepertory(cleanedUpAbbrev, searchTerms, page, remedyString.trim, minWeight, getRemedies != 0) match {
-              case Some((ResultsCaseRubrics(totalNumberOfRepertoryRubrics, totalNumberOfResults, totalNumberOfPages, page, results), remedyStats)) if (totalNumberOfPages > 0) =>
-                Ok((ResultsCaseRubrics(totalNumberOfRepertoryRubrics, totalNumberOfResults, totalNumberOfPages, page, results), remedyStats).asJson.toString())
+              case Some((ResultsCazeRubrics(totalNumberOfRepertoryRubrics, totalNumberOfResults, totalNumberOfPages, page, results), remedyStats)) if (totalNumberOfPages > 0) =>
+                Ok((ResultsCazeRubrics(totalNumberOfRepertoryRubrics, totalNumberOfResults, totalNumberOfPages, page, results), remedyStats).asJson.toString())
               case _ =>
                 Logger.info(s"Get: apiLookupRep(abbrev: ${repertoryAbbrev}, symptom: ${symptom}, page: ${page}, remedy: ${remedyString}, weight: ${minWeight}): no results found")
                 NoContent
