@@ -3,8 +3,9 @@ package org.multics.baueran.frep.shared.frontend
 import org.scalajs.dom
 import dom.Event
 import scalatags.JsDom
-import scalatags.JsDom.all._
-import io.circe.syntax._
+import scalatags.JsDom.all.*
+import io.circe.syntax.*
+import io.circe.parser.parse
 
 import scala.scalajs.js
 import scala.collection.mutable
@@ -12,21 +13,21 @@ import mutable.ListBuffer
 import org.multics.baueran.frep.shared
 import org.multics.baueran.frep.shared.TopLevelUtilCode.getDocumentCsrfCookie
 import org.multics.baueran.frep.shared.sec_frontend.AddToFileModal
-import shared._
+import shared.*
 import shared.frontend.views.repertory.RepertoryView
 import shared.Defs.{CookieFields, HeaderFields}
 import shared.frontend.RemedyFormat.RemedyFormat
-import shared.sec_frontend.FileModalCallbacks._
+import shared.sec_frontend.FileModalCallbacks.*
 import org.scalajs.dom.{Event, html}
 
 import scala.language.implicitConversions
 
-object Case {
+object CaseSection {
 
-  var descr: Option[shared.Caze] = None
-  var cRubrics: List[CaseRubric] = List()
+  var descr: Option[Caze] = None
+  var cRubrics: Set[CazeRubric] = Set.empty
   private val remedyScores = mutable.HashMap[String,Integer]()
-  private var prevCase: Option[shared.Caze] = None
+  private var prevCase: Option[Caze] = None
 
   private object SortCaseBy extends Enumeration {
     type SortCaseBy = Value
@@ -143,6 +144,74 @@ object Case {
     }
   }
 
+  object MergeRubricButton extends OorepHtmlButton {
+    def getId() = "CaseMergeRubricButtonID_jhkjhkjh34576348975634fdgfdgdgfgdsfgertegh"
+
+    def clickHandler() = {
+      val checkBoxes = HtmlRepresentation.getAllCaseRowCheckboxes()
+      val checkBoxesCheckedStrings: List[String] = checkBoxes.filter(_.checked).map(_.value)
+      val checkBoxesChecked: List[CazeRubricJsonHelper] =
+        checkBoxesCheckedStrings.collect {
+          parse(_) match {
+            case Right(json) => {
+              val cursor = json.hcursor
+              cursor.as[CazeRubricJsonHelper] match {
+                case Right(cazeRubricsAsJson) => Some(cazeRubricsAsJson)
+                case _ => None
+              }
+            }
+            case _ => None
+          }
+        }.map(_.get)
+
+      def mergeCaseRubrics(caseRubrics: List[CazeRubricJsonHelper]): Option[CazeRubricJsonHelper] = {
+        if (caseRubrics.length > 1) {
+          val allSubRubrics = caseRubrics.flatMap(_.subRubrics)
+          val cazeId = caseRubrics.head.cazeId
+          val cazeRubricId = caseRubrics.head.cazeRubricId // We merge "into" the first element of the argument list
+          Some(CazeRubricJsonHelper(cazeRubricId, cazeId, allSubRubrics))
+        } else {
+          None
+        }
+      }
+
+      val mergedCaseRubricIds: List[Int] = checkBoxesChecked.flatMap(_.subRubrics.map(sr=>sr.id))
+
+      // Delete merged rubrics from case...
+      val deletedCaseRubrics = cRubrics.filter(cr =>
+        val rubricsSubrubricsIds: Set[Int] = cr.subRubrics.map(_.rubric.id).toSet
+        mergedCaseRubricIds.toSet.intersect(rubricsSubrubricsIds).size > 0
+      )
+
+      // Add the NEWLY merged / created rubric to the case and call "case update" method
+      mergeCaseRubrics(checkBoxesChecked) match {
+        case Some(mergedJsonCaseRubric) =>
+          val mergedCaseSubrubrics: List[CazeSubRubric] = deletedCaseRubrics.flatMap(_.subRubrics).toList
+          val mergedCaseRubric: CazeRubric = CazeRubric(-1, mergedJsonCaseRubric.cazeId, mergedCaseSubrubrics, 1, None)
+          cRubrics = cRubrics + mergedCaseRubric
+          updateCaseViewAndDataStructures() // Make change persistant
+        case None =>
+          println("ERROR: Merge of case rubrics failed.")
+      }
+
+      // Remove the individual rubrics that were merged from the case and call "case update" method
+      // (was, but didn't work: cRubrics = cRubrics.filter(deletedCaseRubrics.contains(_) == false))
+      cRubrics = cRubrics.filter { cr => !deletedCaseRubrics.exists(dcr => dcr.equalsIgnoreWeight(cr)) }
+
+      showCase(RepertoryView.remedyFormat()) // Update case view and make change persistent
+    }
+
+    def apply() = {
+      button(cls := "btn btn-sm btn-secondary", `type` := "button",
+        id := getId(),
+        disabled := true, style := "margin-left:5px; margin-bottom: 5px;",
+        onclick := { (event: Event) => { clickHandler() }},
+        span(cls := "oi oi-fork", title := "Merge/Fork", aria.hidden := "true"),
+        " Merge rubrics"
+      )
+    }
+  }
+
   object CaseHeader extends OorepHtmlElement {
     def getId() = "caseHeader"
     def setHeaderText(newHeaderText: String) = {
@@ -155,7 +224,7 @@ object Case {
     def apply() = {
       def header = "CASE"
 
-      getCookieData(dom.document.cookie, CookieFields.id.toString) match {
+      getTransientUserState(CookieFields.id) match {
         case Some(_) =>
           if (descr != None) {
             div(
@@ -164,6 +233,7 @@ object Case {
               CloseCaseButton(),
               CloneCaseButton(),
               AddToFileButton(),
+              MergeRubricButton(),
               RepertoriseButton()
             )
           }
@@ -175,12 +245,14 @@ object Case {
               CloseCaseButton(),
               CloneCaseButton(),
               AddToFileButton(),
+              MergeRubricButton(),
               RepertoriseButton()
             )
           }
         case None =>
           div(
             b(id := getId(), s"$header: "),
+            MergeRubricButton(),
             RepertoriseButton()
           )
       }
@@ -189,31 +261,37 @@ object Case {
 
   // ===== <HtmlRepresentation> =======================================================================================
   object HtmlRepresentation {
+    def getId() = "Case_HtmlRepresentation_3243jkdvjk34jkJKhk"
+
+    // Select all checkboxes in this view whose ID starts with the parent view's ID...
+    def getAllCaseRowCheckboxes() = dom.document.querySelectorAll(s"input[type=checkbox][id^='${getId()}']").map(_.asInstanceOf[dom.html.Input]).toList
+
     object TableHead extends OorepHtmlElement {
       def getId() = "Case_caseSectionOfPage_34534jhdkfgfd"
 
       def apply() = {
         thead(cls := "thead-dark", scalatags.JsDom.attrs.id := getId(),
-          th(attr("scope") := "col", "Weight"),
+          th(attr("scope") := "col", cls := "minimal-column", ""),
+          th(attr("scope") := "col", cls := "minimal-column", "Weight"),
           th(attr("scope") := "col", "Rep."),
-          th(attr("scope") := "col", "Label"),
+          th(attr("scope") := "col", cls := "minimal-column", "Label"),
           th(attr("scope") := "col", "Rubric"),
           th(cls := "d-none d-sm-table-cell", attr("scope") := "col",
             a(cls := "underline", href := s"#${getId()}", onclick := ((event: Event) => RepertoryView.toggleRemedyFormat()), "Remedies")
           ),
-          th(attr("scope") := "col", " ")
+          th(attr("scope") := "col", cls := "minimal-column", " ")
         )
       }
     }
   }
 
   class HtmlRepresentation(remedyFormat: RemedyFormat) extends OorepHtmlElement {
-    def getId() = "Case_HtmlRepresentation_3243jkdvjk34jkJKhk"
+    def getId() = HtmlRepresentation.getId()
 
-    class CaseRow(crub: CaseRubric) extends OorepHtmlElement {
-      def getId() = "crub_" + crub.rubric.id + crub.repertoryAbbrev
+    class CaseRow(crub: CazeRubric) extends OorepHtmlElement {
+      def getId() = HtmlRepresentation.getId() + "_crub_" + crub.toString()
 
-      implicit def crToCR(cr: CaseRubric): BetterCaseRubric = new BetterCaseRubric(cr)
+      implicit def crToCR(cr: CazeRubric): BetterCaseRubric = new BetterCaseRubric(cr)
 
       val remedies = crub.getFormattedRemedyNames(remedyFormat)
 
@@ -225,8 +303,8 @@ object Case {
           }
           updateCaseViewAndDataStructures()
         }
-
       }
+
       // The weight label on the drop-down button, which needs to change automatically on new user choice
       val weight = new WeightRx(crub.rubricWeight)
 
@@ -245,6 +323,22 @@ object Case {
       def apply() = {
         tr(scalatags.JsDom.attrs.id := getId(),
           td(
+            div(cls:="form-check",
+              input(
+                cls:="form-check-input", `type`:="checkbox", value:=s"${crub.toJson()}", id:=s"${getId()}_${crub.toString()}_checkbox",
+                onchange := { (event: Event) => {
+                  val checkBoxes = HtmlRepresentation.getAllCaseRowCheckboxes()
+                  val checkBoxesChecked = checkBoxes.filter(_.checked)
+
+                  if (checkBoxesChecked.size > 1)
+                    MergeRubricButton.enable()
+                  else
+                    MergeRubricButton.disable()
+                }}
+              )
+            )
+          ),
+          td(
             button(`type` := "button", id := s"${getId()}_Button.Weight", cls := "btn dropdown-toggle btn-sm btn-secondary", style := "width:45px;", data.toggle := "dropdown", weight.get().toString),
             div(cls := "dropdown-menu",
               a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricWeight = 0; weight.set(0) }, "0 (ignore)"),
@@ -254,7 +348,7 @@ object Case {
               a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricWeight = 4; weight.set(4) }, "4 (essential)")
             )
           ),
-          td(crub.repertoryAbbrev),
+          td(crub.abbrev),
           td(
             button(`type` := "button", id := s"${getId()}_Button.Label", cls := "btn dropdown-toggle btn-sm btn-secondary", style := "width:45px;", data.toggle := "dropdown", s"${label.get().getOrElse("")}"),
             div(cls := "dropdown-menu", style := "max-height:250px; overflow-y:auto;",
@@ -287,27 +381,41 @@ object Case {
               a(cls := "dropdown-item", href := s"#${HtmlRepresentation.TableHead.getId()}", onclick := { (event: Event) => crub.rubricLabel = Some("Z"); label.set(Some("Z")) }, "Z")
             )
           ),
-          td(style := "width:28%;", crub.rubric.fullPath),
-          td(cls := "d-none d-sm-table-cell", remedies.take(remedies.size - 1).map(l => span(l, ", ")) ::: List(remedies.last)),
+          td(style := "width:28%;", crub.fullPath),
+          td(cls := "d-none d-sm-table-cell", remedies.take(remedies.size - 1).map(l => span(l, ", ")) ::: List(remedies.lastOption.getOrElse(span("")))),
           td(cls := "text-right", style := "white-space:nowrap;",
             button(cls := "btn btn-sm btn-secondary", `type` := "button",
-              scalatags.JsDom.attrs.id := ("rmBut_" + crub.rubric.id + crub.repertoryAbbrev),
+              scalatags.JsDom.attrs.id := ("rmBut_" + crub.toString()),
               style := "vertical-align: middle; display: inline-block",
               title := "Remove rubric",
               onclick := { (event: Event) => {
                 event.stopPropagation()
                 crub.rubricWeight = 1
                 cRubrics = cRubrics.filter(_ != crub)
-                dom.document.getElementById("crub_" + crub.rubric.id + crub.repertoryAbbrev) match {
+                dom.document.getElementById(HtmlRepresentation.getId() + "_crub_" + crub.toString()) match {
                   case null => ;
                   case elem => elem.parentNode.removeChild(elem)
                 }
 
                 // Enable add-button in results, if removed symptom was in the displayed results list...
-                dom.document.getElementById("button_" + crub.repertoryAbbrev + "_" + crub.rubric.id) match {
-                  case null => ;
-                  case elem => elem.asInstanceOf[dom.html.Button].removeAttribute("disabled")
-                }
+                val addButtons = dom.document.getElementsByTagName("button").filter(_.id.startsWith("addBut_"))
+                addButtons.foreach(addButton =>
+                  parse(addButton.getAttribute("data-crubric")) match {
+                    case Right(json) => json.hcursor.as[CazeRubricJsonHelper] match {
+                      case Right(crjh) =>
+                        crjh.subRubrics match {
+                          case Nil => ;
+                          case subRubric :: _ =>
+                            val addButtonsSingleSubrubricId = subRubric.id
+                            val addButtonsSingleRepertoryAbbrev = subRubric.abbrev
+                            if (crub.containsSubRubric(addButtonsSingleSubrubricId, addButtonsSingleRepertoryAbbrev))
+                              addButton.asInstanceOf[dom.html.Button].removeAttribute("disabled")
+                        }
+                      case Left(err) => ;
+                    }
+                    case Left(err) => ;
+                  }
+                )
 
                 // If this was last case-rubric, clear case div
                 if (cRubrics.size == 0)
@@ -326,10 +434,11 @@ object Case {
       def getId() = "caseTBody"
 
       def apply() = {
-        tbody(scalatags.JsDom.attrs.id := getId(),
-          cRubrics
-            .sortBy(cr => (cr.repertoryAbbrev + cr.rubric.fullPath))
-            .map(crub => new CaseRow(crub)())) //.asInstanceOf[html.Html]
+        val res = tbody(scalatags.JsDom.attrs.id := getId(),
+          cRubrics.toList
+            .sortBy(cr => (cr.abbrev + cr.fullPath))
+            .map(crub => new CaseRow(crub)()))
+        res
       }
     }
 
@@ -353,9 +462,8 @@ object Case {
   def size() = cRubrics.size
 
   // ------------------------------------------------------------------------------------------------------------------
-  def addRepertoryLookup(r: CaseRubric) = {
-    if (cRubrics.filter(cr => cr.rubric.id == r.rubric.id && cr.repertoryAbbrev == r.repertoryAbbrev).length == 0)
-      cRubrics = r :: cRubrics
+  def addRepertoryLookup(r: CazeRubric) = {
+    cRubrics = cRubrics + r
   }
 
   // ------------------------------------------------------------------------------------------------------------------
@@ -368,18 +476,19 @@ object Case {
     for (crub <- cRubrics) {
       crub.rubricWeight = 1
 
-      dom.document.getElementById("crub_" + crub.rubric.id + crub.repertoryAbbrev) match {
+      dom.document.getElementById(HtmlRepresentation.getId() + "_crub_" + crub.toString()) match {
         case null => ;
         case elem => elem.parentNode.removeChild(elem)
       }
-
-      // Enable add-button in results, if removed symptom was in the displayed results list...
-      dom.document.getElementById("button_" + crub.repertoryAbbrev + "_" + crub.rubric.id) match {
-        case null => ;
-        case elem => elem.asInstanceOf[dom.html.Button].removeAttribute("disabled")
-      }
     }
-    cRubrics = List()
+
+    // Re-Enable all add-button in results
+    dom.document.getElementsByTagName("button").foreach { button =>
+      if (button.id.startsWith("addBut_"))
+        button.asInstanceOf[dom.html.Button].removeAttribute("disabled")
+    }
+
+    cRubrics = Set.empty
     descr = None
     MainView.CaseDiv.empty()
     MainView.toggleOnBeforeUnload()
@@ -401,7 +510,7 @@ object Case {
 
         MainView.CaseDiv.empty()
         MainView.toggleOnBeforeUnload()
-        MainView.CaseDiv.append(new Case.HtmlRepresentation(RepertoryView._remedyFormat.get())().render)
+        MainView.CaseDiv.append(new CaseSection.HtmlRepresentation(RepertoryView.remedyFormat())().render)
         updateCaseViewAndDataStructures()
         updateCaseHeaderView()
       case None =>
@@ -424,52 +533,95 @@ object Case {
   }
 
   // ------------------------------------------------------------------------------------------------------------------
-  // Called from the outside.  Typically, an updateCaseViewAndDatastructures() follows such a call.
-  def updateCurrOpenCaseId(caseId: Int) = {
-    if (descr != None) {
-      descr = Some(shared.Caze(caseId, descr.get.header, descr.get.member_id, descr.get.date, descr.get.description, cRubrics))
-      CaseModals.EditModal.CaseIdInput.setReadOnly()
-    }
-    else
-      println(s"Case: updateCaseId with ID ${caseId} failed.")
-  }
-
-  // ------------------------------------------------------------------------------------------------------------------
   def updateCaseViewAndDataStructures(): Unit = {
     def updateFileModalDataStructures(): Unit = {
-      val memberId = getCookieData(dom.document.cookie, CookieFields.id.toString) match {
+      val memberId = getTransientUserState(CookieFields.id) match {
         case Some(id) => updateMemberFiles(id.toInt); id.toInt
         case None => -1
       }
 
       remedyScores.clear()
       cRubrics.foreach(caseRubric => {
-        caseRubric.weightedRemedies.foreach { case WeightedRemedy(r, w) => {
-          remedyScores.put(r.nameAbbrev, remedyScores.getOrElseUpdate(r.nameAbbrev, 0) + caseRubric.rubricWeight * w)
-        }}
+        // Single rubric: we add the score of the one and only subrubric to our remedyScores map (so we don't really need to loop through the subrubrics at all).
+        if (caseRubric.subRubrics.size <= 1) {
+          caseRubric.subRubrics.foreach(subRubric =>
+            subRubric.weightedRemedies.foreach { case WeightedRemedy(r, w) => {
+              remedyScores.put(r.nameAbbrev, remedyScores.getOrElseUpdate(r.nameAbbrev, 0) + caseRubric.rubricWeight * w)
+            }}
+          )
+        }
+        // Merged rubric: we add the max (not the cumulative) value of all scores of the subrubrics to our remedyScores map.
+        else {
+          val cumRemedyWeight = new mutable.HashMap[String, Int]
+
+          caseRubric.subRubrics.foreach(subRubric =>
+            subRubric.weightedRemedies.foreach { case WeightedRemedy(remedy, remedyWeight) => {
+              val curRemedyWeight = caseRubric.rubricWeight * remedyWeight
+              val prevRemedyWeight = cumRemedyWeight.getOrElseUpdate(remedy.nameAbbrev, 0)
+              cumRemedyWeight.put(remedy.nameAbbrev, math.max(curRemedyWeight, prevRemedyWeight))
+            }}
+          )
+
+          cumRemedyWeight.foreach { case (remedyName, remedyWeight) => {
+            remedyScores.put(remedyName, remedyScores.getOrElseUpdate(remedyName, 0) + remedyWeight)
+          }}
+        }
       })
 
       if (descr.isDefined) {
-        descr = Some(shared.Caze(descr.get.id, descr.get.header, descr.get.member_id, descr.get.date, descr.get.description, cRubrics))
+        descr = Some(shared.Caze(descr.get.id, descr.get.header, descr.get.member_id, descr.get.date, descr.get.changed, descr.get.description, cRubrics.toList))
 
         // If user is logged in, attempt to update case in DB (if it exists; see comment in Post.scala),
-        // and if previous case != current case.
+        // and if previous case != current case, and if the case ID is > 0 as otherwise we're getting an error from the backend's persistence methods.
         // And, it only makes sense to update, if there are any rubrics left, e.g., which may not be the
         // case after pressing "Remove" a few times...
-        if ((memberId >= 0) && prevCase.isDefined && (prevCase.get.id == descr.get.id) && (cRubrics.size > 0) && (prevCase.get != descr.get)) {
+        if ((memberId >= 0) &&  descr.get.id > 0 && prevCase.isDefined && (prevCase.get.id == descr.get.id) && (cRubrics.size > 0) && (prevCase.get != descr.get)) {
           // Before we write the case to disk, we update the date to record the change.
           // We do not do this above, as the prevCase != descr check would always fail then!
-          descr = Some(shared.Caze(descr.get.id, descr.get.header, descr.get.member_id, (new js.Date()).toISOString(), descr.get.description, cRubrics))
+          descr = Some(shared.Caze(descr.get.id, descr.get.header, descr.get.member_id, (new js.Date()).toISOString(), (new js.Date()).toISOString(), descr.get.description, cRubrics.toList))
 
           if (descr.get.isSupersetOf(prevCase.get).length > 0) { // Add additional case rubrics to DB
-            val diff = descr.get.isSupersetOf(prevCase.get)
+            val diff = descr.get.isSupersetOf(prevCase.get).map(_.replaceCaseId(descr.get.id))
 
-            HttpRequest2("sec/add_caserubrics_to_case")
-              .withHeaders((HeaderFields.csrfToken.toString(), getDocumentCsrfCookie().getOrElse("")))
-              .post(
-                ("memberID" -> memberId.toString),
-                ("caseID" -> descr.get.id.toString),
-                ("caserubrics" -> diff.asJson.toString))
+            if (diff.size == 1) {
+              HttpRequest2("sec/add_caserubrics_to_case")
+                .withHeaders((HeaderFields.csrfToken.toString(), getDocumentCsrfCookie().getOrElse("")))
+                .onSuccess((response: String) => {
+                  // Response is a comma-separated LIST of integers, each representing an added case rubric
+                  // ID, but we expect only ONE entry in the list at this point (because diff.size == 1).
+                  // Hence the following line works:
+                  val newlyAddedCaseRubricId = response.toInt
+
+                  // After adding to the database, update the case rubrics which are held currently in
+                  // memory, with a VALID case rubric ID as returned from the database insert...
+                  diff.foreach { crub =>
+                    cRubrics =
+                      cRubrics.map(oldCr =>
+                        if (oldCr.id == -1)
+                          oldCr.replaceId(newlyAddedCaseRubricId)
+                        else
+                          oldCr
+                      )
+
+                    // ...same for the ones currently stored in prevCase, if it exists.
+                    if (prevCase.isDefined) {
+                      prevCase.get.rubrics =
+                        prevCase.get.rubrics.map(oldCr =>
+                          if (oldCr.id == -1)
+                            oldCr.replaceId(newlyAddedCaseRubricId)
+                          else
+                            oldCr
+                        )
+                    }
+                  }
+                })
+                .post(
+                  ("memberID" -> memberId.toString),
+                  ("caseID" -> descr.get.id.toString),
+                  ("caserubrics" -> diff.asJson.toString))
+            } else {
+              println("ERROR: Adding case rubric to case aborted, because we somehow tried to add not one but MULTIPLE (or none) case rubrics at once!")
+            }
           }
           else if (prevCase.get.isSupersetOf(descr.get).length > 0) { // Delete the removed case rubrics in DB
             val diff = prevCase.get.isSupersetOf(descr.get)
@@ -502,7 +654,7 @@ object Case {
                 ("casedescription" -> descr.get.description))
           }
           else {
-            println("Case: updateFileModalDataStructures(): NOT saving case, although something indicates it may have changed. " +
+            println("CaseSection: updateFileModalDataStructures(): NOT saving case, although something indicates it may have changed. " +
               "This shouldn't have happened, but previous saves should have taken care that no data-loss occurred.")
           }
         }
@@ -514,14 +666,16 @@ object Case {
 
       // Delete not only view but entire case from DB, when user removed all of its rubrics...
       if (cRubrics.size == 0) {
+
         if (descr != None && descr.get.id != 0)
+
           HttpRequest2("sec/del_case")
-            .withMethod("DELETE")
-            .withHeaders((HeaderFields.csrfToken.toString(), getDocumentCsrfCookie().getOrElse("")))
-            .withBody(
-              ("caseId" -> descr.get.id.toString()),
-              ("memberId" -> memberId.toString()))
-            .send()
+              .withMethod("DELETE")
+              .withHeaders((HeaderFields.csrfToken.toString(), getDocumentCsrfCookie().getOrElse("")))
+              .withBody(
+                ("caseId" -> descr.get.id.toString()),
+                ("memberId" -> memberId.toString()))
+              .send()
 
         CaseModals.EditModal.CaseIdInput.setEditable()
         descr = None
@@ -533,15 +687,15 @@ object Case {
 
     // Now, put previous case to current case; a bit more verbose in order to avoid that prevCase.eq(descr) holds
     // as would be the case with prevCase = descr from what I've tried...
-    // Update: this is due to the var in CaseRubric data structure. F*CK!
+    // (Update: this is due to the var in CaseRubric data structure.)
     if (descr.isDefined)
-      prevCase = Some(descr.get.copy(results = cRubrics.map(_.copy())))
+      prevCase = Some(descr.get.copy(rubrics = cRubrics.toList.map(_.copy())))
     else
       prevCase = None
 
     // Only draw labels and weights, if user is actually using them
-    val caseUsesLabels = cRubrics.filter(_.rubricLabel != None).length > 0
-    val caseUsesWeights = cRubrics.filter(_.rubricWeight != 1).length > 0
+    val caseUsesLabels: Boolean = cRubrics.toList.filter(_.rubricLabel != None).length > 0
+    val caseUsesWeights: Boolean = cRubrics.toList.filter(_.rubricWeight != 1).length > 0
 
     // Redraw table header
     CaseModals.RepertorisationModal.TableHead.getNode() match {
@@ -574,7 +728,7 @@ object Case {
             sortReverse = !sortReverse
             updateCaseViewAndDataStructures()
           }, "Rubric")).render)
-        val allRemediesInCase = cRubrics.map(_.weightedRemedies.map(_.remedy)).flatten.distinct
+        val allRemediesInCase = cRubrics.toList.flatMap(_.getAllRemedies)
         remedyScores.toList.sortWith(_._2 > _._2).map(_._1).foreach(nameabbrev =>
           tableHead.appendChild(th(attr("scope") := "col",
             data.toggle := "tooltip", title := s"${getFullNameFromCasRubrics(allRemediesInCase, nameabbrev).getOrElse("LOOK-UP-ERROR")}",
@@ -582,36 +736,36 @@ object Case {
               s"${nameabbrev} (${remedyScores.get(nameabbrev).get})")).render))
     }
 
-    // Redraw table body
+    // Redraw table body of repertorisation
     implicit def stringToString(s: String): BetterString = new BetterString(s) // For 'shorten'.
 
     CaseModals.RepertorisationModal.TableBody.getNode() match {
       case None => println("Case: Redrawing of table body failed.")
       case Some(tableBody) =>
         CaseModals.RepertorisationModal.TableBody.rmAllChildren()
-        for (cr <- cRubrics.filter(_.rubricWeight > 0)
+        for (cr <- cRubrics.toList.filter(_.rubricWeight > 0)
           .sortBy(cr => {
             if (sortCaseBy == Weight)
-              s"${cr.rubricWeight}${cr.rubricLabel.getOrElse("")}${cr.repertoryAbbrev}${cr.rubric.fullPath}"
+              s"${cr.rubricWeight}${cr.rubricLabel.getOrElse("")}${cr.abbrev}${cr.fullPath}"
             else if (sortCaseBy == Path)
-              cr.rubric.fullPath
+              cr.fullPath
             else if (sortCaseBy == Abbrev)
-              cr.repertoryAbbrev + cr.rubricLabel.getOrElse("") + cr.rubric.fullPath
+              cr.abbrev + cr.rubricLabel.getOrElse("") + cr.fullPath
             else
-              cr.rubricLabel.getOrElse("") + cr.repertoryAbbrev + cr.rubric.fullPath
+              cr.rubricLabel.getOrElse("") + cr.abbrev + cr.fullPath
           })(if (sortReverse) Ordering[String].reverse else Ordering[String]))
         {
-          val trId = cr.rubric.fullPath.replaceAll("[^A-Za-z0-9]", "") + "_" + cr.repertoryAbbrev
+          val trId = cr.fullPath.replaceAll("[^A-Za-z0-9]", "") + "_" + cr.abbrev
 
           // Construct table row entries
           val tableRowEntries = new ListBuffer[JsDom.TypedTag[dom.html.TableCell]]()
           if (caseUsesWeights)
             tableRowEntries += td(cr.rubricWeight.toString())
-          tableRowEntries += td(cr.repertoryAbbrev)
+          tableRowEntries += td(cr.abbrev)
           if (caseUsesLabels)
-            tableRowEntries += td(cr.rubricLabel.getOrElse("").toString())
-          tableRowEntries += td(style := "white-space: nowrap;", cr.rubric.fullPath.shorten)
-
+            tableRowEntries += td(cr.rubricLabel.getOrElse(""))
+          tableRowEntries += td(style := "white-space: nowrap;", cr.fullPath.shorten)
+          
           // Add table row
           tableBody.appendChild(
             tr(scalatags.JsDom.attrs.id := trId, tableRowEntries.toList).render)
@@ -621,9 +775,9 @@ object Case {
             case trr =>
               remedyScores.toList.sortWith(_._2 > _._2).map(_._1) foreach (abbrev => {
                 if (cr.rubricWeight > 0 && cr.containsRemedyAbbrev(abbrev))
-                  trr.appendChild(td(data.toggle := "tooltip", title := s"${cr.rubric.fullPath.shorten(40)}", "" + (cr.getRemedyWeight(abbrev) * cr.rubricWeight)).render)
+                  trr.appendChild(td(data.toggle := "tooltip", title := s"${cr.fullPath.shorten(40)}", "" + (cr.getHighestRemedyWeight(abbrev) * cr.rubricWeight)).render)
                 else
-                  trr.appendChild(td(data.toggle := "tooltip", title := s"${cr.rubric.fullPath.shorten(40)}", " ").render)
+                  trr.appendChild(td(data.toggle := "tooltip", title := s"${cr.fullPath.shorten(40)}", " ").render)
               })
           }
         }
@@ -631,7 +785,7 @@ object Case {
   }
 
   def updateCaseHeaderView(): Unit = {
-    getCookieData(dom.document.cookie, CookieFields.id.toString) match {
+    getTransientUserState(CookieFields.id) match {
       // Not logged in...
       case None =>
         OpenNewCaseButton.hide()
@@ -680,6 +834,16 @@ object Case {
     }
 
     unsaved
+  }
+
+  // ------------------------------------------------------------------------------------------------------------------
+  def showCase(remedyFormat: RemedyFormat): Unit = {
+    if (size() > 0) {
+      MainView.CaseDiv.empty()
+      MainView.CaseDiv.append(new HtmlRepresentation(remedyFormat)().render)
+      updateCaseViewAndDataStructures()
+      updateCaseHeaderView()
+    }
   }
 
 }

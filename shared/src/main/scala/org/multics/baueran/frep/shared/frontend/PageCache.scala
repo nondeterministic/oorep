@@ -1,6 +1,6 @@
 package org.multics.baueran.frep.shared.frontend
 
-import org.multics.baueran.frep.shared.{ResultsCaseRubrics, ResultsRemedyStats}
+import org.multics.baueran.frep.shared.{ResultsCazeRubrics, ResultsRemedyStats}
 import scala.collection.mutable
 import scala.util.boundary, boundary.break
 
@@ -8,7 +8,7 @@ case class CachePage(abbrev: String,
                      symptom: String,
                      remedy: Option[String],
                      minWeight: Int,
-                     content: ResultsCaseRubrics,
+                     content: ResultsCazeRubrics,
                      remedies: List[ResultsRemedyStats])
 {
   def sameMetaDataAs(page: CachePage): Boolean =

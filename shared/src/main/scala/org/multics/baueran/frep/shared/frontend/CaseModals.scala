@@ -68,7 +68,7 @@ object CaseModals {
         button(data.dismiss := "modal", cls := "btn mb-2 btn-secondary",
           "Cancel",
           onclick := { (event: Event) =>
-            Case.descr match {
+            CaseSection.descr match {
               case Some(descr) =>
                 CaseIdInput.setText(descr.header)
                 CaseDescriptionTextArea.setText(descr.description)
@@ -85,22 +85,23 @@ object CaseModals {
       val caseIdTxt = CaseIdInput.getText ()
       CaseIdInput.setReadOnly ()
       val caseDescrTxt = CaseDescriptionTextArea.getText ()
-      val memberId = getCookieData (dom.document.cookie, CookieFields.id.toString) match {
+      val memberId = getTransientUserState(CookieFields.id) match {
         case Some (id) => id.toInt
         case None => -1 // TODO: Force user to relogin; the identification cookie has disappeared!!!!!!!!!!
       }
 
-      Case.descr = Some (shared.Caze ( // WHERE CAZE IS INITIALLY CREATED: WITH ID -1!
-        (if (Case.descr.isDefined) Case.descr.get.id else - 1),
+      CaseSection.descr = Some (shared.Caze ( // WHERE CAZE IS INITIALLY CREATED: WITH ID -1!
+        (if (CaseSection.descr.isDefined) CaseSection.descr.get.id else - 1),
         caseIdTxt,
         memberId,
         (new js.Date () ).toISOString (),
+        "", // TODO: Changed
         caseDescrTxt,
-        Case.cRubrics) )
+        CaseSection.cRubrics.toList) )
 
-      Case.CaseHeader.setHeaderText (s"Case '${Case.descr.get.header}': ")
-      Case.updateCaseHeaderView () // This mainly updates the buttons at bottom of case view
-      Case.updateCaseViewAndDataStructures ()
+      CaseSection.CaseHeader.setHeaderText (s"Case '${CaseSection.descr.get.header}': ")
+      CaseSection.updateCaseHeaderView () // This mainly updates the buttons at bottom of case view
+      CaseSection.updateCaseViewAndDataStructures ()
     }
 
     object SubmitButton extends OorepHtmlButton {
@@ -141,9 +142,9 @@ object CaseModals {
           onkeyup := { (event: Event) =>
             val currTextAreaText = getText()
 
-            if (currTextAreaText.trim.length > 0 && getText().trim.length > 0 && Case.descr.isDefined && currTextAreaText.trim != Case.descr.get.description)
+            if (currTextAreaText.trim.length > 0 && getText().trim.length > 0 && CaseSection.descr.isDefined && currTextAreaText.trim != CaseSection.descr.get.description)
               SubmitButton.enable()
-            else if (currTextAreaText.trim.length > 0 && Case.descr.isDefined && currTextAreaText.trim == Case.descr.get.description)
+            else if (currTextAreaText.trim.length > 0 && CaseSection.descr.isDefined && currTextAreaText.trim == CaseSection.descr.get.description)
               SubmitButton.disable()
           }
         )

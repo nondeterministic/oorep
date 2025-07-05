@@ -1,278 +1,340 @@
 package org.multics.baueran.frep.backend.dao
 
-import org.multics.baueran.frep._
+import org.multics.baueran.frep.*
 import backend.db
-import shared.{BetterString, CaseRubric, Caze}
-import io.getquill._
+import shared.{BetterString, Caze, CazeRubric, CazeSubRubric, Rubric, WeightedRemedy, CazeRubricJsonHelper}
+import backend.dao.RepertoryDao
+import io.getquill.*
+import io.circe.{Decoder, *}
+import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
+import scala.annotation.targetName
 
 class CazeDao(dbContext: db.db.DBContext) {
 
+  case class PersistentCazeRubric(id: Int, cazeId: Int, weight: Int, label: Option[String])
+  object PersistentCazeRubric {
+    implicit val crencoder: Encoder[PersistentCazeRubric] = deriveEncoder[PersistentCazeRubric]
+    implicit val crdecoder: Decoder[PersistentCazeRubric] = deriveDecoder[PersistentCazeRubric]
+  }
+
+  case class PersistentCaze(id: Int, header: String, member_id: Int, date: String, changed: String, description: String)
+  object PersistentCaze {
+    implicit val cencoder: Encoder[PersistentCaze] = deriveEncoder[PersistentCaze]
+    implicit val cdecoder: Decoder[PersistentCaze] = deriveDecoder[PersistentCaze]
+  }
+
+  case class PersistentCazeSubRubric(id: Int, cazeRubricId: Int, abbrev: String, rubricId: Int)
+  object PersistentCazeSubRubric {
+    implicit val csrencoder: Encoder[PersistentCazeSubRubric] = deriveEncoder[PersistentCazeSubRubric]
+    implicit val csrdecoder: Decoder[PersistentCazeSubRubric] = deriveDecoder[PersistentCazeSubRubric]
+  }
+
   import dbContext._
 
-  private case class RawCaze(id: Int, header: String, member_id: Int, date_ : String, description: String, results: List[Int])
+  val repertoryDao = RepertoryDao(dbContext)
+
+  private val schemaCazeSubRubric = quote {
+    querySchema[PersistentCazeSubRubric]("CAZESUBRUBRIC",
+      _.id -> "ID",
+      _.cazeRubricId -> "CAZERUBRICID",
+      _.abbrev -> "ABBREV",
+      _.rubricId -> "RUBRICID"
+    )
+  }
+
+  private val schemaCazeRubric = quote {
+    querySchema[PersistentCazeRubric]("CAZERUBRIC",
+      _.id -> "ID",
+      _.cazeId -> "CAZEID",
+      _.weight -> "WEIGHT",
+      _.label -> "LABEL"
+    )
+  }
+
+  private val schemaCaze = quote {
+    querySchema[PersistentCaze]("CAZE",
+      _.id -> "ID",
+      _.header -> "HEADER",
+      _.member_id -> "MEMBER_ID",
+      _.date -> "DATE_",
+      _.changed -> "CHANGED",
+      _.description -> "DESCRIPTION"
+    )
+  }
 
   private val Logger = play.api.Logger(this.getClass)
-  private val tableCaze = quote { querySchema[Caze]("Caze", _.date -> "date_") }
 
-  def insert(c: Caze): Int = {
-    val cResultDao = new CazeResultDao(dbContext)
+  // Does not delete caserubrics and casesubrubrics!
+  private def deleteOnly(caze: Caze): Int = {
+    val numberOfDeletes =
+      run(quote(query[Caze]
+        .filter(_.id == lift(caze.id))
+        .delete)
+      ).toInt
 
-    Logger.debug("CazeDao: INSERT(): inserting case " + c.toString() + "...")
-
-    transaction {
-      // Insert the case rubrics in terms of case results and store their IDs (ultimately, as a string)
-      val caseResultIds = cResultDao.insert(c)
-
-      // Insert actual case without case result IDs
-      val insert: Quoted[ActionReturning[Caze, Int]] = quote {
-        tableCaze.insert(
-          _.member_id -> lift(c.member_id), _.date -> lift(c.date), _.description -> lift(c.description), _.header -> lift(c.header))
-          .returningGenerated(_.id)
-      }
-      val newId = run(insert)
-
-      // Insert case result IDs
-      val rawQuery = quote {
-        (id: Int, crs: List[Int]) =>
-          sql"""UPDATE caze SET results=$crs WHERE id=$id"""
-            .as[Update[Caze]]
-      }
-      run(rawQuery(lift(newId), lift(caseResultIds)))
-
-      Logger.debug("CazeDao: INSERT(): finished inserting case " + c.toString() + ": case Id: " + newId)
-
-      // Return id of newly inserted case
-      newId
+    if (numberOfDeletes > 0) {
+      val fileDao = new FileDao(dbContext)
+      val numberOfDeletedCaseIds = fileDao.delCaseId(caze.id)
+      if (numberOfDeletes != numberOfDeletedCaseIds)
+        Logger.error(s"CazeDao: deleteOnly(${caze.id}) had inconsistent deletion of case.")
+      numberOfDeletes
     }
-  }
-
-  /**
-    * Get cazes from DB with IDs ids.
-    *
-    * @param ids List of case IDs
-    * @return A list of raw (as in: as stored in the DB) cases, one for each ID.
-    */
-  // TODO: Return not List of basic types, but List[RawCaze]!
-  private def getRaw(ids: List[Int]): List[RawCaze] = {
-    if (ids.length == 0)
-      List()
     else {
-      val rawQuery = quote {
-        // Notice the '#' in front for dynamic infix queries! It is, sort of, the alternative to lift(...).
-        sql"""SELECT id, header, member_id, date_, description, results FROM caze WHERE id IN (#${ids.mkString(", ")})"""
-          .as[Query[RawCaze]]
-      }
-
-      run(rawQuery)
+      Logger.error(s"CazeDao: deleteOnly(${caze.id}) didn't delete anything?!")
+      0
     }
   }
 
-  def getResultIds(id: Int) = getRaw(List(id)).map(_.results).flatten
+  def delete(id: Int): Int = {
+    get(id) match {
+      case Some(caze) => 
+        // delCaseRubrics also deletes subrubrics!
+        delCaseRubrics(caze.rubrics)
+        deleteOnly(caze)
+      case None =>
+        Logger.error(s"CazeDao: delete of case with id ${id} failed.")
+        0
+    }
+  }
 
-  def get(ids: List[Int]): List[Caze] = {
-    if (ids.length > 0) {
-      val cResultDao = new CazeResultDao(dbContext)
+  def delete(caze: Caze): Int = {
+    // delCaseRubrics also deletes subrubrics!
+    delCaseRubrics(caze.rubrics)
+    deleteOnly(caze)
+  }
 
-      getRaw(ids) match {
-        case Nil => List()
-        case rawCases => rawCases.map { case RawCaze(id, header, memberId, date, descr, resultIds) =>
-          Caze(id, header, memberId, date, descr, cResultDao.get(resultIds))
+  def insert(caze: Caze): Option[Caze] = {
+    val newCazeId = run { quote {
+      schemaCaze.insert(
+        _.id -> lift(caze.id),
+        _.header -> lift(caze.header),
+        _.member_id -> lift(caze.member_id),
+        _.date -> lift(caze.date),
+        _.changed -> lift(caze.changed),
+        _.description -> lift(caze.description)
+      ).returningGenerated(_.id)
+    }}
+
+    if (addCaseRubrics(newCazeId, caze.rubrics).length == 0) {
+      Logger.error(s"CazeDao: insert(...) failed to add rubrics to freshly inserted caze with ID ${newCazeId}.")
+      None
+    }
+    else {
+      get(newCazeId)
+
+      // The following could be gotten to work with a lot more updating of IDs, etc.
+      // It's easier to just fetch what has just been stored in the DB from the DB.
+      // Some(Caze(newCazeId, caze.header, caze.member_id, caze.date, caze.changed, caze.description, caze.rubrics))
+    }
+  }
+
+  def getWeightedRemedies(rubric: Rubric): List[WeightedRemedy] = {
+    repertoryDao.getRubricRemedies(rubric.id, rubric.abbrev) match {
+      case Nil => Nil
+      case rubricRemedies => rubricRemedies.collect(rubricRemedy =>
+        repertoryDao.getRemedy(rubricRemedy.remedyId) match {
+          case Some(remedy) => WeightedRemedy(remedy, rubricRemedy.weight)
         }
-      }
-    }
-    else
-      List()
-  }
-
-  def get(id: Int): Either[String, Caze] = {
-    val cResultDao = new CazeResultDao(dbContext)
-
-    getRaw(List(id)) match {
-      case RawCaze(cId, header, memberId, date, descr, resultIds) :: Nil =>
-        Right(Caze(cId, header, memberId, date, descr, cResultDao.get(resultIds)))
-      case _ =>
-        val errorMsg = s"CazeDao: get($id) failed."
-        Logger.error(errorMsg)
-        Left(errorMsg)
+      )
     }
   }
 
-  def getMemberId(Id: Int): Either[String, Int] = {
-    run(quote {
-      tableCaze.filter(_.id == lift(Id)).map(_.member_id)
-    }) match {
-      case memberId :: Nil =>
-        Right(memberId)
-      case _ =>
-        Left(s"getMemberId($Id) failed. No such case in DB?")
+  def getCaseSubRubric(caseSubRubricId: Int): Option[CazeSubRubric] = {
+    run(quote(schemaCazeSubRubric
+      .filter(_.id == lift(caseSubRubricId))
+    )) match {
+      case pcsr :: Nil =>
+        repertoryDao.getRubric(pcsr.rubricId, pcsr.abbrev) match {
+          case Some(rubric) => 
+            Some(CazeSubRubric(rubric, getWeightedRemedies(rubric)))
+          case None =>
+            None
+        }
+      case _ => None
     }
   }
 
-  /**
-    * Deletes not only a case but also the reference to it in the corresponding file(s), and the case results.
-    *
-    * Returns the list of files to which case was associated before deletion.
-    */
+  def getCaseSubRubrics(caseRubricId: Int): List[CazeSubRubric] = {
+    run(quote(schemaCazeSubRubric
+      .filter(_.cazeRubricId == lift(caseRubricId))
+    )) match {
+      case Nil => Nil
+      case pcsrs =>
+        pcsrs.collect(pcsr =>
+          repertoryDao.getRubric(pcsr.rubricId, pcsr.abbrev) match {
+            case Some(rubric) =>
+              CazeSubRubric(rubric, getWeightedRemedies(rubric))
+          }
+        )
+    }
+  }
 
-  def delete(id: Int) = {
-    val fileDao = new FileDao(dbContext)
-    val crDao = new CazeResultDao(dbContext)
-    val correspondingFiles = fileDao.getFilesWithCase(id)
-    var result: List[Int] = List()
+  def getCaseRubrics(caseID: Int): List[CazeRubric] = {
+    run(quote(schemaCazeRubric
+      .filter(_.cazeId == lift(caseID))
+    )).map(pcr =>
+      CazeRubric(
+        pcr.id,
+        pcr.cazeId,
+        getCaseSubRubrics(pcr.id),
+        pcr.weight,
+        pcr.label)
+    )
+  }
 
-    // Delete cases from file(s)
-    Logger.debug(s"CazeDao: DELETE($id): removing case from file first.")
-    correspondingFiles.foreach(file => fileDao.removeCaseFromFile(id, file.id))
+  def getCaseRubric(caseRubricId: Int): Option[CazeRubric] = {
+    run(quote(schemaCazeRubric
+      .filter(_.cazeId == lift(caseRubricId))
+    )) match {
+      case pcr :: Nil =>
+        Some(CazeRubric(
+          pcr.id,
+          pcr.cazeId,
+          getCaseSubRubrics(pcr.id),
+          pcr.weight,
+          pcr.label)
+        )
+      case _ => None
+    }
+  }
 
-    // Delete associated case results
-    Logger.debug(s"CazeDao: DELETE($id): deleting associated case results.")
-    getRaw(List(id)) match {
-      case c :: Nil =>
-        c.results.map(crDao.delete(_))
+  // If we get only ONE case, we're likely interested in the rubrics, too.
+  // So, we pull the rubrics, too.
 
-        // Delete case itself
-        Logger.debug(s"CazeDao: DELETE($id): deleting case itself.")
-        run { quote {
-          tableCaze
-            .filter(_.id == lift(id))
+  def get(id: Int): Option[Caze] = {
+    run(quote(schemaCaze
+      .filter(_.id == lift(id)))
+    ) match {
+      case pcaze :: Nil =>
+        val caseRubrics = getCaseRubrics(pcaze.id)
+        Some(Caze(pcaze.id, pcaze.header, pcaze.member_id, pcaze.date, pcaze.changed, pcaze.description, caseRubrics))
+      case _ => None
+    }
+  }
+
+  // If we get MULTIPLE cases, we're most likely NOT interested in their rubrics.
+  // So, we don't get them, too.
+
+  def get(case_ids: List[Int]): List[Caze] = {
+    run(quote(schemaCaze
+      .filter(caze => liftQuery(case_ids).contains(caze.id))
+    )).map(pcaze => Caze(pcaze.id, pcaze.header, pcaze.member_id, pcaze.date, pcaze.changed, pcaze.description))
+  }
+
+  // Return number of deleted case sub rubrics.
+
+  def delCaseSubRubrics(caseRubricId: Int): Int = {
+    // Get case's subrubrics first.  Corresponds to
+    //   select cazesubrubric.id, cazerubricid, abbrev, rubricid from cazesubrubric join cazerubric
+    //          on cazerubricid = cazerubric.id and cazerubric.id = 29;
+    val caseSubRubrics = run { quote {
+      schemaCazeSubRubric
+        .join(schemaCazeRubric).on({ case (csr, cr) => csr.cazeRubricId == cr.id && cr.id == lift(caseRubricId) })
+    }}.collect { case (csr, _) => csr }
+
+    run { quote {
+      schemaCazeSubRubric
+        .filter (csr => liftQuery(caseSubRubrics.map(_.id)).contains(csr.id))
+        .delete
+    }}.toInt
+  }
+
+  // Return number of deleted case rubrics.
+  @targetName("delCaseRubrics_byObject")
+  def delCaseRubrics(caseRubrics: List[CazeRubric]): Int = {
+    var deletedCaseRubrics = 0
+
+    // First attempt to delete subrubrics, then the rubrics themselves.
+    transaction {
+      if (caseRubrics.map(cr => delCaseSubRubrics(cr.id)).exists(_ > 0))
+        deletedCaseRubrics = run { quote {
+          schemaCazeRubric
+            .filter(cr => liftQuery(caseRubrics.map(_.id)).contains(cr.id))
             .delete
-        }}
-
-        result = correspondingFiles.map(_.id)
-      case _ =>
-        Logger.error(s"CazeDao: DELETE($id) failed.")
+        }}.toInt
     }
 
-    result
+    deletedCaseRubrics
   }
 
-  /**
-    * Like replace(), but does nothing if case does not ALREADY exist in DB.
-    *
-    * @return New case ID if case was replaced, old case ID if case was not replaced, -1 if an error occurred.
-    */
+  @targetName("delCaseRubrics_byIDs")
+  def delCaseRubrics(caseRubricIds: List[Int]): Int = {
+    var deletedCaseRubrics = 0
 
-  def replaceIfExists(caze: Caze) = {
-    implicit def stringToString(s: String): BetterString = new BetterString(s) // For 'shorten'.
-    val fileDao = new FileDao(dbContext)
-
-    get(caze.id) match {
-      case Right(foundCase) =>
-        fileDao.getFilesWithCase(foundCase.id) match {
-          case file :: Nil =>
-            if (foundCase != caze) {
-              // TODO: If we put the below into a transaction, opening of a case, and then opening of a new case works; user will have lost first case in his file!
-              delete(foundCase.id)
-              val insertedId = insert(caze)
-              fileDao.addCaseIdToFile(insertedId, file.id)
-              Logger.debug(s"CazeDao: REPLACEIFEXISTS($caze): replaced: new case ID $insertedId.")
-              insertedId
-            }
-            else {
-              Logger.debug(s"CazeDao: REPLACEIFEXISTS($caze): not replaced as case hasn't changed.")
-              caze.id
-            }
-          case other =>
-            Logger.debug(s"CazeDao: REPLACEIFEXISTS($caze): failed as no unique file found to which case belongs. List of files: $other")
-            -1
-        }
-      case Left(_) =>
-        Logger.debug(s"CazeDao: REPLACEIFEXISTS($caze): not replaced.")
-        caze.id
-    }
-  }
-
-  /**
-    * Returns list of case result IDs that were added to the case with ID case Id,
-    * or empty List on error.
-    */
-
-  def addCaseRubrics(caseId: Int, caseRubrics: List[CaseRubric]) = {
-    val cResultDao = new CazeResultDao(dbContext)
-
-    getMemberId(caseId) match {
-      case Right(memberId) =>
-        // Insert the case rubrics in terms of case results and store their IDs (ultimately, as a string)
-        val caseResultIds = cResultDao.insert(memberId, caseRubrics)
-
-        // Add case result ids to case
-        val rawQuery = quote {
-          (id: Int, crs: List[Int]) =>
-            sql"""UPDATE caze SET results=results || $crs WHERE id=$id"""
-              .as[Update[Caze]]
-        }
-        val numberOfUpdates = run(rawQuery(lift(caseId), lift(caseResultIds)))
-
-        if (numberOfUpdates > 0)
-          caseResultIds
-        else {
-          Logger.error(s"CazeDao: ADDCASERUBRICS($caseId, #${caseRubrics.length}) failed: DB update not done.")
-          List()
-        }
-      case Left(err) =>
-        Logger.error(s"CazeDao: ADDCASERUBRICS($caseId, #${caseRubrics.length}) failed: failed to retrieve case from DB.")
-        List()
-    }
-  }
-
-  /**
-    * Returns number of deleted case results.
-    */
-
-  def delCaseRubrics(caseId: Int, caseRubrics: List[CaseRubric]): Int = {
-    val cResultDao = new CazeResultDao(dbContext)
-
-    getRaw(List(caseId)) match {
-      case caze :: Nil =>
-        val deletedCaseResultIds = cResultDao.delCaseRubrics(caseId, caseRubrics)
-        val leftOverCaseResultIds: List[Int] = caze.results.toSet.filterNot(deletedCaseResultIds.toSet).asInstanceOf[Set[Int]].toList
-        val rawQuery = quote {
-          (id: Int, crs: List[Int]) =>
-            sql"""UPDATE caze SET results=$crs WHERE id=$id"""
-              .as[Update[Caze]]
-        }
-
-        if (run(rawQuery(lift(caseId), lift(leftOverCaseResultIds))) > 0)
-          return deletedCaseResultIds.length
-      case _ =>
-        Logger.warn(s"CazeDao: DELCASERUBRICS($caseId, #${caseRubrics.length}): failed.")
+    // First attempt to delete subrubrics, then the rubrics themselves.
+    transaction {
+      if (caseRubricIds.map(crid => delCaseSubRubrics(crid)).exists(_ > 0))
+        deletedCaseRubrics = run { quote {
+          schemaCazeRubric
+            .filter(cr => liftQuery(caseRubricIds).contains(cr.id))
+            .delete
+        }}.toInt
     }
 
-    0
+    deletedCaseRubrics
   }
 
-  /**
-    * User defined currently label and weight.  The rest is static from repertories.
-    *
-    * @return Number of updated case results
-    */
-
-  def updateCaseRubricsUserDefinedValues(caseId: Int, caseRubrics: List[CaseRubric]): Int = {
-    val cResultDao = new CazeResultDao(dbContext)
-    val caseResults = cResultDao.getCaseResults(caseId, caseRubrics)
-
-    caseResults.map { case caseResult =>
-        caseRubrics.filter(cr => cr.rubric.id == caseResult.rubricId && cr.rubric.abbrev == caseResult.abbrev) match {
-          case caseRubric :: Nil =>
-            if (caseRubric.rubricWeight != caseResult.weight || caseRubric.rubricLabel.getOrElse("").reverse.reverse != caseResult.label.getOrElse("").reverse.reverse) {
-              cResultDao.setWeight(caseResult.id, caseRubric.rubricWeight).toInt +
-                cResultDao.setLabel(caseResult.id, caseRubric.rubricLabel).toInt
-            } else {
-              Logger.warn(s"CazeDao: UPDATECASERUBRICSUSERDEFINEDVALUES($caseId, #${caseRubrics.length}): skipping a case as weights and label are the same.")
-              0
-            }
-          case _ =>
-            Logger.warn(s"CazeDao: UPDATECASERUBRICSUSERDEFINEDVALUES($caseId, #${caseRubrics.length}) failed: ${caseResults.mkString(", ")}.")
-            0
-        }
-    }.foldLeft(0)(_ + _)
+  def addCaseSubRubrics(caseRubricId: Int, caseSubRubrics: List[CazeSubRubric]): List[Int] = {
+    caseSubRubrics.map(csr =>
+      run { quote {
+        schemaCazeSubRubric.insert(
+          _.cazeRubricId -> lift(caseRubricId),
+          _.abbrev -> lift(csr.rubric.abbrev),
+          _.rubricId -> lift(csr.rubric.id)
+        ).returningGenerated(_.id)
+      }}
+    )
   }
 
-  def updateCaseDescription(caseId: Int, caseDescription: String): Long = {
-    run(quote(tableCaze
-      .filter(_.id == lift(caseId))
-      .update(_.description -> lift(caseDescription))
-    ))
+  def addCaseRubrics(caseID: Int, caseRubrics: List[CazeRubric]): List[Int] = {
+    caseRubrics.map(cr =>
+      val newCaseRubricId = run { quote {
+        schemaCazeRubric.insert(
+          _.cazeId -> lift(caseID),
+          _.weight -> lift(cr.rubricWeight),
+          _.label -> lift(cr.rubricLabel)
+        ).returningGenerated(_.id)
+      }}
+
+      addCaseSubRubrics(newCaseRubricId, cr.subRubrics)
+      newCaseRubricId
+    )
+  }
+
+  def updateCaseSubRubric(caseRubricId: Int, caseSubRubric: CazeSubRubric): Int = {
+    run { quote {
+      schemaCazeSubRubric
+        .filter(_.id == lift(caseSubRubric.rubric.id))
+        .update(
+          _.cazeRubricId -> lift(caseSubRubric.rubric.id),
+          _.abbrev -> lift(caseSubRubric.rubric.abbrev),
+          _.rubricId -> lift(caseSubRubric.rubric.id)
+        )
+    }}.toInt
+  }
+
+  def updateCaseRubricUserDefinedValues(caseRubric: CazeRubric): Int = {
+    run { quote {
+      schemaCazeRubric
+        .filter(_.id == lift(caseRubric.id))
+        .update(
+          _.cazeId -> lift(caseRubric.cazeId),
+          _.weight -> lift(caseRubric.rubricWeight),
+          _.label -> lift(caseRubric.rubricLabel)
+        )
+    }}.toInt
+  }
+
+  def updateCaseRubricsUserDefinedValues(caseRubrics: List[CazeRubric]): Int = {
+    caseRubrics.map(updateCaseRubricUserDefinedValues(_)).length
+  }
+
+  def updateCaseDescription(cazeId: Int, caseDescription: String): Int = {
+    run { quote {
+      schemaCaze
+        .filter(_.id == lift(cazeId))
+        .update(_.description -> lift(caseDescription))
+    }}.toInt
   }
 
 }

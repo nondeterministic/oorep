@@ -1,7 +1,7 @@
 import sbt.Keys.libraryDependencies
 
 val myScalaVersion     = "3.5.2"
-val scalaTestPlusVersion = "7.0.1"
+val scalaTestPlusVersion = "7.0.2"
 val scalaJsDomVersion  = "2.3.0"
 val scalaTagsVersion   = "0.13.1"
 val circeVersion       = "0.14.10"

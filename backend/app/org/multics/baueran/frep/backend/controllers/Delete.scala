@@ -3,7 +3,7 @@ package org.multics.baueran.frep.backend.controllers
 import javax.inject._
 import play.api.mvc._
 import org.multics.baueran.frep._
-import shared.CaseRubric
+import shared.CazeRubric
 import backend.db.db.DBContext
 
 class Delete @Inject()(cc: ControllerComponents, dbContext: DBContext) extends AbstractController(cc) with ServerUrl {
@@ -17,18 +17,18 @@ class Delete @Inject()(cc: ControllerComponents, dbContext: DBContext) extends A
 
         (requestData("memberID"), requestData("caseID"), requestData("caserubrics")) match {
           case (Seq(memberIdStr), Seq(cazeIDStr), Seq(caserubricsJson)) if (cazeIDStr.forall(_.isDigit) && (memberIdStr.forall(_.isDigit))) =>
-            (memberIdStr.toInt, cazeIDStr.toInt, CaseRubric.decodeList(caserubricsJson)) match {
+            (memberIdStr.toInt, cazeIDStr.toInt, CazeRubric.decodeList(caserubricsJson)) match {
               case (memberId, caseID, Some(caseRubrics)) =>
                 if (!isUserAuthorized(request, memberId)) {
                   Logger.error(s"Delete: delCaseRubricsFromCaze() failed: not authorised.")
                   Forbidden
                 } else {
-                  if (cazeDao.delCaseRubrics(caseID, caseRubrics) > 0) {
+                  if (cazeDao.delCaseRubrics(caseRubrics) > 0) {
                     Logger.debug(s"Delete: delCaseRubricsFromCaze(): success")
                     Ok
                   }
                   else {
-                    Logger.error(s"Delete: delCaseRubricsFromCaze(): failed")
+                    Logger.error(s"Delete: delCaseRubricsFromCaze(member: $memberId, caseID: $caseID, caserubrics: ${caseRubrics.map(_.id).mkString(", ")}): failed")
                     BadRequest("Delete: delCaseRubrics() failed")
                   }
                 }
@@ -58,11 +58,16 @@ class Delete @Inject()(cc: ControllerComponents, dbContext: DBContext) extends A
               Logger.error(s"Delete: delCaze() failed: not authorised.")
               Forbidden
             } else {
-              cazeDao.delete(caseIdStr.toInt)
-              Ok
+              cazeDao.get(caseIdStr.toInt) match {
+                case Some(caze) =>
+                  cazeDao.delete(caze)
+                  Ok
+                case None =>
+                  BadRequest(s"Delete: delCaze() failed because case with ID ${caseIdStr} doesn't seem to exist?!")
+              }
             }
           case _ =>
-            BadRequest("Delete: delCaze() failed")
+            BadRequest("Delete: delCaze() failed because a bad request was issued.")
         }
       }
       case None =>

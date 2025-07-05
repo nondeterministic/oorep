@@ -50,6 +50,44 @@ class RepertoryDao(dbContext: db.db.DBContext) {
     }
   }
 
+  // case class Rubric(abbrev: String, id: Int, mother: Option[Int], isMother: Option[Boolean],
+  //                   chapterId: Int, fullPath: String, path: Option[String], textt: Option[String])
+
+  def getRubric(rubricId: Int, abbrev: String): Option[Rubric] = {
+    run(quote(query[Rubric]
+      .filter(rubric => rubric.id == lift(rubricId) && rubric.abbrev == lift(abbrev))
+    )) match {
+      case r :: Nil => Some(r)
+      case _ => None
+    }
+  }
+
+  // case class RubricRemedy(abbrev: String, rubricId: Int, remedyId: Int, weight: Int, chapterId: Int)
+
+  def getRubricRemedies(rubricId: Int, abbrev: String): List[RubricRemedy] = {
+    run(quote(query[RubricRemedy]
+      .filter(rr => rr.rubricId == lift(rubricId) && rr.abbrev == lift(abbrev))
+    ))
+  }
+
+  def getRemedy(remedyId: Int): Option[Remedy] = {
+    run(quote(query[Remedy]
+      .filter(_.id == lift(remedyId))
+    )) match {
+      case remedy :: Nil => Some(remedy)
+      case _ => None
+    }
+  }
+
+  def getRemedy(remedyAbbrev: String): Option[Remedy] = {
+    run(quote(query[Remedy]
+      .filter(_.nameAbbrev == lift(remedyAbbrev))
+    )) match {
+      case remedy :: Nil => Some(remedy)
+      case _ => None
+    }
+  }
+
   def getRemedies(): List[Remedy] = {
     if (_remedies.length == 0) {
       Logger.info("RepetoryDao: Getting all remedies from DB...")
@@ -171,7 +209,7 @@ class RepertoryDao(dbContext: db.db.DBContext) {
     }
   }
 
-  def queryRepertory(abbrevFromMenu: String, searchTerms: SearchTerms, page: Int, remedyString: String, minWeight: Int, getRemedies: Boolean): Option[(ResultsCaseRubrics, List[ResultsRemedyStats])] = {
+  def queryRepertory(abbrevFromMenu: String, searchTerms: SearchTerms, page: Int, remedyString: String, minWeight: Int, getRemedies: Boolean): Option[(ResultsCazeRubrics, List[ResultsRemedyStats])] = {
     val abbrev = abbrevFromMenu.replaceAll("[^0-9A-Za-z\\-]", "")
 
     // Determining entered remedy is a bit more work than a simple declaration...
@@ -358,11 +396,19 @@ class RepertoryDao(dbContext: db.db.DBContext) {
         WeightedRemedy(tmpRemedies.filter(_.id == rr.remedyId).head, rr.weight))
     }
 
+    //    case class CazeRubric(id: Int,
+    //                          subRubrics: List[CazeSubRubric],
+    //                          var rubricWeight: Int,
+    //                          var rubricLabel: Option[String]) {
+    // val caseRubrics = tmpRubricsTruncated.map(rubric => CazeRubric(rubric, abbrev, 1, None, getWeightedRemedies(rubric)))
+
     // Compute the to be returned results...
-    val caseRubrics = tmpRubricsTruncated.map(rubric => CaseRubric(rubric, abbrev, 1, None, getWeightedRemedies(rubric)))
+    val caseRubrics = tmpRubricsTruncated.map(rubric => 
+      CazeRubric(-1, -1, List(CazeSubRubric(rubric, getWeightedRemedies(rubric))), 1, None)
+    )
     val returnTotalNumberOfPages = math.ceil(tmpRubricsAll.size.toDouble / maxNumberOfResultsPerPage.toDouble).toInt
     Logger.info(s"queryRepertory(abbrev: ${abbrev}, symptom: ${searchTerms.symptom}, page: ${page}, remedy: ${remedyString}, weight: ${minWeight}, getRemedies: $getRemedies) found ${tmpRubricsAll.size} case rubrics.")
-    Some((ResultsCaseRubrics(totalNumberOfRepertoryRubrics, tmpRubricsAll.size, returnTotalNumberOfPages, page, caseRubrics), remedyStats.toList))
+    Some((ResultsCazeRubrics(totalNumberOfRepertoryRubrics, tmpRubricsAll.size, returnTotalNumberOfPages, page, caseRubrics), remedyStats.toList))
   }
 
 }
