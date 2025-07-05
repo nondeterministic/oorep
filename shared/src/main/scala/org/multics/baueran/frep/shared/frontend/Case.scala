@@ -143,6 +143,27 @@ object Case {
     }
   }
 
+  object MergeRubricButton extends OorepHtmlButton {
+    def getId() = "CaseMergeRubricButtonID_jhkjhkjh34576348975634"
+
+    def clickHandler() = {
+      val checkBoxes = HtmlRepresentation.getAllCaseRowCheckboxes()
+      val checkBoxesChecked = checkBoxes.filter(_.checked)
+
+      // TODO ...
+    }
+
+    def apply() = {
+      button(cls := "btn btn-sm btn-secondary", `type` := "button",
+        id := getId(),
+        disabled := true, style := "margin-left:5px; margin-bottom: 5px;",
+        onclick := { (event: Event) => { clickHandler() }},
+        span(cls := "oi oi-fork", title := "Merge/Fork", aria.hidden := "true"),
+        " Merge rubrics"
+      )
+    }
+  }
+
   object CaseHeader extends OorepHtmlElement {
     def getId() = "caseHeader"
     def setHeaderText(newHeaderText: String) = {
@@ -164,6 +185,7 @@ object Case {
               CloseCaseButton(),
               CloneCaseButton(),
               AddToFileButton(),
+              MergeRubricButton(),
               RepertoriseButton()
             )
           }
@@ -175,12 +197,14 @@ object Case {
               CloseCaseButton(),
               CloneCaseButton(),
               AddToFileButton(),
+              MergeRubricButton(),
               RepertoriseButton()
             )
           }
         case None =>
           div(
             b(id := getId(), s"$header: "),
+            MergeRubricButton(),
             RepertoriseButton()
           )
       }
@@ -189,11 +213,19 @@ object Case {
 
   // ===== <HtmlRepresentation> =======================================================================================
   object HtmlRepresentation {
+    def getId() = "Case_HtmlRepresentation_3243jkdvjk34jkJKhk"
+
+    def getAllCaseRowCheckboxes() = {
+      // Select all checkboxes in this view whose ID starts with the parent view's ID...
+      dom.document.querySelectorAll(s"input[type=checkbox][id^='${getId()}']").map(_.asInstanceOf[dom.html.Input]).toList
+    }
+
     object TableHead extends OorepHtmlElement {
       def getId() = "Case_caseSectionOfPage_34534jhdkfgfd"
 
       def apply() = {
         thead(cls := "thead-dark", scalatags.JsDom.attrs.id := getId(),
+          th(attr("scope") := "col", style := "width:1px;", ""),
           th(attr("scope") := "col", "Weight"),
           th(attr("scope") := "col", "Rep."),
           th(attr("scope") := "col", "Label"),
@@ -208,10 +240,10 @@ object Case {
   }
 
   class HtmlRepresentation(remedyFormat: RemedyFormat) extends OorepHtmlElement {
-    def getId() = "Case_HtmlRepresentation_3243jkdvjk34jkJKhk"
+    def getId() = HtmlRepresentation.getId()
 
     class CaseRow(crub: CaseRubric) extends OorepHtmlElement {
-      def getId() = "crub_" + crub.rubric.id + crub.repertoryAbbrev
+      def getId() = HtmlRepresentation.getId() + "_crub_" + crub.rubric.id + "_" + crub.repertoryAbbrev
 
       implicit def crToCR(cr: CaseRubric): BetterCaseRubric = new BetterCaseRubric(cr)
 
@@ -244,6 +276,22 @@ object Case {
 
       def apply() = {
         tr(scalatags.JsDom.attrs.id := getId(),
+          td(
+            div(cls:="form-check", style:="width:1px;",
+              input(
+                cls:="form-check-input", `type`:="checkbox", value:=s"${crub.rubric.id}", id:=s"${getId()}_${crub.rubric.id}_checkbox",
+                onchange := { (event: Event) => {
+                  val checkBoxes = HtmlRepresentation.getAllCaseRowCheckboxes()
+                  val checkBoxesChecked = checkBoxes.filter(_.checked)
+
+                  if (checkBoxesChecked.size > 1)
+                    MergeRubricButton.enable()
+                  else
+                    MergeRubricButton.disable()
+                }}
+              )
+            )
+          ),
           td(
             button(`type` := "button", id := s"${getId()}_Button.Weight", cls := "btn dropdown-toggle btn-sm btn-secondary", style := "width:45px;", data.toggle := "dropdown", weight.get().toString),
             div(cls := "dropdown-menu",

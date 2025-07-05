@@ -160,6 +160,10 @@ object CaseRubric {
   }
 }
 
+case class CaseRubricMerged(rubrics: List[CaseRubric],
+                            var rubricWeight: Int,
+                            var rubricLabel: Option[String])
+
 /**
   * This class is merely used/necessary in order to transmit lookup results of a repertory
   */
