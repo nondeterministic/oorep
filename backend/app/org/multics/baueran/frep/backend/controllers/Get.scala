@@ -257,7 +257,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     getAuthenticatedUser(request) match {
       case Some(member) if (caseId.forall(_.isDigit)) => {
         cazeDao.get(caseId.toInt) match {
-          case Right(caze) if (caze.member_id == member.member_id) =>
+          case Some(caze) if (caze.member_id == member.member_id) =>
             if (!isUserAuthorized(request, caze.member_id)) {
               val err = s"Get: apiSecGetCase() failed: not authorised."
               Logger.error(err)
@@ -349,8 +349,8 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
           else {
             // Do actual look-up and return results in case of success.
             repertoryDao.queryRepertory(cleanedUpAbbrev, searchTerms, page, remedyString.trim, minWeight, getRemedies != 0) match {
-              case Some((ResultsCaseRubrics(totalNumberOfRepertoryRubrics, totalNumberOfResults, totalNumberOfPages, page, results), remedyStats)) if (totalNumberOfPages > 0) =>
-                Ok((ResultsCaseRubrics(totalNumberOfRepertoryRubrics, totalNumberOfResults, totalNumberOfPages, page, results), remedyStats).asJson.toString())
+              case Some((ResultsCazeRubrics(totalNumberOfRepertoryRubrics, totalNumberOfResults, totalNumberOfPages, page, results), remedyStats)) if (totalNumberOfPages > 0) =>
+                Ok((ResultsCazeRubrics(totalNumberOfRepertoryRubrics, totalNumberOfResults, totalNumberOfPages, page, results), remedyStats).asJson.toString())
               case _ =>
                 Logger.info(s"Get: apiLookupRep(abbrev: ${repertoryAbbrev}, symptom: ${symptom}, page: ${page}, remedy: ${remedyString}, weight: ${minWeight}): no results found")
                 NoContent

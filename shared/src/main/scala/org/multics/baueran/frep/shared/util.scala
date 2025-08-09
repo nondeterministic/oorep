@@ -16,10 +16,10 @@ class BetterString(val s: String) {
   def shorten(length: Int) = if (s.length <= length) s else s.substring(0, math.abs(length - 3)) + "..."
 }
 
-class BetterCaseRubric(val cr: CaseRubric) {
+class BetterCaseRubric(val cr: CazeRubric) {
 
   def getFormattedRemedyNames(format: RemedyFormat) = {
-    cr.weightedRemedies.toList.sortBy(_.remedy.nameAbbrev).map {
+    cr.subRubrics.flatMap(_.weightedRemedies.toList.sortBy(_.remedy.nameAbbrev)).map {
       case WeightedRemedy(r, w) =>
         val remedyName = if (format == RemedyFormat.Abbreviated) r.nameAbbrev else r.nameLong
 

@@ -2,7 +2,7 @@ package org.multics.baueran.frep.shared
 
 import org.scalajs.dom
 import org.multics.baueran.frep.shared.TopLevelUtilCode.deleteCustomCookies
-import org.multics.baueran.frep.shared.frontend.{MainView, Notify, apiPrefix, serverUrl, Case}
+import org.multics.baueran.frep.shared.frontend.{MainView, Notify, apiPrefix, serverUrl, CaseSection}
 
 class HttpRequest2DefaultExceptionHandler(apiURI: String, responseCode: Int = -1) {
 
@@ -26,12 +26,12 @@ class HttpRequest2DefaultExceptionHandler(apiURI: String, responseCode: Int = -1
 
         // If we log the user out effectively, we also need to hide all but the Repertorise-button
         // if a case is currently open.
-        if (Case.size() > 0) {
-          Case.AddToFileButton.hide()
-          Case.OpenNewCaseButton.hide()
-          Case.CloneCaseButton.hide()
-          Case.CloseCaseButton.hide()
-          Case.EditDescrButton.hide()
+        if (CaseSection.size() > 0) {
+          CaseSection.AddToFileButton.hide()
+          CaseSection.OpenNewCaseButton.hide()
+          CaseSection.CloneCaseButton.hide()
+          CaseSection.CloseCaseButton.hide()
+          CaseSection.EditDescrButton.hide()
         }
       }
   }

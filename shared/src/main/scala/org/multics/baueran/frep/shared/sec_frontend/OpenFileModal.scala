@@ -3,7 +3,7 @@ package org.multics.baueran.frep.shared.sec_frontend
 import org.multics.baueran.frep.shared.Defs.{CookieFields, HeaderFields}
 import org.multics.baueran.frep.shared.HttpRequest2
 import org.multics.baueran.frep.shared.TopLevelUtilCode.getDocumentCsrfCookie
-import org.multics.baueran.frep.shared.frontend.{Case, MainView, OorepHtmlButton, OorepHtmlElement, apiPrefix, getCookieData, serverUrl}
+import org.multics.baueran.frep.shared.frontend.{CaseSection, MainView, OorepHtmlButton, OorepHtmlElement, apiPrefix, getCookieData, serverUrl}
 import org.scalajs.dom
 import org.scalajs.dom.{Event, document, html}
 import scalatags.JsDom.all._
@@ -25,8 +25,8 @@ object OpenFileModal extends FileModal("OpenFileModal__") {
         // If the file had currently a case opened in the case view,
         // remove it from screen to avoid weird database behaviour,
         // in case the user then modifies the case...
-        if (Case.getCurrOpenFileId() == selected_file_id) {
-          Case.removeFromMemory()
+        if (CaseSection.getCurrOpenFileId() == selected_file_id) {
+          CaseSection.removeFromMemory()
           MainView.CaseDiv.empty()
         }
       }
@@ -73,7 +73,7 @@ object OpenFileModal extends FileModal("OpenFileModal__") {
           onclick := { (event: Event) =>
             document.body.style.cursor = "wait"
             EditFileModal.update(selected_file_header.getOrElse("SOMETHING WENT WRONG"), selected_file_id.getOrElse(-1).toString)
-            Case.updateCurrOpenFile(selected_file_id)
+            CaseSection.updateCurrOpenFile(selected_file_id)
           },
           "Open"
         )

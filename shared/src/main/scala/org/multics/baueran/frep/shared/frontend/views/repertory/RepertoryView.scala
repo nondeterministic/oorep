@@ -36,7 +36,7 @@ object RepertoryView extends TabView {
   }
   val _remedyFormat = new RemedyFormatRx(RemedyFormat.Abbreviated)
 
-  private class RepertorisationResultsRx(results: Option[ResultsCaseRubrics]) extends Rx(results) {
+  private class RepertorisationResultsRx(results: Option[ResultsCazeRubrics]) extends Rx(results) {
     override def triggerLater() = {
       value match {
         case Some(_) => showResults()
@@ -125,11 +125,11 @@ object RepertoryView extends TabView {
 
   // ------------------------------------------------------------------------------------------------------------------
   private def showCase(): Unit = {
-    if (Case.size() > 0) {
+    if (CaseSection.size() > 0) {
       MainView.CaseDiv.empty()
-      MainView.CaseDiv.append(new Case.HtmlRepresentation(_remedyFormat.get())().render)
-      Case.updateCaseViewAndDataStructures()
-      Case.updateCaseHeaderView()
+      MainView.CaseDiv.append(new CaseSection.HtmlRepresentation(_remedyFormat.get())().render)
+      CaseSection.updateCaseViewAndDataStructures()
+      CaseSection.updateCaseHeaderView()
     }
   }
 
@@ -137,25 +137,25 @@ object RepertoryView extends TabView {
   // Render HTML for the results of a repertory lookup directly to page.
   def showResults(): Unit = {
 
-    def resultRow(result: CaseRubric) = {
-      implicit def crToCR(cr: CaseRubric): BetterCaseRubric = new BetterCaseRubric(cr)
+    def resultRow(result: CazeRubric) = {
+      implicit def crToCR(cr: CazeRubric): BetterCaseRubric = new BetterCaseRubric(cr)
 
       val remedies = result.getFormattedRemedyNames(_remedyFormat.get())
 
       if (remedies.size > 0)
         tr(
-          td(result.rubric.fullPath, style:="width:35%;"),
+          td(result.fullPath, style:="width:35%;"),
           td(remedies.take(remedies.size - 1).map(l => span(l, ", ")) ::: List(remedies.last)),
           td(cls := "text-right", style := "white-space:nowrap;",
-            button(cls := "btn btn-sm btn-secondary", `type` := "button", id := ("button_" + result.repertoryAbbrev + "_" + result.rubric.id),
+            button(cls := "btn btn-sm btn-secondary", `type` := "button", id := ("button_" + result.toJson.toString),
               style := "vertical-align: middle; display: inline-block",
-              (if (Case.cRubrics.filter(_.equalsIgnoreWeight(result)).size > 0) attr("disabled") := "disabled" else ""),
+              (if (CaseSection.cRubrics.toList.filter(_.equalsIgnoreWeight(result)).size > 0) attr("disabled") := "disabled" else ""),
               title := "Add rubric",
               onclick := { (event: Event) => {
                 event.stopPropagation()
-                Case.addRepertoryLookup(result)
-                Case.updateCaseViewAndDataStructures()
-                dom.document.getElementById("button_" + result.repertoryAbbrev + "_" + result.rubric.id).asInstanceOf[dom.html.Button].setAttribute("disabled", "1")
+                CaseSection.addRepertoryLookup(result)
+                CaseSection.updateCaseViewAndDataStructures()
+                dom.document.getElementById("button_" + result.toJson.toString).asInstanceOf[dom.html.Button].setAttribute("disabled", "1")
                 showCase()
                 MainView.toggleOnBeforeUnload()
               }
@@ -164,7 +164,7 @@ object RepertoryView extends TabView {
         )
       else
         tr(
-          td(result.rubric.fullPath, style := "width:35%;"),
+          td(result.fullPath, style := "width:35%;"),
           td(),
           td()
         )
@@ -174,7 +174,7 @@ object RepertoryView extends TabView {
     showCase()
 
     (_repertorisationResults.get(), _pageCache.latest()) match {
-      case (Some(ResultsCaseRubrics(totalNumberOfRepertoryRubrics, totalNumberOfResults, totalNumberOfPages, currPage, results)), Some(latestCachePage)) if (results.size > 0) => {
+      case (Some(ResultsCazeRubrics(totalNumberOfRepertoryRubrics, totalNumberOfResults, totalNumberOfPages, currPage, results)), Some(latestCachePage)) if (results.size > 0) => {
         dom.document.getElementById("resultStatus").innerHTML = ""
         dom.document.getElementById("resultStatus").appendChild(
           div(scalatags.JsDom.attrs.id := "multiOccurrenceDiv", cls := "alert alert-secondary", role := "alert",
@@ -261,7 +261,7 @@ object RepertoryView extends TabView {
 
     // Display potentially useful hint, when max. number of search results was returned.
     (_repertorisationResults.get(), _pageCache.latest()) match {
-      case (Some(ResultsCaseRubrics(totalNumberOfRepertoryRubrics, totalNumberOfResults, totalNumberOfPages, _, results)), Some(latestCachePage)) => {
+      case (Some(ResultsCazeRubrics(totalNumberOfRepertoryRubrics, totalNumberOfResults, totalNumberOfPages, _, results)), Some(latestCachePage)) => {
         // If the total number of results matches the total number of available rubrics in a repertory, the user either entered "*"
         // or, in fact, the repertory is a so called small repertory, which means, we show everything...
         if (_showMaxSearchResultsAlert && totalNumberOfRepertoryRubrics == totalNumberOfResults) {
@@ -273,9 +273,9 @@ object RepertoryView extends TabView {
             ).render)
         }
         else if (_showMaxSearchResultsAlert && (results.size >= maxNumberOfResultsPerPage || totalNumberOfPages > 1)) {
-          val fullPathWords = results.map(cr => cr.rubric.fullPath.split("[, ]+").filter(_.length > 0).map(_.trim())).flatten
-          val pathWords = results.map(cr => cr.rubric.path.getOrElse("").split("[, ]+").filter(_.length > 0).map(_.trim())).flatten
-          val textWords = results.map(cr => cr.rubric.textt.getOrElse("").split("[, ]+").filter(_.length > 0).map(_.trim())).flatten
+          val fullPathWords = results.map(cr => cr.fullPath.split("[, ]+").filter(_.length > 0).map(_.trim())).flatten
+          val pathWords = results.map(cr => cr.path.split("[, ]+").filter(_.length > 0).map(_.trim())).flatten
+          val textWords = results.map(cr => cr.textt.split("[, ]+").filter(_.length > 0).map(_.trim())).flatten
 
           // Yields a sequence like [ ("pain", 130), ("abdomen", 50), ... ]
           val sortedResultOccurrences =
@@ -322,7 +322,7 @@ object RepertoryView extends TabView {
     }
 
     _repertorisationResults.get() match {
-      case Some(ResultsCaseRubrics(_, _, _, _, results)) =>
+      case Some(ResultsCazeRubrics(_, _, _, _, results)) =>
         results.foreach(result => dom.document.getElementById("resultsTBody").appendChild(resultRow(result).render))
       case _ => ;
     }
@@ -331,7 +331,7 @@ object RepertoryView extends TabView {
     if (_resultRemedyStats.get().size > 1 && dom.document.getElementById("collapseMultiOccurrences") == null)
       redrawMultiOccurringRemedies()
 
-    Case.updateCaseHeaderView()
+    CaseSection.updateCaseHeaderView()
   }
 
   // ------------------------------------------------------------------------------------------------------------------
@@ -341,7 +341,7 @@ object RepertoryView extends TabView {
     else
       _remedyFormat.set(RemedyFormat.Fullname)
 
-    if (Case.size() > 0)
+    if (CaseSection.size() > 0)
       showCase()
     else
       println("RepertoryView: toggleRemedyFormat: Case.size() == 0.")
@@ -559,7 +559,7 @@ object RepertoryView extends TabView {
         None // No remedy was entered
     }
 
-    def showRepertorisationResults(results: ResultsCaseRubrics, remedyStats: List[ResultsRemedyStats]): Unit = {
+    def showRepertorisationResults(results: ResultsCazeRubrics, remedyStats: List[ResultsRemedyStats]): Unit = {
       _pageCache.addPage(CachePage(abbrev, symptom, abbrevForRemedyEntered, minWeight, results, remedyStats))
 
       _currResultShareLink =
@@ -570,7 +570,7 @@ object RepertoryView extends TabView {
       _resultRemedyStats.set(List())
       _resultRemedyStats.set(remedyStats)
 
-      if (Case.size() > 0)
+      if (CaseSection.size() > 0)
         showCase()
 
       dom.document.body.classList.remove("wait")
@@ -696,7 +696,7 @@ object RepertoryView extends TabView {
           parse(response) match {
             case Right(json) => {
               val cursor = json.hcursor
-              cursor.as[(ResultsCaseRubrics, List[ResultsRemedyStats])] match {
+              cursor.as[(ResultsCazeRubrics, List[ResultsRemedyStats])] match {
                 case Right((rcr, remedyStats)) => {
                   cachedRemedies match {
                     case Nil => {
@@ -883,7 +883,7 @@ object RepertoryView extends TabView {
       // refactor it. So, for now, we just call showResults() whenever a redraw event occurs, cause
       // then the dom certainly exists.
       onshow := {( (event: Event) =>
-        if (_repertorisationResults.get() != None || Case.size() > 0)
+        if (_repertorisationResults.get() != None || CaseSection.size() > 0)
           showResults()
         )
       },
@@ -1059,7 +1059,7 @@ object RepertoryView extends TabView {
   }
 
   override def containsUnsavedResults(): Boolean = {
-    Case.containsUnsavedResults()
+    CaseSection.containsUnsavedResults()
   }
 
   override def updateDataStructures(remedies: List[Remedy]): Unit = {

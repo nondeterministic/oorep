@@ -7,7 +7,7 @@ import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{Failure, Success}
 import org.multics.baueran.frep._
-import shared.{CaseRubric, Caze, EmailHistory, FIle, MyDate, PasswordChangeRequest}
+import shared.{CazeRubric, Caze, EmailHistory, FIle, MyDate, PasswordChangeRequest}
 import backend.db.db.DBContext
 
 class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends AbstractController(cc) with ServerUrl {
@@ -227,7 +227,7 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
 
         (requestData("memberID"), requestData("caseID"), requestData("caserubrics")) match {
           case (Seq(memberIdStr), Seq(cazeIDStr), Seq(caserubricsJson)) if (cazeIDStr.forall(_.isDigit) && (memberIdStr.forall(_.isDigit))) =>
-            (memberIdStr.toInt, cazeIDStr.toInt, CaseRubric.decodeList(caserubricsJson)) match {
+            (memberIdStr.toInt, cazeIDStr.toInt, CazeRubric.decodeList(caserubricsJson)) match {
               case (memberId, caseID, Some(caseRubrics)) =>
                 if (!isUserAuthorized(request, memberId)) {
                   val err = s"Post: addRubricsToCaze() failed: not authorised."

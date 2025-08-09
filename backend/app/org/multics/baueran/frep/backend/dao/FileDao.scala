@@ -30,7 +30,7 @@ class FileDao(dbContext: db.db.DBContext) {
         val cazeDao = new CazeDao(dbContext)
         // TODO: Is this in fact the performance bottle-neck?
         val cazes: List[Caze] = cazeDao.get(dbFile.case_ids)
-        FIle(Some(dbFile.id), dbFile.header, dbFile.member_id, dbFile.date, dbFile.description, cazes)
+        FIle(Some(dbFile.id), dbFile.header, dbFile.member_id, dbFile.date, dbFile.changed, dbFile.description, cazes)
       }
     } catch {
       case exception: Throwable =>
@@ -77,7 +77,7 @@ class FileDao(dbContext: db.db.DBContext) {
   }
 
   private def fileToDBFile(file: FIle): dbFile = {
-    dbFile(file.dbId.getOrElse(-1), file.header, file.member_id, file.date, file.description, file.cazes.map(_.id))
+    dbFile(file.dbId.getOrElse(-1), file.header, file.member_id, file.date, file.changed, file.description, file.cazes.map(_.id))
   }
 
   def insert(f: FIle): Int = {
@@ -89,6 +89,7 @@ class FileDao(dbContext: db.db.DBContext) {
         _.header -> lift(newDBFile.header),
         _.member_id -> lift(newDBFile.member_id),
         _.date -> lift(newDBFile.date),
+        _.changed -> lift(newDBFile.changed),
         _.description -> lift(newDBFile.description),
         _.case_ids -> lift(newDBFile.case_ids))
         .returningGenerated(_.id)
@@ -107,7 +108,7 @@ class FileDao(dbContext: db.db.DBContext) {
 
     transaction {
       cazeDao.get(cazeId) match {
-        case Right(foundCase) =>
+        case Some(foundCase) =>
           // Delete case ID from all files first, as a case can only have one parent file...
           for (file <- getFilesWithCase(foundCase.id)) {
             run(quote {

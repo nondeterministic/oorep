@@ -2,8 +2,8 @@ package org.multics.baueran.frep.shared.sec_frontend
 
 import org.multics.baueran.frep.shared.Defs.{CookieFields, HeaderFields}
 import org.multics.baueran.frep.shared.{FIle, HttpRequest2}
-import org.multics.baueran.frep.shared.frontend.{Case, Notify, OorepHtmlButton, OorepHtmlElement, OorepHtmlInput, OorepHtmlTextArea, apiPrefix, getCookieData, serverUrl}
-import scalatags.JsDom.all.{id, input, _}
+import org.multics.baueran.frep.shared.frontend.{CaseSection, Notify, OorepHtmlButton, OorepHtmlElement, OorepHtmlInput, OorepHtmlTextArea, apiPrefix, getCookieData, serverUrl}
+import scalatags.JsDom.all.*
 import org.scalajs.dom
 import org.scalajs.dom.{Event, html}
 
@@ -41,12 +41,12 @@ object NewFileModal extends OorepHtmlElement {
             new Notify("tempFeedbackAlert", "Saving file failed. Make sure file ID is unique and not empty!")
         }
         else {
-          val currFIle = Some(FIle(None, HeaderInput.getText().trim, memberId, (new js.Date()).toISOString(), DescriptionTextArea.getText(), List.empty))
+          val currFIle = Some(FIle(None, HeaderInput.getText().trim, memberId, (new js.Date()).toISOString(), (new js.Date()).toISOString(), DescriptionTextArea.getText(), List.empty))
 
           HttpRequest2("sec/save_file")
             .withHeaders((HeaderFields.csrfToken.toString(), getDocumentCsrfCookie().getOrElse("")))
             .onSuccess((_) => {
-              Case.updateCaseViewAndDataStructures()
+              CaseSection.updateCaseViewAndDataStructures()
               HeaderInput.setText("")
               DescriptionTextArea.setText("")
               NewFileModal.CloseButton.click()

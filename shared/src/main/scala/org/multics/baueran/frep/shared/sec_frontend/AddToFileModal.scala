@@ -1,10 +1,10 @@
 package org.multics.baueran.frep.shared.sec_frontend
 
 import org.scalajs.dom
-import org.multics.baueran.frep.shared.frontend.{Case, OorepHtmlButton, OorepHtmlElement, getCookieData}
+import org.multics.baueran.frep.shared.frontend.{CaseSection, OorepHtmlButton, OorepHtmlElement, getCookieData}
 import org.multics.baueran.frep.shared.Defs.{CookieFields, HeaderFields}
 import org.multics.baueran.frep.shared.HttpRequest2
-import scalatags.JsDom.all.{id, _}
+import scalatags.JsDom.all.*
 import org.scalajs.dom.{Event, html}
 import io.circe.syntax._
 import org.multics.baueran.frep.shared.TopLevelUtilCode.getDocumentCsrfCookie
@@ -27,15 +27,15 @@ object AddToFileModal extends FileModal("AddToFileModal__") with OorepHtmlElemen
       button(cls := "btn btn-primary mb-2", style := "margin-left:8px;", `type` := "button", id := getId(), disabled := true,
         "Submit",
         onclick := { (event: Event) =>
-          Case.descr match {
+          CaseSection.descr match {
             case Some(caze) =>
               HttpRequest2("sec/save_case")
                 .withHeaders((HeaderFields.csrfToken.toString(), getDocumentCsrfCookie().getOrElse("")))
                 .onSuccess((response: String) => {
-                  Case.updateCurrOpenCaseId(response.toInt)
-                  Case.updateCurrOpenFile(selected_file_id)
-                  Case.updateCaseViewAndDataStructures()
-                  Case.updateCaseHeaderView()
+                  CaseSection.updateCurrOpenCaseId(response.toInt)
+                  CaseSection.updateCurrOpenFile(selected_file_id)
+                  CaseSection.updateCaseViewAndDataStructures()
+                  CaseSection.updateCaseHeaderView()
                   AddToFileModal.CloseButton.click()
                 })
                 .post(

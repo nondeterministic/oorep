@@ -171,7 +171,7 @@ class RepertoryDao(dbContext: db.db.DBContext) {
     }
   }
 
-  def queryRepertory(abbrevFromMenu: String, searchTerms: SearchTerms, page: Int, remedyString: String, minWeight: Int, getRemedies: Boolean): Option[(ResultsCaseRubrics, List[ResultsRemedyStats])] = {
+  def queryRepertory(abbrevFromMenu: String, searchTerms: SearchTerms, page: Int, remedyString: String, minWeight: Int, getRemedies: Boolean): Option[(ResultsCazeRubrics, List[ResultsRemedyStats])] = {
     val abbrev = abbrevFromMenu.replaceAll("[^0-9A-Za-z\\-]", "")
 
     // Determining entered remedy is a bit more work than a simple declaration...
@@ -358,11 +358,19 @@ class RepertoryDao(dbContext: db.db.DBContext) {
         WeightedRemedy(tmpRemedies.filter(_.id == rr.remedyId).head, rr.weight))
     }
 
+    //    case class CazeRubric(id: Int,
+    //                          subRubrics: List[CazeSubRubric],
+    //                          var rubricWeight: Int,
+    //                          var rubricLabel: Option[String]) {
+    // val caseRubrics = tmpRubricsTruncated.map(rubric => CazeRubric(rubric, abbrev, 1, None, getWeightedRemedies(rubric)))
+
     // Compute the to be returned results...
-    val caseRubrics = tmpRubricsTruncated.map(rubric => CaseRubric(rubric, abbrev, 1, None, getWeightedRemedies(rubric)))
+    val caseRubrics = tmpRubricsTruncated.map(rubric => 
+      CazeRubric(-1, List(CazeSubRubric(rubric.id, rubric, getWeightedRemedies(rubric))), 1, None)
+    )
     val returnTotalNumberOfPages = math.ceil(tmpRubricsAll.size.toDouble / maxNumberOfResultsPerPage.toDouble).toInt
     Logger.info(s"queryRepertory(abbrev: ${abbrev}, symptom: ${searchTerms.symptom}, page: ${page}, remedy: ${remedyString}, weight: ${minWeight}, getRemedies: $getRemedies) found ${tmpRubricsAll.size} case rubrics.")
-    Some((ResultsCaseRubrics(totalNumberOfRepertoryRubrics, tmpRubricsAll.size, returnTotalNumberOfPages, page, caseRubrics), remedyStats.toList))
+    Some((ResultsCazeRubrics(totalNumberOfRepertoryRubrics, tmpRubricsAll.size, returnTotalNumberOfPages, page, caseRubrics), remedyStats.toList))
   }
 
 }

@@ -4,11 +4,11 @@ import io.circe.parser.parse
 import org.multics.baueran.frep.shared.Defs.{CookieFields, HeaderFields}
 import org.multics.baueran.frep.shared.TopLevelUtilCode.getDocumentCsrfCookie
 import org.multics.baueran.frep.shared.{Caze, HttpRequest2, FileOverviewRow}
-import org.multics.baueran.frep.shared.frontend.{Case, OorepHtmlButton, OorepHtmlElement, getCookieData}
+import org.multics.baueran.frep.shared.frontend.{CaseSection, OorepHtmlButton, OorepHtmlElement, getCookieData}
 import org.multics.baueran.frep.shared.frontend.views.repertory.RepertoryView
 import org.scalajs.dom
 import org.scalajs.dom.{Event, document, html}
-import scalatags.JsDom.all.{onclick, *}
+import scalatags.JsDom.all.*
 
 object EditFileModal extends OorepHtmlElement {
   def getId() = "editFileModal"
@@ -54,8 +54,8 @@ object EditFileModal extends OorepHtmlElement {
                     .send()
 
                   // If the deleted case is currently opened, update current view by basically removing that case.
-                  if (Case.descr.isDefined && (Case.descr.get.id == currentlySelectedCaseId))
-                    Case.removeFromMemory()
+                  if (CaseSection.descr.isDefined && (CaseSection.descr.get.id == currentlySelectedCaseId))
+                    CaseSection.removeFromMemory()
                   else
                     println("EditFileModal: the case which was meant to be deleted from DB, was not currently opened. Nothing to be redrawn on screen.")
                 },
@@ -153,10 +153,10 @@ object EditFileModal extends OorepHtmlElement {
                     val cursor = json.hcursor
                     cursor.as[Caze] match {
                       case Right(caze) => {
-                        Case.descr = Some(caze)
-                        Case.cRubrics = caze.results
+                        CaseSection.descr = Some(caze)
+                        CaseSection.cRubrics = caze.results.toSet
                         RepertoryView.showResults()
-                        Case.updateCaseHeaderView() // So that the buttons Add, Edit, etc. are redrawn properly
+                        CaseSection.updateCaseHeaderView() // So that the buttons Add, Edit, etc. are redrawn properly
                       }
                       case Left(err) => println("Decoding of case failed: " + err)
                     }

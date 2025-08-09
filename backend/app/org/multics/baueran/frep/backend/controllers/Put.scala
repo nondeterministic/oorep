@@ -3,7 +3,7 @@ package org.multics.baueran.frep.backend.controllers
 import javax.inject._
 import play.api.mvc._
 import org.multics.baueran.frep._
-import shared.CaseRubric
+import shared.CazeRubric
 import backend.db.db.DBContext
 
 class Put @Inject()(cc: ControllerComponents, dbContext: DBContext) extends AbstractController(cc) with ServerUrl {
@@ -17,7 +17,7 @@ class Put @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
 
         (requestData("memberID"), requestData("caseID"), requestData("caserubrics")) match {
           case (Seq(memberIdStr), Seq(cazeIDStr), Seq(caserubricsJson)) if (cazeIDStr.forall(_.isDigit) && (memberIdStr.forall(_.isDigit))) =>
-            (memberIdStr.toInt, cazeIDStr.toInt, CaseRubric.decodeList(caserubricsJson)) match {
+            (memberIdStr.toInt, cazeIDStr.toInt, CazeRubric.decodeList(caserubricsJson)) match {
               case (memberId, caseID, Some(caseRubrics)) =>
                 if (!isUserAuthorized(request, memberId)) {
                   val err = s"Put: updateCaseRubricsUserDefinedValues() failed: not authorised."
