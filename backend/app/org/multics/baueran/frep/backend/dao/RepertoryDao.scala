@@ -366,7 +366,7 @@ class RepertoryDao(dbContext: db.db.DBContext) {
 
     // Compute the to be returned results...
     val caseRubrics = tmpRubricsTruncated.map(rubric => 
-      CazeRubric(-1, List(CazeSubRubric(rubric.id, rubric, getWeightedRemedies(rubric))), 1, None)
+      CazeRubric(-1, -1, List(CazeSubRubric(rubric.id, rubric, getWeightedRemedies(rubric))), 1, None)
     )
     val returnTotalNumberOfPages = math.ceil(tmpRubricsAll.size.toDouble / maxNumberOfResultsPerPage.toDouble).toInt
     Logger.info(s"queryRepertory(abbrev: ${abbrev}, symptom: ${searchTerms.symptom}, page: ${page}, remedy: ${remedyString}, weight: ${minWeight}, getRemedies: $getRemedies) found ${tmpRubricsAll.size} case rubrics.")

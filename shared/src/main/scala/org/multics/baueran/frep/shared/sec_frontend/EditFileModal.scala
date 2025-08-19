@@ -154,7 +154,7 @@ object EditFileModal extends OorepHtmlElement {
                     cursor.as[Caze] match {
                       case Right(caze) => {
                         CaseSection.descr = Some(caze)
-                        CaseSection.cRubrics = caze.results.toSet
+                        CaseSection.cRubrics = caze.rubrics.toSet
                         RepertoryView.showResults()
                         CaseSection.updateCaseHeaderView() // So that the buttons Add, Edit, etc. are redrawn properly
                       }

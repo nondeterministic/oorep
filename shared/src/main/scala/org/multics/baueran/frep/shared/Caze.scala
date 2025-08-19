@@ -4,7 +4,10 @@ import io.circe.*
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.parser.*
 import io.circe.syntax.*
+
 import scala.util.control.Breaks.{break, breakable}
+
+import org.multics.baueran.frep.shared.HttpRequest2
 
 case class WeightedRemedy(remedy: Remedy, weight: Int) {
   def canEqual(a: Any) = a.isInstanceOf[WeightedRemedy]
@@ -92,10 +95,11 @@ object CazeSubRubric {
 }
 
 case class CazeRubric(id: Int,
+                      cazeId: Int,
                       subRubrics: List[CazeSubRubric],
                       var rubricWeight: Int,
-                      var rubricLabel: Option[String]) {
-
+                      var rubricLabel: Option[String])
+{
   object VarHandling extends Enumeration {
     type VarHandling = Value
     val Equal, NotEqual, Ignore = Value
@@ -239,14 +243,31 @@ case class Caze(id: Int,
                 date: String,
                 changed: String,
                 description: String,
-                rubrics: List[CazeRubric] = Nil)
+                var rubrics: List[CazeRubric] = Nil)
 {
-  def canEqual(a: Any) = a.isInstanceOf[Caze]
-
-  // TODO
-  def results: List[CazeRubric] = {
-    Nil
+  private def getRubricsFromDb(caseId: Int, memberId: Int): Unit = {
+    HttpRequest2("sec/caserubrics")
+      .withQueryParameters("caseId" -> caseId.toString, "memberId" -> memberId.toString)
+      .onSuccess((response: String) => {
+        parse(response) match {
+          case Right(json) => {
+            val cursor = json.hcursor
+            cursor.as[List[CazeRubric]] match {
+              case Right(cazerubrics) => {
+                rubrics = cazerubrics
+              }
+              case Left(err) => println("Decoding of case failed: " + err)
+            }
+          }
+          case Left(err) => println("Parsing of case (is it JSON?): " + err)
+        }
+      })
+      .send()
   }
+
+  def loadRubricsFromDb(): Unit = getRubricsFromDb(id, member_id)
+
+  def canEqual(a: Any) = a.isInstanceOf[Caze]
 
   // Ignore id and date on purpose. Id is DB-generated and two same Cazes with different id should be treated as equal!
   override def equals(that: Any): Boolean = {
@@ -255,8 +276,8 @@ case class Caze(id: Int,
         that.header == this.header &&
         that.member_id == this.member_id &&
         that.description == this.description &&
-        that.results.length == this.results.length &&
-        (that.results diff this.results).isEmpty
+        that.rubrics.length == this.rubrics.length &&
+        (that.rubrics diff this.rubrics).isEmpty
       case _ => false
     }
   }
@@ -264,12 +285,12 @@ case class Caze(id: Int,
   // Ignore id and date on purpose. Id is DB-generated and two same Cazes with different id should be treated as equal!
   override def hashCode: Int = {
     val prime = 31
-    var result = results.toString().hashCode
+    var result = rubrics.toString().hashCode
     result = prime * result +
       (if (header == null) 0 else header.hashCode()) +
       member_id +
       (if (description == null) 0 else description.hashCode()) +
-      results.map(_.hashCode()).fold(0)(_ + _)
+      rubrics.map(_.hashCode()).fold(0)(_ + _)
     result * 23
   }
 
@@ -282,16 +303,16 @@ case class Caze(id: Int,
     */
 
   def isSupersetOf(that: Caze): List[CazeRubric] = {
-    if (that.member_id == member_id && that.results.length < results.length && that.header == header && that.description == description) {
-      if (that.results.filter(!results.contains(_)).length == 0) { // If there are no results in *that* that are not contained in *this*...
-        return results.filter(!that.results.contains(_))
+    if (that.member_id == member_id && that.rubrics.length < rubrics.length && that.header == header && that.description == description) {
+      if (that.rubrics.filter(!rubrics.contains(_)).length == 0) { // If there are no rubrics in *that* that are not contained in *this*...
+        return rubrics.filter(!that.rubrics.contains(_))
       }
     }
     List()
   }
 
   /**
-    * @return a non-empty list of case rubrics that have different weights or labels in *that* when compared to *this*' results.
+    * @return a non-empty list of case rubrics that have different weights or labels in *that* when compared to *this*' rubrics.
     *         Return an empty list otherwise (i.e., they could be equal or completely different in more ways than just weight or label).
     */
 
@@ -299,11 +320,11 @@ case class Caze(id: Int,
     var result: List[CazeRubric] = Nil
 
     breakable {
-      if (that.member_id == member_id && that.results.length == results.length && that.header == header && that.description == description) {
+      if (that.member_id == member_id && that.rubrics.length == rubrics.length && that.header == header && that.description == description) {
         val unequalCRubricPairs =
-          results
+          rubrics
             .sortBy(_.toJson.toString)
-            .zip(that.results.sortBy(_.toJson.toString))
+            .zip(that.rubrics.sortBy(_.toJson.toString))
             .filter { case (a, b) => a.equalsExceptWeight(b) }
 
         if (unequalCRubricPairs.length > 0) {
@@ -316,10 +337,39 @@ case class Caze(id: Int,
     result
   }
 
-  override def toString() = s"Caze($id, $header, $member_id, $date, $description, results: #${results.size})"
+  override def toString() = s"Caze($id, $header, $member_id, $date, $description, rubrics: #${rubrics.size})"
+
 }
 
 object Caze {
+
+  // def create(id: Int, header: String, member_id: Int, date: String, changed: String, description: String): Caze = {
+  //   var _rubrics: List[CazeRubric] = Nil
+
+  //   def getRubricsFromDb(caseId: Int, memberId: Int): Unit = {
+  //     HttpRequest2("sec/caserubrics")
+  //       .withQueryParameters("caseId" -> caseId.toString, "memberId" -> memberId.toString)
+  //       .onSuccess((response: String) => {
+  //         parse(response) match {
+  //           case Right(json) => {
+  //             val cursor = json.hcursor
+  //             cursor.as[List[CazeRubric]] match {
+  //               case Right(cazerubrics) => {
+  //                 _rubrics = cazerubrics
+  //               }
+  //               case Left(err) => println("Decoding of case failed: " + err)
+  //             }
+  //           }
+  //           case Left(err) => println("Parsing of case (is it JSON?): " + err)
+  //         }
+  //       })
+  //       .send()
+  //   }
+
+  //   val newCaze = new Caze(id, header, member_id, date, changed, description, _rubrics)
+  //   getRubricsFromDb(id, member_id)
+  //   newCaze
+  // }
 
   implicit val caseRubricEncoder: Encoder[CazeRubric] = deriveEncoder[CazeRubric]
   implicit val caseRubricDecoder: Decoder[CazeRubric] = deriveDecoder[CazeRubric]

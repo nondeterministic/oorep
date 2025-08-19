@@ -20,6 +20,7 @@ GET     /api/sec/available_files            org.multics.baueran.frep.backend.con
 GET     /api/sec/file_overview              org.multics.baueran.frep.backend.controllers.Get.apiSecFileOverview(fileId: String)
 GET     /api/sec/file                       org.multics.baueran.frep.backend.controllers.Get.apiSecGetFile(fileId: String)
 GET     /api/sec/case                       org.multics.baueran.frep.backend.controllers.Get.apiSecGetCase(caseId: String)
+GET     /api/sec/caserubrics                org.multics.baueran.frep.backend.controllers.Get.apiSecGetCaseRubrics(caseId: Int, memberId: Int)
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file                       controllers.Assets.versioned(path="/public", file: Asset)

@@ -10,10 +10,11 @@ import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 class CazeDao(dbContext: db.db.DBContext) {
 
   //  case class CazeRubric(id: Int,
+  //                        cazId: Int,
   //                        subRubrics: List[CazeSubRubric],
   //                        var rubricWeight: Int,
   //                        var rubricLabel: Option[String]) {
-  case class PersistentCazeRubric(id: Int, cazeId: Int, weight: Int, label: String)
+  case class PersistentCazeRubric(id: Int, cazeId: Int, weight: Int, label: Option[String])
   object PersistentCazeRubric {
     implicit val crencoder: Encoder[PersistentCazeRubric] = deriveEncoder[PersistentCazeRubric]
     implicit val crdecoder: Decoder[PersistentCazeRubric] = deriveDecoder[PersistentCazeRubric]
@@ -35,7 +36,12 @@ class CazeDao(dbContext: db.db.DBContext) {
   import dbContext._
 
   private val schemaCazeRubric = quote {
-    querySchema[PersistentCazeRubric]("CAZERUBRIC")
+    querySchema[PersistentCazeRubric]("CAZERUBRIC",
+      _.id -> "ID",
+      _.cazeId -> "CAZEID",
+      _.weight -> "WEIGHT",
+      _.label -> "LABEL"
+    )
   }
 
   private val schemaCaze = quote {
@@ -59,20 +65,20 @@ class CazeDao(dbContext: db.db.DBContext) {
     )
   }
 
-  // TODO: Return newly inserted caze-ID
   def insert(caze: Caze): Int = {
-    0
+    run { quote {
+      schemaCaze.insert(
+        _.id -> lift(caze.id),
+        _.header -> lift(caze.header),
+        _.member_id -> lift(caze.member_id),
+        _.date -> lift(caze.date),
+        _.changed -> lift(caze.changed),
+        _.description -> lift(caze.description)
+      ).returningGenerated(_.id)
+    }}
   }
 
   def get(id: Int): Option[Caze] = {
-//    Logger.debug(s"CazeDao: get($id) called")
-//    run(quote(query[Caze]
-//      .filter(_.id == lift(id)))
-//    ) match {
-//      case caze::Nil => Some(caze)
-//      case _ => None
-//    }
-
     Logger.debug(s"CazeDao: get($id) called")
     run(quote(schemaCaze
       .filter(_.id == lift(id)))
@@ -80,15 +86,13 @@ class CazeDao(dbContext: db.db.DBContext) {
       case pcaze :: Nil => Some(Caze(pcaze.id, pcaze.header, pcaze.member_id, pcaze.date, pcaze.changed, pcaze.description))
       case _ => None
     }
-
   }
 
   def get(case_ids: List[Int]): List[Caze] = {
-//    Logger.debug(s"CazeDao: get(${case_ids}) called")
-//    run(quote(query[Caze]
-//      .filter(caze => liftQuery(case_ids).contains(caze.id))
-//    ))
-    Nil
+    Logger.debug(s"CazeDao: get(${case_ids}) called")
+    run(quote(schemaCaze
+      .filter(caze => liftQuery(case_ids).contains(caze.id))
+    )).map(pcaze => Caze(pcaze.id, pcaze.header, pcaze.member_id, pcaze.date, pcaze.changed, pcaze.description))
   }
 
   def delCaseRubrics(caseID: Int, caseRubrics: List[CazeRubric]): Int = {
@@ -98,6 +102,12 @@ class CazeDao(dbContext: db.db.DBContext) {
   // TODO: Return a list of cazerubric-ids!
   def addCaseRubrics(caseID: Int, caseRubrics: List[CazeRubric]): List[Int] = {
     List()
+  }
+
+  def getCaseRubrics(caseID: Int): List[CazeRubric] = {
+    run(quote(schemaCazeRubric
+      .filter(_.cazeId == lift(caseID))
+    )).map(pcr => CazeRubric(pcr.id, pcr.cazeId, Nil, pcr.weight, pcr.label))
   }
 
   def updateCaseRubricsUserDefinedValues(caseID: Int, caseRubrics: List[CazeRubric]): Int = {

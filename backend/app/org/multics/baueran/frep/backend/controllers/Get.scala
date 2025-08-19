@@ -276,6 +276,25 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     }
   }
 
+  def apiSecGetCaseRubrics(caseId: Int, caseMemberId: Int) = Action { (request: Request[AnyContent]) =>
+    getAuthenticatedUser(request) match {
+      case Some(member) if (caseMemberId == member.member_id) => {
+        cazeDao.getCaseRubrics(caseId) match {
+          case cazeRubrics  =>
+            if (!isUserAuthorized(request, caseMemberId)) {
+              val err = s"Get: apiSecGetCaseRubrics() failed: not authorised."
+              Logger.error(err)
+              Forbidden(err)
+            } else {
+              Ok(cazeRubrics.asJson.toString())
+            }
+        }
+      }
+      case _ =>
+        Unauthorized("apiSecGetCaseRubrics() failed: not authenticated or authorized.")
+    }
+  }
+
   /**
     * Returns basically a list of pairs with single entries like
     *
