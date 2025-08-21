@@ -33,7 +33,23 @@ class CazeDao(dbContext: db.db.DBContext) {
     implicit val cdecoder: Decoder[PersistentCaze] = deriveDecoder[PersistentCaze]
   }
 
+  // case class CazeSubRubric(id: Int, rubric: Rubric, weightedRemedies: List[WeightedRemedy]) {
+  case class PersistentCazeSubRubric(id: Int, cazeRubricId: Int, abbrev: String, rubricId: Int)
+  object PersistentCazeSubRubric {
+    implicit val csrencoder: Encoder[PersistentCazeSubRubric] = deriveEncoder[PersistentCazeSubRubric]
+    implicit val csrdecoder: Decoder[PersistentCazeSubRubric] = deriveDecoder[PersistentCazeSubRubric]
+  }
+
   import dbContext._
+
+  private val schemaCazeSubRubric = quote {
+    querySchema[PersistentCazeSubRubric]("CAZESUBRUBRIC",
+      _.id -> "ID",
+      _.cazeRubricId -> "CAZERUBRICID",
+      _.abbrev -> "ABBREV",
+      _.rubricId -> "RUBRICID"
+    )
+  }
 
   private val schemaCazeRubric = quote {
     querySchema[PersistentCazeRubric]("CAZERUBRIC",
@@ -99,9 +115,35 @@ class CazeDao(dbContext: db.db.DBContext) {
     0
   }
 
-  // TODO: Return a list of cazerubric-ids!
+  def addCaseSubRubrics(caseRubricId: Int, caseSubRubrics: List[CazeSubRubric]): List[Int] = {
+    println(s"Inserting sub-rubrics for caseRubric ${caseRubricId}")
+
+    caseSubRubrics.map(csr =>
+      run { quote {
+        schemaCazeSubRubric.insert(
+          _.cazeRubricId -> lift(caseRubricId),
+          _.abbrev -> lift(csr.rubric.abbrev),
+          _.rubricId -> lift(csr.rubric.id)
+        ).returningGenerated(_.id)
+      }}
+    )
+  }
+
   def addCaseRubrics(caseID: Int, caseRubrics: List[CazeRubric]): List[Int] = {
-    List()
+    println(s"Inserting rubrics for case ${caseID}")
+
+    caseRubrics.map(cr =>
+      val newCaseRubricId = run { quote {
+        schemaCazeRubric.insert(
+          _.cazeId -> lift(caseID),
+          _.weight -> lift(cr.rubricWeight),
+          _.label -> lift(cr.rubricLabel)
+        ).returningGenerated(_.id)
+      }}
+
+      addCaseSubRubrics(newCaseRubricId, cr.subRubrics)
+      newCaseRubricId
+    )
   }
 
   def getCaseRubrics(caseID: Int): List[CazeRubric] = {

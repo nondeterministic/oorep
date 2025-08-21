@@ -503,7 +503,7 @@ object CaseSection {
       if (descr.isDefined) {
         descr = Some(shared.Caze(descr.get.id, descr.get.header, descr.get.member_id, descr.get.date, descr.get.changed, descr.get.description, cRubrics.toList))
 
-        println("2 *************************************************************************************************")
+        println(s"2 *************************************************************************************************, memberId: ${memberId}, prevCase.isdefined: ${prevCase.isDefined}")
 
         // If user is logged in, attempt to update case in DB (if it exists; see comment in Post.scala),
         // and if previous case != current case.
@@ -569,10 +569,18 @@ object CaseSection {
         }
       }
 
+      println("5 *************************************************************************************************" + cRubrics.size.toString())
+
       // Delete not only view but entire case from DB, when user removed all of its rubrics...
       if (cRubrics.size == 0) {
+
+        println("6 *************************************************************************************************")
+
         if (descr != None && descr.get.id != 0)
-          HttpRequest2("sec/del_case")
+
+        println("7 *************************************************************************************************")
+
+        HttpRequest2("sec/del_case")
             .withMethod("DELETE")
             .withHeaders((HeaderFields.csrfToken.toString(), getDocumentCsrfCookie().getOrElse("")))
             .withBody(
@@ -590,13 +598,11 @@ object CaseSection {
 
     // Now, put previous case to current case; a bit more verbose in order to avoid that prevCase.eq(descr) holds
     // as would be the case with prevCase = descr from what I've tried...
-    // Update: this is due to the var in CaseRubric data structure. F*CK!
-
-    // TODO: results is now only an accessor, no longer a setter! Do we still need the following then?!
-//    if (descr.isDefined)
-//      prevCase = Some(descr.get.copy(results = cRubrics.toList.map(_.copy())))
-//    else
-//      prevCase = None
+    // (Update: this is due to the var in CaseRubric data structure.)
+    if (descr.isDefined)
+      prevCase = Some(descr.get.copy(rubrics = cRubrics.toList.map(_.copy())))
+    else
+      prevCase = None
 
     // Only draw labels and weights, if user is actually using them
     val caseUsesLabels: Boolean = cRubrics.toList.filter(_.rubricLabel != None).length > 0
