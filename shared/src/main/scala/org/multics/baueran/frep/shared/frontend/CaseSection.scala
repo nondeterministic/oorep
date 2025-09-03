@@ -257,8 +257,8 @@ object CaseSection {
           }
           updateCaseViewAndDataStructures()
         }
-
       }
+
       // The weight label on the drop-down button, which needs to change automatically on new user choice
       val weight = new WeightRx(crub.rubricWeight)
 
@@ -336,7 +336,9 @@ object CaseSection {
             )
           ),
           td(style := "width:28%;", crub.fullPath),
-          td(cls := "d-none d-sm-table-cell", remedies.take(remedies.size - 1).map(l => span(l, ", ")) ::: List(remedies.last)),
+          // td(cls := "d-none d-sm-table-cell", remedies.take(remedies.size - 1).map(l => span(l, ", ")) ::: List(remedies.last)),
+          // td(cls := "d-none d-sm-table-cell", remedies.take(remedies.size - 1).map(l => span(l, ", "))), // ::: List(remedies.last)), // TODO: THIS IS IT FUCK ME SIDEWAYS!
+          td(cls := "d-none d-sm-table-cell", remedies.take(remedies.size - 1).map(l => span(l, ", ")) ::: List(remedies.lastOption.getOrElse(span("")))),
           td(cls := "text-right", style := "white-space:nowrap;",
             button(cls := "btn btn-sm btn-secondary", `type` := "button",
               scalatags.JsDom.attrs.id := ("rmBut_" + crub.toJson.toString),
@@ -374,10 +376,11 @@ object CaseSection {
       def getId() = "caseTBody"
 
       def apply() = {
-        tbody(scalatags.JsDom.attrs.id := getId(),
+        val res = tbody(scalatags.JsDom.attrs.id := getId(),
           cRubrics.toList
             .sortBy(cr => (cr.abbrev + cr.fullPath))
             .map(crub => new CaseRow(crub)())) //.asInstanceOf[html.Html]
+        res
       }
     }
 
@@ -498,12 +501,8 @@ object CaseSection {
         )
       })
 
-      println("1 *************************************************************************************************")
-
       if (descr.isDefined) {
         descr = Some(shared.Caze(descr.get.id, descr.get.header, descr.get.member_id, descr.get.date, descr.get.changed, descr.get.description, cRubrics.toList))
-
-        println(s"2 *************************************************************************************************, memberId: ${memberId}, prevCase.isdefined: ${prevCase.isDefined}")
 
         // If user is logged in, attempt to update case in DB (if it exists; see comment in Post.scala),
         // and if previous case != current case.
@@ -514,12 +513,8 @@ object CaseSection {
           // We do not do this above, as the prevCase != descr check would always fail then!
           descr = Some(shared.Caze(descr.get.id, descr.get.header, descr.get.member_id, (new js.Date()).toISOString(), (new js.Date()).toISOString(), descr.get.description, cRubrics.toList))
 
-          println("3 *************************************************************************************************")
-
           if (descr.get.isSupersetOf(prevCase.get).length > 0) { // Add additional case rubrics to DB
             val diff = descr.get.isSupersetOf(prevCase.get)
-
-            println("4 *************************************************************************************************")
 
             HttpRequest2("sec/add_caserubrics_to_case")
               .withHeaders((HeaderFields.csrfToken.toString(), getDocumentCsrfCookie().getOrElse("")))
@@ -569,16 +564,10 @@ object CaseSection {
         }
       }
 
-      println("5 *************************************************************************************************" + cRubrics.size.toString())
-
       // Delete not only view but entire case from DB, when user removed all of its rubrics...
       if (cRubrics.size == 0) {
 
-        println("6 *************************************************************************************************")
-
         if (descr != None && descr.get.id != 0)
-
-        println("7 *************************************************************************************************")
 
         HttpRequest2("sec/del_case")
             .withMethod("DELETE")

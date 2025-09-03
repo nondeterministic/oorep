@@ -2,7 +2,8 @@ package org.multics.baueran.frep.backend.dao
 
 import org.multics.baueran.frep.*
 import backend.db
-import shared.{BetterString, Caze, CazeRubric, CazeSubRubric}
+import shared.{BetterString, Caze, CazeRubric, CazeSubRubric, Rubric, WeightedRemedy}
+import backend.dao.RepertoryDao
 import io.getquill.*
 import io.circe.{Decoder, *}
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
@@ -41,6 +42,8 @@ class CazeDao(dbContext: db.db.DBContext) {
   }
 
   import dbContext._
+
+  val repertoryDao = RepertoryDao(dbContext)
 
   private val schemaCazeSubRubric = quote {
     querySchema[PersistentCazeSubRubric]("CAZESUBRUBRIC",
@@ -94,15 +97,90 @@ class CazeDao(dbContext: db.db.DBContext) {
     }}
   }
 
+  def getWeightedRemedies(rubric: Rubric): List[WeightedRemedy] = {
+    repertoryDao.getRubricRemedies(rubric.id, rubric.abbrev) match {
+      case Nil => Nil
+      case rubricRemedies => rubricRemedies.collect(rubricRemedy =>
+        repertoryDao.getRemedy(rubricRemedy.remedyId) match {
+          case Some(remedy) => WeightedRemedy(remedy, rubricRemedy.weight)
+        }
+      )
+    }
+  }
+
+  // case class CazeSubRubric(id: Int, rubric: Rubric, weightedRemedies: List[WeightedRemedy]) {
+  // case class PersistentCazeSubRubric(id: Int, cazeRubricId: Int, abbrev: String, rubricId: Int)
+
+  def getCaseSubRubric(caseSubRubricId: Int): Option[CazeSubRubric] = {
+    run(quote(schemaCazeSubRubric
+      .filter(_.id == lift(caseSubRubricId))
+    )) match {
+      case pcsr :: Nil =>
+        repertoryDao.getRubric(pcsr.rubricId, pcsr.abbrev) match {
+          case Some(rubric) => 
+            Some(CazeSubRubric(pcsr.id, rubric, getWeightedRemedies(rubric)))
+          case None =>
+            None
+        }
+      case _ => None
+    }
+  }
+
+  def getCaseSubRubrics(caseRubricId: Int): List[CazeSubRubric] = {
+    run(quote(schemaCazeSubRubric
+      .filter(_.cazeRubricId == lift(caseRubricId))
+    )) match {
+      case Nil => Nil
+      case pcsrs =>
+        pcsrs.collect(pcsr =>
+          repertoryDao.getRubric(pcsr.rubricId, pcsr.abbrev) match {
+            case Some(rubric) =>
+              CazeSubRubric(pcsr.id, rubric, getWeightedRemedies(rubric))
+          }
+        )
+    }
+  }
+
+  // def getCaseSubRubrics(caseRubricId: Int): List[CazeSubRubric] = {
+  //   Nil
+  // }
+
+  //  case class CazeRubric(id: Int,
+  //                        cazId: Int,
+  //                        subRubrics: List[CazeSubRubric],
+  //                        var rubricWeight: Int,
+  //                        var rubricLabel: Option[String]) {
+
+  def getCaseRubrics(caseID: Int): List[CazeRubric] = {
+    run(quote(schemaCazeRubric
+      .filter(_.cazeId == lift(caseID))
+    )).map(pcr =>
+      CazeRubric(
+        pcr.id,
+        pcr.cazeId,
+        getCaseSubRubrics(pcr.id),
+        pcr.weight,
+        pcr.label)
+    )
+  }
+
+  // If we get only ONE case, we're likely interested in the rubrics, too.
+  // So, we pull the rubrics, too.
+
   def get(id: Int): Option[Caze] = {
     Logger.debug(s"CazeDao: get($id) called")
     run(quote(schemaCaze
       .filter(_.id == lift(id)))
     ) match {
-      case pcaze :: Nil => Some(Caze(pcaze.id, pcaze.header, pcaze.member_id, pcaze.date, pcaze.changed, pcaze.description))
+      case pcaze :: Nil =>
+        val caseRubrics = getCaseRubrics(pcaze.id)
+        Some(Caze(pcaze.id, pcaze.header, pcaze.member_id, pcaze.date, pcaze.changed, pcaze.description, caseRubrics))
       case _ => None
     }
   }
+
+  // If we get MULTIPLE cases, we're most likely NOT interested in their rubrics.
+  // So, we don't get them, too.
 
   def get(case_ids: List[Int]): List[Caze] = {
     Logger.debug(s"CazeDao: get(${case_ids}) called")
@@ -116,8 +194,6 @@ class CazeDao(dbContext: db.db.DBContext) {
   }
 
   def addCaseSubRubrics(caseRubricId: Int, caseSubRubrics: List[CazeSubRubric]): List[Int] = {
-    println(s"Inserting sub-rubrics for caseRubric ${caseRubricId}")
-
     caseSubRubrics.map(csr =>
       run { quote {
         schemaCazeSubRubric.insert(
@@ -130,8 +206,6 @@ class CazeDao(dbContext: db.db.DBContext) {
   }
 
   def addCaseRubrics(caseID: Int, caseRubrics: List[CazeRubric]): List[Int] = {
-    println(s"Inserting rubrics for case ${caseID}")
-
     caseRubrics.map(cr =>
       val newCaseRubricId = run { quote {
         schemaCazeRubric.insert(
@@ -144,12 +218,6 @@ class CazeDao(dbContext: db.db.DBContext) {
       addCaseSubRubrics(newCaseRubricId, cr.subRubrics)
       newCaseRubricId
     )
-  }
-
-  def getCaseRubrics(caseID: Int): List[CazeRubric] = {
-    run(quote(schemaCazeRubric
-      .filter(_.cazeId == lift(caseID))
-    )).map(pcr => CazeRubric(pcr.id, pcr.cazeId, Nil, pcr.weight, pcr.label))
   }
 
   def updateCaseRubricsUserDefinedValues(caseID: Int, caseRubrics: List[CazeRubric]): Int = {
