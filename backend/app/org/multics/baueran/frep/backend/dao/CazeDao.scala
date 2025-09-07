@@ -190,7 +190,11 @@ class CazeDao(dbContext: db.db.DBContext) {
   }
 
   def delCaseRubrics(caseID: Int, caseRubrics: List[CazeRubric]): Int = {
-    0
+    run { quote {
+      schemaCazeRubric
+        .filter(cr => liftQuery(caseRubrics.map(_.id)).contains(cr.id))
+        .delete
+    }}.toInt
   }
 
   def addCaseSubRubrics(caseRubricId: Int, caseSubRubrics: List[CazeSubRubric]): List[Int] = {
@@ -248,8 +252,12 @@ class CazeDao(dbContext: db.db.DBContext) {
     caseRubrics.map(updateCaseRubricUserDefinedValues(_)).length
   }
 
-  def updateCaseDescription(cazeI: Int, casedescription: String): Int = {
-    0
+  def updateCaseDescription(cazeId: Int, caseDescription: String): Int = {
+    run { quote {
+      schemaCaze
+        .filter(_.id == lift(cazeId))
+        .update(_.description -> lift(caseDescription))
+    }}.toInt
   }
 
 }
