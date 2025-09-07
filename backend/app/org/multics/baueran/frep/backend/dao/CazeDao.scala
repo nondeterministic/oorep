@@ -232,16 +232,7 @@ class CazeDao(dbContext: db.db.DBContext) {
     }}.toInt
   }
 
-  //  case class CazeRubric(id: Int,
-  //                        cazeId: Int,
-  //                        subRubrics: List[CazeSubRubric],
-  //                        var rubricWeight: Int,
-  //                        var rubricLabel: Option[String]) {
-  // case class PersistentCazeRubric(id: Int, cazeId: Int, weight: Int, label: Option[String])
-
-  def updateCaseRubric(caseRubric: CazeRubric): Int = {
-    // caseRubric.subRubrics.foreach(csr => updateCaseSubRubric(caseRubric.id, csr))
-
+  def updateCaseRubricUserDefinedValues(caseRubric: CazeRubric): Int = {
     run { quote {
       schemaCazeRubric
         .filter(_.id == lift(caseRubric.id))
@@ -253,10 +244,8 @@ class CazeDao(dbContext: db.db.DBContext) {
     }}.toInt
   }
 
-  def updateCaseRubricsUserDefinedValues(caseID: Int, caseRubrics: List[CazeRubric]): Int = {
-    // TODO: caseID probably not needed. Remove?
-
-    caseRubrics.map(cr => updateCaseRubric(cr)).length
+  def updateCaseRubricsUserDefinedValues(caseRubrics: List[CazeRubric]): Int = {
+    caseRubrics.map(updateCaseRubricUserDefinedValues(_)).length
   }
 
   def updateCaseDescription(cazeI: Int, casedescription: String): Int = {

@@ -24,7 +24,7 @@ class Put @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
                   Logger.error(err)
                   Forbidden(err)
                 } else {
-                  if (cazeDao.updateCaseRubricsUserDefinedValues(caseID, caseRubrics) > 0) {
+                  if (cazeDao.updateCaseRubricsUserDefinedValues(caseRubrics) > 0) {
                     Logger.debug(s"Put: updateCaseRubricsUserDefinedValues(): success")
                     Ok
                   }

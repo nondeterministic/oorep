@@ -221,8 +221,6 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
   }
 
   def addCaseRubricsToCaze() = Action { (request: Request[AnyContent]) =>
-    println("*************************************************************************************************")
-
     getAuthenticatedUser(request) match {
       case Some(_) => {
         val requestData = request.body.asFormUrlEncoded.get
