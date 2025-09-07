@@ -11,7 +11,7 @@ import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 class CazeDao(dbContext: db.db.DBContext) {
 
   //  case class CazeRubric(id: Int,
-  //                        cazId: Int,
+  //                        cazeId: Int,
   //                        subRubrics: List[CazeSubRubric],
   //                        var rubricWeight: Int,
   //                        var rubricLabel: Option[String]) {
@@ -146,7 +146,7 @@ class CazeDao(dbContext: db.db.DBContext) {
   // }
 
   //  case class CazeRubric(id: Int,
-  //                        cazId: Int,
+  //                        cazeId: Int,
   //                        subRubrics: List[CazeSubRubric],
   //                        var rubricWeight: Int,
   //                        var rubricLabel: Option[String]) {
@@ -220,11 +220,47 @@ class CazeDao(dbContext: db.db.DBContext) {
     )
   }
 
+  def updateCaseSubRubric(caseRubricId: Int, caseSubRubric: CazeSubRubric): Int = {
+    run { quote {
+      schemaCazeSubRubric
+        .filter(_.id == lift(caseSubRubric.id))
+        .update(
+          _.cazeRubricId -> lift(caseSubRubric.id),
+          _.abbrev -> lift(caseSubRubric.rubric.abbrev),
+          _.rubricId -> lift(caseSubRubric.rubric.id)
+        )
+    }}.toInt
+  }
+
+  //  case class CazeRubric(id: Int,
+  //                        cazeId: Int,
+  //                        subRubrics: List[CazeSubRubric],
+  //                        var rubricWeight: Int,
+  //                        var rubricLabel: Option[String]) {
+  // case class PersistentCazeRubric(id: Int, cazeId: Int, weight: Int, label: Option[String])
+
+  def updateCaseRubric(caseRubric: CazeRubric): Int = {
+    // caseRubric.subRubrics.foreach(csr => updateCaseSubRubric(caseRubric.id, csr))
+
+    run { quote {
+      schemaCazeRubric
+        .filter(_.id == lift(caseRubric.id))
+        .update(
+          _.cazeId -> lift(caseRubric.cazeId),
+          _.weight -> lift(caseRubric.rubricWeight),
+          _.label -> lift(caseRubric.rubricLabel)
+        )
+    }}.toInt
+  }
+
   def updateCaseRubricsUserDefinedValues(caseID: Int, caseRubrics: List[CazeRubric]): Int = {
-    0
+    // TODO: caseID probably not needed. Remove?
+
+    caseRubrics.map(cr => updateCaseRubric(cr)).length
   }
 
   def updateCaseDescription(cazeI: Int, casedescription: String): Int = {
     0
   }
+
 }
