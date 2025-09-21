@@ -76,12 +76,12 @@ class CazeDao(dbContext: db.db.DBContext) {
 
   private val Logger = play.api.Logger(this.getClass)
 
-  def delete(id: Int): Long = {
+  def delete(id: Int): Int = {
     Logger.debug(s"CazeDao: DELETE($id) called")
     run(quote(query[Caze]
       .filter(_.id == lift(id))
       .delete)
-    )
+    ).toInt
   }
 
   def insert(caze: Caze): Int = {
@@ -107,6 +107,13 @@ class CazeDao(dbContext: db.db.DBContext) {
       )
     }
   }
+
+  // def delCaseSubRubric(caseSubRubricId: Int): Int = {
+  //   run(quote(schemaCazeSubRubric
+  //     .filter(_.id == lift(caseSubRubricId))
+  //     .delete
+  //   )).toInt
+  // }
 
   // case class CazeSubRubric(id: Int, rubric: Rubric, weightedRemedies: List[WeightedRemedy]) {
   // case class PersistentCazeSubRubric(id: Int, cazeRubricId: Int, abbrev: String, rubricId: Int)
@@ -164,6 +171,22 @@ class CazeDao(dbContext: db.db.DBContext) {
     )
   }
 
+  def getCaseRubric(caseRubricId: Int): Option[CazeRubric] = {
+    run(quote(schemaCazeRubric
+      .filter(_.cazeId == lift(caseRubricId))
+    )) match {
+      case pcr :: Nil =>
+        Some(CazeRubric(
+          pcr.id,
+          pcr.cazeId,
+          getCaseSubRubrics(pcr.id),
+          pcr.weight,
+          pcr.label)
+        )
+      case _ => None
+    }
+  }
+
   // If we get only ONE case, we're likely interested in the rubrics, too.
   // So, we pull the rubrics, too.
 
@@ -189,7 +212,15 @@ class CazeDao(dbContext: db.db.DBContext) {
     )).map(pcaze => Caze(pcaze.id, pcaze.header, pcaze.member_id, pcaze.date, pcaze.changed, pcaze.description))
   }
 
-  def delCaseRubrics(caseID: Int, caseRubrics: List[CazeRubric]): Int = {
+  def delCaseRubric(caseRubricId: Int): Int = {
+    run { quote {
+      schemaCazeRubric
+        .filter(_.id == lift(caseRubricId))
+        .delete
+    }}.toInt
+  }
+
+  def delCaseRubrics(caseRubrics: List[CazeRubric]): Int = {
     run { quote {
       schemaCazeRubric
         .filter(cr => liftQuery(caseRubrics.map(_.id)).contains(cr.id))
@@ -258,6 +289,30 @@ class CazeDao(dbContext: db.db.DBContext) {
         .filter(_.id == lift(cazeId))
         .update(_.description -> lift(caseDescription))
     }}.toInt
+  }
+
+  // case class CazeSubRubric(id: Int, rubric: Rubric, weightedRemedies: List[WeightedRemedy]) {
+  // case class PersistentCazeSubRubric(id: Int, cazeRubricId: Int, abbrev: String, rubricId: Int)
+
+  def moveCaseSubRubric(caseSubRubric: CazeSubRubric, cazeRubricId: Int): Int = {
+    run { quote {
+      schemaCazeSubRubric
+        .filter(_.id == lift(caseSubRubric.id))
+        .update(_.cazeRubricId -> lift(cazeRubricId))
+    }}.toInt
+  }
+
+  def mergeCaseRubrics(caseRubricIdFrom: Int, caseRubricIdTo: Int): Boolean = {
+    getCaseSubRubrics(caseRubricIdFrom).collect(moveCaseSubRubric(_, caseRubricIdTo)) match {
+      case Nil => false
+      case _ =>
+        if (delCaseRubric(caseRubricIdFrom) > 0)
+          true
+        else {
+          Logger.debug(s"CazeDao: mergeCaseRubrics($caseRubricIdFrom, $caseRubricIdTo) failed to delete the merged CaseRubric. Subrubrics are deleted though. Oh no!")
+          false
+        }
+    }
   }
 
 }

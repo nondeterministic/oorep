@@ -23,7 +23,7 @@ class Delete @Inject()(cc: ControllerComponents, dbContext: DBContext) extends A
                   Logger.error(s"Delete: delCaseRubricsFromCaze() failed: not authorised.")
                   Forbidden
                 } else {
-                  if (cazeDao.delCaseRubrics(caseID, caseRubrics) > 0) {
+                  if (cazeDao.delCaseRubrics(caseRubrics) > 0) {
                     Logger.debug(s"Delete: delCaseRubricsFromCaze(): success")
                     Ok
                   }

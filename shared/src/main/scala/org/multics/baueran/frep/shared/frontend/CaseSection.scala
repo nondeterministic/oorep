@@ -144,7 +144,7 @@ object CaseSection {
   }
 
   object MergeRubricButton extends OorepHtmlButton {
-    def getId() = "CaseMergeRubricButtonID_jhkjhkjh34576348975634"
+    def getId() = "CaseMergeRubricButtonID_jhkjhkjh34576348975634fdgfdgdgfgdsfgertegh"
 
     def clickHandler() = {
       val checkBoxes = HtmlRepresentation.getAllCaseRowCheckboxes()
