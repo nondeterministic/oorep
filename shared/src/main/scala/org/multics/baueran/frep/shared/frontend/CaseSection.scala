@@ -166,7 +166,7 @@ object CaseSection {
               ("caseRubricIdTo" -> checkBoxesChecked.last._3.toString)
             )
         case None =>
-          println("Pressed Merge without being logged in.") // TODO
+          println("Pressed Merge without being logged in.")
       }
     }
 

@@ -221,12 +221,12 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
   }
 
   def mergeCaseRubrics() = Action { (request: Request[AnyContent]) =>
+    val requestData = request.body.asFormUrlEncoded.get
+
     getAuthenticatedUser(request) match {
       case Some(_) => {
-        val requestData = request.body.asFormUrlEncoded.get
-
         (requestData("memberID"), requestData("caseRubricIdFrom"), requestData("caseRubricIdTo")) match {
-          case (Seq(memberIdStr), Seq(cazeRubricIdFrom), Seq(cazeRubricIdTo)) if (cazeRubricIdFrom.forall(_.isDigit) && cazeRubricIdTo.forall(_.isDigit) && (memberIdStr.forall(_.isDigit))) =>
+          case (Seq(memberIdStr), Seq(cazeRubricIdFrom), Seq(cazeRubricIdTo)) => // if (cazeRubricIdFrom.forall(_.isDigit) && cazeRubricIdTo.forall(_.isDigit) && (memberIdStr.forall(_.isDigit))) => // TODO Fails cause of -1 for new cazes!
             (memberIdStr.toInt, cazeRubricIdFrom.toInt, cazeRubricIdTo.toInt) match {
               case (memberId, caseRubricIdFrom, caseRubricIdTo) =>
                 if (!isUserAuthorized(request, memberId)) {
@@ -234,7 +234,7 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
                   Logger.error(err)
                   Forbidden(err)
                 } else {
-                  Logger.debug("MERGECASERUBRICS SUCCESS!!")
+                  println("MERGECASERUBRICS SUCCESS!!")
                   Ok
 
                   // if (cazeDao.addCaseRubrics(caseID, caseRubrics).length > 0) {
