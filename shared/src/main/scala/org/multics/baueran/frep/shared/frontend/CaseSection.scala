@@ -5,6 +5,7 @@ import dom.Event
 import scalatags.JsDom
 import scalatags.JsDom.all._
 import io.circe.syntax._
+import io.circe.parser.parse
 
 import scala.scalajs.js
 import scala.collection.mutable
@@ -23,10 +24,10 @@ import scala.language.implicitConversions
 
 object CaseSection {
 
-  var descr: Option[shared.Caze] = None
+  var descr: Option[Caze] = None
   var cRubrics: Set[CazeRubric] = Set.empty
   private val remedyScores = mutable.HashMap[String,Integer]()
-  private var prevCase: Option[shared.Caze] = None
+  private var prevCase: Option[Caze] = None
 
   private object SortCaseBy extends Enumeration {
     type SortCaseBy = Value
@@ -148,9 +149,25 @@ object CaseSection {
 
     def clickHandler() = {
       val checkBoxes = HtmlRepresentation.getAllCaseRowCheckboxes()
-      val checkBoxesChecked = checkBoxes.filter(_.checked)
+      val checkBoxesCheckedStrings: List[String] = checkBoxes.filter(_.checked).map(_.value)
+      val checkBoxesChecked: List[(String, Int, Int)] = CazeRubric.fromJson(checkBoxesCheckedStrings)
+
+      println(s"Parsed ${checkBoxesChecked.length}: ${checkBoxesChecked}")
 
       // TODO ...
+
+      getCookieData(dom.document.cookie, CookieFields.id.toString) match {
+        case Some(memberId) =>
+          HttpRequest2("sec/merge_caserubrics")
+            .withHeaders((HeaderFields.csrfToken.toString(), getDocumentCsrfCookie().getOrElse("")))
+            .post(
+              ("memberID" -> memberId),
+              ("caseRubricIdFrom" -> checkBoxesChecked.head._2.toString),
+              ("caseRubricIdTo" -> checkBoxesChecked.last._3.toString)
+            )
+        case None =>
+          println("Pressed Merge without being logged in.") // TODO
+      }
     }
 
     def apply() = {
@@ -215,8 +232,8 @@ object CaseSection {
   object HtmlRepresentation {
     def getId() = "Case_HtmlRepresentation_3243jkdvjk34jkJKhk"
 
+    // Select all checkboxes in this view whose ID starts with the parent view's ID...
     def getAllCaseRowCheckboxes() = {
-      // Select all checkboxes in this view whose ID starts with the parent view's ID...
       dom.document.querySelectorAll(s"input[type=checkbox][id^='${getId()}']").map(_.asInstanceOf[dom.html.Input]).toList
     }
 
@@ -243,7 +260,7 @@ object CaseSection {
     def getId() = HtmlRepresentation.getId()
 
     class CaseRow(crub: CazeRubric) extends OorepHtmlElement {
-      def getId() = HtmlRepresentation.getId() + "_crub_" + crub.toJson.toString
+      def getId() = HtmlRepresentation.getId() + "_crub_" + crub.toString()
 
       implicit def crToCR(cr: CazeRubric): BetterCaseRubric = new BetterCaseRubric(cr)
 
@@ -279,7 +296,7 @@ object CaseSection {
           td(
             div(cls:="form-check", style:="width:1px;",
               input(
-                cls:="form-check-input", `type`:="checkbox", value:=s"${crub.toJson.toString}", id:=s"${getId()}_${crub.toJson.toString}_checkbox",
+                cls:="form-check-input", `type`:="checkbox", value:=s"${crub.toJson()}", id:=s"${getId()}_${crub.toString()}_checkbox",
                 onchange := { (event: Event) => {
                   val checkBoxes = HtmlRepresentation.getAllCaseRowCheckboxes()
                   val checkBoxesChecked = checkBoxes.filter(_.checked)
@@ -341,20 +358,20 @@ object CaseSection {
           td(cls := "d-none d-sm-table-cell", remedies.take(remedies.size - 1).map(l => span(l, ", ")) ::: List(remedies.lastOption.getOrElse(span("")))),
           td(cls := "text-right", style := "white-space:nowrap;",
             button(cls := "btn btn-sm btn-secondary", `type` := "button",
-              scalatags.JsDom.attrs.id := ("rmBut_" + crub.toJson.toString),
+              scalatags.JsDom.attrs.id := ("rmBut_" + crub.toString()),
               style := "vertical-align: middle; display: inline-block",
               title := "Remove rubric",
               onclick := { (event: Event) => {
                 event.stopPropagation()
                 crub.rubricWeight = 1
                 cRubrics = cRubrics.filter(_ != crub)
-                dom.document.getElementById(HtmlRepresentation.getId() + "_crub_" + crub.toJson.toString) match {
+                dom.document.getElementById(HtmlRepresentation.getId() + "_crub_" + crub.toString()) match {
                   case null => ;
                   case elem => elem.parentNode.removeChild(elem)
                 }
 
                 // Enable add-button in results, if removed symptom was in the displayed results list...
-                dom.document.getElementById("button_" + crub.toJson.toString) match {
+                dom.document.getElementById("button_" + crub.toString()) match {
                   case null => ;
                   case elem => elem.asInstanceOf[dom.html.Button].removeAttribute("disabled")
                 }
@@ -418,13 +435,13 @@ object CaseSection {
     for (crub <- cRubrics) {
       crub.rubricWeight = 1
 
-      dom.document.getElementById(HtmlRepresentation.getId() + "_crub_" + crub.toJson.toString) match {
+      dom.document.getElementById(HtmlRepresentation.getId() + "_crub_" + crub.toString()) match {
         case null => ;
         case elem => elem.parentNode.removeChild(elem)
       }
 
       // Enable add-button in results, if removed symptom was in the displayed results list...
-      dom.document.getElementById("button_" + crub.toJson.toString) match {
+      dom.document.getElementById("button_" + crub.toString()) match {
         case null => ;
         case elem => elem.asInstanceOf[dom.html.Button].removeAttribute("disabled")
       }

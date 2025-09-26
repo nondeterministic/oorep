@@ -220,6 +220,48 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
     }
   }
 
+  def mergeCaseRubrics() = Action { (request: Request[AnyContent]) =>
+    getAuthenticatedUser(request) match {
+      case Some(_) => {
+        val requestData = request.body.asFormUrlEncoded.get
+
+        (requestData("memberID"), requestData("caseRubricIdFrom"), requestData("caseRubricIdTo")) match {
+          case (Seq(memberIdStr), Seq(cazeRubricIdFrom), Seq(cazeRubricIdTo)) if (cazeRubricIdFrom.forall(_.isDigit) && cazeRubricIdTo.forall(_.isDigit) && (memberIdStr.forall(_.isDigit))) =>
+            (memberIdStr.toInt, cazeRubricIdFrom.toInt, cazeRubricIdTo.toInt) match {
+              case (memberId, caseRubricIdFrom, caseRubricIdTo) =>
+                if (!isUserAuthorized(request, memberId)) {
+                  val err = s"Post: mergeCaseRubrics() failed: not authorised."
+                  Logger.error(err)
+                  Forbidden(err)
+                } else {
+                  Logger.debug("MERGECASERUBRICS SUCCESS!!")
+                  Ok
+
+                  // if (cazeDao.addCaseRubrics(caseID, caseRubrics).length > 0) {
+                  //   Logger.debug(s"Post: addCaseRubricsToCaze(): success")
+                  //   Ok
+                  // }
+                  // else {
+                  //   val err = s"Post: addCaseRubricsToCaze() failed"
+                  //   Logger.error(err)
+                  //   BadRequest(err)
+                  // }
+                }
+              case _ =>
+                val err = s"Post: mergeCaseRubrics() failed: type conversion error which should never have happened"
+                Logger.error(err)
+                BadRequest(err)
+            }
+          case wrongData => {
+            val err = s"Post: mergeCaseRubrics() failed: no or the wrong form data received: ${wrongData}"
+            Logger.error(err)
+            BadRequest(err)
+          }
+        }
+      }
+    }
+  }
+
   def addCaseRubricsToCaze() = Action { (request: Request[AnyContent]) =>
     getAuthenticatedUser(request) match {
       case Some(_) => {

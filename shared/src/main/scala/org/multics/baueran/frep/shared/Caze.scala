@@ -107,19 +107,10 @@ case class CazeRubric(id: Int,
 
   import VarHandling._
 
-  // Get a unique ID (i.e. list of rubrics) which can later be used to access the individual rubrics of a (merged) rubric/row.
-  def toJson: Json = subRubrics.map(r => s"(${r.rubric.abbrev}, ${r.rubric.id})").mkString(", ").asJson
-
-  // Get the full list of rubrics - that is: a list of (abbrev, rubric_id) tuples - from a CaseRubric's ID
-  def idAsJsonRubrics: List[(String, Int)] = {
-    io.circe.parser.parse(toJson.toString) match {
-      case Right(json) => json.hcursor.as[List[(String, Int)]] match {
-        case Right(c) => c
-        case Left(err) => List.empty
-      }
-      case Left(err) => List.empty
-    }
-  }
+  // Get a unique ID (i.e. list of subrubrics) which can later be used to access the individual subrubrics of a (merged) rubric/row.
+  // (The counterpart to fromJson() below in the support object)
+  def toJson(): Json = subRubrics.map(sr => (sr.rubric.abbrev, id, sr.rubric.id)).asJson
+  override def toString(): String = subRubrics.map(sr => s"${sr.rubric.abbrev}_${id}_${sr.rubric.id}").mkString("__")
 
   def getAllRemedies: List[Remedy] =
     subRubrics.flatMap(_.weightedRemedies.map(_.remedy))
@@ -211,13 +202,20 @@ object CazeRubric {
   implicit val crencoder: Encoder[CazeRubric] = deriveEncoder[CazeRubric]
   implicit val crdecoder: Decoder[CazeRubric] = deriveDecoder[CazeRubric]
 
-//  implicit val crLdecoder: Decoder[List[CazeRubric]] = new Decoder[List[CazeRubric]] {
-//    final def apply(c: HCursor): Decoder.Result[List[CazeRubric]] = {
-//      val result: List[CazeRubric] = Nil
-//      Right(result)
-//    }
-//  }
-
+  // The counterpart to toJson() above
+  def fromJson(jsonEncodedStrings: List[String]): List[(String, Int, Int)] = {
+    jsonEncodedStrings.collect(
+      parse(_) match {
+        case Right(json) =>
+          val cursor = json.hcursor
+          cursor.as[Seq[(String, Int, Int)]] match {
+            case Right(Seq(results)) => {
+              results
+            }
+          }
+      }
+    )
+  }
 }
 
 /**
@@ -323,8 +321,8 @@ case class Caze(id: Int,
       if (that.member_id == member_id && that.rubrics.length == rubrics.length && that.header == header && that.description == description) {
         val unequalCRubricPairs =
           rubrics
-            .sortBy(_.toJson.toString)
-            .zip(that.rubrics.sortBy(_.toJson.toString))
+            .sortBy(_.toJson().toString())
+            .zip(that.rubrics.sortBy(_.toJson().toString()))
             .filter { case (a, b) => a.equalsExceptWeight(b) }
 
         if (unequalCRubricPairs.length > 0) {
