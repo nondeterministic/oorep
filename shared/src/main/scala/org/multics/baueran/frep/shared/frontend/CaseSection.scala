@@ -163,7 +163,7 @@ object CaseSection {
             .post(
               ("memberID" -> memberId),
               ("caseRubricIdFrom" -> checkBoxesChecked.head._2.toString),
-              ("caseRubricIdTo" -> checkBoxesChecked.last._3.toString)
+              ("caseRubricIdTo" -> checkBoxesChecked.last._2.toString)
             )
         case None =>
           println("Pressed Merge without being logged in.")

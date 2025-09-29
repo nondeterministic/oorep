@@ -234,7 +234,12 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
                   Logger.error(err)
                   Forbidden(err)
                 } else {
-                  println("MERGECASERUBRICS SUCCESS!!")
+                  println("MERGECASERUBRICS SUCCESS!! 1")
+
+                  val success = cazeDao.mergeCaseRubrics(List(caseRubricIdFrom, caseRubricIdTo))
+
+                  println("MERGECASERUBRICS SUCCESS!! 2 " + success.toString())
+
                   Ok
 
                   // if (cazeDao.addCaseRubrics(caseID, caseRubrics).length > 0) {

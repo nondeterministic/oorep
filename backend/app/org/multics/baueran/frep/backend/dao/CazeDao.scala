@@ -85,7 +85,7 @@ class CazeDao(dbContext: db.db.DBContext) {
   }
 
   def insert(caze: Caze): Int = {
-    run { quote {
+    val newCazeId = run { quote {
       schemaCaze.insert(
         _.id -> lift(caze.id),
         _.header -> lift(caze.header),
@@ -95,6 +95,11 @@ class CazeDao(dbContext: db.db.DBContext) {
         _.description -> lift(caze.description)
       ).returningGenerated(_.id)
     }}
+
+    if (addCaseRubrics(newCazeId, caze.rubrics).length == 0)
+      Logger.debug(s"CazeDao: insert(...) failed to add rubrics to freshly inserted caze with ID ${newCazeId}.")
+
+    newCazeId
   }
 
   def getWeightedRemedies(rubric: Rubric): List[WeightedRemedy] = {
@@ -302,17 +307,46 @@ class CazeDao(dbContext: db.db.DBContext) {
     }}.toInt
   }
 
-  def mergeCaseRubrics(caseRubricIdFrom: Int, caseRubricIdTo: Int): Boolean = {
-    getCaseSubRubrics(caseRubricIdFrom).collect(moveCaseSubRubric(_, caseRubricIdTo)) match {
-      case Nil => false
-      case _ =>
-        if (delCaseRubric(caseRubricIdFrom) > 0)
-          true
-        else {
-          Logger.debug(s"CazeDao: mergeCaseRubrics($caseRubricIdFrom, $caseRubricIdTo) failed to delete the merged CaseRubric. Subrubrics are deleted though. Oh no!")
-          false
-        }
+  //  case class CazeRubric(id: Int,
+  //                        cazeId: Int,
+  //                        subRubrics: List[CazeSubRubric],
+  //                        var rubricWeight: Int,
+  //                        var rubricLabel: Option[String]) {
+
+  def mergeCaseRubrics(caseRubricIds: List[Int]): Boolean = {
+    println("Merging rubrics...")
+    
+    if (caseRubricIds.length > 1) {
+      val caseSubRubrics: List[CazeSubRubric] =
+        caseRubricIds.flatMap(getCaseSubRubrics(_)) // TODO: Do we need to check for duplicates and delete them?! What if user re-adds an already added rubric?
+
+      // Move all subrubrics into the last case rubric in caseRubricIds
+      //   && Delete all but that last case rubric
+      println(s"Moving to cazerubric ${caseRubricIds.last}...")
+      if (caseSubRubrics.map(moveCaseSubRubric(_, caseRubricIds.last)).exists(_ > 0) &&
+        caseRubricIds.dropRight(1).map(delCaseRubric(_)).exists(_ > 0))
+        println("MERGED in CazeDao!!!!!!!!!!!!!!!!")
+        true
+      else {
+        Logger.debug(s"CazeDao: mergeCaseRubrics() failed.")
+        false
+      }
     }
+    else {
+      Logger.debug(s"CazeDao: mergeCaseRubrics() needs at least two case rubrics to work.")
+      false
+    }
+
+    // getCaseSubRubrics(caseRubricIdFrom).collect(moveCaseSubRubric(_, caseRubricIdTo)) match {
+    //   case Nil => false
+    //   case _ =>
+    //     if (delCaseRubric(caseRubricIdFrom) > 0)
+    //       true
+    //     else {
+    //       Logger.debug(s"CazeDao: mergeCaseRubrics($caseRubricIdFrom, $caseRubricIdTo) failed to delete the merged CaseRubric. Subrubrics are deleted though. Oh no!")
+    //       false
+    //     }
+    // }
   }
 
 }
