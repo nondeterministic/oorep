@@ -7,9 +7,11 @@ import backend.dao.RepertoryDao
 import io.getquill.*
 import io.circe.{Decoder, *}
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
+import scala.annotation.targetName
 
 class CazeDao(dbContext: db.db.DBContext) {
 
+  // case class CazeSubRubric(id: Int, rubric: Rubric, weightedRemedies: List[WeightedRemedy]) {
   //  case class CazeRubric(id: Int,
   //                        cazeId: Int,
   //                        subRubrics: List[CazeSubRubric],
@@ -113,13 +115,6 @@ class CazeDao(dbContext: db.db.DBContext) {
     }
   }
 
-  // def delCaseSubRubric(caseSubRubricId: Int): Int = {
-  //   run(quote(schemaCazeSubRubric
-  //     .filter(_.id == lift(caseSubRubricId))
-  //     .delete
-  //   )).toInt
-  // }
-
   // case class CazeSubRubric(id: Int, rubric: Rubric, weightedRemedies: List[WeightedRemedy]) {
   // case class PersistentCazeSubRubric(id: Int, cazeRubricId: Int, abbrev: String, rubricId: Int)
 
@@ -152,10 +147,6 @@ class CazeDao(dbContext: db.db.DBContext) {
         )
     }
   }
-
-  // def getCaseSubRubrics(caseRubricId: Int): List[CazeSubRubric] = {
-  //   Nil
-  // }
 
   //  case class CazeRubric(id: Int,
   //                        cazeId: Int,
@@ -217,20 +208,65 @@ class CazeDao(dbContext: db.db.DBContext) {
     )).map(pcaze => Caze(pcaze.id, pcaze.header, pcaze.member_id, pcaze.date, pcaze.changed, pcaze.description))
   }
 
-  def delCaseRubric(caseRubricId: Int): Int = {
+  // def delCaseRubric(caseRubricId: Int): Int = {
+  //   run { quote {
+  //     schemaCazeRubric
+  //         .filter(_.id == lift(caseRubricId))
+  //       .delete
+  //   }}.toInt
+  // }
+
+  // Return number of deleted case sub rubrics.
+
+  def delCaseSubRubrics(caseRubricId: Int): Int = {
+    // Get case's subrubrics first.  Corresponds to
+    //   select cazesubrubric.id, cazerubricid, abbrev, rubricid from cazesubrubric join cazerubric
+    //          on cazerubricid = cazerubric.id and cazerubric.id = 29;
+    val caseSubRubrics = run { quote {
+      schemaCazeSubRubric
+        .join(schemaCazeRubric).on({ case (csr, cr) => csr.cazeRubricId == cr.id && cr.id == lift(caseRubricId) })
+    }}.collect { case (csr, _) => csr }
+
     run { quote {
-      schemaCazeRubric
-        .filter(_.id == lift(caseRubricId))
+      schemaCazeSubRubric
+        .filter (csr => liftQuery(caseSubRubrics.map(_.id)).contains(csr.id))
         .delete
     }}.toInt
   }
 
+  // Return number of deleted case rubrics.
+  @targetName("delCaseRubrics_byObject")
   def delCaseRubrics(caseRubrics: List[CazeRubric]): Int = {
-    run { quote {
-      schemaCazeRubric
-        .filter(cr => liftQuery(caseRubrics.map(_.id)).contains(cr.id))
-        .delete
-    }}.toInt
+    var deletedCaseRubrics = 0
+
+    // First attempt to delete subrubrics, then the rubrics themselves.
+    transaction {
+      if (caseRubrics.map(cr => delCaseSubRubrics(cr.id)).exists(_ > 0))
+        deletedCaseRubrics = run { quote {
+          schemaCazeRubric
+            .filter(cr => liftQuery(caseRubrics.map(_.id)).contains(cr.id))
+            .delete
+        }}.toInt
+    }
+
+    deletedCaseRubrics
+  }
+
+  @targetName("delCaseRubrics_byID")
+  def delCaseRubrics(caseRubricIds: List[Int]): Int = {
+    var deletedCaseRubrics = 0
+
+    // First attempt to delete subrubrics, then the rubrics themselves.
+    transaction {
+      if (caseRubricIds.map(crid => delCaseSubRubrics(crid)).exists(_ > 0))
+        deletedCaseRubrics = run { quote {
+          schemaCazeRubric
+            .filter(cr => liftQuery(caseRubricIds).contains(cr.id))
+            .delete
+        }}.toInt
+    }
+
+    deletedCaseRubrics
   }
 
   def addCaseSubRubrics(caseRubricId: Int, caseSubRubrics: List[CazeSubRubric]): List[Int] = {
@@ -324,9 +360,11 @@ class CazeDao(dbContext: db.db.DBContext) {
       //   && Delete all but that last case rubric
       println(s"Moving to cazerubric ${caseRubricIds.last}...")
       if (caseSubRubrics.map(moveCaseSubRubric(_, caseRubricIds.last)).exists(_ > 0) &&
-        caseRubricIds.dropRight(1).map(delCaseRubric(_)).exists(_ > 0))
+        delCaseRubrics(caseRubricIds.dropRight(1)) > 0)
+      {
         println("MERGED in CazeDao!!!!!!!!!!!!!!!!")
         true
+      }
       else {
         Logger.debug(s"CazeDao: mergeCaseRubrics() failed.")
         false

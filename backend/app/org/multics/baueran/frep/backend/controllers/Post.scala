@@ -10,6 +10,10 @@ import org.multics.baueran.frep._
 import shared.{CazeRubric, Caze, EmailHistory, FIle, MyDate, PasswordChangeRequest}
 import backend.db.db.DBContext
 
+import io.circe.parser._
+import io.circe.generic.auto._ // Brings implicit Decoders for standard types (like List[Int]) into scope
+import scala.util.{Left, Right} // For pattern matching on the Either result
+
 class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends AbstractController(cc) with ServerUrl {
 
   private val Logger = play.api.Logger(this.getClass)
@@ -225,19 +229,28 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
 
     getAuthenticatedUser(request) match {
       case Some(_) => {
-        (requestData("memberID"), requestData("caseRubricIdFrom"), requestData("caseRubricIdTo")) match {
-          case (Seq(memberIdStr), Seq(cazeRubricIdFrom), Seq(cazeRubricIdTo)) => // if (cazeRubricIdFrom.forall(_.isDigit) && cazeRubricIdTo.forall(_.isDigit) && (memberIdStr.forall(_.isDigit))) => // TODO Fails cause of -1 for new cazes!
-            (memberIdStr.toInt, cazeRubricIdFrom.toInt, cazeRubricIdTo.toInt) match {
-              case (memberId, caseRubricIdFrom, caseRubricIdTo) =>
+        (requestData("memberID"), requestData("caseRubricIds")) match {
+          case (Seq(memberIdStr), Seq(cazeRubricIdsStr)) => // if (cazeRubricIdFrom.forall(_.isDigit) && cazeRubricIdTo.forall(_.isDigit) && (memberIdStr.forall(_.isDigit))) => // TODO Fails cause of -1 for new cazes!
+            val cazeRubricIdsJson: Either[io.circe.Error, List[Int]] = decode[List[Int]](cazeRubricIdsStr)
+            val cazeRubricIds: List[Int] = cazeRubricIdsJson match {
+              case Right(list) => list
+              case Left(error) =>
+                // TODO!!!!!!! Error case handling...
+                println(s"Error parsing JSON with circe: $error")
+                throw new RuntimeException("Invalid JSON for List[Int]", error)
+            }
+            println(s"List: ${cazeRubricIds.mkString(", ")}")
+
+            (memberIdStr.toInt, cazeRubricIds.map(_.toInt)) match {
+              case (memberId, caseRubricIds) =>
                 if (!isUserAuthorized(request, memberId)) {
                   val err = s"Post: mergeCaseRubrics() failed: not authorised."
                   Logger.error(err)
                   Forbidden(err)
                 } else {
-                  println("MERGECASERUBRICS SUCCESS!! 1")
+                  println(s"MERGECASERUBRICS SUCCESS!! 1 ${caseRubricIds.mkString(", ")}")
 
-                  val success = cazeDao.mergeCaseRubrics(List(caseRubricIdFrom, caseRubricIdTo))
-
+                  val success = cazeDao.mergeCaseRubrics(caseRubricIds)
                   println("MERGECASERUBRICS SUCCESS!! 2 " + success.toString())
 
                   Ok

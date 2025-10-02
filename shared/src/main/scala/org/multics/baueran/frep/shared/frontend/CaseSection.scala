@@ -162,8 +162,8 @@ object CaseSection {
             .withHeaders((HeaderFields.csrfToken.toString(), getDocumentCsrfCookie().getOrElse("")))
             .post(
               ("memberID" -> memberId),
-              ("caseRubricIdFrom" -> checkBoxesChecked.head._2.toString),
-              ("caseRubricIdTo" -> checkBoxesChecked.last._2.toString)
+              ("caseRubricIds" -> s"[ ${checkBoxesChecked.map(_._2).mkString(", ")} ]")
+              // ("caseRubricIds" -> s"[ ${checkBoxesChecked.head._2.toString}, ${checkBoxesChecked.last._2.toString} ]")
             )
         case None =>
           println("Pressed Merge without being logged in.")
