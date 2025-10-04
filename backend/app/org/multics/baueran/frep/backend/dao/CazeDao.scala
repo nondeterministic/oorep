@@ -355,7 +355,6 @@ class CazeDao(dbContext: db.db.DBContext) {
         caseRubricIds.flatMap(getCaseSubRubrics(_)) // TODO: Do we need to check for duplicates and delete them?! What if user re-adds an already added rubric?
 
       // Move all subrubrics into the last case rubric in caseRubricIds   &&   delete all but that last case rubric
-      println(s"Moving to cazerubric ${caseRubricIds.last}...")
       if ( caseSubRubrics.map(moveCaseSubRubric(_, caseRubricIds.last)).exists(_ > 0)  &&  delCaseRubrics(caseRubricIds.dropRight(1)) > 0 )
         true
       else {
