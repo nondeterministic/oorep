@@ -350,21 +350,14 @@ class CazeDao(dbContext: db.db.DBContext) {
   //                        var rubricLabel: Option[String]) {
 
   def mergeCaseRubrics(caseRubricIds: List[Int]): Boolean = {
-    println("Merging rubrics...")
-    
     if (caseRubricIds.length > 1) {
       val caseSubRubrics: List[CazeSubRubric] =
         caseRubricIds.flatMap(getCaseSubRubrics(_)) // TODO: Do we need to check for duplicates and delete them?! What if user re-adds an already added rubric?
 
-      // Move all subrubrics into the last case rubric in caseRubricIds
-      //   && Delete all but that last case rubric
+      // Move all subrubrics into the last case rubric in caseRubricIds   &&   delete all but that last case rubric
       println(s"Moving to cazerubric ${caseRubricIds.last}...")
-      if (caseSubRubrics.map(moveCaseSubRubric(_, caseRubricIds.last)).exists(_ > 0) &&
-        delCaseRubrics(caseRubricIds.dropRight(1)) > 0)
-      {
-        println("MERGED in CazeDao!!!!!!!!!!!!!!!!")
+      if ( caseSubRubrics.map(moveCaseSubRubric(_, caseRubricIds.last)).exists(_ > 0)  &&  delCaseRubrics(caseRubricIds.dropRight(1)) > 0 )
         true
-      }
       else {
         Logger.debug(s"CazeDao: mergeCaseRubrics() failed.")
         false
@@ -374,17 +367,6 @@ class CazeDao(dbContext: db.db.DBContext) {
       Logger.debug(s"CazeDao: mergeCaseRubrics() needs at least two case rubrics to work.")
       false
     }
-
-    // getCaseSubRubrics(caseRubricIdFrom).collect(moveCaseSubRubric(_, caseRubricIdTo)) match {
-    //   case Nil => false
-    //   case _ =>
-    //     if (delCaseRubric(caseRubricIdFrom) > 0)
-    //       true
-    //     else {
-    //       Logger.debug(s"CazeDao: mergeCaseRubrics($caseRubricIdFrom, $caseRubricIdTo) failed to delete the merged CaseRubric. Subrubrics are deleted though. Oh no!")
-    //       false
-    //     }
-    // }
   }
 
 }

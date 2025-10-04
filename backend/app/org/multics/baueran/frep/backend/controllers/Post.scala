@@ -231,15 +231,14 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
       case Some(_) => {
         (requestData("memberID"), requestData("caseRubricIds")) match {
           case (Seq(memberIdStr), Seq(cazeRubricIdsStr)) => // if (cazeRubricIdFrom.forall(_.isDigit) && cazeRubricIdTo.forall(_.isDigit) && (memberIdStr.forall(_.isDigit))) => // TODO Fails cause of -1 for new cazes!
+            // Extract case rubric Ids from API argument...
             val cazeRubricIdsJson: Either[io.circe.Error, List[Int]] = decode[List[Int]](cazeRubricIdsStr)
             val cazeRubricIds: List[Int] = cazeRubricIdsJson match {
               case Right(list) => list
               case Left(error) =>
-                // TODO!!!!!!! Error case handling...
-                println(s"Error parsing JSON with circe: $error")
-                throw new RuntimeException("Invalid JSON for List[Int]", error)
+                Logger.error(s"Post: addCaseRubricsToCaze(): failed to decode API argument ${cazeRubricIdsStr}.")
+                List()
             }
-            println(s"List: ${cazeRubricIds.mkString(", ")}")
 
             (memberIdStr.toInt, cazeRubricIds.map(_.toInt)) match {
               case (memberId, caseRubricIds) =>
@@ -248,22 +247,11 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
                   Logger.error(err)
                   Forbidden(err)
                 } else {
-                  println(s"MERGECASERUBRICS SUCCESS!! 1 ${caseRubricIds.mkString(", ")}")
-
-                  val success = cazeDao.mergeCaseRubrics(caseRubricIds)
-                  println("MERGECASERUBRICS SUCCESS!! 2 " + success.toString())
-
+                  if (cazeDao.mergeCaseRubrics(caseRubricIds))
+                    Logger.debug(s"Post: addCaseRubricsToCaze(): success")
+                  else
+                    Logger.debug(s"Post: addCaseRubricsToCaze(): failed")
                   Ok
-
-                  // if (cazeDao.addCaseRubrics(caseID, caseRubrics).length > 0) {
-                  //   Logger.debug(s"Post: addCaseRubricsToCaze(): success")
-                  //   Ok
-                  // }
-                  // else {
-                  //   val err = s"Post: addCaseRubricsToCaze() failed"
-                  //   Logger.error(err)
-                  //   BadRequest(err)
-                  // }
                 }
               case _ =>
                 val err = s"Post: mergeCaseRubrics() failed: type conversion error which should never have happened"
