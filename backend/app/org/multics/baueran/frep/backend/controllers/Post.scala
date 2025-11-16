@@ -7,7 +7,7 @@ import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{Failure, Success}
 import org.multics.baueran.frep._
-import shared.{CazeRubric, Caze, EmailHistory, FIle, MyDate, PasswordChangeRequest}
+import shared.{CazeRubric, CazeRubricJsonHelper, Caze, EmailHistory, FIle, MyDate, PasswordChangeRequest, Member}
 import backend.db.db.DBContext
 
 import io.circe.parser._
@@ -226,45 +226,46 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
 
   def mergeCaseRubrics() = Action { (request: Request[AnyContent]) =>
     val requestData = request.body.asFormUrlEncoded.get
-
-    getAuthenticatedUser(request) match {
-      case Some(_) => {
-        (requestData("memberID"), requestData("caseRubricIds")) match {
-          case (Seq(memberIdStr), Seq(cazeRubricIdsStr)) => // if (cazeRubricIdFrom.forall(_.isDigit) && cazeRubricIdTo.forall(_.isDigit) && (memberIdStr.forall(_.isDigit))) => // TODO Fails cause of -1 for new cazes!
-            // Extract case rubric Ids from API argument...
-            val cazeRubricIdsJson: Either[io.circe.Error, List[Int]] = decode[List[Int]](cazeRubricIdsStr)
-            val cazeRubricIds: List[Int] = cazeRubricIdsJson match {
-              case Right(list) => list
-              case Left(error) =>
-                Logger.error(s"Post: addCaseRubricsToCaze(): failed to decode API argument ${cazeRubricIdsStr}.")
-                List()
-            }
-
-            (memberIdStr.toInt, cazeRubricIds.map(_.toInt)) match {
-              case (memberId, caseRubricIds) =>
-                if (!isUserAuthorized(request, memberId)) {
-                  val err = s"Post: mergeCaseRubrics() failed: not authorised."
-                  Logger.error(err)
-                  Forbidden(err)
-                } else {
-                  if (cazeDao.mergeCaseRubrics(caseRubricIds))
-                    Logger.debug(s"Post: addCaseRubricsToCaze(): success")
-                  else
-                    Logger.debug(s"Post: addCaseRubricsToCaze(): failed")
-                  Ok
-                }
+    val requestMemberId: Option[Int] = getAuthenticatedUser(request) match {
+      case Some(member) => Some(member.member_id)
+      case _ => None
+    }
+    val argumentMemberId: Option[Int] = requestData("memberID") match {
+      case Seq(memberIdStr) => Some(memberIdStr.toInt)
+      case _ => None
+    }
+    val argCazeRubrics: List[CazeRubricJsonHelper] = requestData("cazeRubrics") match {
+      case Seq(cazeRubricsStr) =>
+        io.circe.parser.parse(cazeRubricsStr) match {
+          case Right(json) =>
+            val cursor = json.hcursor
+            cursor.as[List[CazeRubricJsonHelper]] match {
+              case Right(cazeRubrics) =>
+                cazeRubrics
               case _ =>
-                val err = s"Post: mergeCaseRubrics() failed: type conversion error which should never have happened"
-                Logger.error(err)
-                BadRequest(err)
+                Nil
             }
-          case wrongData => {
-            val err = s"Post: mergeCaseRubrics() failed: no or the wrong form data received: ${wrongData}"
-            Logger.error(err)
-            BadRequest(err)
-          }
+          case _ => Nil
         }
-      }
+      case _ => Nil
+    }
+
+    if (requestMemberId != argumentMemberId || argumentMemberId == None || !isUserAuthorized(request, argumentMemberId.get)) {
+      val err = s"Post: mergeCaseRubrics() failed: not authorised."
+      Logger.error(err)
+      Forbidden(err)
+    }
+    else if (argCazeRubrics.length < 2) {
+      val err = s"Post: mergeCaseRubrics() failed: need to select more than ${argCazeRubrics.length} rubrics!"
+      Logger.error(err)
+      BadRequest(err)
+    }
+    else {
+      if (cazeDao.mergeCaseRubrics(argCazeRubrics))
+        Logger.info(s"Post: mergeCaseRubrics(): success")
+      else
+        Logger.error(s"Post: mergeCaseRubrics(): failed")
+      Ok
     }
   }
 

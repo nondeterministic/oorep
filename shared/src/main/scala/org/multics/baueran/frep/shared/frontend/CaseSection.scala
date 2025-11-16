@@ -148,13 +148,49 @@ object CaseSection {
     def getId() = "CaseMergeRubricButtonID_jhkjhkjh34576348975634fdgfdgdgfgdsfgertegh"
 
     def clickHandler() = {
+
+      def mergeCaseRubrics(caseRubrics: List[CazeRubricJsonHelper]): Option[CazeRubricJsonHelper] = {
+        if (caseRubrics.length > 1) {
+          val allSubRubrics = caseRubrics.flatMap(_.subRubrics)
+          val cazeId = caseRubrics.head.cazeId
+          val cazeRubricId = caseRubrics.head.cazeRubricId // We merge "into" the first element of the argument list
+          Some(CazeRubricJsonHelper(cazeRubricId, cazeId, allSubRubrics))
+        } else {
+          None
+        }
+      }
+
       val checkBoxes = HtmlRepresentation.getAllCaseRowCheckboxes()
       val checkBoxesCheckedStrings: List[String] = checkBoxes.filter(_.checked).map(_.value)
-      val checkBoxesChecked: List[(String, Int, Int)] = CazeRubric.fromJson(checkBoxesCheckedStrings)
+      val checkBoxesChecked: List[CazeRubricJsonHelper] =
+        checkBoxesCheckedStrings.collect {
+          parse(_) match {
+            case Right(json) => {
+              val cursor = json.hcursor
+              cursor.as[CazeRubricJsonHelper] match {
+                case Right(cazeRubricsAsJson) => Some(cazeRubricsAsJson)
+                case _ => None
+              }
+            }
+            case _ => None
+          }
+        }.map(_.get)
 
       println(s"Parsed ${checkBoxesChecked.length}: ${checkBoxesChecked}")
 
+      println(checkBoxesChecked.asJson.toString)
+
       // TODO ...
+
+      //  case class CazeRubric(id: Int,
+      //                        cazeId: Int,
+      //                        subRubrics: List[CazeSubRubric],
+      //                        var rubricWeight: Int,
+      //                        var rubricLabel: Option[String]) {
+      //
+      // case class CazeRubricJsonHelper(cazeRubricId: Int, cazeId: Int, subRubrics: List[(Int, String, Int)])
+      // case class CazeSubRubric(id: Int, rubric: Rubric, weightedRemedies: List[WeightedRemedy]) 
+      // case class WeightedRemedy(remedy: Remedy, weight: Int)
 
       getCookieData(dom.document.cookie, CookieFields.id.toString) match {
         case Some(memberId) =>
@@ -162,11 +198,34 @@ object CaseSection {
             .withHeaders((HeaderFields.csrfToken.toString(), getDocumentCsrfCookie().getOrElse("")))
             .post(
               ("memberID" -> memberId),
-              ("caseRubricIds" -> s"[ ${checkBoxesChecked.map(_._2).mkString(", ")} ]")
-              // ("caseRubricIds" -> s"[ ${checkBoxesChecked.head._2.toString}, ${checkBoxesChecked.last._2.toString} ]")
+              ("cazeRubrics" -> checkBoxesChecked.asJson.toString)
             )
         case None =>
-          println("Pressed Merge without being logged in.")
+          val mergedCaseRubricIds = checkBoxesChecked.flatMap(_.subRubrics.map(_._1))
+          println("mergedCaseRubricIds: " + mergedCaseRubricIds.mkString(", "))
+          mergeCaseRubrics(checkBoxesChecked) match {
+            case Some(mergedJsonCaseRubric) =>
+              println("Case rubrics before: " + cRubrics.size + ", subrubrics: " + cRubrics.flatMap(_.subRubrics.map(_._1)).mkString(", "))
+
+              // Delete merged rubrics from case...
+              val deletedCaseRubrics = cRubrics.filter(cr =>
+                val rubricsSubrubricsIds = cr.subRubrics.map(_._1).toSet
+                  mergedCaseRubricIds.toSet.intersect(rubricsSubrubricsIds).size > 0
+              )
+              cRubrics = cRubrics.filter(cr => deletedCaseRubrics.contains(cr) == false)
+
+              // Add newly merged rubric to case...
+              val mergedCaseSubrubrics: List[CazeSubRubric] = deletedCaseRubrics.flatMap(_.subRubrics).toList
+              val mergedCaseRubric: CazeRubric = CazeRubric(-1, mergedJsonCaseRubric.cazeId, mergedCaseSubrubrics, 1, None)
+              cRubrics = cRubrics + mergedCaseRubric
+
+              // Update view
+              updateCaseViewAndDataStructures()
+
+              println("Case rubrics after: " + cRubrics.size + ", subrubrics: " + cRubrics.flatMap(_.subRubrics.map(_._1)).mkString(", "))
+            case None =>
+              println("Nothing to be done.")
+          }
       }
     }
 
@@ -233,9 +292,7 @@ object CaseSection {
     def getId() = "Case_HtmlRepresentation_3243jkdvjk34jkJKhk"
 
     // Select all checkboxes in this view whose ID starts with the parent view's ID...
-    def getAllCaseRowCheckboxes() = {
-      dom.document.querySelectorAll(s"input[type=checkbox][id^='${getId()}']").map(_.asInstanceOf[dom.html.Input]).toList
-    }
+    def getAllCaseRowCheckboxes() = dom.document.querySelectorAll(s"input[type=checkbox][id^='${getId()}']").map(_.asInstanceOf[dom.html.Input]).toList
 
     object TableHead extends OorepHtmlElement {
       def getId() = "Case_caseSectionOfPage_34534jhdkfgfd"

@@ -2,7 +2,7 @@ package org.multics.baueran.frep.backend.dao
 
 import org.multics.baueran.frep.*
 import backend.db
-import shared.{BetterString, Caze, CazeRubric, CazeSubRubric, Rubric, WeightedRemedy}
+import shared.{BetterString, Caze, CazeRubric, CazeSubRubric, Rubric, WeightedRemedy, CazeRubricJsonHelper}
 import backend.dao.RepertoryDao
 import io.getquill.*
 import io.circe.{Decoder, *}
@@ -348,8 +348,20 @@ class CazeDao(dbContext: db.db.DBContext) {
   //                        subRubrics: List[CazeSubRubric],
   //                        var rubricWeight: Int,
   //                        var rubricLabel: Option[String]) {
+  //
+  // case class CazeRubricJsonHelper(id: Int, cazeId: Int, subRubrics: List[(Int, String, Int)])
 
-  def mergeCaseRubrics(caseRubricIds: List[Int]): Boolean = {
+  // TODO !!!!!!!!!!!!!!!!!!!!
+
+  def mergeCaseRubrics(caseRubricIds: List[CazeRubricJsonHelper]): Boolean = {
+    if (caseRubricIds.length > 1) {
+      true
+    } else {
+      false
+    }
+  }
+
+  def mergeCaseRubrics2(caseRubricIds: List[Int]): Boolean = {
     if (caseRubricIds.length > 1) {
       val caseSubRubrics: List[CazeSubRubric] =
         caseRubricIds.flatMap(getCaseSubRubrics(_)) // TODO: Do we need to check for duplicates and delete them?! What if user re-adds an already added rubric?

@@ -94,6 +94,13 @@ object CazeSubRubric {
 
 }
 
+case class CazeRubricJsonHelper(cazeRubricId: Int, cazeId: Int, subRubrics: List[(Int, String, Int)])
+
+object CazeRubricJsonHelper {
+  implicit val cazeRubricJsonHelperDecoder: Decoder[CazeRubricJsonHelper] = deriveDecoder[CazeRubricJsonHelper]
+  implicit val cazeRubricJsonHelperEncoder: Encoder[CazeRubricJsonHelper] = deriveEncoder[CazeRubricJsonHelper]
+}
+
 case class CazeRubric(id: Int,
                       cazeId: Int,
                       subRubrics: List[CazeSubRubric],
@@ -109,8 +116,12 @@ case class CazeRubric(id: Int,
 
   // Get a unique ID (i.e. list of subrubrics) which can later be used to access the individual subrubrics of a (merged) rubric/row.
   // (The counterpart to fromJson() below in the support object)
-  def toJson(): Json = subRubrics.map(sr => (sr.rubric.abbrev, id, sr.rubric.id)).asJson
-  override def toString(): String = subRubrics.map(sr => s"${sr.rubric.abbrev}_${id}_${sr.rubric.id}").mkString("__")
+  def toJson(): Json = CazeRubricJsonHelper(id, cazeId, subRubrics.map(sr => (sr.id, sr.rubric.abbrev, sr.rubric.id))).asJson
+
+  // This is really only used in CaseSection.scala as follows:
+  //     def getId() = HtmlRepresentation.getId() + "_crub_" + crub.toString()
+  // to give each checkbox a unique ID.
+  override def toString(): String = toJson().toString().filter(_.isDigit)
 
   def getAllRemedies: List[Remedy] =
     subRubrics.flatMap(_.weightedRemedies.map(_.remedy))
@@ -203,12 +214,12 @@ object CazeRubric {
   implicit val crdecoder: Decoder[CazeRubric] = deriveDecoder[CazeRubric]
 
   // The counterpart to toJson() above
-  def fromJson(jsonEncodedStrings: List[String]): List[(String, Int, Int)] = {
+  def fromJson(jsonEncodedStrings: List[String]): List[(Int, String, Int)] = {
     jsonEncodedStrings.collect(
       parse(_) match {
         case Right(json) =>
           val cursor = json.hcursor
-          cursor.as[Seq[(String, Int, Int)]] match {
+          cursor.as[Seq[(Int, String, Int)]] match {
             case Right(Seq(results)) => {
               results
             }
