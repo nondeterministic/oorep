@@ -221,6 +221,10 @@ object CaseSection {
 
               // Update view
               updateCaseViewAndDataStructures()
+              MainView.CaseDiv.empty()
+              MainView.CaseDiv.append(new CaseSection.HtmlRepresentation(RepertoryView._remedyFormat.get())().render)
+              CaseSection.updateCaseViewAndDataStructures()
+              CaseSection.updateCaseHeaderView()
 
               println("Case rubrics after: " + cRubrics.size + ", subrubrics: " + cRubrics.flatMap(_.subRubrics.map(_._1)).mkString(", "))
             case None =>
