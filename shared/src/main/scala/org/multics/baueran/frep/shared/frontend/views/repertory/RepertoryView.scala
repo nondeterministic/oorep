@@ -124,16 +124,6 @@ object RepertoryView extends TabView {
   }
 
   // ------------------------------------------------------------------------------------------------------------------
-  private def showCase(): Unit = {
-    if (CaseSection.size() > 0) {
-      MainView.CaseDiv.empty()
-      MainView.CaseDiv.append(new CaseSection.HtmlRepresentation(_remedyFormat.get())().render)
-      CaseSection.updateCaseViewAndDataStructures()
-      CaseSection.updateCaseHeaderView()
-    }
-  }
-
-  // ------------------------------------------------------------------------------------------------------------------
   // Render HTML for the results of a repertory lookup directly to page.
   def showResults(): Unit = {
 
@@ -156,7 +146,7 @@ object RepertoryView extends TabView {
                 CaseSection.addRepertoryLookup(result)
                 CaseSection.updateCaseViewAndDataStructures()
                 dom.document.getElementById("button_" + result.toJson().toString()).asInstanceOf[dom.html.Button].setAttribute("disabled", "1")
-                showCase()
+                CaseSection.showCase(_remedyFormat)
                 MainView.toggleOnBeforeUnload()
               }
               }, b(raw("&nbsp;+&nbsp;")))
@@ -171,7 +161,7 @@ object RepertoryView extends TabView {
     }
 
     MainView.resetContentView()
-    showCase()
+    CaseSection.showCase(_remedyFormat)
 
     (_repertorisationResults.get(), _pageCache.latest()) match {
       case (Some(ResultsCazeRubrics(totalNumberOfRepertoryRubrics, totalNumberOfResults, totalNumberOfPages, currPage, results)), Some(latestCachePage)) if (results.size > 0) => {
@@ -342,7 +332,7 @@ object RepertoryView extends TabView {
       _remedyFormat.set(RemedyFormat.Fullname)
 
     if (CaseSection.size() > 0)
-      showCase()
+      CaseSection.showCase(_remedyFormat)
     else
       println("RepertoryView: toggleRemedyFormat: Case.size() == 0.")
   }
@@ -571,7 +561,7 @@ object RepertoryView extends TabView {
       _resultRemedyStats.set(remedyStats)
 
       if (CaseSection.size() > 0)
-        showCase()
+        CaseSection.showCase(_remedyFormat)
 
       dom.document.body.classList.remove("wait")
 
