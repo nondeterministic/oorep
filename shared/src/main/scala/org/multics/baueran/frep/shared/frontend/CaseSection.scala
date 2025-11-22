@@ -148,18 +148,6 @@ object CaseSection {
     def getId() = "CaseMergeRubricButtonID_jhkjhkjh34576348975634fdgfdgdgfgdsfgertegh"
 
     def clickHandler() = {
-
-      def mergeCaseRubrics(caseRubrics: List[CazeRubricJsonHelper]): Option[CazeRubricJsonHelper] = {
-        if (caseRubrics.length > 1) {
-          val allSubRubrics = caseRubrics.flatMap(_.subRubrics)
-          val cazeId = caseRubrics.head.cazeId
-          val cazeRubricId = caseRubrics.head.cazeRubricId // We merge "into" the first element of the argument list
-          Some(CazeRubricJsonHelper(cazeRubricId, cazeId, allSubRubrics))
-        } else {
-          None
-        }
-      }
-
       val checkBoxes = HtmlRepresentation.getAllCaseRowCheckboxes()
       val checkBoxesCheckedStrings: List[String] = checkBoxes.filter(_.checked).map(_.value)
       val checkBoxesChecked: List[CazeRubricJsonHelper] =
@@ -191,6 +179,21 @@ object CaseSection {
       // case class CazeRubricJsonHelper(cazeRubricId: Int, cazeId: Int, subRubrics: List[(Int, String, Int)])
       // case class CazeSubRubric(id: Int, rubric: Rubric, weightedRemedies: List[WeightedRemedy]) 
       // case class WeightedRemedy(remedy: Remedy, weight: Int)
+
+      /**
+        * Returns the merged CazeRubricJsonHelper, or None if something went wrong.
+        */
+
+      def mergeCaseRubrics(caseRubrics: List[CazeRubricJsonHelper]): Option[CazeRubricJsonHelper] = {
+        if (caseRubrics.length > 1) {
+          val allSubRubrics = caseRubrics.flatMap(_.subRubrics)
+          val cazeId = caseRubrics.head.cazeId
+          val cazeRubricId = caseRubrics.head.cazeRubricId // We merge "into" the first element of the argument list
+          Some(CazeRubricJsonHelper(cazeRubricId, cazeId, allSubRubrics))
+        } else {
+          None
+        }
+      }
 
       getCookieData(dom.document.cookie, CookieFields.id.toString) match {
         case Some(memberId) =>
