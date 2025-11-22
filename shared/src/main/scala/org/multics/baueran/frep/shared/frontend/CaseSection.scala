@@ -22,7 +22,7 @@ import org.scalajs.dom.{Event, html}
 
 import scala.language.implicitConversions
 
-object CaseSection {  // TODO: Should this, like RepertoryView, derive from TabView? Probably, yes.
+object CaseSection {
 
   var descr: Option[Caze] = None
   var cRubrics: Set[CazeRubric] = Set.empty
@@ -209,13 +209,13 @@ object CaseSection {  // TODO: Should this, like RepertoryView, derive from TabV
                 val rubricsSubrubricsIds = cr.subRubrics.map(_._1).toSet
                   mergedCaseRubricIds.toSet.intersect(rubricsSubrubricsIds).size > 0
               )
-              cRubrics = cRubrics.filter(cr => deletedCaseRubrics.contains(cr) == false)
+              cRubrics = cRubrics.filter(deletedCaseRubrics.contains(_) == false)
 
               // Add newly merged rubric to case...
               val mergedCaseSubrubrics: List[CazeSubRubric] = deletedCaseRubrics.flatMap(_.subRubrics).toList
               val mergedCaseRubric: CazeRubric = CazeRubric(-1, mergedJsonCaseRubric.cazeId, mergedCaseSubrubrics, 1, None)
               cRubrics = cRubrics + mergedCaseRubric
-              showCase(RepertoryView._remedyFormat)
+              showCase(RepertoryView.remedyFormat())
             case None =>
               println("Nothing to be done.")
           }
@@ -518,7 +518,7 @@ object CaseSection {  // TODO: Should this, like RepertoryView, derive from TabV
 
         MainView.CaseDiv.empty()
         MainView.toggleOnBeforeUnload()
-        MainView.CaseDiv.append(new CaseSection.HtmlRepresentation(RepertoryView._remedyFormat.get())().render)
+        MainView.CaseDiv.append(new CaseSection.HtmlRepresentation(RepertoryView.remedyFormat())().render)
         updateCaseViewAndDataStructures()
         updateCaseHeaderView()
       case None =>
@@ -804,10 +804,10 @@ object CaseSection {  // TODO: Should this, like RepertoryView, derive from TabV
   }
 
   // ------------------------------------------------------------------------------------------------------------------
-  def showCase(remedyFormat: RepertoryView.RemedyFormatRx): Unit = {
+  def showCase(remedyFormat: RemedyFormat): Unit = {
     if (size() > 0) {
       MainView.CaseDiv.empty()
-      MainView.CaseDiv.append(new HtmlRepresentation(remedyFormat.get())().render)
+      MainView.CaseDiv.append(new HtmlRepresentation(remedyFormat)().render)
       updateCaseViewAndDataStructures()
       updateCaseHeaderView()
     }

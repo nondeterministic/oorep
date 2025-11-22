@@ -35,6 +35,9 @@ object RepertoryView extends TabView {
     }
   }
   val _remedyFormat = new RemedyFormatRx(RemedyFormat.Abbreviated)
+  def remedyFormat() = {
+    _remedyFormat.get()
+  }
 
   private class RepertorisationResultsRx(results: Option[ResultsCazeRubrics]) extends Rx(results) {
     override def triggerLater() = {
@@ -146,7 +149,7 @@ object RepertoryView extends TabView {
                 CaseSection.addRepertoryLookup(result)
                 CaseSection.updateCaseViewAndDataStructures()
                 dom.document.getElementById("button_" + result.toJson().toString()).asInstanceOf[dom.html.Button].setAttribute("disabled", "1")
-                CaseSection.showCase(_remedyFormat)
+                CaseSection.showCase(remedyFormat())
                 MainView.toggleOnBeforeUnload()
               }
               }, b(raw("&nbsp;+&nbsp;")))
@@ -161,7 +164,7 @@ object RepertoryView extends TabView {
     }
 
     MainView.resetContentView()
-    CaseSection.showCase(_remedyFormat)
+    CaseSection.showCase(remedyFormat())
 
     (_repertorisationResults.get(), _pageCache.latest()) match {
       case (Some(ResultsCazeRubrics(totalNumberOfRepertoryRubrics, totalNumberOfResults, totalNumberOfPages, currPage, results)), Some(latestCachePage)) if (results.size > 0) => {
@@ -332,7 +335,7 @@ object RepertoryView extends TabView {
       _remedyFormat.set(RemedyFormat.Fullname)
 
     if (CaseSection.size() > 0)
-      CaseSection.showCase(_remedyFormat)
+      CaseSection.showCase(remedyFormat())
     else
       println("RepertoryView: toggleRemedyFormat: Case.size() == 0.")
   }
@@ -561,7 +564,7 @@ object RepertoryView extends TabView {
       _resultRemedyStats.set(remedyStats)
 
       if (CaseSection.size() > 0)
-        CaseSection.showCase(_remedyFormat)
+        CaseSection.showCase(remedyFormat())
 
       dom.document.body.classList.remove("wait")
 
