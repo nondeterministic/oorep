@@ -18,22 +18,19 @@ class BetterString(val s: String) {
 
 class BetterCaseRubric(val cr: CazeRubric) {
 
+  /**
+    * Get list of weighted remedies with only single remedy occurrences and their respective highest occurring weight
+    * in all of a case's subrubrics. List is alphabetically sorted and then converted into HTML elements.
+    */
+
   def getFormattedRemedyNames(format: RemedyFormat) = {
-    // First, creat a flat list of all weighted rubrics which is sorted by first
-    // the remedy name and then the weight.
-    // Then we create remedy -> weight maps with the highest weight only to keep only the highest weighing occurrence of the remedy.
-    // Finally, we convert the map back into a list (of weighted remedies)
-    // ...and yield weightedRemedies
     val weightedRemedies = cr.subRubrics.flatMap(_.weightedRemedies)
-      .sortBy { case WeightedRemedy(remedy, weight) =>
-        (remedy.nameAbbrev, -weight)
-      }
       .groupBy { case WeightedRemedy(remedy, weight) => remedy.nameAbbrev }
       .mapValues { remedyList => remedyList.maxBy { case WeightedRemedy(remedy, weight) => weight } }
       .values.toList
+      .sortBy(_.remedy.nameAbbrev)
 
-    // Then create the HTML output from said list above...
-    weightedRemedies.sortBy(_.remedy.nameAbbrev).map {
+    weightedRemedies.map {
       case WeightedRemedy(r, w) =>
         val remedyName = if (format == RemedyFormat.Abbreviated) r.nameAbbrev else r.nameLong
 
