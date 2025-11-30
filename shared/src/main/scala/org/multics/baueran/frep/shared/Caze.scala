@@ -116,7 +116,8 @@ case class CazeRubric(id: Int,
 
   // Get a unique ID (i.e. list of subrubrics) which can later be used to access the individual subrubrics of a (merged) rubric/row.
   // (The counterpart to fromJson() below in the support object)
-  def toJson(): Json = CazeRubricJsonHelper(id, cazeId, subRubrics.map(sr => (sr.id, sr.rubric.abbrev, sr.rubric.id))).asJson
+  def toJson(): Json =
+    CazeRubricJsonHelper(id, cazeId, subRubrics.map(sr => (sr.id, sr.rubric.abbrev, sr.rubric.id))).asJson
 
   // This is really only used in CaseSection.scala as follows:
   //     def getId() = HtmlRepresentation.getId() + "_crub_" + crub.toString()
@@ -147,6 +148,10 @@ case class CazeRubric(id: Int,
 
   def getHighestRemedyWeight(remedyAbbrev: String): Int =
     subRubrics.map(_.getRemedyWeight(remedyAbbrev)).max
+
+  def containsSubRubric(subRubricId: Int, subRubricAbbrev: String): Boolean = {
+    subRubrics.exists(sr => sr.id == subRubricId && sr.rubric.abbrev == subRubricAbbrev)
+  }
 
   private def checkEquality(handlingOfVars: VarHandling, that: Any): Boolean = {
     that match {

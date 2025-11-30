@@ -140,7 +140,8 @@ object RepertoryView extends TabView {
           td(result.fullPath, style:="width:35%;"),
           td(remedies.take(remedies.size - 1).map(l => span(l, ", ")) ::: List(remedies.last)),
           td(cls := "text-right", style := "white-space:nowrap;",
-            button(cls := "btn btn-sm btn-secondary", `type` := "button", id := ("button_" + result.toJson().toString()),
+            button(cls := "btn btn-sm btn-secondary", `type` := "button", id := ("addBut_" + result.toString()),
+              attr("data-crubric") := result.toJson().toString(),
               style := "vertical-align: middle; display: inline-block",
               (if (CaseSection.cRubrics.toList.filter(_.equalsIgnoreWeight(result)).size > 0) attr("disabled") := "disabled" else ""),
               title := "Add rubric",
@@ -148,7 +149,7 @@ object RepertoryView extends TabView {
                 event.stopPropagation()
                 CaseSection.addRepertoryLookup(result)
                 CaseSection.updateCaseViewAndDataStructures()
-                dom.document.getElementById("button_" + result.toJson().toString()).asInstanceOf[dom.html.Button].setAttribute("disabled", "1")
+                dom.document.getElementById("addBut_" + result.toString()).asInstanceOf[dom.html.Button].setAttribute("disabled", "1")
                 CaseSection.showCase(remedyFormat())
                 MainView.toggleOnBeforeUnload()
               }

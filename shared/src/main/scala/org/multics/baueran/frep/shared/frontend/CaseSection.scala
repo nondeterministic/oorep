@@ -424,8 +424,24 @@ object CaseSection {
                 }
 
                 // Enable add-button in results, if removed symptom was in the displayed results list...
-                dom.document.getElementById("button_" + crub.toString()) match {
-                  case null => ;
+                dom.document.getElementById("addBut_" + crub.toString()) match {
+                  // We (likely) pressed the remove button of a merged case rubric, i.e., one that contains many subrubrics!
+                  case null =>
+                    val addButtons = dom.document.getElementsByTagName("button").filter(_.id.startsWith("addBut_"))
+                    addButtons.foreach(addButton =>
+                      parse(addButton.getAttribute("data-crubric")) match {
+                        case Right(json) => json.hcursor.as[CazeRubricJsonHelper] match {
+                          case Right(crjh) =>
+                            val addButtonsSingleSubrubricId = crjh.subRubrics.head._1
+                            val addButtonsSingleRepertoryAbbrev = crjh.subRubrics.head._2
+                            if (crub.containsSubRubric(addButtonsSingleSubrubricId, addButtonsSingleRepertoryAbbrev))
+                              addButton.asInstanceOf[dom.html.Button].removeAttribute("disabled")
+                          case Left(err) => ;
+                        }
+                        case Left(err) => ;
+                      }
+                    )
+                  // We pressed the remove button of a case rubric with a single subrubric.
                   case elem => elem.asInstanceOf[dom.html.Button].removeAttribute("disabled")
                 }
 
@@ -494,7 +510,7 @@ object CaseSection {
       }
 
       // Enable add-button in results, if removed symptom was in the displayed results list...
-      dom.document.getElementById("button_" + crub.toString()) match {
+      dom.document.getElementById("addBut_" + crub.toString()) match {
         case null => ;
         case elem => elem.asInstanceOf[dom.html.Button].removeAttribute("disabled")
       }
