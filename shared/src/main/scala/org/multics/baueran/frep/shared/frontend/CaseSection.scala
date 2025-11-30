@@ -406,8 +406,6 @@ object CaseSection {
             )
           ),
           td(style := "width:28%;", crub.fullPath),
-          // td(cls := "d-none d-sm-table-cell", remedies.take(remedies.size - 1).map(l => span(l, ", ")) ::: List(remedies.last)),
-          // td(cls := "d-none d-sm-table-cell", remedies.take(remedies.size - 1).map(l => span(l, ", "))), // ::: List(remedies.last)), // TODO: THIS IS IT FUCK ME SIDEWAYS!
           td(cls := "d-none d-sm-table-cell", remedies.take(remedies.size - 1).map(l => span(l, ", ")) ::: List(remedies.lastOption.getOrElse(span("")))),
           td(cls := "text-right", style := "white-space:nowrap;",
             button(cls := "btn btn-sm btn-secondary", `type` := "button",

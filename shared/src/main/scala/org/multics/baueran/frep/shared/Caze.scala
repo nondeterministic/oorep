@@ -357,34 +357,6 @@ case class Caze(id: Int,
 
 object Caze {
 
-  // def create(id: Int, header: String, member_id: Int, date: String, changed: String, description: String): Caze = {
-  //   var _rubrics: List[CazeRubric] = Nil
-
-  //   def getRubricsFromDb(caseId: Int, memberId: Int): Unit = {
-  //     HttpRequest2("sec/caserubrics")
-  //       .withQueryParameters("caseId" -> caseId.toString, "memberId" -> memberId.toString)
-  //       .onSuccess((response: String) => {
-  //         parse(response) match {
-  //           case Right(json) => {
-  //             val cursor = json.hcursor
-  //             cursor.as[List[CazeRubric]] match {
-  //               case Right(cazerubrics) => {
-  //                 _rubrics = cazerubrics
-  //               }
-  //               case Left(err) => println("Decoding of case failed: " + err)
-  //             }
-  //           }
-  //           case Left(err) => println("Parsing of case (is it JSON?): " + err)
-  //         }
-  //       })
-  //       .send()
-  //   }
-
-  //   val newCaze = new Caze(id, header, member_id, date, changed, description, _rubrics)
-  //   getRubricsFromDb(id, member_id)
-  //   newCaze
-  // }
-
   implicit val caseRubricEncoder: Encoder[CazeRubric] = deriveEncoder[CazeRubric]
   implicit val caseRubricDecoder: Decoder[CazeRubric] = deriveDecoder[CazeRubric]
 
