@@ -97,8 +97,10 @@ object CazeSubRubric {
 case class CazeRubricJsonHelper(cazeRubricId: Int, cazeId: Int, subRubrics: List[(Int, String, Int)])
 
 object CazeRubricJsonHelper {
+
   implicit val cazeRubricJsonHelperDecoder: Decoder[CazeRubricJsonHelper] = deriveDecoder[CazeRubricJsonHelper]
   implicit val cazeRubricJsonHelperEncoder: Encoder[CazeRubricJsonHelper] = deriveEncoder[CazeRubricJsonHelper]
+
 }
 
 case class CazeRubric(id: Int,
