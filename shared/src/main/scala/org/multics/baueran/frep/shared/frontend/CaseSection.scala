@@ -164,26 +164,6 @@ object CaseSection {
           }
         }.map(_.get)
 
-      println(s"Parsed ${checkBoxesChecked.length}: ${checkBoxesChecked}")
-
-      println(checkBoxesChecked.asJson.toString)
-
-      // TODO ...
-
-      //  case class CazeRubric(id: Int,
-      //                        cazeId: Int,
-      //                        subRubrics: List[CazeSubRubric],
-      //                        var rubricWeight: Int,
-      //                        var rubricLabel: Option[String]) {
-      //
-      // case class CazeRubricJsonHelper(cazeRubricId: Int, cazeId: Int, subRubrics: List[(Int, String, Int)])
-      // case class CazeSubRubric(id: Int, rubric: Rubric, weightedRemedies: List[WeightedRemedy]) 
-      // case class WeightedRemedy(remedy: Remedy, weight: Int)
-
-      /**
-        * Returns the merged CazeRubricJsonHelper, or None if something went wrong.
-        */
-
       def mergeCaseRubrics(caseRubrics: List[CazeRubricJsonHelper]): Option[CazeRubricJsonHelper] = {
         if (caseRubrics.length > 1) {
           val allSubRubrics = caseRubrics.flatMap(_.subRubrics)
@@ -195,33 +175,54 @@ object CaseSection {
         }
       }
 
-      getCookieData(dom.document.cookie, CookieFields.id.toString) match {
-        case Some(memberId) =>
-          HttpRequest2("sec/merge_caserubrics")
-            .withHeaders((HeaderFields.csrfToken.toString(), getDocumentCsrfCookie().getOrElse("")))
-            .post(
-              ("memberID" -> memberId),
-              ("cazeRubrics" -> checkBoxesChecked.asJson.toString)
-            )
-        case None =>
-          val mergedCaseRubricIds = checkBoxesChecked.flatMap(_.subRubrics.map(_._1))
-          mergeCaseRubrics(checkBoxesChecked) match {
-            case Some(mergedJsonCaseRubric) =>
-              // Delete merged rubrics from case...
-              val deletedCaseRubrics = cRubrics.filter(cr =>
-                val rubricsSubrubricsIds = cr.subRubrics.map(_._1).toSet
-                  mergedCaseRubricIds.toSet.intersect(rubricsSubrubricsIds).size > 0
-              )
-              cRubrics = cRubrics.filter(deletedCaseRubrics.contains(_) == false)
+      val mergedCaseRubricIds = checkBoxesChecked.flatMap(_.subRubrics.map(_._1))
 
-              // Add newly merged rubric to case...
-              val mergedCaseSubrubrics: List[CazeSubRubric] = deletedCaseRubrics.flatMap(_.subRubrics).toList
-              val mergedCaseRubric: CazeRubric = CazeRubric(-1, mergedJsonCaseRubric.cazeId, mergedCaseSubrubrics, 1, None)
-              cRubrics = cRubrics + mergedCaseRubric
-              showCase(RepertoryView.remedyFormat())
+      // Delete merged rubrics from case...
+      val deletedCaseRubrics = cRubrics.filter(cr =>
+        val rubricsSubrubricsIds = cr.subRubrics.map(_._1).toSet
+          mergedCaseRubricIds.toSet.intersect(rubricsSubrubricsIds).size > 0
+      )
+      cRubrics = cRubrics.filter(deletedCaseRubrics.contains(_) == false)
+
+      mergeCaseRubrics(checkBoxesChecked) match {
+        case Some(mergedJsonCaseRubric) =>
+          // Add newly merged rubric to case...
+          val mergedCaseSubrubrics: List[CazeSubRubric] = deletedCaseRubrics.flatMap(_.subRubrics).toList
+          val mergedCaseRubric: CazeRubric = CazeRubric(-1, mergedJsonCaseRubric.cazeId, mergedCaseSubrubrics, 1, None)
+          cRubrics = cRubrics + mergedCaseRubric
+          showCase(RepertoryView.remedyFormat())
+
+          // cRubrics = cRubrics.filter(_ != crub)
+          // dom.document.getElementById(HtmlRepresentation.getId() + "_crub_" + crub.toString()) match {
+          //   case null => ;
+          //   case elem => elem.parentNode.removeChild(elem)
+          // }
+
+          // Write changes to disk, if user is logged in
+          getCookieData(dom.document.cookie, CookieFields.id.toString) match {
+            case Some(memberId) =>
+              HttpRequest2("sec/del_caserubrics_from_case")
+                .withMethod("DELETE")
+                .withHeaders((HeaderFields.csrfToken.toString(), getDocumentCsrfCookie().getOrElse("")))
+                .withBody(
+                  ("memberID" -> memberId),
+                  ("caseID" -> descr.get.id.toString),
+                  ("caserubrics" -> deletedCaseRubrics.toList.asJson.toString))
+                .onSuccess((_) => {
+                  HttpRequest2("sec/add_caserubrics_to_case")
+                    .withHeaders((HeaderFields.csrfToken.toString(), getDocumentCsrfCookie().getOrElse("")))
+                    .post(
+                      ("memberID" -> memberId),
+                      ("caseID" -> descr.get.id.toString),
+                      ("caserubrics" -> List(mergedCaseRubric).asJson.toString))
+                })
+                .send()
+
             case None =>
-              println("Nothing to be done.")
+              println("INFO: Merged rubrics are not written to to disc cause user isn't logged in.")
           }
+        case None =>
+          println("ERROR: Merge of case rubrics failed.")
       }
     }
 

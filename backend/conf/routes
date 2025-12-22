@@ -33,7 +33,6 @@ GET     /show_mm                            org.multics.baueran.frep.backend.con
 GET     /                                   org.multics.baueran.frep.backend.controllers.Get.serve_static_html(page="index")
 GET     /:page                              org.multics.baueran.frep.backend.controllers.Get.serve_static_html(page:String)
 
-POST	/api/sec/merge_caserubrics          org.multics.baueran.frep.backend.controllers.Post.mergeCaseRubrics()
 POST    /api/sec/add_caserubrics_to_case    org.multics.baueran.frep.backend.controllers.Post.addCaseRubricsToCaze()
 POST   	/api/sec/save_case                  org.multics.baueran.frep.backend.controllers.Post.saveCaze()
 POST   	/api/sec/save_file                  org.multics.baueran.frep.backend.controllers.Post.saveFile()

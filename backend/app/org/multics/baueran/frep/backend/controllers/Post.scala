@@ -224,51 +224,6 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
     }
   }
 
-  def mergeCaseRubrics() = Action { (request: Request[AnyContent]) =>
-    val requestData = request.body.asFormUrlEncoded.get
-    val requestMemberId: Option[Int] = getAuthenticatedUser(request) match {
-      case Some(member) => Some(member.member_id)
-      case _ => None
-    }
-    val argumentMemberId: Option[Int] = requestData("memberID") match {
-      case Seq(memberIdStr) => Some(memberIdStr.toInt)
-      case _ => None
-    }
-    val argCazeRubrics: List[CazeRubricJsonHelper] = requestData("cazeRubrics") match {
-      case Seq(cazeRubricsStr) =>
-        io.circe.parser.parse(cazeRubricsStr) match {
-          case Right(json) =>
-            val cursor = json.hcursor
-            cursor.as[List[CazeRubricJsonHelper]] match {
-              case Right(cazeRubrics) =>
-                cazeRubrics
-              case _ =>
-                Nil
-            }
-          case _ => Nil
-        }
-      case _ => Nil
-    }
-
-    if (requestMemberId != argumentMemberId || argumentMemberId == None || !isUserAuthorized(request, argumentMemberId.get)) {
-      val err = s"Post: mergeCaseRubrics() failed: not authorised."
-      Logger.error(err)
-      Forbidden(err)
-    }
-    else if (argCazeRubrics.length < 2) {
-      val err = s"Post: mergeCaseRubrics() failed: need to select more than ${argCazeRubrics.length} rubrics!"
-      Logger.error(err)
-      BadRequest(err)
-    }
-    else {
-      if (cazeDao.mergeCaseRubrics(argCazeRubrics))
-        Logger.info(s"Post: mergeCaseRubrics(): success")
-      else
-        Logger.error(s"Post: mergeCaseRubrics(): failed")
-      Ok
-    }
-  }
-
   def addCaseRubricsToCaze() = Action { (request: Request[AnyContent]) =>
     getAuthenticatedUser(request) match {
       case Some(_) => {
