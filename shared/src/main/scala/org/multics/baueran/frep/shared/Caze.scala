@@ -80,11 +80,14 @@ case class CazeSubRubric(id: Int, rubric: Rubric, weightedRemedies: List[Weighte
 
   def checkEquality(that: Any): Boolean = {
     that match {
-      case that: CazeSubRubric => rubric.equals(that) && (weightedRemedies diff that.weightedRemedies).isEmpty
-      case _ => false
+      case that: CazeSubRubric =>
+        rubric.equals(that.rubric) && (weightedRemedies diff that.weightedRemedies).isEmpty
+      case _ =>
+        false
     }
   }
 
+  override def equals(that: Any): Boolean = checkEquality(that)
 }
 
 object CazeSubRubric {
