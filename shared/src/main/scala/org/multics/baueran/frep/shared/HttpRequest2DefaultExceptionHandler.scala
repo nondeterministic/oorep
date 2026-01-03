@@ -21,7 +21,7 @@ class HttpRequest2DefaultExceptionHandler(apiURI: String, responseCode: Int = -1
       // any data of a logged in user / from a stale cookie.
 
       if (apiURI.contains("/sec/")) {
-        deleteCustomCookies()
+        // deleteCustomCookies()
         dom.document.getElementById("nav_bar").replaceWith(NavBarAnon().render)
 
         // If we log the user out effectively, we also need to hide all but the Repertorise-button

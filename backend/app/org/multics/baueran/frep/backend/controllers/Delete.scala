@@ -28,7 +28,7 @@ class Delete @Inject()(cc: ControllerComponents, dbContext: DBContext) extends A
                     Ok
                   }
                   else {
-                    Logger.error(s"Delete: delCaseRubricsFromCaze($memberId, $caseID, ${caseRubrics.map(_.id).mkString(", ")}): failed")
+                    Logger.error(s"Delete: delCaseRubricsFromCaze(member: $memberId, caseID: $caseID, caserubrics: ${caseRubrics.map(_.id).mkString(", ")}): failed")
                     BadRequest("Delete: delCaseRubrics() failed")
                   }
                 }

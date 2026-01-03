@@ -119,6 +119,9 @@ case class CazeRubric(id: Int,
 
   import VarHandling._
 
+  def replaceCaseId(newId: Int) = CazeRubric(id, newId, subRubrics, rubricWeight, rubricLabel)
+  def replaceId(newId: Int) = CazeRubric(newId, cazeId, subRubrics, rubricWeight, rubricLabel)
+
   // Get a unique ID (i.e. list of subrubrics) which can later be used to access the individual subrubrics of a (merged) rubric/row.
   // (The counterpart to fromJson() below in the support object)
   def toJson(): Json =
@@ -322,12 +325,27 @@ case class Caze(id: Int,
     */
 
   def isSupersetOf(that: Caze): List[CazeRubric] = {
-    if (that.member_id == member_id && that.rubrics.length < rubrics.length && that.header == header && that.description == description) {
-      if (that.rubrics.filter(!rubrics.contains(_)).length == 0) { // If there are no rubrics in *that* that are not contained in *this*...
+    if (that.member_id == member_id &&
+      that.rubrics.length < rubrics.length &&
+      that.header == header &&
+      that.description == description)
+    {
+      // If there are no rubrics in *that* that are not contained in *this*...
+      if (that.rubrics.filter(!rubrics.contains(_)).length == 0)
         return rubrics.filter(!that.rubrics.contains(_))
-      }
     }
     List()
+  }
+
+  def hasRubricsNotIn(that: Caze): List[CazeRubric] = {
+    if (that.member_id == member_id &&
+      that.header == header &&
+      that.description == description)
+    {
+      this.rubrics.filter(!that.rubrics.contains(_))
+    }
+    else
+      List()
   }
 
   /**

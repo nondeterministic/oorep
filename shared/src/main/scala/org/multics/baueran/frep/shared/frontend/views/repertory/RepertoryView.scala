@@ -130,10 +130,15 @@ object RepertoryView extends TabView {
   // Render HTML for the results of a repertory lookup directly to page.
   def showResults(): Unit = {
 
-    def resultRow(result: CazeRubric) = {
+    def resultRow(resultToBeAdded: CazeRubric) = {
       implicit def crToCR(cr: CazeRubric): BetterCaseRubric = new BetterCaseRubric(cr)
 
-      val remedies = result.getFormattedRemedyNames(_remedyFormat.get())
+      val remedies = resultToBeAdded.getFormattedRemedyNames(_remedyFormat.get())
+
+      val result = CaseSection.descr match {
+        case Some(caze) => resultToBeAdded.replaceCaseId(caze.id)
+        case None => resultToBeAdded
+      }
 
       if (remedies.size > 0)
         tr(

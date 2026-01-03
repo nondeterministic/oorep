@@ -183,6 +183,7 @@ object CaseSection {
           mergedCaseRubricIds.toSet.intersect(rubricsSubrubricsIds).size > 0
       )
       cRubrics = cRubrics.filter(deletedCaseRubrics.contains(_) == false)
+      updateCaseViewAndDataStructures()  // This will effectively REMOVE the deleted rubrics from DB
 
       mergeCaseRubrics(checkBoxesChecked) match {
         case Some(mergedJsonCaseRubric) =>
@@ -190,37 +191,7 @@ object CaseSection {
           val mergedCaseSubrubrics: List[CazeSubRubric] = deletedCaseRubrics.flatMap(_.subRubrics).toList
           val mergedCaseRubric: CazeRubric = CazeRubric(-1, mergedJsonCaseRubric.cazeId, mergedCaseSubrubrics, 1, None)
           cRubrics = cRubrics + mergedCaseRubric
-          showCase(RepertoryView.remedyFormat())
-
-          // cRubrics = cRubrics.filter(_ != crub)
-          // dom.document.getElementById(HtmlRepresentation.getId() + "_crub_" + crub.toString()) match {
-          //   case null => ;
-          //   case elem => elem.parentNode.removeChild(elem)
-          // }
-
-          // Write changes to disk, if user is logged in
-          getCookieData(dom.document.cookie, CookieFields.id.toString) match {
-            case Some(memberId) =>
-              HttpRequest2("sec/del_caserubrics_from_case")
-                .withMethod("DELETE")
-                .withHeaders((HeaderFields.csrfToken.toString(), getDocumentCsrfCookie().getOrElse("")))
-                .withBody(
-                  ("memberID" -> memberId),
-                  ("caseID" -> descr.get.id.toString),
-                  ("caserubrics" -> deletedCaseRubrics.toList.asJson.toString))
-                .onSuccess((_) => {
-                  HttpRequest2("sec/add_caserubrics_to_case")
-                    .withHeaders((HeaderFields.csrfToken.toString(), getDocumentCsrfCookie().getOrElse("")))
-                    .post(
-                      ("memberID" -> memberId),
-                      ("caseID" -> descr.get.id.toString),
-                      ("caserubrics" -> List(mergedCaseRubric).asJson.toString))
-                })
-                .send()
-
-            case None =>
-              println("INFO: Merged rubrics are not written to to disc cause user isn't logged in.")
-          }
+          showCase(RepertoryView.remedyFormat()) // This will effectively ADD the deleted rubrics from DB
         case None =>
           println("ERROR: Merge of case rubrics failed.")
       }
@@ -580,6 +551,8 @@ object CaseSection {
         )
       })
 
+      println("UPDATE CASE AND DATASTRUCTURES")
+
       if (descr.isDefined) {
         descr = Some(shared.Caze(descr.get.id, descr.get.header, descr.get.member_id, descr.get.date, descr.get.changed, descr.get.description, cRubrics.toList))
 
@@ -593,17 +566,56 @@ object CaseSection {
           descr = Some(shared.Caze(descr.get.id, descr.get.header, descr.get.member_id, (new js.Date()).toISOString(), (new js.Date()).toISOString(), descr.get.description, cRubrics.toList))
 
           if (descr.get.isSupersetOf(prevCase.get).length > 0) { // Add additional case rubrics to DB
-            val diff = descr.get.isSupersetOf(prevCase.get)
+            val diff = descr.get.isSupersetOf(prevCase.get).map(_.replaceCaseId(descr.get.id))
 
-            HttpRequest2("sec/add_caserubrics_to_case")
-              .withHeaders((HeaderFields.csrfToken.toString(), getDocumentCsrfCookie().getOrElse("")))
-              .post(
-                ("memberID" -> memberId.toString),
-                ("caseID" -> descr.get.id.toString),
-                ("caserubrics" -> diff.asJson.toString))
+            println("Adding...")
+
+            if (diff.size == 1) {
+              HttpRequest2("sec/add_caserubrics_to_case")
+                .withHeaders((HeaderFields.csrfToken.toString(), getDocumentCsrfCookie().getOrElse("")))
+                .onSuccess((response: String) => {
+                  // Response is a comma-separated LIST of integers, each representing an added case rubric
+                  // ID, but we expect only ONE entry in the list at this point (because diff.size == 1).
+                  // Hence the following line works:
+                  val newlyAddedCaseRubricId = response.toInt
+
+                  // After adding to the database, update the case rubrics which are held currently in
+                  // memory, with a VALID case rubric ID as returned from the database insert...
+                  diff.foreach { crub =>
+                    cRubrics =
+                      cRubrics.map(oldCr =>
+                        if (oldCr.id == -1)
+                          oldCr.replaceId(newlyAddedCaseRubricId)
+                        else
+                          oldCr
+                      )
+
+                    // ...same for the ones currently stored in prevCase, if it exists.
+                    if (prevCase.isDefined) {
+                      prevCase.get.rubrics =
+                        prevCase.get.rubrics.map(oldCr =>
+                          if (oldCr.id == -1)
+                            oldCr.replaceId(newlyAddedCaseRubricId)
+                          else
+                            oldCr
+                        )
+                    }
+                  }
+
+                  println(s"Added successfully case rubric: case id: ${descr.get.id}, caserubrics: ${diff.head.replaceId(newlyAddedCaseRubricId).asJson.toString}")
+                })
+                .post(
+                  ("memberID" -> memberId.toString),
+                  ("caseID" -> descr.get.id.toString),
+                  ("caserubrics" -> diff.asJson.toString))
+            } else {
+              println("ERROR: Adding case rubric to case aborted, because we somehow tried to add not one but MULTIPLE (or none) case rubrics at once!")
+            }
           }
           else if (prevCase.get.isSupersetOf(descr.get).length > 0) { // Delete the removed case rubrics in DB
             val diff = prevCase.get.isSupersetOf(descr.get)
+
+            println(s"Deleting case rubric: case id: ${descr.get.id}, caserubrics: ${diff.asJson.toString}")
 
             HttpRequest2("sec/del_caserubrics_from_case")
               .withMethod("DELETE")
@@ -617,6 +629,8 @@ object CaseSection {
           else if (descr.get.isEqualExceptUserDefinedValues(prevCase.get).length > 0) { // Update user defined case rubric values only in DB
             val diff = prevCase.get.isEqualExceptUserDefinedValues(descr.get) // These are the user-changed ones, which we'll need to update in the DB, too.
 
+            println(s"Updating case rubrics: case id: ${descr.get.id}, caserubrics: ${diff.asJson.toString}")
+
             HttpRequest2("sec/update_caserubrics_userdef")
               .withHeaders((HeaderFields.csrfToken.toString(), getDocumentCsrfCookie().getOrElse("")))
               .put(
@@ -625,6 +639,8 @@ object CaseSection {
                 ("caserubrics" -> diff.asJson.toString))
           }
           else if (descr.get.description != prevCase.get.description) {
+            println("Updating case description")
+
             HttpRequest2("sec/update_case_description")
               .withHeaders((HeaderFields.csrfToken.toString(), getDocumentCsrfCookie().getOrElse("")))
               .put(

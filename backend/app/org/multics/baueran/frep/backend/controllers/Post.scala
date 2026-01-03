@@ -238,9 +238,10 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
                   Logger.error(err)
                   Forbidden(err)
                 } else {
-                  if (cazeDao.addCaseRubrics(caseID, caseRubrics).length > 0) {
+                  val newlyAddedCaseRubricIds = cazeDao.addCaseRubrics(caseID, caseRubrics)
+                  if (newlyAddedCaseRubricIds.length > 0) {
                     Logger.debug(s"Post: addCaseRubricsToCaze(): success")
-                    Ok
+                    Ok(newlyAddedCaseRubricIds.mkString(", "))
                   }
                   else {
                     val err = s"Post: addCaseRubricsToCaze() failed"
