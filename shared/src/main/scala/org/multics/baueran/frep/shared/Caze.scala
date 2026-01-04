@@ -158,21 +158,26 @@ case class CazeRubric(id: Int,
     subRubrics.map(_.getRemedyWeight(remedyAbbrev)).max
 
   def containsSubRubric(subRubricId: Int, subRubricAbbrev: String): Boolean = {
-    subRubrics.exists(sr => sr.id == subRubricId && sr.rubric.abbrev == subRubricAbbrev)
+    subRubrics.exists(sr => sr.rubric.id == subRubricId && sr.rubric.abbrev == subRubricAbbrev)
+  }
+
+  def containsSubRubric(subRubric: CazeSubRubric): Boolean = {
+    containsSubRubric(subRubric.rubric.id, subRubric.rubric.abbrev)
   }
 
   private def checkEquality(handlingOfVars: VarHandling, that: Any): Boolean = {
     that match {
       case that: CazeRubric =>
         this.canEqual(that) &&
-          (this.subRubrics diff that.subRubrics).isEmpty &&
-          (handlingOfVars match {
-            case Equal => s"${that.rubricWeight}".toLong == s"${this.rubricWeight}".toLong &&
-              that.rubricLabel.getOrElse("").toLowerCase.reverse == this.rubricLabel.getOrElse("").toLowerCase.reverse
-            case NotEqual => s"${that.rubricWeight}".toLong != s"${this.rubricWeight}".toLong ||
-              that.rubricLabel.getOrElse("").toLowerCase.reverse != this.rubricLabel.getOrElse("").toLowerCase.reverse
-            case _ => true
-          })
+        this.subRubrics.length == that.subRubrics.length &&
+        that.subRubrics.filter(this.containsSubRubric(_)).length == that.subRubrics.length &&
+        (handlingOfVars match {
+          case Equal => s"${that.rubricWeight}".toLong == s"${this.rubricWeight}".toLong &&
+            that.rubricLabel.getOrElse("").toLowerCase.reverse == this.rubricLabel.getOrElse("").toLowerCase.reverse
+          case NotEqual => s"${that.rubricWeight}".toLong != s"${this.rubricWeight}".toLong ||
+            that.rubricLabel.getOrElse("").toLowerCase.reverse != this.rubricLabel.getOrElse("").toLowerCase.reverse
+          case _ => true
+        })
       case _ => false
     }
   }

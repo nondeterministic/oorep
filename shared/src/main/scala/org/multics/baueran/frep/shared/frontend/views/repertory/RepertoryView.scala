@@ -135,10 +135,13 @@ object RepertoryView extends TabView {
 
       val remedies = resultToBeAdded.getFormattedRemedyNames(_remedyFormat.get())
 
-      val result = CaseSection.descr match {
+      val result: CazeRubric = CaseSection.descr match {
         case Some(caze) => resultToBeAdded.replaceCaseId(caze.id)
         case None => resultToBeAdded
       }
+
+      println(s"#cRubrics: ${CaseSection.cRubrics.size}")
+      println(s"CaseRubric's subrubrics: #${result.subRubrics.size}")
 
       if (remedies.size > 0)
         tr(
@@ -148,6 +151,7 @@ object RepertoryView extends TabView {
             button(cls := "btn btn-sm btn-secondary", `type` := "button", id := ("addBut_" + result.toString()),
               attr("data-crubric") := result.toJson().toString(),
               style := "vertical-align: middle; display: inline-block",
+              // (if (CaseSection.cRubrics.toList.exists(_.containsSubRubric(result.subRubrics.head))) attr("disabled") := "disabled" else "poo"),
               (if (CaseSection.cRubrics.toList.filter(_.equalsIgnoreWeight(result)).size > 0) attr("disabled") := "disabled" else ""),
               title := "Add rubric",
               onclick := { (event: Event) => {
