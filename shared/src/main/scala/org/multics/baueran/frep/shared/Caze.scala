@@ -165,6 +165,10 @@ case class CazeRubric(id: Int,
     containsSubRubric(subRubric.rubric.id, subRubric.rubric.abbrev)
   }
 
+  def containsSubRubrics(srs: List[CazeSubRubric]): Boolean = {
+    srs.exists(containsSubRubric(_))
+  }
+
   private def checkEquality(handlingOfVars: VarHandling, that: Any): Boolean = {
     that match {
       case that: CazeRubric =>

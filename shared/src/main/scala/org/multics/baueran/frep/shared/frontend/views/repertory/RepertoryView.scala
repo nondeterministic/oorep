@@ -151,8 +151,7 @@ object RepertoryView extends TabView {
             button(cls := "btn btn-sm btn-secondary", `type` := "button", id := ("addBut_" + result.toString()),
               attr("data-crubric") := result.toJson().toString(),
               style := "vertical-align: middle; display: inline-block",
-              // (if (CaseSection.cRubrics.toList.exists(_.containsSubRubric(result.subRubrics.head))) attr("disabled") := "disabled" else "poo"),
-              (if (CaseSection.cRubrics.toList.filter(_.equalsIgnoreWeight(result)).size > 0) attr("disabled") := "disabled" else ""),
+              (if (CaseSection.cRubrics.toList.exists(_.containsSubRubrics(result.subRubrics))) attr("disabled") := "disabled" else ""),
               title := "Add rubric",
               onclick := { (event: Event) => {
                 event.stopPropagation()
