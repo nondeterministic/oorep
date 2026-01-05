@@ -140,9 +140,6 @@ object RepertoryView extends TabView {
         case None => resultToBeAdded
       }
 
-      println(s"#cRubrics: ${CaseSection.cRubrics.size}")
-      println(s"CaseRubric's subrubrics: #${result.subRubrics.size}")
-
       if (remedies.size > 0)
         tr(
           td(result.fullPath, style:="width:35%;"),
