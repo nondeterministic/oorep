@@ -551,8 +551,6 @@ object CaseSection {
         )
       })
 
-      println("UPDATE CASE AND DATASTRUCTURES")
-
       if (descr.isDefined) {
         descr = Some(shared.Caze(descr.get.id, descr.get.header, descr.get.member_id, descr.get.date, descr.get.changed, descr.get.description, cRubrics.toList))
 
@@ -567,8 +565,6 @@ object CaseSection {
 
           if (descr.get.isSupersetOf(prevCase.get).length > 0) { // Add additional case rubrics to DB
             val diff = descr.get.isSupersetOf(prevCase.get).map(_.replaceCaseId(descr.get.id))
-
-            println("Adding...")
 
             if (diff.size == 1) {
               HttpRequest2("sec/add_caserubrics_to_case")
@@ -601,8 +597,6 @@ object CaseSection {
                         )
                     }
                   }
-
-                  println(s"Added successfully case rubric: case id: ${descr.get.id}, caserubrics: ${diff.head.replaceId(newlyAddedCaseRubricId).asJson.toString}")
                 })
                 .post(
                   ("memberID" -> memberId.toString),
@@ -614,8 +608,6 @@ object CaseSection {
           }
           else if (prevCase.get.isSupersetOf(descr.get).length > 0) { // Delete the removed case rubrics in DB
             val diff = prevCase.get.isSupersetOf(descr.get)
-
-            println(s"Deleting case rubric: case id: ${descr.get.id}, caserubrics: ${diff.asJson.toString}")
 
             HttpRequest2("sec/del_caserubrics_from_case")
               .withMethod("DELETE")
@@ -629,8 +621,6 @@ object CaseSection {
           else if (descr.get.isEqualExceptUserDefinedValues(prevCase.get).length > 0) { // Update user defined case rubric values only in DB
             val diff = prevCase.get.isEqualExceptUserDefinedValues(descr.get) // These are the user-changed ones, which we'll need to update in the DB, too.
 
-            println(s"Updating case rubrics: case id: ${descr.get.id}, caserubrics: ${diff.asJson.toString}")
-
             HttpRequest2("sec/update_caserubrics_userdef")
               .withHeaders((HeaderFields.csrfToken.toString(), getDocumentCsrfCookie().getOrElse("")))
               .put(
@@ -639,8 +629,6 @@ object CaseSection {
                 ("caserubrics" -> diff.asJson.toString))
           }
           else if (descr.get.description != prevCase.get.description) {
-            println("Updating case description")
-
             HttpRequest2("sec/update_case_description")
               .withHeaders((HeaderFields.csrfToken.toString(), getDocumentCsrfCookie().getOrElse("")))
               .put(
