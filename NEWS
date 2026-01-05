@@ -12,6 +12,16 @@
      ██║ ╚████║███████╗╚███╔███╔╝███████║
      ╚═╝  ╚═══╝╚══════╝ ╚══╝╚══╝ ╚══════╝
 
+v0.18.0                                under development
+--------------------------------------------------------
+- Main features
+  - Merging of rubrics now possible
+  - Major revamp of database schema to enable rubrics merging
+
+- Minor improvements and changes:
+  - Library updates
+  - Removed "News" link from landing page
+
 v0.17.0                  Sat Dec 14 03:05:54 PM CET 2024 
 --------------------------------------------------------
 - Main features:
