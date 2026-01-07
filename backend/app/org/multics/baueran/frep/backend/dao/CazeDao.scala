@@ -11,32 +11,18 @@ import scala.annotation.targetName
 
 class CazeDao(dbContext: db.db.DBContext) {
 
-  // case class CazeSubRubric(id: Int, rubric: Rubric, weightedRemedies: List[WeightedRemedy]) {
-  //  case class CazeRubric(id: Int,
-  //                        cazeId: Int,
-  //                        subRubrics: List[CazeSubRubric],
-  //                        var rubricWeight: Int,
-  //                        var rubricLabel: Option[String]) {
   case class PersistentCazeRubric(id: Int, cazeId: Int, weight: Int, label: Option[String])
   object PersistentCazeRubric {
     implicit val crencoder: Encoder[PersistentCazeRubric] = deriveEncoder[PersistentCazeRubric]
     implicit val crdecoder: Decoder[PersistentCazeRubric] = deriveDecoder[PersistentCazeRubric]
   }
 
-  //  case class Caze(id: Int,
-  //                  header: String,
-  //                  member_id: Int,
-  //                  date: String,
-  //                  changed: String,
-  //                  description: String,
-  //                  rubrics: List[CazeRubric] = Nil) {
   case class PersistentCaze(id: Int, header: String, member_id: Int, date: String, changed: String, description: String)
   object PersistentCaze {
     implicit val cencoder: Encoder[PersistentCaze] = deriveEncoder[PersistentCaze]
     implicit val cdecoder: Decoder[PersistentCaze] = deriveDecoder[PersistentCaze]
   }
 
-  // case class CazeSubRubric(id: Int, rubric: Rubric, weightedRemedies: List[WeightedRemedy]) {
   case class PersistentCazeSubRubric(id: Int, cazeRubricId: Int, abbrev: String, rubricId: Int)
   object PersistentCazeSubRubric {
     implicit val csrencoder: Encoder[PersistentCazeSubRubric] = deriveEncoder[PersistentCazeSubRubric]
@@ -78,12 +64,30 @@ class CazeDao(dbContext: db.db.DBContext) {
 
   private val Logger = play.api.Logger(this.getClass)
 
-  def delete(id: Int): Int = {
-    Logger.debug(s"CazeDao: DELETE($id) called")
+  // Does not delete caserubrics and casesubrubrics!
+  private def deleteOnly(id: Int): Int = {
     run(quote(query[Caze]
       .filter(_.id == lift(id))
       .delete)
     ).toInt
+  }
+
+  def delete(id: Int): Int = {
+    get(id) match {
+      case Some(caze) => 
+        // delCaseRubrics also deletes subrubrics!
+        delCaseRubrics(caze.rubrics)
+        deleteOnly(id)
+      case None =>
+        Logger.error(s"CazeDao: delete of case with id ${id} failed.")
+        0
+    }
+  }
+
+  def delete(caze: Caze): Int = {
+    // delCaseRubrics also deletes subrubrics!
+    delCaseRubrics(caze.rubrics)
+    deleteOnly(caze.id)
   }
 
   def insert(caze: Caze): Int = {
@@ -99,7 +103,7 @@ class CazeDao(dbContext: db.db.DBContext) {
     }}
 
     if (addCaseRubrics(newCazeId, caze.rubrics).length == 0)
-      Logger.debug(s"CazeDao: insert(...) failed to add rubrics to freshly inserted caze with ID ${newCazeId}.")
+      Logger.error(s"CazeDao: insert(...) failed to add rubrics to freshly inserted caze with ID ${newCazeId}.")
 
     newCazeId
   }
@@ -114,9 +118,6 @@ class CazeDao(dbContext: db.db.DBContext) {
       )
     }
   }
-
-  // case class CazeSubRubric(id: Int, rubric: Rubric, weightedRemedies: List[WeightedRemedy]) {
-  // case class PersistentCazeSubRubric(id: Int, cazeRubricId: Int, abbrev: String, rubricId: Int)
 
   def getCaseSubRubric(caseSubRubricId: Int): Option[CazeSubRubric] = {
     run(quote(schemaCazeSubRubric
@@ -147,12 +148,6 @@ class CazeDao(dbContext: db.db.DBContext) {
         )
     }
   }
-
-  //  case class CazeRubric(id: Int,
-  //                        cazeId: Int,
-  //                        subRubrics: List[CazeSubRubric],
-  //                        var rubricWeight: Int,
-  //                        var rubricLabel: Option[String]) {
 
   def getCaseRubrics(caseID: Int): List[CazeRubric] = {
     run(quote(schemaCazeRubric
@@ -187,7 +182,6 @@ class CazeDao(dbContext: db.db.DBContext) {
   // So, we pull the rubrics, too.
 
   def get(id: Int): Option[Caze] = {
-    Logger.debug(s"CazeDao: get($id) called")
     run(quote(schemaCaze
       .filter(_.id == lift(id)))
     ) match {
@@ -202,19 +196,10 @@ class CazeDao(dbContext: db.db.DBContext) {
   // So, we don't get them, too.
 
   def get(case_ids: List[Int]): List[Caze] = {
-    Logger.debug(s"CazeDao: get(${case_ids}) called")
     run(quote(schemaCaze
       .filter(caze => liftQuery(case_ids).contains(caze.id))
     )).map(pcaze => Caze(pcaze.id, pcaze.header, pcaze.member_id, pcaze.date, pcaze.changed, pcaze.description))
   }
-
-  // def delCaseRubric(caseRubricId: Int): Int = {
-  //   run { quote {
-  //     schemaCazeRubric
-  //         .filter(_.id == lift(caseRubricId))
-  //       .delete
-  //   }}.toInt
-  // }
 
   // Return number of deleted case sub rubrics.
 
@@ -252,7 +237,7 @@ class CazeDao(dbContext: db.db.DBContext) {
     deletedCaseRubrics
   }
 
-  @targetName("delCaseRubrics_byID")
+  @targetName("delCaseRubrics_byIDs")
   def delCaseRubrics(caseRubricIds: List[Int]): Int = {
     var deletedCaseRubrics = 0
 
@@ -330,54 +315,6 @@ class CazeDao(dbContext: db.db.DBContext) {
         .filter(_.id == lift(cazeId))
         .update(_.description -> lift(caseDescription))
     }}.toInt
-  }
-
-  // case class CazeSubRubric(id: Int, rubric: Rubric, weightedRemedies: List[WeightedRemedy]) {
-  // case class PersistentCazeSubRubric(id: Int, cazeRubricId: Int, abbrev: String, rubricId: Int)
-
-  def moveCaseSubRubric(caseSubRubric: CazeSubRubric, cazeRubricId: Int): Int = {
-    run { quote {
-      schemaCazeSubRubric
-        .filter(_.id == lift(caseSubRubric.id))
-        .update(_.cazeRubricId -> lift(cazeRubricId))
-    }}.toInt
-  }
-
-  //  case class CazeRubric(id: Int,
-  //                        cazeId: Int,
-  //                        subRubrics: List[CazeSubRubric],
-  //                        var rubricWeight: Int,
-  //                        var rubricLabel: Option[String]) {
-  //
-  // case class CazeRubricJsonHelper(id: Int, cazeId: Int, subRubrics: List[(Int, String, Int)])
-
-  // TODO !!!!!!!!!!!!!!!!!!!!
-
-  def mergeCaseRubrics(caseRubricIds: List[CazeRubricJsonHelper]): Boolean = {
-    if (caseRubricIds.length > 1) {
-      true
-    } else {
-      false
-    }
-  }
-
-  def mergeCaseRubrics2(caseRubricIds: List[Int]): Boolean = {
-    if (caseRubricIds.length > 1) {
-      val caseSubRubrics: List[CazeSubRubric] =
-        caseRubricIds.flatMap(getCaseSubRubrics(_)) // TODO: Do we need to check for duplicates and delete them?! What if user re-adds an already added rubric?
-
-      // Move all subrubrics into the last case rubric in caseRubricIds   &&   delete all but that last case rubric
-      if ( caseSubRubrics.map(moveCaseSubRubric(_, caseRubricIds.last)).exists(_ > 0)  &&  delCaseRubrics(caseRubricIds.dropRight(1)) > 0 )
-        true
-      else {
-        Logger.debug(s"CazeDao: mergeCaseRubrics() failed.")
-        false
-      }
-    }
-    else {
-      Logger.debug(s"CazeDao: mergeCaseRubrics() needs at least two case rubrics to work.")
-      false
-    }
   }
 
 }

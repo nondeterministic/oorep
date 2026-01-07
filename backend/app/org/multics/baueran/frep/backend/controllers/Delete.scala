@@ -58,11 +58,16 @@ class Delete @Inject()(cc: ControllerComponents, dbContext: DBContext) extends A
               Logger.error(s"Delete: delCaze() failed: not authorised.")
               Forbidden
             } else {
-              cazeDao.delete(caseIdStr.toInt)
-              Ok
+              cazeDao.get(caseIdStr.toInt) match {
+                case Some(caze) =>
+                  cazeDao.delete(caze)
+                  Ok
+                case None =>
+                  BadRequest(s"Delete: delCaze() failed because case with ID ${caseIdStr} doesn't seem to exist?!")
+              }
             }
           case _ =>
-            BadRequest("Delete: delCaze() failed")
+            BadRequest("Delete: delCaze() failed because a bad request was issued.")
         }
       }
       case None =>
