@@ -65,11 +65,24 @@ class CazeDao(dbContext: db.db.DBContext) {
   private val Logger = play.api.Logger(this.getClass)
 
   // Does not delete caserubrics and casesubrubrics!
-  private def deleteOnly(id: Int): Int = {
-    run(quote(query[Caze]
-      .filter(_.id == lift(id))
-      .delete)
-    ).toInt
+  private def deleteOnly(caze: Caze): Int = {
+    val numberOfDeletes =
+      run(quote(query[Caze]
+        .filter(_.id == lift(caze.id))
+        .delete)
+      ).toInt
+
+    if (numberOfDeletes > 0) {
+      val fileDao = new FileDao(dbContext)
+      val numberOfDeletedCaseIds = fileDao.delCaseId(caze.id)
+      if (numberOfDeletes != numberOfDeletedCaseIds)
+        Logger.error(s"CazeDao: deleteOnly(${caze.id}) had inconsistent deletion of case.")
+      numberOfDeletes
+    }
+    else {
+      Logger.error(s"CazeDao: deleteOnly(${caze.id}) didn't delete anything?!")
+      0
+    }
   }
 
   def delete(id: Int): Int = {
@@ -77,7 +90,7 @@ class CazeDao(dbContext: db.db.DBContext) {
       case Some(caze) => 
         // delCaseRubrics also deletes subrubrics!
         delCaseRubrics(caze.rubrics)
-        deleteOnly(id)
+        deleteOnly(caze)
       case None =>
         Logger.error(s"CazeDao: delete of case with id ${id} failed.")
         0
@@ -87,7 +100,7 @@ class CazeDao(dbContext: db.db.DBContext) {
   def delete(caze: Caze): Int = {
     // delCaseRubrics also deletes subrubrics!
     delCaseRubrics(caze.rubrics)
-    deleteOnly(caze.id)
+    deleteOnly(caze)
   }
 
   def insert(caze: Caze): Int = {

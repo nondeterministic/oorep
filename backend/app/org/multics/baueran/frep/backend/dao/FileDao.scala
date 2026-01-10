@@ -76,6 +76,28 @@ class FileDao(dbContext: db.db.DBContext) {
     }) // UNCOMMENT, if FIles should be returned instead of dbFiles: .map(dbFileToFIle(_)).map { case Some(file) => file }
   }
 
+  // A case can only ever be attached to ONE File. So we're updating ONE File here, effectively.
+
+  def delCaseId(caseId: Int): Int = {
+    val dbFiles = run(quote {
+      tableFile
+        .filter(_.case_ids.contains(lift(caseId)))
+    })
+
+    dbFiles match {
+      case file :: Nil =>
+        val updatedCaseIds = file.case_ids.filter(_ != caseId)
+        run(quote {
+          tableFile
+            .filter(_.id == lift(file.id))
+            .update(f => f.case_ids -> lift(updatedCaseIds))
+        }).toInt
+      case _ =>
+        Logger.error(s"FileDao: delCaseId(${caseId}) failed.")
+        0
+    }
+  }
+
   private def fileToDBFile(file: FIle): dbFile = {
     dbFile(file.dbId.getOrElse(-1), file.header, file.member_id, file.date, file.changed, file.description, file.cazes.map(_.id))
   }
