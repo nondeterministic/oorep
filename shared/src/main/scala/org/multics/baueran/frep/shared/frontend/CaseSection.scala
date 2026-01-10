@@ -472,13 +472,14 @@ object CaseSection {
         case null => ;
         case elem => elem.parentNode.removeChild(elem)
       }
-
-      // Enable add-button in results, if removed symptom was in the displayed results list...
-      dom.document.getElementById("addBut_" + crub.toString()) match {
-        case null => ;
-        case elem => elem.asInstanceOf[dom.html.Button].removeAttribute("disabled")
-      }
     }
+
+    // Re-Enable all add-button in results
+    dom.document.getElementsByTagName("button").foreach { button =>
+      if (button.id.startsWith("addBut_"))
+        button.asInstanceOf[dom.html.Button].removeAttribute("disabled")
+    }
+
     cRubrics = Set.empty
     descr = None
     MainView.CaseDiv.empty()
