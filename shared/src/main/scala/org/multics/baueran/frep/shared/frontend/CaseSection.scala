@@ -267,15 +267,15 @@ object CaseSection {
 
       def apply() = {
         thead(cls := "thead-dark", scalatags.JsDom.attrs.id := getId(),
-          th(attr("scope") := "col", style := "width:1px;", ""),
-          th(attr("scope") := "col", "Weight"),
+          th(attr("scope") := "col", cls := "minimal-column", ""),
+          th(attr("scope") := "col", cls := "minimal-column", "Weight"),
           th(attr("scope") := "col", "Rep."),
-          th(attr("scope") := "col", "Label"),
+          th(attr("scope") := "col", cls := "minimal-column", "Label"),
           th(attr("scope") := "col", "Rubric"),
           th(cls := "d-none d-sm-table-cell", attr("scope") := "col",
             a(cls := "underline", href := s"#${getId()}", onclick := ((event: Event) => RepertoryView.toggleRemedyFormat()), "Remedies")
           ),
-          th(attr("scope") := "col", " ")
+          th(attr("scope") := "col", cls := "minimal-column", " ")
         )
       }
     }
@@ -319,7 +319,7 @@ object CaseSection {
       def apply() = {
         tr(scalatags.JsDom.attrs.id := getId(),
           td(
-            div(cls:="form-check", style:="width:1px;",
+            div(cls:="form-check",
               input(
                 cls:="form-check-input", `type`:="checkbox", value:=s"${crub.toJson()}", id:=s"${getId()}_${crub.toString()}_checkbox",
                 onchange := { (event: Event) => {

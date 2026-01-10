@@ -144,7 +144,7 @@ object RepertoryView extends TabView {
         tr(
           td(result.fullPath, style:="width:35%;"),
           td(remedies.take(remedies.size - 1).map(l => span(l, ", ")) ::: List(remedies.last)),
-          td(cls := "text-right", style := "white-space:nowrap;",
+          td(cls := "text-right", cls := "minimal-column",
             button(cls := "btn btn-sm btn-secondary", `type` := "button", id := ("addBut_" + result.toString()),
               attr("data-crubric") := result.toJson().toString(),
               style := "vertical-align: middle; display: inline-block",
