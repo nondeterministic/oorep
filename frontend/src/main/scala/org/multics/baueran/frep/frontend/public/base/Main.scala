@@ -48,7 +48,7 @@ object Main extends MainUtil {
       AOSInit()
 
     // For onScroll, see MainUtil.scala!
-    dom.window.addEventListener("scroll", onScroll)
+    dom.window.addEventListener("scroll", (e: dom.Event) => onScroll(e))
 
     dom.document.getElementById("cookiePopup") match {
       case null => ;

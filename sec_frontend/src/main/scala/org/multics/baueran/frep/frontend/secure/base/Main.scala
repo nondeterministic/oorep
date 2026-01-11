@@ -82,7 +82,7 @@ object Main extends MainUtil {
       }
     }
 
-    dom.window.addEventListener("scroll", onScroll)
+    dom.window.addEventListener("scroll", (e: dom.Event) => onScroll(e))
 
     dom.document.getElementById("navbar_logout") match {
       case null => ;

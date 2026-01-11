@@ -19,7 +19,7 @@ v0.18.0                                under development
   - Major revamp of database schema to enable rubrics merging
 
 - Minor improvements and changes:
-  - Library updates
+  - Library and tool updates (e.g. ScalaJS 1.20.2)
   - Removed "News" link from landing page
 
 v0.17.0                  Sat Dec 14 03:05:54 PM CET 2024 
