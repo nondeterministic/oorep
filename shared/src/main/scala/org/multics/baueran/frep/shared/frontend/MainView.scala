@@ -86,7 +86,7 @@ object MainView {
             case (aboutDiv: dom.Element, featuresDiv: dom.Element) =>
               dom.document.body.removeChild(aboutDiv)
               dom.document.body.removeChild(featuresDiv)
-            case null => ;
+            case _ => ;
           }
         }
       }
