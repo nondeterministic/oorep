@@ -179,7 +179,7 @@ object CaseSection {
 
       // Delete merged rubrics from case...
       val deletedCaseRubrics = cRubrics.filter(cr =>
-        val rubricsSubrubricsIds = cr.subRubrics.map(_._1).toSet
+        val rubricsSubrubricsIds = cr.subRubrics.map(_.id).toSet
           mergedCaseRubricIds.toSet.intersect(rubricsSubrubricsIds).size > 0
       )
       cRubrics = cRubrics.filter(deletedCaseRubrics.contains(_) == false)

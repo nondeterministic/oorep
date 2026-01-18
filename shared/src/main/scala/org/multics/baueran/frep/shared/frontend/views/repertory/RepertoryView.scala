@@ -135,6 +135,8 @@ object RepertoryView extends TabView {
 
       val remedies = resultToBeAdded.getFormattedRemedyNames(_remedyFormat.get())
 
+      // If there is an open case, add the case ID to the displayed case rubric,
+      // so that if it is added to the case, it would come with a correct case ID.
       val result: CazeRubric = CaseSection.descr match {
         case Some(caze) => resultToBeAdded.replaceCaseId(caze.id)
         case None => resultToBeAdded
