@@ -66,7 +66,7 @@ object WeightedRemedy {
 
 }
 
-case class CazeSubRubric(id: Int, rubric: Rubric, weightedRemedies: List[WeightedRemedy]) {
+case class CazeSubRubric(rubric: Rubric, weightedRemedies: List[WeightedRemedy]) {
 
   def containsRemedyAbbrev(remedyAbbrev: String): Boolean =
     weightedRemedies.exists(_.remedy.nameAbbrev == remedyAbbrev)
@@ -97,7 +97,16 @@ object CazeSubRubric {
 
 }
 
-case class CazeRubricJsonHelper(cazeRubricId: Int, cazeId: Int, subRubrics: List[(Int, String, Int)])
+case class SubRubricJsonHelper(id: Int, abbrev: String)
+
+object SubRubricJsonHelper {
+
+  implicit val decoder: Decoder[SubRubricJsonHelper] = deriveDecoder
+  implicit val encoder: Encoder[SubRubricJsonHelper] = deriveEncoder
+
+}
+
+case class CazeRubricJsonHelper(cazeRubricId: Int, cazeId: Int, subRubrics: List[SubRubricJsonHelper])
 
 object CazeRubricJsonHelper {
 
@@ -125,7 +134,7 @@ case class CazeRubric(id: Int,
   // Get a unique ID (i.e. list of subrubrics) which can later be used to access the individual subrubrics of a (merged) rubric/row.
   // (The counterpart to fromJson() below in the support object)
   def toJson(): Json =
-    CazeRubricJsonHelper(id, cazeId, subRubrics.map(sr => (sr.id, sr.rubric.abbrev, sr.rubric.id))).asJson
+    CazeRubricJsonHelper(id, cazeId, subRubrics.map(sr => SubRubricJsonHelper(sr.rubric.id, sr.rubric.abbrev))).asJson
 
   // This is really only used in CaseSection.scala as follows:
   //     def getId() = HtmlRepresentation.getId() + "_crub_" + crub.toString()
@@ -235,13 +244,15 @@ object CazeRubric {
   implicit val crencoder: Encoder[CazeRubric] = deriveEncoder[CazeRubric]
   implicit val crdecoder: Decoder[CazeRubric] = deriveDecoder[CazeRubric]
 
+  // TODO: Pattern matching not exhaustive?!
+
   // The counterpart to toJson() above
-  def fromJson(jsonEncodedStrings: List[String]): List[(Int, String, Int)] = {
+  def fromJson(jsonEncodedStrings: List[String]): List[(String, Int)] = {
     jsonEncodedStrings.collect(
       parse(_) match {
         case Right(json) =>
           val cursor = json.hcursor
-          cursor.as[Seq[(Int, String, Int)]] match {
+          cursor.as[Seq[(String, Int)]] match {
             case Right(Seq(results)) => {
               results
             }

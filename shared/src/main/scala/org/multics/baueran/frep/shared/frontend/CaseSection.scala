@@ -175,12 +175,12 @@ object CaseSection {
         }
       }
 
-      val mergedCaseRubricIds = checkBoxesChecked.flatMap(_.subRubrics.map(_._1))
+      val mergedCaseRubricIds: List[Int] = checkBoxesChecked.flatMap(_.subRubrics.map(sr=>sr.id))
 
       // Delete merged rubrics from case...
       val deletedCaseRubrics = cRubrics.filter(cr =>
-        val rubricsSubrubricsIds = cr.subRubrics.map(_.id).toSet
-          mergedCaseRubricIds.toSet.intersect(rubricsSubrubricsIds).size > 0
+        val rubricsSubrubricsIds: Set[Int] = cr.subRubrics.map(_.rubric.id).toSet
+        mergedCaseRubricIds.toSet.intersect(rubricsSubrubricsIds).size > 0
       )
       cRubrics = cRubrics.filter(deletedCaseRubrics.contains(_) == false)
       updateCaseViewAndDataStructures()  // This will effectively REMOVE the deleted rubrics from DB
@@ -399,10 +399,14 @@ object CaseSection {
                   parse(addButton.getAttribute("data-crubric")) match {
                     case Right(json) => json.hcursor.as[CazeRubricJsonHelper] match {
                       case Right(crjh) =>
-                        val addButtonsSingleSubrubricId = crjh.subRubrics.head._1
-                        val addButtonsSingleRepertoryAbbrev = crjh.subRubrics.head._2
-                        if (crub.containsSubRubric(addButtonsSingleSubrubricId, addButtonsSingleRepertoryAbbrev))
-                          addButton.asInstanceOf[dom.html.Button].removeAttribute("disabled")
+                        crjh.subRubrics match {
+                          case Nil => ;
+                          case subRubric :: _ =>
+                            val addButtonsSingleSubrubricId = subRubric.id
+                            val addButtonsSingleRepertoryAbbrev = subRubric.abbrev
+                            if (crub.containsSubRubric(addButtonsSingleSubrubricId, addButtonsSingleRepertoryAbbrev))
+                              addButton.asInstanceOf[dom.html.Button].removeAttribute("disabled")
+                        }
                       case Left(err) => ;
                     }
                     case Left(err) => ;

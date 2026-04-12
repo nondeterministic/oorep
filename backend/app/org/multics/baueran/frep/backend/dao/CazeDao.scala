@@ -139,7 +139,7 @@ class CazeDao(dbContext: db.db.DBContext) {
       case pcsr :: Nil =>
         repertoryDao.getRubric(pcsr.rubricId, pcsr.abbrev) match {
           case Some(rubric) => 
-            Some(CazeSubRubric(pcsr.id, rubric, getWeightedRemedies(rubric)))
+            Some(CazeSubRubric(rubric, getWeightedRemedies(rubric)))
           case None =>
             None
         }
@@ -156,7 +156,7 @@ class CazeDao(dbContext: db.db.DBContext) {
         pcsrs.collect(pcsr =>
           repertoryDao.getRubric(pcsr.rubricId, pcsr.abbrev) match {
             case Some(rubric) =>
-              CazeSubRubric(pcsr.id, rubric, getWeightedRemedies(rubric))
+              CazeSubRubric(rubric, getWeightedRemedies(rubric))
           }
         )
     }
@@ -297,9 +297,9 @@ class CazeDao(dbContext: db.db.DBContext) {
   def updateCaseSubRubric(caseRubricId: Int, caseSubRubric: CazeSubRubric): Int = {
     run { quote {
       schemaCazeSubRubric
-        .filter(_.id == lift(caseSubRubric.id))
+        .filter(_.id == lift(caseSubRubric.rubric.id))
         .update(
-          _.cazeRubricId -> lift(caseSubRubric.id),
+          _.cazeRubricId -> lift(caseSubRubric.rubric.id),
           _.abbrev -> lift(caseSubRubric.rubric.abbrev),
           _.rubricId -> lift(caseSubRubric.rubric.id)
         )
