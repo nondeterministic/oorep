@@ -8,6 +8,7 @@
 GET   	/login                              org.multics.baueran.frep.backend.controllers.Get.login()
 GET   	/logout                             org.multics.baueran.frep.backend.controllers.Get.logout()
 
+GET	/api/settings                       org.multics.baueran.frep.backend.controllers.Get.apiSettings()
 GET	/api/authenticate                   org.multics.baueran.frep.backend.controllers.Get.apiAuthenticate()
 GET	/api/lookup_rep			    org.multics.baueran.frep.backend.controllers.Get.apiLookupRep(repertory: String, symptom: String, page: Int, remedyString: String, minWeight: Int, getRemedies: Int)
 GET     /api/lookup_mm                      org.multics.baueran.frep.backend.controllers.Get.apiLookupMM(mmAbbrev: String, symptom: String, page: Int, remedyString: String)

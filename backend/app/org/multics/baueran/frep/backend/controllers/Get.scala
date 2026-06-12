@@ -149,6 +149,12 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     }
   }
 
+  def apiSettings() = Action { implicit (request: Request[AnyContent]) =>
+    println("ENV VAR: ")
+    println(sys.env.get("OOREP_MAIL_USER"))
+    Ok("FUCK YEAH!")
+  }
+
   def apiDisplayGetErrorPage(message: String) = Action { implicit (request: Request[AnyContent]) =>
     BadRequest(views.html.defaultpages.badRequest("GET", request.uri, message))
   }

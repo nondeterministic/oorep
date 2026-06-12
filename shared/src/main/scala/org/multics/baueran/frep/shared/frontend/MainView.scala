@@ -162,6 +162,19 @@ object MainView {
   private def withoutResults(): JsDom.TypedTag[dom.html.Div] = {
     val divTabs = {
 
+      println("POO")
+      HttpRequest2("settings")
+        .onSuccess((response: String) =>
+          println("Response: " + response)
+            // TODO: Add this to the DOM somehow somewhere...
+            // div(cls := "alert alert-success", role := "alert",
+            //   button(`type` := "button", cls := "close", data.dismiss := "alert", onclick := { (_: Event) => _showMaxSearchResultsAlert = false },
+            //     span(aria.hidden := "true", raw("&times;"))),
+            //   b(s"Showing ALL available rubrics instead, because this small repertory only has ${totalNumberOfRepertoryRubrics.toString} rubrics in total.")
+            // ).render)
+        )
+        .send()
+
       val divContents = {
         div(cls:="tab-content border-right border-left border-bottom", id:="divTabs_content", style:="padding:20px;",
           div(cls:="tab-pane fade show active", id:=_tabViews.head.tabPaneId(), role:="tabpanel", aria.labelledby:="ex1-tab-1",

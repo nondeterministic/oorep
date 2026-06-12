@@ -4,7 +4,7 @@ import scala.scalajs.js.annotation.JSExportTopLevel
 import org.multics.baueran.frep.shared._
 import frontend.{CaseModals, LoadingSpinner, MainView, apiPrefix, serverUrl}
 import TopLevelUtilCode.{deleteAllCookies, toggleTheme}
-import sec_frontend.{AddToFileModal, EditFileModal, FileModalCallbacks, NewFileModal, OpenFileModal}
+import sec_frontend.{AddToFileModal, EditFileModal, FileModalCallbacks, NewFileModal, SettingsModal, OpenFileModal}
 
 import scalatags.JsDom.all.{id, _}
 import org.scalajs.dom
@@ -71,6 +71,7 @@ object Main extends MainUtil {
     dom.document.body.appendChild(OpenFileModal().render)
     dom.document.body.appendChild(EditFileModal().render)
     dom.document.body.appendChild(NewFileModal().render)
+    dom.document.body.appendChild(SettingsModal().render)
     dom.document.body.appendChild(CaseModals.RepertorisationModal().render)
     dom.document.body.appendChild(CaseModals.EditModal().render)
 
