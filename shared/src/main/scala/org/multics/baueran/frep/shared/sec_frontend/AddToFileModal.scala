@@ -1,7 +1,7 @@
 package org.multics.baueran.frep.shared.sec_frontend
 
 import org.scalajs.dom
-import org.multics.baueran.frep.shared.frontend.{CaseSection, OorepHtmlButton, OorepHtmlElement, getCookieData}
+import org.multics.baueran.frep.shared.frontend.{CaseSection, OorepHtmlButton, OorepHtmlElement}
 import org.multics.baueran.frep.shared.Defs.{CookieFields, HeaderFields}
 import org.multics.baueran.frep.shared.HttpRequest2
 import scalatags.JsDom.all.*

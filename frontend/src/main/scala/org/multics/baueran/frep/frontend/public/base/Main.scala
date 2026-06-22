@@ -1,8 +1,9 @@
 package org.multics.baueran.frep.frontend.public.base
 
-import org.multics.baueran.frep.shared.MainUtil
+import org.multics.baueran.frep.shared.{HttpRequest2, MainUtil, frontend}
 import org.multics.baueran.frep.shared.TopLevelUtilCode.{loadMainPageAndJumpToAnchor, sendAcceptCookies, toggleTheme}
 import org.multics.baueran.frep.shared.frontend.CaseModals.RepertorisationModal.getId
+import org.multics.baueran.frep.shared.Defs.CookieFields
 import org.scalajs.dom
 
 import scala.scalajs.js
@@ -78,6 +79,11 @@ object Main extends MainUtil {
     // This is to handle all the index_... pages, which do something after the main script has been loaded,
     // e.g. look something up or display the password-change dialog.
     handleCallsWithURIencodedParameters()
+
+    HttpRequest2("authenticate")
+      .onSuccess((response: String) => { frontend.setTransientUserState(Map(CookieFields.id -> response)) })
+      .onFailure((response: String) => { println("Checked if backend says user is logged in. No.") })
+      .send()
   }
 
   // See MainUtil trait!

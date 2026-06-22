@@ -220,7 +220,7 @@ object CaseSection {
     def apply() = {
       def header = "CASE"
 
-      getCookieData(dom.document.cookie, CookieFields.id.toString) match {
+      getTransientUserState(CookieFields.id) match {
         case Some(_) =>
           if (descr != None) {
             div(
@@ -542,7 +542,7 @@ object CaseSection {
   // ------------------------------------------------------------------------------------------------------------------
   def updateCaseViewAndDataStructures(): Unit = {
     def updateFileModalDataStructures(): Unit = {
-      val memberId = getCookieData(dom.document.cookie, CookieFields.id.toString) match {
+      val memberId = getTransientUserState(CookieFields.id) match {
         case Some(id) => updateMemberFiles(id.toInt); id.toInt
         case None => -1
       }
@@ -773,7 +773,7 @@ object CaseSection {
   }
 
   def updateCaseHeaderView(): Unit = {
-    getCookieData(dom.document.cookie, CookieFields.id.toString) match {
+    getTransientUserState(CookieFields.id) match {
       // Not logged in...
       case None =>
         OpenNewCaseButton.hide()

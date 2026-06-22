@@ -85,7 +85,7 @@ object CaseModals {
       val caseIdTxt = CaseIdInput.getText ()
       CaseIdInput.setReadOnly ()
       val caseDescrTxt = CaseDescriptionTextArea.getText ()
-      val memberId = getCookieData (dom.document.cookie, CookieFields.id.toString) match {
+      val memberId = getTransientUserState(CookieFields.id) match {
         case Some (id) => id.toInt
         case None => -1 // TODO: Force user to relogin; the identification cookie has disappeared!!!!!!!!!!
       }

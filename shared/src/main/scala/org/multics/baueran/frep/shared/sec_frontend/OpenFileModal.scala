@@ -3,7 +3,7 @@ package org.multics.baueran.frep.shared.sec_frontend
 import org.multics.baueran.frep.shared.Defs.{CookieFields, HeaderFields}
 import org.multics.baueran.frep.shared.HttpRequest2
 import org.multics.baueran.frep.shared.TopLevelUtilCode.getDocumentCsrfCookie
-import org.multics.baueran.frep.shared.frontend.{CaseSection, MainView, OorepHtmlButton, OorepHtmlElement, apiPrefix, getCookieData, serverUrl}
+import org.multics.baueran.frep.shared.frontend.{CaseSection, MainView, OorepHtmlButton, OorepHtmlElement, apiPrefix, getCookieData, getTransientUserState, serverUrl}
 import org.scalajs.dom
 import org.scalajs.dom.{Event, document, html}
 import scalatags.JsDom.all._
@@ -11,13 +11,13 @@ import scalatags.JsDom.all._
 object OpenFileModal extends FileModal("OpenFileModal__") {
 
   private def requestFileDeletion() = {
-    getCookieData(dom.document.cookie, CookieFields.id.toString) match {
+    getTransientUserState(CookieFields.id) match {
       case Some(memberId) => {
         HttpRequest2("sec/del_file_and_cases")
           .withMethod("DELETE")
           .withHeaders((HeaderFields.csrfToken.toString(), getDocumentCsrfCookie().getOrElse("")))
           .withBody(
-            ("memberId" -> memberId.toString()),
+            ("memberId" -> memberId),
             ("fileId" -> selected_file_id.getOrElse(-1).toString))
           .onSuccess((_) => { FileModalCallbacks.updateMemberFiles(memberId.toInt) })
           .send()

@@ -2,7 +2,7 @@ package org.multics.baueran.frep.shared.sec_frontend
 
 import org.multics.baueran.frep.shared.Defs.{CookieFields, HeaderFields}
 import org.multics.baueran.frep.shared.{FIle, HttpRequest2}
-import org.multics.baueran.frep.shared.frontend.{CaseSection, Notify, OorepHtmlButton, OorepHtmlElement, OorepHtmlInput, OorepHtmlTextArea, apiPrefix, getCookieData, serverUrl}
+import org.multics.baueran.frep.shared.frontend.{CaseSection, Notify, OorepHtmlButton, OorepHtmlElement, OorepHtmlInput, OorepHtmlTextArea, apiPrefix, getCookieData, getTransientUserState, serverUrl}
 import scalatags.JsDom.all.*
 import org.scalajs.dom
 import org.scalajs.dom.{Event, html}
@@ -31,7 +31,7 @@ object NewFileModal extends OorepHtmlElement {
       def onSubmit = (event: Event) => {
         event.preventDefault() // Without this, the submit button also closes on wrong input and reloads the application
 
-        val memberId = getCookieData(dom.document.cookie, CookieFields.id.toString) match {
+        val memberId = getTransientUserState(CookieFields.id) match {
           case Some(id) => id.toInt
           case None => -1 // TODO: Force user to relogin; the identification cookie has disappeared!!!!!!!!!!
         }

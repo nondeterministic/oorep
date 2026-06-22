@@ -1,7 +1,7 @@
 package org.multics.baueran.frep.shared
 
 import org.multics.baueran.frep.shared.Defs.CookieFields
-import org.multics.baueran.frep.shared.frontend.{RemedyFormat, getCookieData, serverUrl}
+import org.multics.baueran.frep.shared.frontend.{RemedyFormat, getCookieData, getTransientUserState, serverUrl}
 import org.multics.baueran.frep.shared.frontend.RemedyFormat._
 import org.scalajs.dom
 import scalatags.JsDom.all._
@@ -170,14 +170,7 @@ class MyDate(isoDateString: String) {
 object TopLevelUtilCode {
 
   def getDocumentCsrfCookie(): Option[String] = {
-    getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString)
-    //    dom.document.cookie.split(";").foreach { cookie =>
-    //      cookie.split("=").toList match {
-    //        case name :: content :: Nil if (name.toLowerCase() == CookieFields.csrfCookie.toString.toLowerCase) => return Some(content)
-    //        case _ => ;
-    //      }
-    //    }
-    //    None
+    getTransientUserState(CookieFields.csrfCookie)
   }
 
   // Only delete cookies that OOREP set itself in order to store data
@@ -196,6 +189,11 @@ object TopLevelUtilCode {
     deleteCustomCookies()
   }
 
+  //  def sendAcceptCookies() = {
+  //    frontend.setCookieData(Map(CookieFields.cookiePopupAccepted -> "1"))
+  //    dom.document.getElementById("cookiePopup").asInstanceOf[dom.html.Div].classList.remove("show")
+  //    dom.document.getElementById("cookiePopup").asInstanceOf[dom.html.Div].style.setProperty("display", "none")
+  //  }
   def sendAcceptCookies() = {
     HttpRequest2("store_cookie")
       .withQueryParameters("name" -> CookieFields.cookiePopupAccepted.toString, "value" -> "1")

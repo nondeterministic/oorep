@@ -4,7 +4,7 @@ import io.circe.parser.parse
 import org.multics.baueran.frep.shared.Defs.{CookieFields, HeaderFields}
 import org.multics.baueran.frep.shared.TopLevelUtilCode.getDocumentCsrfCookie
 import org.multics.baueran.frep.shared.{Caze, HttpRequest2, FileOverviewRow}
-import org.multics.baueran.frep.shared.frontend.{CaseSection, OorepHtmlButton, OorepHtmlElement, getCookieData}
+import org.multics.baueran.frep.shared.frontend.{CaseSection, OorepHtmlButton, OorepHtmlElement, getCookieData, getTransientUserState}
 import org.multics.baueran.frep.shared.frontend.views.repertory.RepertoryView
 import org.scalajs.dom
 import org.scalajs.dom.{Event, document, html}
@@ -44,9 +44,9 @@ object EditFileModal extends OorepHtmlElement {
                     .withHeaders((HeaderFields.csrfToken.toString(), getDocumentCsrfCookie().getOrElse("")))
                     .withBody(
                       ("caseId" -> currentlySelectedCaseId.toString()),
-                      ("memberId" -> getCookieData(dom.document.cookie, CookieFields.id.toString).getOrElse("")))
+                      ("memberId" -> getTransientUserState(CookieFields.id).getOrElse("")))
                     .onSuccess((_: String) => {
-                      getCookieData(dom.document.cookie, CookieFields.id.toString) match {
+                      getTransientUserState(CookieFields.id) match {
                         case Some(memberId) => FileModalCallbacks.updateMemberFiles(memberId.toInt)
                         case None => println("EditFileModal: Deleting of case failed.")
                       }

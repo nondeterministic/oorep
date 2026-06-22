@@ -5,7 +5,7 @@ import org.multics.baueran.frep.shared.frontend.{ChangePasswordForm, MainView, g
 import org.multics.baueran.frep.shared.frontend.views.materiamedica.MateriaMedicaView
 import org.multics.baueran.frep.shared.frontend.views.repertory.RepertoryView
 import org.scalajs.dom
-import scalatags.JsDom.all._
+import scalatags.JsDom.all.*
 import monix.execution.Scheduler.Implicits.global
 
 import scala.scalajs.js.URIUtils.decodeURIComponent

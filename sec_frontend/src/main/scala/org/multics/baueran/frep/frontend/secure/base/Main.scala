@@ -103,6 +103,16 @@ object Main extends MainUtil {
     // This is to handle all the index_... pages, which do something after the main script has been loaded,
     // e.g. look something up or display the password-change dialog.
     handleCallsWithURIencodedParameters()
+
+    import org.multics.baueran.frep.shared.Defs.CookieFields
+    HttpRequest2("authenticate")
+      .onSuccess((response: String) => {
+        frontend.setTransientUserState(Map(CookieFields.id -> response))
+      })
+      .onFailure((response: String) => {
+        println("Checked if backend says user is logged in. No.")
+      })
+      .send()
   }
 
   // See MainUtil trait!

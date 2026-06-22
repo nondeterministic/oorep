@@ -100,7 +100,7 @@ object MainView {
     if (features != null)
       dom.document.body.removeChild(features)
 
-    getCookieData(dom.document.cookie, CookieFields.id.toString) match {
+    getTransientUserState(CookieFields.id) match {
       case Some(id) => updateMemberFiles(id.toInt)
       case None => ;
     }
