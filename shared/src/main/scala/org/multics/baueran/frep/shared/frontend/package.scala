@@ -22,13 +22,13 @@ package object frontend {
 
   def setTransientUserState(data: Map[CookieFields,String]) = {
     transientUserState.addAll(data)
-    println(s"Transient SPA data after adding:")
+    // println(s"Transient SPA data after adding:")
     transientUserState.foreach(println(_))
   }
 
   def getTransientUserState(key: CookieFields): Option[String] = {
     val data = transientUserState.get(key)
-    println(s"Transient SPA data requested: ${key.toString()}; Transient SPA data gotten: ${data}")
+    // println(s"Transient SPA data requested: ${key.toString()}; Transient SPA data gotten: ${data}")
     data
   }
 

@@ -189,11 +189,6 @@ object TopLevelUtilCode {
     deleteCustomCookies()
   }
 
-  //  def sendAcceptCookies() = {
-  //    frontend.setCookieData(Map(CookieFields.cookiePopupAccepted -> "1"))
-  //    dom.document.getElementById("cookiePopup").asInstanceOf[dom.html.Div].classList.remove("show")
-  //    dom.document.getElementById("cookiePopup").asInstanceOf[dom.html.Div].style.setProperty("display", "none")
-  //  }
   def sendAcceptCookies() = {
     HttpRequest2("store_cookie")
       .withQueryParameters("name" -> CookieFields.cookiePopupAccepted.toString, "value" -> "1")
