@@ -6,7 +6,7 @@ import org.multics.baueran.frep.shared.{HttpRequest2, Remedy}
 import org.multics.baueran.frep.shared.sec_frontend.FileModalCallbacks.updateMemberFiles
 import org.multics.baueran.frep.shared.frontend.views.materiamedica.MateriaMedicaView
 import org.multics.baueran.frep.shared.frontend.views.repertory.RepertoryView
-import scalatags.JsDom.all._
+import scalatags.JsDom.all.*
 import org.scalajs.dom
 import scalatags.JsDom
 import org.scalajs.dom.raw.BeforeUnloadEvent
@@ -162,7 +162,7 @@ object MainView {
   private def withoutResults(): JsDom.TypedTag[dom.html.Div] = {
     val divTabs = {
 
-      println("POO")
+      println("TODO: Revisit this code in MainView and connect it to Settings...")
       HttpRequest2("settings")
         .onSuccess((response: String) =>
           println("Response: " + response)

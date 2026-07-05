@@ -25,7 +25,7 @@ package object Defs {
 
   object HeaderFields extends Enumeration {
     type HeaderFields = Value
-    val csrfToken = "Csrf-Token"
+    val csrfToken = "Csrf-Token" // See also application.conf !!
   }
 
 }

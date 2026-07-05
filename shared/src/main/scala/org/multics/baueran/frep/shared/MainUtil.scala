@@ -103,6 +103,16 @@ trait MainUtil {
     }
   }
 
+  def setCsrfToken(): Unit = {
+    dom.document.cookie.split(";").collectFirst { cookie =>
+      cookie.split("=").toList match {
+        case name :: content :: Nil if (name.toLowerCase() == CookieFields.csrfCookie.toString.toLowerCase) =>
+          frontend.setTransientUserState(Map(CookieFields.csrfCookie -> content))
+        case _ => ;
+      }
+    }
+  }
+  
   // This is like a class constructor: we want Main to get the data from the backend as soon as OOREP application has started up.
   // The second line basically calls all implementations of updateDataStructuresFromBackendData() that exist.
   def updateDataStructuresFromBackendData(): Unit

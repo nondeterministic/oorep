@@ -2,14 +2,14 @@ package org.multics.baueran.frep.frontend.public.base
 
 import org.multics.baueran.frep.shared.{HttpRequest2, MainUtil, frontend}
 import org.multics.baueran.frep.shared.TopLevelUtilCode.{loadMainPageAndJumpToAnchor, sendAcceptCookies, toggleTheme}
-import org.multics.baueran.frep.shared.frontend.CaseModals.RepertorisationModal.getId
+// import org.multics.baueran.frep.shared.frontend.CaseModals.RepertorisationModal.getId
 import org.multics.baueran.frep.shared.Defs.CookieFields
 import org.scalajs.dom
 
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSExportTopLevel
 import org.multics.baueran.frep.shared.frontend.{CaseModals, LoadingSpinner, MainView}
-import scalatags.JsDom.all.{cls, div, role, tabindex}
+// import scalatags.JsDom.all.{cls, div, role, tabindex}
 
 @JSExportTopLevel("Main")
 object Main extends MainUtil {
@@ -84,6 +84,8 @@ object Main extends MainUtil {
       .onSuccess((response: String) => { frontend.setTransientUserState(Map(CookieFields.id -> response)) })
       .onFailure((response: String) => { println("Checked if backend says user is logged in. No.") })
       .send()
+
+    setCsrfToken()
   }
 
   // See MainUtil trait!

@@ -1,7 +1,8 @@
 package org.multics.baueran.frep.frontend.secure.base
 
 import scala.scalajs.js.annotation.JSExportTopLevel
-import org.multics.baueran.frep.shared._
+import org.multics.baueran.frep.shared.*
+import org.multics.baueran.frep.shared.Defs.CookieFields
 import frontend.{CaseModals, LoadingSpinner, MainView, apiPrefix, serverUrl}
 import TopLevelUtilCode.{deleteAllCookies, toggleTheme}
 import sec_frontend.{AddToFileModal, EditFileModal, FileModalCallbacks, NewFileModal, SettingsModal, OpenFileModal}
@@ -24,6 +25,7 @@ object Main extends MainUtil {
 
         try {
           val memberId = response.toInt
+          frontend.setTransientUserState(Map(CookieFields.id -> response))
           FileModalCallbacks.updateMemberFiles(memberId)
         } catch {
           case exception: Throwable =>
@@ -104,15 +106,7 @@ object Main extends MainUtil {
     // e.g. look something up or display the password-change dialog.
     handleCallsWithURIencodedParameters()
 
-    import org.multics.baueran.frep.shared.Defs.CookieFields
-    HttpRequest2("authenticate")
-      .onSuccess((response: String) => {
-        frontend.setTransientUserState(Map(CookieFields.id -> response))
-      })
-      .onFailure((response: String) => {
-        println("Checked if backend says user is logged in. No.")
-      })
-      .send()
+    setCsrfToken()
   }
 
   // See MainUtil trait!

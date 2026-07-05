@@ -20,15 +20,15 @@ package object frontend {
 
   private val transientUserState = mutable.HashMap[CookieFields, String]()
 
-  def setTransientUserState(cookieData: Map[CookieFields,String]) = {
-    transientUserState.addAll(cookieData)
-    println(s"Cookie data after adding:")
+  def setTransientUserState(data: Map[CookieFields,String]) = {
+    transientUserState.addAll(data)
+    println(s"Transient SPA data after adding:")
     transientUserState.foreach(println(_))
   }
 
-  def getTransientUserState(cookieField: CookieFields): Option[String] = {
-    val data = transientUserState.get(cookieField)
-    println(s"Cookie data requested: ${cookieField.toString()}; Cookie data gotten: ${data}")
+  def getTransientUserState(key: CookieFields): Option[String] = {
+    val data = transientUserState.get(key)
+    println(s"Transient SPA data requested: ${key.toString()}; Transient SPA data gotten: ${data}")
     data
   }
 

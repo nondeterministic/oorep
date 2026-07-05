@@ -57,11 +57,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
         memberDao.setLastSeen(member.member_id, new MyDate())
         Logger.debug(s"Get: login() completed for user ${member.member_id.toString}.")
         Redirect(serverUrl(request))
-          .withCookies(
-            Cookie(CookieFields.id.toString, member.member_id.toString, secure = true, httpOnly = false),
-            Cookie(CookieFields.cookiePopupAccepted.toString, "1", secure = true, httpOnly = false)
-          )
-          .withSession("id" -> member.member_id.toString)
+          .withCookies(Cookie(CookieFields.cookiePopupAccepted.toString, "1", secure = true, httpOnly = false))
     }
   }
 
@@ -79,37 +75,11 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
   }
 
   def show(repertory: String, symptom: String, page: Int, remedyString: String, minWeight: Int) = Action { implicit request: Request[AnyContent] =>
-    try {
-      getAuthenticatedUser(request) match {
-        case None =>
-          Ok(views.html.index_lookup(request, repertory, URLEncoder.encode(symptom, StandardCharsets.UTF_8.toString()), page - 1, remedyString, minWeight, s"OOREP - ${symptom} (${repertory})"))
-            .withSession("id" -> "-1")
-        case Some(member) =>
-          Ok(views.html.index_lookup(request, repertory, URLEncoder.encode(symptom, StandardCharsets.UTF_8.toString()), page - 1, remedyString, minWeight, s"OOREP - ${symptom} (${repertory})"))
-            .withSession("id" -> member.member_id.toString)
-      }
-    } catch {
-      case e: Exception =>
-        Logger.debug(s"GET: show() failed; most likely URLEncoder.encode(): ${e.toString}")
-        InternalServerError(views.html.defaultpages.badRequest("GET", request.uri, "Something went wrong. Go to main page, https://www.oorep.com/, and try again, or submit a bug report!"))
-    }
+    Ok(views.html.index_lookup(request, repertory, URLEncoder.encode(symptom, StandardCharsets.UTF_8.toString()), page - 1, remedyString, minWeight, s"OOREP - ${symptom} (${repertory})"))
   }
 
   def showMM(materiaMedica: String, symptom: String, page: Int, hideSections: Boolean, remedyString: String) = Action { implicit (request: Request[AnyContent]) =>
-    try {
-      getAuthenticatedUser(request) match {
-        case None =>
-          Ok(views.html.index_lookup_mm(request, materiaMedica, URLEncoder.encode(symptom, StandardCharsets.UTF_8.toString()), page - 1, hideSections, remedyString, s"OOREP - ${symptom} (${materiaMedica})"))
-            .withSession("id" -> "-1")
-        case Some(member) =>
-          Ok(views.html.index_lookup_mm(request, materiaMedica, URLEncoder.encode(symptom, StandardCharsets.UTF_8.toString()), page - 1, hideSections, remedyString, s"OOREP - ${symptom} (${materiaMedica})"))
-            .withSession("id" -> member.member_id.toString)
-      }
-    } catch {
-      case e: Exception =>
-        Logger.debug(s"GET: showMM() failed; most likely URLEncoder.encode(): ${e.toString}")
-        InternalServerError(views.html.defaultpages.badRequest("GET", request.uri, "Something went wrong. Go to main page, https://www.oorep.com/, and try again, or submit a bug report!"))
-    }
+    Ok(views.html.index_lookup_mm(request, materiaMedica, URLEncoder.encode(symptom, StandardCharsets.UTF_8.toString()), page - 1, hideSections, remedyString, s"OOREP - ${symptom} (${materiaMedica})"))
   }
 
   def serve_static_html(page: String) = Action { implicit request: Request[AnyContent] =>
@@ -150,9 +120,8 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
   }
 
   def apiSettings() = Action { implicit (request: Request[AnyContent]) =>
-    println("ENV VAR: ")
-    println(sys.env.get("OOREP_MAIL_USER"))
-    Ok("FUCK YEAH!")
+    println("ENV VAR: " + sys.env.get("OOREP_MAIL_USER"))
+    Ok("TODO: Revisit this later and connect the method!")
   }
 
   def apiDisplayGetErrorPage(message: String) = Action { implicit (request: Request[AnyContent]) =>
@@ -182,36 +151,15 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
   }
 
   def apiAvailableRemedies() = Action { (request: Request[AnyContent]) =>
-    getAuthenticatedUser(request) match {
-      case Some(member) =>
-        Ok(repertoryDao.getRemedies().asJson.toString())
-          .withSession("id" -> member.member_id.toString)
-      case None =>
-        Ok(repertoryDao.getRemedies().asJson.toString())
-          .withSession("id" -> "-1")
-    }
+    Ok(repertoryDao.getRemedies().asJson.toString())
   }
 
   def apiAvailableRepertoriesAndRemedies() = Action { (request: Request[AnyContent]) =>
-    getAuthenticatedUser(request) match {
-      case Some(member) =>
-        Ok((repertoryDao.getRepsAndRemedies(getAuthenticatedUser(request)).asJson.toString))
-          .withSession("id" -> member.member_id.toString)
-      case None =>
-        Ok((repertoryDao.getRepsAndRemedies(getAuthenticatedUser(request)).asJson.toString))
-          .withSession("id" -> "-1")
-    }
+    Ok((repertoryDao.getRepsAndRemedies(getAuthenticatedUser(request)).asJson.toString))
   }
 
   def apiAvailableMateriaMedicasAndRemedies() = Action { (request: Request[AnyContent]) =>
-    getAuthenticatedUser(request) match {
-      case Some(member) =>
-        Ok(mmDao.getMMsAndRemedies(getAuthenticatedUser(request)).asJson.toString())
-          .withSession("id" -> member.member_id.toString)
-      case None =>
-        Ok(mmDao.getMMsAndRemedies(getAuthenticatedUser(request)).asJson.toString())
-          .withSession("id" -> "-1")
-    }
+    Ok(mmDao.getMMsAndRemedies(getAuthenticatedUser(request)).asJson.toString())
   }
 
   /**
