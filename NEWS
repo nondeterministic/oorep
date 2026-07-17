@@ -17,6 +17,8 @@ v0.18.0                                under development
 - Main features
   - Merging of rubrics now possible
   - Major revamp of database schema to enable rubrics merging
+  - User-ID is no longer stored inside a cookie but in the app's
+    transient memory (should also fix some "stale cookie problems")
 
 - Minor improvements and changes:
   - Library and tool updates (e.g. ScalaJS 1.20.2)

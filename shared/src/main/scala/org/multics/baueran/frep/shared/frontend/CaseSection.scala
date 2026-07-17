@@ -182,19 +182,26 @@ object CaseSection {
         val rubricsSubrubricsIds: Set[Int] = cr.subRubrics.map(_.rubric.id).toSet
         mergedCaseRubricIds.toSet.intersect(rubricsSubrubricsIds).size > 0
       )
-      cRubrics = cRubrics.filter(deletedCaseRubrics.contains(_) == false)
-      updateCaseViewAndDataStructures()  // This will effectively REMOVE the deleted rubrics from DB
 
+      // Add the NEWLY merged / created rubric to the case and call "case update" method
       mergeCaseRubrics(checkBoxesChecked) match {
         case Some(mergedJsonCaseRubric) =>
-          // Add newly merged rubric to case...
           val mergedCaseSubrubrics: List[CazeSubRubric] = deletedCaseRubrics.flatMap(_.subRubrics).toList
           val mergedCaseRubric: CazeRubric = CazeRubric(-1, mergedJsonCaseRubric.cazeId, mergedCaseSubrubrics, 1, None)
           cRubrics = cRubrics + mergedCaseRubric
-          showCase(RepertoryView.remedyFormat()) // This will effectively ADD the deleted rubrics from DB
+          println("After adding merged rubric: " + cRubrics.size)
+          updateCaseViewAndDataStructures() // Make change persistant
         case None =>
           println("ERROR: Merge of case rubrics failed.")
       }
+
+      // Remove the individual rubrics that were merged from the case and call "case update" method
+      println("Deleted rubrics: " + deletedCaseRubrics.size)
+      println("Before filter: " + cRubrics.size)
+      cRubrics = cRubrics.filter(deletedCaseRubrics.contains(_) == false)
+      println("After filter: " + cRubrics.size)
+      showCase(RepertoryView.remedyFormat()) // Update case view and make change persistant
+      println("After update: " + cRubrics.size)
     }
 
     def apply() = {
@@ -547,6 +554,7 @@ object CaseSection {
         case None => -1
       }
 
+      println("CS: #cRubrics: " + cRubrics.size)
       remedyScores.clear()
       cRubrics.foreach(caseRubric => {
         caseRubric.subRubrics.foreach(subRubric =>
@@ -614,6 +622,8 @@ object CaseSection {
           else if (prevCase.get.isSupersetOf(descr.get).length > 0) { // Delete the removed case rubrics in DB
             val diff = prevCase.get.isSupersetOf(descr.get)
 
+            println(s"Attempt to delete casr rubric for memberID ${memberId}, caseID ${descr.get.id} and caserubrics ${diff.asJson.toString}...")
+
             HttpRequest2("sec/del_caserubrics_from_case")
               .withMethod("DELETE")
               .withHeaders((HeaderFields.csrfToken.toString(), getDocumentCsrfCookie().getOrElse("")))
@@ -642,7 +652,7 @@ object CaseSection {
                 ("casedescription" -> descr.get.description))
           }
           else {
-            println("Case: updateFileModalDataStructures(): NOT saving case, although something indicates it may have changed. " +
+            println("CaseSection: updateFileModalDataStructures(): NOT saving case, although something indicates it may have changed. " +
               "This shouldn't have happened, but previous saves should have taken care that no data-loss occurred.")
           }
         }
@@ -652,18 +662,22 @@ object CaseSection {
         }
       }
 
+      println("CS: #cRubrics (#2): " + cRubrics.size)
+
       // Delete not only view but entire case from DB, when user removed all of its rubrics...
       if (cRubrics.size == 0) {
 
         if (descr != None && descr.get.id != 0)
 
-        HttpRequest2("sec/del_case")
-            .withMethod("DELETE")
-            .withHeaders((HeaderFields.csrfToken.toString(), getDocumentCsrfCookie().getOrElse("")))
-            .withBody(
-              ("caseId" -> descr.get.id.toString()),
-              ("memberId" -> memberId.toString()))
-            .send()
+          println("CS: #cRubrics (#3): " + cRubrics.size + " -- DELETING CASE !!!!!!!!!!!!!!!!!!!!!!!!!!!")
+
+          HttpRequest2("sec/del_case")
+              .withMethod("DELETE")
+              .withHeaders((HeaderFields.csrfToken.toString(), getDocumentCsrfCookie().getOrElse("")))
+              .withBody(
+                ("caseId" -> descr.get.id.toString()),
+                ("memberId" -> memberId.toString()))
+              .send()
 
         CaseModals.EditModal.CaseIdInput.setEditable()
         descr = None
@@ -831,6 +845,9 @@ object CaseSection {
       MainView.CaseDiv.append(new HtmlRepresentation(remedyFormat)().render)
       updateCaseViewAndDataStructures()
       updateCaseHeaderView()
+      println("UPDATED CASE")
+    } else {
+      println("NOT UPDATING CASE AS SIZE == 0")
     }
   }
 
