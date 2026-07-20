@@ -1,7 +1,7 @@
 package org.multics.baueran.frep.shared.sec_frontend
 
 import org.scalajs.dom
-import org.multics.baueran.frep.shared.frontend.{CaseSection, OorepHtmlButton, OorepHtmlElement}
+import org.multics.baueran.frep.shared.frontend.{CaseSection, MainView, OorepHtmlButton, OorepHtmlElement}
 import org.multics.baueran.frep.shared.Defs.{CookieFields, HeaderFields}
 import org.multics.baueran.frep.shared.{Caze, HttpRequest2}
 import scalatags.JsDom.all.*
@@ -44,6 +44,7 @@ object AddToFileModal extends FileModal("AddToFileModal__") with OorepHtmlElemen
                           CaseSection.descr = Some(caze)
                           CaseSection.cRubrics = caze.rubrics.toSet
                           CaseSection.updateCurrOpenFile(selected_file_id)
+                          MainView.toggleOnBeforeUnload()
 
                           // TODO: Not sure if, after the above, we still need this costly call to updateCaseViewAndDatastructures()
                           CaseSection.updateCaseViewAndDataStructures()
