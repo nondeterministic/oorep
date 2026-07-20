@@ -536,17 +536,6 @@ object CaseSection {
   }
 
   // ------------------------------------------------------------------------------------------------------------------
-  // Called from the outside.  Typically, an updateCaseViewAndDatastructures() follows such a call.
-  def updateCurrOpenCaseId(caseId: Int) = {
-    if (descr != None) {
-      descr = Some(shared.Caze(caseId, descr.get.header, descr.get.member_id, descr.get.date, descr.get.changed, descr.get.description, cRubrics.toList))
-      CaseModals.EditModal.CaseIdInput.setReadOnly()
-    }
-    else
-      println(s"Case: updateCaseId with ID ${caseId} failed.")
-  }
-
-  // ------------------------------------------------------------------------------------------------------------------
   def updateCaseViewAndDataStructures(): Unit = {
     def updateFileModalDataStructures(): Unit = {
       val memberId = getTransientUserState(CookieFields.id) match {
@@ -568,10 +557,10 @@ object CaseSection {
         descr = Some(shared.Caze(descr.get.id, descr.get.header, descr.get.member_id, descr.get.date, descr.get.changed, descr.get.description, cRubrics.toList))
 
         // If user is logged in, attempt to update case in DB (if it exists; see comment in Post.scala),
-        // and if previous case != current case.
+        // and if previous case != current case, and if the case ID is > 0 as otherwise we're getting an error from the backend's persistence methods.
         // And, it only makes sense to update, if there are any rubrics left, e.g., which may not be the
         // case after pressing "Remove" a few times...
-        if ((memberId >= 0) && prevCase.isDefined && (prevCase.get.id == descr.get.id) && (cRubrics.size > 0) && (prevCase.get != descr.get)) {
+        if ((memberId >= 0) &&  descr.get.id > 0 && prevCase.isDefined && (prevCase.get.id == descr.get.id) && (cRubrics.size > 0) && (prevCase.get != descr.get)) {
           // Before we write the case to disk, we update the date to record the change.
           // We do not do this above, as the prevCase != descr check would always fail then!
           descr = Some(shared.Caze(descr.get.id, descr.get.header, descr.get.member_id, (new js.Date()).toISOString(), (new js.Date()).toISOString(), descr.get.description, cRubrics.toList))
@@ -621,8 +610,6 @@ object CaseSection {
           }
           else if (prevCase.get.isSupersetOf(descr.get).length > 0) { // Delete the removed case rubrics in DB
             val diff = prevCase.get.isSupersetOf(descr.get)
-
-            println(s"Attempt to delete casr rubric for memberID ${memberId}, caseID ${descr.get.id} and caserubrics ${diff.asJson.toString}...")
 
             HttpRequest2("sec/del_caserubrics_from_case")
               .withMethod("DELETE")

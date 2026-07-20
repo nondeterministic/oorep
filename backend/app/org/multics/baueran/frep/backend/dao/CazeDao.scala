@@ -103,7 +103,7 @@ class CazeDao(dbContext: db.db.DBContext) {
     deleteOnly(caze)
   }
 
-  def insert(caze: Caze): Int = {
+  def insert(caze: Caze): Option[Caze] = {
     val newCazeId = run { quote {
       schemaCaze.insert(
         _.id -> lift(caze.id),
@@ -115,10 +115,17 @@ class CazeDao(dbContext: db.db.DBContext) {
       ).returningGenerated(_.id)
     }}
 
-    if (addCaseRubrics(newCazeId, caze.rubrics).length == 0)
+    if (addCaseRubrics(newCazeId, caze.rubrics).length == 0) {
       Logger.error(s"CazeDao: insert(...) failed to add rubrics to freshly inserted caze with ID ${newCazeId}.")
+      None
+    }
+    else {
+      get(newCazeId)
 
-    newCazeId
+      // The following could be gotten to work with a lot more updating of IDs, etc.
+      // It's easier to just fetch what has just been stored in the DB from the DB.
+      // Some(Caze(newCazeId, caze.header, caze.member_id, caze.date, caze.changed, caze.description, caze.rubrics))
+    }
   }
 
   def getWeightedRemedies(rubric: Rubric): List[WeightedRemedy] = {

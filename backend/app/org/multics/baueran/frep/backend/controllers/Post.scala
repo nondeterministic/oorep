@@ -10,6 +10,9 @@ import org.multics.baueran.frep._
 import shared.{CazeRubric, CazeRubricJsonHelper, Caze, EmailHistory, FIle, MyDate, PasswordChangeRequest, Member}
 import backend.db.db.DBContext
 
+import io.circe.syntax.*
+import io.circe.Json
+
 import io.circe.parser._
 import io.circe.generic.auto._ // Brings implicit Decoders for standard types (like List[Int]) into scope
 import scala.util.{Left, Right} // For pattern matching on the Either result
@@ -202,15 +205,22 @@ class Post @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abs
                   val err = s"Post: saveCaze() failed: not authorised."
                   Logger.error(err)
                   Forbidden(err)
-                } else {
-                  if (newCaseId < 0)
-                    newCaseId = cazeDao.insert(caze)
+                } else if (newCaseId < 0) {
+                  cazeDao.insert(caze) match {
+                    case Some(newCase) => {
+                      newCaseId = newCase.id
 
-                  if (fileDao.addCaseIdToFile(newCaseId, fileId.toInt))
-                    Ok(newCaseId.toString)
-                  else
-                    BadRequest(s"Post: saveCaze() failed: failed to add case with new ID ${newCaseId} (old case id: ${caze.id}) to file with ID ${fileId}.")
+                      if (fileDao.addCaseIdToFile(newCaseId, fileId.toInt))
+                        Ok(newCase.asJson.toString())
+                      else
+                        BadRequest(s"Post: saveCaze() failed: failed to add case with new ID ${newCaseId} (old case id: ${caze.id}) to file with ID ${fileId}.")
+                    }
+                    case None =>
+                      BadRequest(s"Post: saveCaze() failed: failed to create a new case with ID ${newCaseId} (old case id: ${caze.id}) for file with ID ${fileId}.")
+                  }
                 }
+                else
+                  BadRequest(s"Post: saveCaze() failed: failed to create a new case with ID ${newCaseId} (old case id: ${caze.id}) for file with ID ${fileId}.")
               case None =>
                 BadRequest("Post: saveCaze() failed: decoding of caze failed. Json wrong? " + cazeJson)
             }
