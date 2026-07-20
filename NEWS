@@ -17,12 +17,16 @@ v0.18.0                                under development
 - Main features
   - Merging of rubrics now possible
   - Major revamp of database schema to enable rubrics merging
-  - User-ID is no longer stored inside a cookie but in the app's
-    transient memory (should also fix some "stale cookie problems")
 
 - Minor improvements and changes:
   - Library and tool updates (e.g. ScalaJS 1.20.2)
   - Removed "News" link from landing page
+  - User-ID is no longer stored inside a cookie but in the app's
+    transient memory (should also fix some "stale cookie problems")
+
+- Bug fixes:
+  - OOREP didn't detect properly when a freshly created case
+    was actually saved persistently in the DB, and when it wasn't
 
 v0.17.0                  Sat Dec 14 03:05:54 PM CET 2024 
 --------------------------------------------------------
