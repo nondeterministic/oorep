@@ -189,19 +189,14 @@ object CaseSection {
           val mergedCaseSubrubrics: List[CazeSubRubric] = deletedCaseRubrics.flatMap(_.subRubrics).toList
           val mergedCaseRubric: CazeRubric = CazeRubric(-1, mergedJsonCaseRubric.cazeId, mergedCaseSubrubrics, 1, None)
           cRubrics = cRubrics + mergedCaseRubric
-          println("After adding merged rubric: " + cRubrics.size)
           updateCaseViewAndDataStructures() // Make change persistant
         case None =>
           println("ERROR: Merge of case rubrics failed.")
       }
 
       // Remove the individual rubrics that were merged from the case and call "case update" method
-      println("Deleted rubrics: " + deletedCaseRubrics.size)
-      println("Before filter: " + cRubrics.size)
       cRubrics = cRubrics.filter(deletedCaseRubrics.contains(_) == false)
-      println("After filter: " + cRubrics.size)
       showCase(RepertoryView.remedyFormat()) // Update case view and make change persistant
-      println("After update: " + cRubrics.size)
     }
 
     def apply() = {
@@ -543,7 +538,6 @@ object CaseSection {
         case None => -1
       }
 
-      println("CS: #cRubrics: " + cRubrics.size)
       remedyScores.clear()
       cRubrics.foreach(caseRubric => {
         caseRubric.subRubrics.foreach(subRubric =>
@@ -649,14 +643,10 @@ object CaseSection {
         }
       }
 
-      println("CS: #cRubrics (#2): " + cRubrics.size)
-
       // Delete not only view but entire case from DB, when user removed all of its rubrics...
       if (cRubrics.size == 0) {
 
         if (descr != None && descr.get.id != 0)
-
-          println("CS: #cRubrics (#3): " + cRubrics.size + " -- DELETING CASE !!!!!!!!!!!!!!!!!!!!!!!!!!!")
 
           HttpRequest2("sec/del_case")
               .withMethod("DELETE")
@@ -832,9 +822,6 @@ object CaseSection {
       MainView.CaseDiv.append(new HtmlRepresentation(remedyFormat)().render)
       updateCaseViewAndDataStructures()
       updateCaseHeaderView()
-      println("UPDATED CASE")
-    } else {
-      println("NOT UPDATING CASE AS SIZE == 0")
     }
   }
 

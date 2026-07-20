@@ -244,9 +244,6 @@ class CazeDao(dbContext: db.db.DBContext) {
   def delCaseRubrics(caseRubrics: List[CazeRubric]): Int = {
     var deletedCaseRubrics = 0
 
-    println(s"Attempting to delete ${caseRubrics.length} case rubrics...")
-    println(caseRubrics.foreach(v => println(v.toString())))
-
     // First attempt to delete subrubrics, then the rubrics themselves.
     transaction {
       if (caseRubrics.map(cr => delCaseSubRubrics(cr.id)).exists(_ > 0))
@@ -256,8 +253,6 @@ class CazeDao(dbContext: db.db.DBContext) {
             .delete
         }}.toInt
     }
-
-    println(s"Deleted ${deletedCaseRubrics} case rubrics")
 
     deletedCaseRubrics
   }
