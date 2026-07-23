@@ -17,16 +17,19 @@ v0.18.0                                under development
 - Main features
   - Merging of rubrics now possible
   - Major revamp of database schema to enable rubrics merging
+  - For authenticated users: A rudimentary settings dialog
 
 - Minor improvements and changes:
   - Library and tool updates (e.g. ScalaJS 1.20.2)
   - Removed "News" link from landing page
-  - User-ID is no longer stored inside a cookie but in the app's
-    transient memory (should also fix some "stale cookie problems")
+  - For authenticated users: User-ID is no longer stored inside a cookie
+    but in the app's transient memory (should also fix some "stale
+    cookie problems")
 
 - Bug fixes:
-  - OOREP didn't detect properly when a freshly created case
-    was actually saved persistently in the DB, and when it wasn't
+  - For authenticated users: OOREP didn't detect properly when a freshly
+    created case was actually saved persistently in the DB, and when it
+    wasn't
 
 v0.17.0                  Sat Dec 14 03:05:54 PM CET 2024 
 --------------------------------------------------------
@@ -39,8 +42,9 @@ v0.17.0                  Sat Dec 14 03:05:54 PM CET 2024
   - Display source version information in the disclaimer
 
 - Bug fixes:
-  - Detect and delete stale cookies from a previous login
-    resulting in repeated notifications of network errors
+  - For authenticated users: Detect and delete stale cookies from a
+    previous login resulting in repeated notifications of network
+    errors
 
 v0.16.1                  Sun Mar 24 10:36:47 AM CET 2024
 --------------------------------------------------------
@@ -50,8 +54,8 @@ v0.16.1                  Sun Mar 24 10:36:47 AM CET 2024
   - Update to Play 2.9.2, ScalaJS 1.16.0 and Scala 2.13.13
 
 - Bug fixes:
-  - Sorting in file modal dialogue broke with the removal of RX
-    libraries and is fixed now
+  - For authenticated users: Sorting in file modal dialogue broke
+    with the removal of RX libraries and is fixed now
 
 v0.16.0                     Sa 13. Jan 14:28:21 CET 2024
 --------------------------------------------------------
@@ -73,8 +77,8 @@ v0.15.0                    Sa 16. Sep 13:36:29 CEST 2023
     warrants for a new version number)
 
 - Minor improvements and changes:
-  - Add "Clone case" button for logged-in users
-  - Add icons to case buttons for logged-in users
+  - Add "Clone case" button for authenticated users
+  - Add icons to case buttons for authenticated users
   - Replace deprecated OpenJDK docker image with Eclipse Temurin image
   - Update to ScalaJS 1.13.2 and Scala 2.13.11
   - Update a lot of other library and plugin versions (too many to

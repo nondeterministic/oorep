@@ -1,61 +1,83 @@
 package org.multics.baueran.frep.shared.sec_frontend
 
-import org.multics.baueran.frep.shared.Defs.{CookieFields, HeaderFields}
-import org.multics.baueran.frep.shared.{FIle, HttpRequest2}
-import org.multics.baueran.frep.shared.frontend.{CaseSection, Notify, OorepHtmlButton, OorepHtmlElement, OorepHtmlInput, OorepHtmlTextArea, getCookieData, getTransientUserState}
+import org.multics.baueran.frep.shared.{HttpRequest2, Member}
+import org.multics.baueran.frep.shared.frontend.{Notify, OorepHtmlButton, OorepHtmlElement, OorepHtmlInput}
 import scalatags.JsDom.all.*
 import org.scalajs.dom
-import org.scalajs.dom.{Event, html}
-
-import scala.scalajs.js
-import io.circe.syntax._
-import org.multics.baueran.frep.shared.TopLevelUtilCode.getDocumentCsrfCookie
+import org.scalajs.dom.Event
+import io.circe.parser.parse
 
 object SettingsModal extends OorepHtmlElement {
-  def getId() = "SettingsModal_EEEdsfakjDD345nmbertertertv8f89HG34jkdf8934RSCjfr8943jkarsklfg"
+  def getId() = "SettingsModal_UniqueId_783424hjkshdfuih324793284"
 
-  object CloseButton extends OorepHtmlButton {
-    def getId() = "SettingsModal_CloseButton_sdcfdfdferertfdsf24532"
+  private var settingsUsername = ""
+  private var settingsEmail = ""
 
+  def updateWithDataFromDB(memberId: Int) = {
+    HttpRequest2("sec/settings")
+      .withQueryParameters("memberId" -> memberId.toString)
+      .onSuccess((response: String) =>
+        parse(response) match {
+          case Right(jsonMember) => {
+            val cursor = jsonMember.hcursor
+            cursor.as[Member] match {
+              case Right(member) => {
+                settingsUsername = member.member_name
+                settingsEmail = member.email
+              }
+              case Left(error) => {
+                println(s"SettingsModal: Received corrupted member data from backend: ${error}")
+              }
+            }
+          }
+          case Left(error) => {
+            println(s"SettingsModal: Received corrupted JSON data from backend: ${error}")
+          }
+        }
+      )
+      .send()
+  }
+
+  private object CloseButton extends OorepHtmlButton {
+    def getId() = "SettingsModal_CloseButton_982347dfg"
     def apply() = {
+
       button(id := getId(), `type` := "button", cls := "close", data.dismiss := "modal", "\u00d7")
     }
   }
 
-  object Form extends OorepHtmlElement {
-    def getId() = "SettingsModal_Form_7659587ertretertfdvdf032424jhbjd32sfGGHjhHKJEEWYYCVVKGHFJHD56476476"
+  private object Form extends OorepHtmlElement {
+    def getId() = "SettingsModal_Form_892347932847923"
 
     object SubmitButton extends OorepHtmlButton {
-      def getId() = "SettingsModal_Form_SubmitButton_dsfretertretsdfkjhsdklj324234nkbsdfkljh34rt34kl"
+      def getId() = "SettingsModal_Form_SubmitButton_23847923"
 
       def onSubmit = (event: Event) => {
-        event.preventDefault() // Without this, the submit button also closes on wrong input and reloads the application
+        event.preventDefault()
 
-        val memberId = getTransientUserState(CookieFields.id) match {
-          case Some(id) => id.toInt
-          case None => -1 // TODO: Force user to relogin; the identification cookie has disappeared!!!!!!!!!!
-        }
+        val username = UsernameInput.getText().trim
+        val email = EmailInput.getText().trim
 
-        if (HeaderInput.getText().trim.length == 0 || OpenFileModal.headers().count(_ == HeaderInput.getText().trim) != 0) {
+        if (username.length == 0 || email.length == 0) {
           if (Notify.noAlertsVisible())
-            new Notify("tempFeedbackAlert", "Saving file failed. Make sure file ID is unique and not empty!")
-        }
-        else {
-          val currFIle = Some(FIle(None, HeaderInput.getText().trim, memberId, (new js.Date()).toISOString(), (new js.Date()).toISOString(), DescriptionTextArea.getText(), List.empty))
-
-          HttpRequest2("sec/save_file")
-            .withHeaders((HeaderFields.csrfToken.toString(), getDocumentCsrfCookie().getOrElse("")))
-            .onSuccess((_) => {
-              CaseSection.updateCaseViewAndDataStructures()
-              HeaderInput.setText("")
-              DescriptionTextArea.setText("")
-              SettingsModal.CloseButton.click()
-            })
-            .onFailure((_) => {
-              if (Notify.noAlertsVisible())
-                new Notify("tempFeedbackAlert", "Saving file failed. Make sure file ID is unique!")
-            })
-            .post(currFIle.get.asJson.toString())
+            new Notify("tempFeedbackAlert", "Saving settings failed. Fields cannot be empty!")
+        } else {
+          // TODO: Save settings
+          //
+          //          HttpRequest2("sec/save_settings")
+          //            .withHeaders((HeaderFields.csrfToken.toString(), getDocumentCsrfCookie().getOrElse("")))
+          //            .onSuccess((_) => {
+          //              CaseSection.updateCaseViewAndDataStructures()
+          //              SettingsModal.CloseButton.click()
+          //            })
+          //            .onFailure((_) => {
+          //              if (Notify.noAlertsVisible())
+          //                new Notify("tempFeedbackAlert", "Saving settings failed. Server error.")
+          //            })
+          //            .post(
+          //              "username" -> username,
+          //              "email" -> email
+          //            )
         }
       }
 
@@ -67,54 +89,74 @@ object SettingsModal extends OorepHtmlElement {
     }
 
     object CancelButton extends OorepHtmlButton {
-      def getId() = "SettingsModal_Form_CancelButton_dsfHJGJHGksdfkjertreterthsdklj324234nkbsdfkljh34rt34kl"
-
+      def getId() = "SettingsModal_Form_CancelButton_23849723"
       def apply() = {
         button(cls := "btn mb-2 btn-secondary", data.dismiss := "modal",
           "Cancel",
           onclick := { (event: Event) =>
             event.preventDefault()
-            HeaderInput.setText("")
-            DescriptionTextArea.setText("")
+            UsernameInput.setText("")
+            EmailInput.setText("")
           })
       }
     }
 
-    object HeaderInput extends OorepHtmlInput {
-      def getId() = "SettingsModal_Form_HeaderInput_nbmnbNMBerNMgerertertBHJGJHGUIF7657687ghzxcjksd23234IFY"
-
+    object UsernameInput extends OorepHtmlInput {
+      def getId() = "SettingsModal_Form_UsernameInput_9823749"
       def apply() = {
         input(cls := "form-control",
           id := getId(),
-          placeholder := "A simple, unique file identifier",
+          placeholder := "Enter your username",
           required,
           oninput := { (event: dom.KeyboardEvent) =>
-            if (getText().trim.length > 0)
-              SubmitButton.enable()
-            else
-              SubmitButton.disable()
+            validateInputs()
           }
         )
       }
     }
-    object DescriptionTextArea extends OorepHtmlTextArea {
-      def getId() = "SettingsModal_Form_DescriptionTextArea_HJJHGJKGertretretJGKJG4534534ertretert532535345345423"
 
-      def apply() =
-        textarea(cls := "form-control", id := getId(), rows := "3", placeholder := "A more verbose description of the file")
+    object EmailInput extends OorepHtmlInput {
+      def getId() = "SettingsModal_Form_EmailInput_2384972"
+      def apply() = {
+        input(`type` := "email", cls := "form-control",
+          id := getId(),
+          placeholder := "Enter your email address",
+          required,
+          oninput := { (event: dom.KeyboardEvent) =>
+            validateInputs()
+          }
+        )
+      }
+    }
+
+    private def validateInputs(): Unit = {
+      // TODO: For now, the settings dialog cannot be edited, only cancelled.
+      //  To allow editing, uncomment the following and enable the write method to transmit changes back to the backend.
+      //
+      //      if (UsernameInput.getText().trim.length > 0 && EmailInput.getText().trim.length > 0)
+      //        SubmitButton.enable()
+      //      else
+      //        SubmitButton.disable()
     }
 
     def apply() = {
       form(id := getId(),
-        div(cls := "form-group",
-          label(`for` := HeaderInput.getId(), "ID"),
-          HeaderInput()
+        // Username row: label and input right next to each other
+        div(cls := "form-group row align-items-center",
+          label(`for` := UsernameInput.getId(), cls := "col-sm-2 col-form-label", "Username:"),
+          div(cls := "col-sm-10",
+            UsernameInput()
+          )
         ),
-        div(cls := "form-group",
-          label(`for` := DescriptionTextArea.getId(), "Description"),
-          DescriptionTextArea()
+        // E-Mail row: label and input right next to each other
+        div(cls := "form-group row align-items-center",
+          label(`for` := EmailInput.getId(), cls := "col-sm-2 col-form-label", "E-Mail:"),
+          div(cls := "col-sm-10",
+            EmailInput()
+          )
         ),
-        div(cls := "d-flex flex-row-reverse",
+        // Bottom buttons row
+        div(cls := "d-flex flex-row-reverse mt-4",
           SubmitButton(),
           CancelButton()
         )
@@ -123,22 +165,24 @@ object SettingsModal extends OorepHtmlElement {
   }
 
   def apply() = {
-    println("SettingsModal!!!")
-    div(cls:="modal fade", tabindex:="-1", role:="dialog", id:=getId(),
-      onshow := { (event: Event) => Form.SubmitButton.disable() },
-      div(cls:="modal-dialog modal-dialog-centered", role:="document", style:="min-width: 80%;",
-        div(cls:="modal-content",
-          div(cls:="modal-header",
-            h5(cls:="modal-title", "Create a new file"),
-            CloseButton(),
+    div(cls := "modal fade", tabindex := "-1", role := "dialog", id := getId(),
+      onshow := { (event: Event) =>
+        Form.UsernameInput.setText(settingsUsername)
+        Form.EmailInput.setText(settingsEmail)
+        Form.SubmitButton.disable()
+      },
+      div(cls := "modal-dialog modal-dialog-centered", role:="document", style:="min-width: 80%;",
+        div(cls := "modal-content",
+          div(cls := "modal-header",
+            h5(cls := "modal-title", "Settings"),
+            CloseButton()
           ),
-          div(cls:="modal-body",
-            div(cls:="table-responsive",
-              Form()
-            )
+          div(cls := "modal-body",
+            Form()
           )
         )
       )
     )
   }
+
 }

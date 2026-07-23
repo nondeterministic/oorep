@@ -22,7 +22,6 @@ package object frontend {
 
   def setTransientUserState(data: Map[CookieFields,String]) = {
     transientUserState.addAll(data)
-    transientUserState.foreach(println(_))
   }
 
   def getTransientUserState(key: CookieFields): Option[String] = {

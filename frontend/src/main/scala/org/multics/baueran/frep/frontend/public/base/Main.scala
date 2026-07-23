@@ -81,8 +81,12 @@ object Main extends MainUtil {
     handleCallsWithURIencodedParameters()
 
     HttpRequest2("authenticate")
-      .onSuccess((response: String) => { frontend.setTransientUserState(Map(CookieFields.id -> response)) })
-      .onFailure((response: String) => { println("Checked if backend says user is logged in. No.") })
+      .onSuccess((response: String) => {
+        frontend.setTransientUserState(Map(CookieFields.id -> response))
+      })
+      .onFailure((response: String) => {
+        ; // println("Checked if backend says user is logged in. No.")
+      })
       .send()
 
     setCsrfToken()

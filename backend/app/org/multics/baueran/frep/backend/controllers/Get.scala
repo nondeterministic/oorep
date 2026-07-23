@@ -118,12 +118,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
         BadRequest(views.html.defaultpages.badRequest("GET", request.uri, errorMessage))
     }
   }
-
-  def apiSettings() = Action { implicit (request: Request[AnyContent]) =>
-    println("ENV VAR: " + sys.env.get("OOREP_MAIL_USER"))
-    Ok("TODO: Revisit this later and connect the method!")
-  }
-
+  
   def apiDisplayGetErrorPage(message: String) = Action { implicit (request: Request[AnyContent]) =>
     BadRequest(views.html.defaultpages.badRequest("GET", request.uri, message))
   }
@@ -160,6 +155,23 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
 
   def apiAvailableMateriaMedicasAndRemedies() = Action { (request: Request[AnyContent]) =>
     Ok(mmDao.getMMsAndRemedies(getAuthenticatedUser(request)).asJson.toString())
+  }
+
+  def apiSecSettings(memberId: Int) = Action { implicit (request: Request[AnyContent]) =>
+    getAuthenticatedUser(request) match {
+      case None =>
+        val errStr = "Get: apiSecSettings() failed: not authenticated"
+        Logger.error(errStr)
+        Unauthorized(errStr)
+      case Some(member) =>
+        if (!isUserAuthorized(request, memberId)) {
+          val err = s"Get: apiSecSettings() failed: not authorised"
+          Logger.error(err)
+          Forbidden(err)
+        } else {
+          Ok(member.asJson.toString())
+        }
+    }
   }
 
   /**

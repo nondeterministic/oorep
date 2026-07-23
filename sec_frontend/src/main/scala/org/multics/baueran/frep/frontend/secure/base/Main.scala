@@ -27,6 +27,7 @@ object Main extends MainUtil {
           val memberId = response.toInt
           frontend.setTransientUserState(Map(CookieFields.id -> response))
           FileModalCallbacks.updateMemberFiles(memberId)
+          SettingsModal.updateWithDataFromDB(memberId)
         } catch {
           case exception: Throwable =>
             dom.document.location.replace(s"${serverUrl()}/${apiPrefix()}/display_error_page?message=${encodeURI("Not authenticated or cookie expired")}")
