@@ -435,7 +435,7 @@ object CaseSection {
         val res = tbody(scalatags.JsDom.attrs.id := getId(),
           cRubrics.toList
             .sortBy(cr => (cr.abbrev + cr.fullPath))
-            .map(crub => new CaseRow(crub)())) //.asInstanceOf[html.Html]
+            .map(crub => new CaseRow(crub)()))
         res
       }
     }
@@ -715,7 +715,7 @@ object CaseSection {
               s"${nameabbrev} (${remedyScores.get(nameabbrev).get})")).render))
     }
 
-    // Redraw table body
+    // Redraw table body of repertorisation
     implicit def stringToString(s: String): BetterString = new BetterString(s) // For 'shorten'.
 
     CaseModals.RepertorisationModal.TableBody.getNode() match {
