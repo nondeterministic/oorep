@@ -540,11 +540,24 @@ object CaseSection {
 
       remedyScores.clear()
       cRubrics.foreach(caseRubric => {
-        caseRubric.subRubrics.foreach(subRubric =>
-          subRubric.weightedRemedies.foreach { case WeightedRemedy(r, w) => {
-            remedyScores.put(r.nameAbbrev, remedyScores.getOrElseUpdate(r.nameAbbrev, 0) + caseRubric.rubricWeight * w)
-          }}
-        )
+        // Single rubric: we add the score of the one and only subrubric to our remedyScores map (so we don't really need to loop through the subrubrics at all).
+        if (caseRubric.subRubrics.size <= 1) {
+          caseRubric.subRubrics.foreach(subRubric =>
+            subRubric.weightedRemedies.foreach { case WeightedRemedy(r, w) => {
+              remedyScores.put(r.nameAbbrev, remedyScores.getOrElseUpdate(r.nameAbbrev, 0) + caseRubric.rubricWeight * w)
+            }}
+          )
+        }
+        // Merged rubric: we add the max (not the cumulative) value of all scores of the subrubrics to our remedyScores map.
+        else {
+          caseRubric.subRubrics.foreach(subRubric =>
+            subRubric.weightedRemedies.foreach { case WeightedRemedy(r, w) => {
+              val oldWeight = remedyScores.getOrElseUpdate(r.nameAbbrev, 0)
+              val curWeight = caseRubric.rubricWeight * w
+              remedyScores.put(r.nameAbbrev, math.max(oldWeight, curWeight))
+            }}
+          )
+        }
       })
 
       if (descr.isDefined) {
