@@ -304,42 +304,28 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     }
   }
 
-  private def isCrossSiteRequest(request: Request[AnyContent]): Boolean = {
-    // We allow "cookie-less" look-ups from localhost for testing purposes. TODO: Is this a security problem?!
-    if (request.remoteAddress == "127.0.0.1")
-      false
-    else
-      request.session.get("id") == None && getAuthenticatedUser(request) == None
-  }
-
   def apiLookupRep(repertoryAbbrev: String, symptom: String, page: Int, remedyString: String, minWeight: Int, getRemedies: Int): Action[AnyContent] =
     Action { (request: Request[AnyContent]) =>
-      if (isCrossSiteRequest(request)) {
-        val errStr = (s"ERROR: request to ${request.uri} not authorized. Make sure your browser allows cookies. (IP: ${request.remoteAddress})")
-        Logger.error(errStr)
-        Unauthorized(errStr)
+      // We don't allow '*' in the middle of a search term.  '*' can only be at beginning or end of a word, whether exact search term or not.
+      if (symptom.trim.matches(".*\\w+\\*\\w+.*") || symptom.trim.contains(" * ")) {
+        NoContent
       } else {
-        // We don't allow '*' in the middle of a search term.  '*' can only be at beginning or end of a word, whether exact search term or not.
-        if (symptom.trim.matches(".*\\w+\\*\\w+.*") || symptom.trim.contains(" * ")) {
-          NoContent
-        } else {
-          val searchTerms = new SearchTerms(symptom.trim)
-          val cleanedUpAbbrev = repertoryAbbrev.replaceAll("[^0-9A-Za-z\\-]", "")
+        val searchTerms = new SearchTerms(symptom.trim)
+        val cleanedUpAbbrev = repertoryAbbrev.replaceAll("[^0-9A-Za-z\\-]", "")
 
-          // Check if user is allowed to access the resource at all (might be Private or Protected and user not logged in)
-          if (repertoryDao.getRepsAndRemedies(getAuthenticatedUser(request)).find(_.info.abbrev == cleanedUpAbbrev) == None) {
-            Logger.warn(s"Get: apiLookupRep(abbrev: ${repertoryAbbrev}, symptom: ${symptom}, page: ${page}, remedy: ${remedyString}, weight: ${minWeight}): user not allowed to access ressource.")
-            NoContent
-          }
-          else {
-            // Do actual look-up and return results in case of success.
-            repertoryDao.queryRepertory(cleanedUpAbbrev, searchTerms, page, remedyString.trim, minWeight, getRemedies != 0) match {
-              case Some((ResultsCazeRubrics(totalNumberOfRepertoryRubrics, totalNumberOfResults, totalNumberOfPages, page, results), remedyStats)) if (totalNumberOfPages > 0) =>
-                Ok((ResultsCazeRubrics(totalNumberOfRepertoryRubrics, totalNumberOfResults, totalNumberOfPages, page, results), remedyStats).asJson.toString())
-              case _ =>
-                Logger.info(s"Get: apiLookupRep(abbrev: ${repertoryAbbrev}, symptom: ${symptom}, page: ${page}, remedy: ${remedyString}, weight: ${minWeight}): no results found")
-                NoContent
-            }
+        // Check if user is allowed to access the resource at all (might be Private or Protected and user not logged in)
+        if (repertoryDao.getRepsAndRemedies(getAuthenticatedUser(request)).find(_.info.abbrev == cleanedUpAbbrev) == None) {
+          Logger.warn(s"Get: apiLookupRep(abbrev: ${repertoryAbbrev}, symptom: ${symptom}, page: ${page}, remedy: ${remedyString}, weight: ${minWeight}): user not allowed to access ressource.")
+          NoContent
+        }
+        else {
+          // Do actual look-up and return results in case of success.
+          repertoryDao.queryRepertory(cleanedUpAbbrev, searchTerms, page, remedyString.trim, minWeight, getRemedies != 0) match {
+            case Some((ResultsCazeRubrics(totalNumberOfRepertoryRubrics, totalNumberOfResults, totalNumberOfPages, page, results), remedyStats)) if (totalNumberOfPages > 0) =>
+              Ok((ResultsCazeRubrics(totalNumberOfRepertoryRubrics, totalNumberOfResults, totalNumberOfPages, page, results), remedyStats).asJson.toString())
+            case _ =>
+              Logger.info(s"Get: apiLookupRep(abbrev: ${repertoryAbbrev}, symptom: ${symptom}, page: ${page}, remedy: ${remedyString}, weight: ${minWeight}): no results found")
+              NoContent
           }
         }
       }
@@ -347,32 +333,26 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
 
   def apiLookupMM(mmAbbrev: String, symptom: String, page: Int, remedyString: String): Action[AnyContent] =
     Action { (request: Request[AnyContent]) =>
-      if (isCrossSiteRequest(request)) {
-        val errStr = (s"ERROR: request to ${request.uri} not authorized. Make sure your browser allows cookies. (IP: ${request.remoteAddress})")
-        Logger.error(errStr)
-        Unauthorized(errStr)
+      // We don't allow '*' in the middle of a search term.  '*' can only be at beginning or end of a word, whether exact search term or not.
+      if (symptom.trim.matches(".*\\w+\\*\\w+.*") || symptom.trim.contains(" * ")) {
+        NoContent
       } else {
-        // We don't allow '*' in the middle of a search term.  '*' can only be at beginning or end of a word, whether exact search term or not.
-        if (symptom.trim.matches(".*\\w+\\*\\w+.*") || symptom.trim.contains(" * ")) {
-          NoContent
-        } else {
-          val searchTerms = new SearchTerms(symptom.trim)
-          val cleanedUpAbbrev = mmAbbrev.replaceAll("[^0-9A-Za-z\\-]", "")
+        val searchTerms = new SearchTerms(symptom.trim)
+        val cleanedUpAbbrev = mmAbbrev.replaceAll("[^0-9A-Za-z\\-]", "")
 
-          // Check if user is allowed to access the resource at all (might be Private or Protected and user not logged in)
-          if (mmDao.getMMsAndRemedies(getAuthenticatedUser(request)).find(_.mminfo.abbrev == cleanedUpAbbrev) == None) {
-            Logger.info(s"Get: apiLookupMM(abbrev: ${mmAbbrev}, symptom: ${symptom}, page: ${page}, remedy: ${remedyString}): user not allowed to access ressource.")
-            NoContent
-          }
-          else {
-            // Do actual look-up and return results in case of success.
-            mmDao.getSectionHits(cleanedUpAbbrev, searchTerms, page, Some(remedyString)) match {
-              case Some(sectionHits) if (sectionHits.results.length > 0 || sectionHits.numberOfMatchingSectionsPerChapter.length > 0) =>
-                Ok(sectionHits.asJson.toString())
-              case _ =>
-                Logger.info(s"Get: apiLookupMM(abbrev: ${mmAbbrev}, symptom: ${symptom}, page: ${page}, remedy: ${remedyString}): no results found")
-                NoContent
-            }
+        // Check if user is allowed to access the resource at all (might be Private or Protected and user not logged in)
+        if (mmDao.getMMsAndRemedies(getAuthenticatedUser(request)).find(_.mminfo.abbrev == cleanedUpAbbrev) == None) {
+          Logger.info(s"Get: apiLookupMM(abbrev: ${mmAbbrev}, symptom: ${symptom}, page: ${page}, remedy: ${remedyString}): user not allowed to access ressource.")
+          NoContent
+        }
+        else {
+          // Do actual look-up and return results in case of success.
+          mmDao.getSectionHits(cleanedUpAbbrev, searchTerms, page, Some(remedyString)) match {
+            case Some(sectionHits) if (sectionHits.results.length > 0 || sectionHits.numberOfMatchingSectionsPerChapter.length > 0) =>
+              Ok(sectionHits.asJson.toString())
+            case _ =>
+              Logger.info(s"Get: apiLookupMM(abbrev: ${mmAbbrev}, symptom: ${symptom}, page: ${page}, remedy: ${remedyString}): no results found")
+              NoContent
           }
         }
       }
