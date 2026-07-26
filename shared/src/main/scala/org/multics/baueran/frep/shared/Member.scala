@@ -8,6 +8,7 @@ case class Member(member_id: Int,
                   hash: String,
                   realname: String,
                   email: String,
+                  mobile: String,
                   country: String,
                   numberoflogins: Int,
                   company: Option[String] = None,
@@ -44,6 +45,10 @@ object Member {
         case Right(d) => d
         case _ => return Left(DecodingFailure("Member decoding failed: email.", c.history))
       }
+      val mobile = c.downField("mobile").as[String] match {
+        case Right(d) => d
+        case _ => return Left(DecodingFailure("Member decoding failed: mobile.", c.history))
+      }
       val country = c.downField("country").as[String] match {
         case Right(d) => d
         case _ => return Left(DecodingFailure("Member decoding failed: country.", c.history))
@@ -70,7 +75,7 @@ object Member {
         case _ => None
       }
 
-      Right(Member(member_id, member_name, hash, realname, email, country, numberoflogins, company, title, student_until, profession, access, lastseen, isadmin, bannedsince))
+      Right(Member(member_id, member_name, hash, realname, email, mobile, country, numberoflogins, company, title, student_until, profession, access, lastseen, isadmin, bannedsince))
     }
   }
 
@@ -81,6 +86,7 @@ object Member {
       ("hash", Json.fromString(m.hash)),
       ("realname", Json.fromString(m.realname)),
       ("email", Json.fromString(m.email)),
+      ("mobile", Json.fromString(m.mobile)),
       ("country", Json.fromString(m.country)),
       ("company", m.company match {
         case Some(d) => Json.fromString(d)
