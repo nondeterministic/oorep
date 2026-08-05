@@ -195,8 +195,10 @@ object CaseSection {
       }
 
       // Remove the individual rubrics that were merged from the case and call "case update" method
-      cRubrics = cRubrics.filter(deletedCaseRubrics.contains(_) == false)
-      showCase(RepertoryView.remedyFormat()) // Update case view and make change persistant
+      // (was, but didn't work: cRubrics = cRubrics.filter(deletedCaseRubrics.contains(_) == false))
+      cRubrics = cRubrics.filter { cr => !deletedCaseRubrics.exists(dcr => dcr.equalsIgnoreWeight(cr)) }
+
+      showCase(RepertoryView.remedyFormat()) // Update case view and make change persistent
     }
 
     def apply() = {
