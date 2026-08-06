@@ -3,8 +3,8 @@ package org.multics.baueran.frep.shared.frontend
 import org.scalajs.dom
 import dom.Event
 import scalatags.JsDom
-import scalatags.JsDom.all._
-import io.circe.syntax._
+import scalatags.JsDom.all.*
+import io.circe.syntax.*
 import io.circe.parser.parse
 
 import scala.scalajs.js
@@ -13,11 +13,11 @@ import mutable.ListBuffer
 import org.multics.baueran.frep.shared
 import org.multics.baueran.frep.shared.TopLevelUtilCode.getDocumentCsrfCookie
 import org.multics.baueran.frep.shared.sec_frontend.AddToFileModal
-import shared._
+import shared.*
 import shared.frontend.views.repertory.RepertoryView
 import shared.Defs.{CookieFields, HeaderFields}
 import shared.frontend.RemedyFormat.RemedyFormat
-import shared.sec_frontend.FileModalCallbacks._
+import shared.sec_frontend.FileModalCallbacks.*
 import org.scalajs.dom.{Event, html}
 
 import scala.language.implicitConversions
@@ -552,13 +552,19 @@ object CaseSection {
         }
         // Merged rubric: we add the max (not the cumulative) value of all scores of the subrubrics to our remedyScores map.
         else {
+          val cumRemedyWeight = new mutable.HashMap[String, Int]
+
           caseRubric.subRubrics.foreach(subRubric =>
-            subRubric.weightedRemedies.foreach { case WeightedRemedy(r, w) => {
-              val oldWeight = remedyScores.getOrElseUpdate(r.nameAbbrev, 0)
-              val curWeight = caseRubric.rubricWeight * w
-              remedyScores.put(r.nameAbbrev, math.max(oldWeight, curWeight))
+            subRubric.weightedRemedies.foreach { case WeightedRemedy(remedy, remedyWeight) => {
+              val curRemedyWeight = caseRubric.rubricWeight * remedyWeight
+              val prevRemedyWeight = cumRemedyWeight.getOrElseUpdate(remedy.nameAbbrev, 0)
+              cumRemedyWeight.put(remedy.nameAbbrev, math.max(curRemedyWeight, prevRemedyWeight))
             }}
           )
+
+          cumRemedyWeight.foreach { case (remedyName, remedyWeight) => {
+            remedyScores.put(remedyName, remedyScores.getOrElseUpdate(remedyName, 0) + remedyWeight)
+          }}
         }
       })
 
