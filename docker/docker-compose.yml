@@ -19,7 +19,7 @@ services:
       OOREP_APP_PROTOCOL: http
       OOREP_APP_HOSTNAME: localhost
       OOREP_APP_PORT: 9000
-      OOREP_APP_SECRET: abcdefghijklmnopqrstuvwxyz
+      OOREP_APP_SECRET: abcd23842439847324985734985734985734985734985734987efghijklmnopqrstuvwxyz
       OOREP_DB_NAME: oorep
       OOREP_DB_USER: oorep_user
       OOREP_DB_PASS: poofoo
