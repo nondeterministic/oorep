@@ -19,7 +19,7 @@ up and running on your own machine.
 
 #### Prerequisite
 
-* You have the commands `docker` and `docker-compose` available on your machine.
+* You have the commands `docker` and `docker compose` (formerly `docker-compose`) available on your machine.
 
 #### Pull and start the Docker images from [Dockerhub](https://hub.docker.com/u/oorep)
 
