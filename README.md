@@ -27,8 +27,8 @@ But first, clone OOREP's source code repository from here. Afterwards change int
 the `docker` subdirectory of your then local source code repository and execute the
 following two commands one after another:
 ```
-$ docker-compose pull
-$ docker-compose up
+$ docker compose pull
+$ docker compose up
 ```
 Depending on your Internet connection, those commands may take a while to complete.
 When all is done, you should be able to point your web browser to `http://localhost:9000`
