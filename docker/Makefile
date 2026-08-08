@@ -41,6 +41,17 @@ oorep_db/oorep.sql:
 	cp ../oorep.sql.gz ./oorep_db/.
 	cd oorep_db && gzip -d ./oorep.sql.gz
 
+push:
+	docker compose build
+	@echo "Pushe Images zu Docker Hub..."
+	docker push oorep/application:$(version)
+	docker push oorep/database:$(version)
+	
+	docker tag oorep/application:$(version) oorep/application:latest
+	docker tag oorep/database:$(version) oorep/database:latest
+	docker push oorep/application:latest
+	docker push oorep/database:latest
+
 clean:
 	rm -rf tmp/oorep*
 	rm -rf oorep_app/backend-*
