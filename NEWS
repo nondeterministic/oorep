@@ -12,12 +12,13 @@
      ██║ ╚████║███████╗╚███╔███╔╝███████║
      ╚═╝  ╚═══╝╚══════╝ ╚══╝╚══╝ ╚══════╝
 
-v0.18.0                                under development
+v0.18.0                 Sat Aug  8 08:59:38 AM CEST 2026
 --------------------------------------------------------
 - Main features
   - Merging of rubrics now possible
   - Major revamp of database schema to enable rubrics merging
   - For authenticated users: A rudimentary settings dialog
+  - Updated orphaned docker build and images
 
 - Minor improvements and changes:
   - Library and tool updates (e.g. ScalaJS 1.20.2)
