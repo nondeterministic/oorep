@@ -1,7 +1,7 @@
 package org.multics.baueran.frep.shared
 
 import org.multics.baueran.frep.shared.Defs.CookieFields
-import org.multics.baueran.frep.shared.frontend.{RemedyFormat, getCookieData, serverUrl}
+import org.multics.baueran.frep.shared.frontend.{RemedyFormat, getCookieData, getTransientUserState, serverUrl}
 import org.multics.baueran.frep.shared.frontend.RemedyFormat._
 import org.scalajs.dom
 import scalatags.JsDom.all._
@@ -16,10 +16,21 @@ class BetterString(val s: String) {
   def shorten(length: Int) = if (s.length <= length) s else s.substring(0, math.abs(length - 3)) + "..."
 }
 
-class BetterCaseRubric(val cr: CaseRubric) {
+class BetterCaseRubric(val cr: CazeRubric) {
+
+  /**
+    * Get list of weighted remedies with only single remedy occurrences and their respective highest occurring weight
+    * in all of a case's subrubrics. List is alphabetically sorted and then converted into HTML elements.
+    */
 
   def getFormattedRemedyNames(format: RemedyFormat) = {
-    cr.weightedRemedies.toList.sortBy(_.remedy.nameAbbrev).map {
+    val weightedRemedies = cr.subRubrics.flatMap(_.weightedRemedies)
+      .groupBy { case WeightedRemedy(remedy, weight) => remedy.nameAbbrev }
+      .mapValues { remedyList => remedyList.maxBy { case WeightedRemedy(remedy, weight) => weight } }
+      .values.toList
+      .sortBy(_.remedy.nameAbbrev)
+
+    weightedRemedies.map {
       case WeightedRemedy(r, w) =>
         val remedyName = if (format == RemedyFormat.Abbreviated) r.nameAbbrev else r.nameLong
 
@@ -159,14 +170,7 @@ class MyDate(isoDateString: String) {
 object TopLevelUtilCode {
 
   def getDocumentCsrfCookie(): Option[String] = {
-    getCookieData(dom.document.cookie, CookieFields.csrfCookie.toString)
-    //    dom.document.cookie.split(";").foreach { cookie =>
-    //      cookie.split("=").toList match {
-    //        case name :: content :: Nil if (name.toLowerCase() == CookieFields.csrfCookie.toString.toLowerCase) => return Some(content)
-    //        case _ => ;
-    //      }
-    //    }
-    //    None
+    getTransientUserState(CookieFields.csrfCookie)
   }
 
   // Only delete cookies that OOREP set itself in order to store data

@@ -17,12 +17,8 @@
                 Die Wirksamkeit von Homöopathie ist wissenschaftlich nicht bewiesen!
                 Der Autor dieser Website übernimmt keine Verantwortung für die Richtigkeit der Ergebnisse oder die Folgen,
                 die aus einem unsachgemäßen Gebrauch resultieren. Diese Website basiert aktuell auf Version
-                @if(File("./conf/version.txt").exists()) {
-                @{scala.io.Source.fromFile("./conf/version.txt").mkString}
-                } else {
-                @{scala.io.Source.fromFile("./backend/conf/version.txt").mkString}
-                }
-                des OOREP Quell-Codes.
+		@{play.api.inject.guice.GuiceApplicationBuilder().injector().instanceOf[play.api.Environment].resourceAsStream("version.txt").map(s => scala.io.Source.fromInputStream(s).mkString).getOrElse("unknown")}
+		des OOREP Quell-Codes.
             </p>
             <p style="text-align:justify;">
                 This homeopathy web site is intended for information purposes only.
@@ -30,11 +26,7 @@
                 Scientifically, homeopathy was never proven to actually work!
                 The author of this web site does not take responsibility for the correctness of this site's
                 results or the consequences of misusing them. This website is currently based upon version
-                @if(File("./conf/version.txt").exists()) {
-                @{scala.io.Source.fromFile("./conf/version.txt").mkString}
-                } else {
-                @{scala.io.Source.fromFile("./backend/conf/version.txt").mkString}
-                }
+		@{play.api.inject.guice.GuiceApplicationBuilder().injector().instanceOf[play.api.Environment].resourceAsStream("version.txt").map(s => scala.io.Source.fromInputStream(s).mkString).getOrElse("unknown")}
                 of the OOREP source code.
             </p>
         </div>
@@ -43,8 +35,6 @@
 
         <div class="container">
             <a class="underline" style="color:white;" href="@{org.multics.baueran.frep.backend.controllers.Get.staticServerUrl}/">Home</a>
-            |
-            <a class="underline" style="color:white;" href="https://twitter.com/OOREP1" target="_blank" rel="noopener noreferrer">News</a>
             |
             <a class="underline" style="color:white;" href="/impressum">Impressum</a>
             |

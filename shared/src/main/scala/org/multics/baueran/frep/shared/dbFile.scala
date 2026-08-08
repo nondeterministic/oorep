@@ -7,6 +7,7 @@ case class dbFile(id: Int,
                   header: String,
                   member_id: Int,
                   date: String,
+                  changed: String,
                   description: String,
                   case_ids: List[Int])
 

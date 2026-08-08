@@ -1,10 +1,11 @@
 package org.multics.baueran.frep.frontend.secure.base
 
 import scala.scalajs.js.annotation.JSExportTopLevel
-import org.multics.baueran.frep.shared._
+import org.multics.baueran.frep.shared.*
+import org.multics.baueran.frep.shared.Defs.CookieFields
 import frontend.{CaseModals, LoadingSpinner, MainView, apiPrefix, serverUrl}
 import TopLevelUtilCode.{deleteAllCookies, toggleTheme}
-import sec_frontend.{AddToFileModal, EditFileModal, FileModalCallbacks, NewFileModal, OpenFileModal}
+import sec_frontend.{AddToFileModal, EditFileModal, FileModalCallbacks, NewFileModal, SettingsModal, OpenFileModal}
 
 import scalatags.JsDom.all.{id, _}
 import org.scalajs.dom
@@ -24,7 +25,9 @@ object Main extends MainUtil {
 
         try {
           val memberId = response.toInt
+          frontend.setTransientUserState(Map(CookieFields.id -> response))
           FileModalCallbacks.updateMemberFiles(memberId)
+          SettingsModal.updateWithDataFromDB(memberId)
         } catch {
           case exception: Throwable =>
             dom.document.location.replace(s"${serverUrl()}/${apiPrefix()}/display_error_page?message=${encodeURI("Not authenticated or cookie expired")}")
@@ -71,6 +74,7 @@ object Main extends MainUtil {
     dom.document.body.appendChild(OpenFileModal().render)
     dom.document.body.appendChild(EditFileModal().render)
     dom.document.body.appendChild(NewFileModal().render)
+    dom.document.body.appendChild(SettingsModal().render)
     dom.document.body.appendChild(CaseModals.RepertorisationModal().render)
     dom.document.body.appendChild(CaseModals.EditModal().render)
 
@@ -82,7 +86,7 @@ object Main extends MainUtil {
       }
     }
 
-    dom.window.addEventListener("scroll", onScroll)
+    dom.window.addEventListener("scroll", (e: dom.Event) => onScroll(e))
 
     dom.document.getElementById("navbar_logout") match {
       case null => ;
@@ -102,6 +106,8 @@ object Main extends MainUtil {
     // This is to handle all the index_... pages, which do something after the main script has been loaded,
     // e.g. look something up or display the password-change dialog.
     handleCallsWithURIencodedParameters()
+
+    setCsrfToken()
   }
 
   // See MainUtil trait!

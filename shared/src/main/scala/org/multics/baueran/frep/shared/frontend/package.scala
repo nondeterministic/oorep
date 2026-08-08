@@ -1,6 +1,9 @@
 package org.multics.baueran.frep.shared
 
+import org.multics.baueran.frep.shared.Defs.CookieFields.CookieFields
 import org.scalajs.dom
+
+import scala.collection.mutable
 import scala.util.boundary, boundary.break
 
 package object frontend {
@@ -14,6 +17,17 @@ package object frontend {
   }
 
   def apiPrefix() = "api"
+
+  private val transientUserState = mutable.HashMap[CookieFields, String]()
+
+  def setTransientUserState(data: Map[CookieFields,String]) = {
+    transientUserState.addAll(data)
+  }
+
+  def getTransientUserState(key: CookieFields): Option[String] = {
+    val data = transientUserState.get(key)
+    data
+  }
 
   def getCookieData(cookie: String, elementName: String): Option[String] = {
     boundary:

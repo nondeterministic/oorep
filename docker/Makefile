@@ -7,14 +7,14 @@
 
 SHELL:=/bin/bash
 
-branch:=master
-version:=$(shell cat ../build.sbt | grep 'version :=' | sed -n -r 's/.*\"([^\"]+)\"/\1/p')
+branch:=$(shell git branch -a | grep "\*" | cut -c 3-)
+version:=$(shell cat ../backend/conf/version.txt)
 playapp:=backend-$(version)
-sbt:=1.6.2
+sbt:=1.9.7
 
 all: oorep_app/$(playapp).zip oorep_db/oorep.sql .env
 	@echo "**************************************"
-	@echo "All done. Now, do docker-compose build"
+	@echo "All done. Now, do docker compose build"
 	@echo "**************************************"
 
 oorep_app/$(playapp).zip: tmp/sbt-$(sbt).zip tmp/oorep/LICENSE .env
@@ -40,6 +40,17 @@ tmp/oorep/LICENSE: tmp/sbt-$(sbt).zip
 oorep_db/oorep.sql:
 	cp ../oorep.sql.gz ./oorep_db/.
 	cd oorep_db && gzip -d ./oorep.sql.gz
+
+push:
+	docker compose build
+	@echo "Pushe Images zu Docker Hub..."
+	docker push oorep/application:$(version)
+	docker push oorep/database:$(version)
+	
+	docker tag oorep/application:$(version) oorep/application:latest
+	docker tag oorep/database:$(version) oorep/database:latest
+	docker push oorep/application:latest
+	docker push oorep/database:latest
 
 clean:
 	rm -rf tmp/oorep*

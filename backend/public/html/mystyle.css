@@ -292,3 +292,8 @@ a.underline:hover {
 textarea {
   font-family:Consolas,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,Bitstream Vera Sans Mono,Courier New, monospace;
 }
+
+.minimal-column {
+  width: 1%;
+  white-space: nowrap;
+}
