@@ -17,8 +17,17 @@
                 Die Wirksamkeit von Homöopathie ist wissenschaftlich nicht bewiesen!
                 Der Autor dieser Website übernimmt keine Verantwortung für die Richtigkeit der Ergebnisse oder die Folgen,
                 die aus einem unsachgemäßen Gebrauch resultieren. Diese Website basiert aktuell auf Version
-		0.18.0
-		des OOREP Quell-Codes.
+                @{
+                  Option(getClass.getResourceAsStream("/version.txt")).map { stream =>
+                    val source = scala.io.Source.fromInputStream(stream)
+                    try {
+                      source.mkString.trim
+                    } finally {
+                      source.close()
+                    }
+                  }.getOrElse("unknown")
+                }
+         		des OOREP Quell-Codes.
             </p>
             <p style="text-align:justify;">
                 This homeopathy web site is intended for information purposes only.
@@ -26,7 +35,16 @@
                 Scientifically, homeopathy was never proven to actually work!
                 The author of this web site does not take responsibility for the correctness of this site's
                 results or the consequences of misusing them. This website is currently based upon version
-		0.18.0
+                @{
+                  Option(getClass.getResourceAsStream("/version.txt")).map { stream =>
+                    val source = scala.io.Source.fromInputStream(stream)
+                    try {
+                      source.mkString.trim
+                    } finally {
+                      source.close()
+                    }
+                  }.getOrElse("unknown")
+                }
                 of the OOREP source code.
             </p>
         </div>

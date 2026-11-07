@@ -147,11 +147,15 @@ case class CazeRubric(id: Int,
   def fullPath: String =
     subRubrics.map(_.rubric.fullPath).mkString(", ")
 
-  def path: String =
-    subRubrics.map(_.rubric.path).mkString(", ")
+  def path: Option[String] = {
+    val result = subRubrics.flatMap(_.rubric.path).mkString(", ")
+    Option.when(result.nonEmpty) { result }
+  }
 
-  def textt: String =
-    subRubrics.map(_.rubric.textt).mkString(", ")
+  def textt: Option[String] = {
+    val result = subRubrics.flatMap(_.rubric.textt).mkString(", ")
+    Option.when(result.nonEmpty) { result }
+  }
 
   def abbrev: String =
     subRubrics.map(_.rubric.abbrev).mkString(", ")

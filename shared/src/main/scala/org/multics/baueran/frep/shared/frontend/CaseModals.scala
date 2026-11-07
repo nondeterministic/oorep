@@ -91,7 +91,7 @@ object CaseModals {
       }
 
       CaseSection.descr = Some (shared.Caze ( // WHERE CAZE IS INITIALLY CREATED: WITH ID -1!
-        (if (CaseSection.descr.isDefined) CaseSection.descr.get.id else - 1),
+        (if (CaseSection.descr.isDefined) CaseSection.descr.get.id else -1),
         caseIdTxt,
         memberId,
         (new js.Date () ).toISOString (),
