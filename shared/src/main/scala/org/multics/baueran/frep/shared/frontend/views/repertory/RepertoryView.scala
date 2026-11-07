@@ -275,8 +275,8 @@ object RepertoryView extends TabView {
         }
         else if (_showMaxSearchResultsAlert && (results.size >= maxNumberOfResultsPerPage || totalNumberOfPages > 1)) {
           val fullPathWords = results.map(cr => cr.fullPath.split("[, ]+").filter(_.length > 0).map(_.trim())).flatten
-          val pathWords = results.map(cr => cr.path.split("[, ]+").filter(_.length > 0).map(_.trim())).flatten
-          val textWords = results.map(cr => cr.textt.split("[, ]+").filter(_.length > 0).map(_.trim())).flatten
+          val pathWords     = results.flatMap(_.path.toList.flatMap(_.split("[, ]+"))).map(_.trim).filter(_.nonEmpty)
+          val textWords     = results.flatMap(_.textt.toList.flatMap(_.split("[, ]+"))).map(_.trim).filter(_.nonEmpty)
 
           // Yields a sequence like [ ("pain", 130), ("abdomen", 50), ... ]
           val sortedResultOccurrences =
