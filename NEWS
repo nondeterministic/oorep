@@ -12,6 +12,15 @@
      ██║ ╚████║███████╗╚███╔███╔╝███████║
      ╚═╝  ╚═══╝╚══════╝ ╚══╝╚══╝ ╚══════╝
 
+v0.18.1                  Sun Nov  8 10:55:16 AM CET 2026
+--------------------------------------------------------
+- Minor improvements and changes:
+  - Update various library/compiler versions
+
+- Bug fixes:
+  - Fix suggestion of search terms after results are shown 
+  - Fix display of OOREP version at bottom of page
+
 v0.18.0                 Sat Aug  8 08:59:38 AM CEST 2026
 --------------------------------------------------------
 - Main features
