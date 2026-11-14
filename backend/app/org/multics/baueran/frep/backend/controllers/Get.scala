@@ -358,6 +358,54 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
       }
     }
 
+  def apiBrowseRepertory(repertory: String): Action[AnyContent] =
+    Action { (request: Request[AnyContent]) =>
+      val cleanedUpAbbrev = repertory.replaceAll("[^0-9A-Za-z\\-]", "")
+      if (repertoryDao.getRepsAndRemedies(getAuthenticatedUser(request)).find(_.info.abbrev == cleanedUpAbbrev).isEmpty) {
+        Logger.warn(s"Get: apiBrowseRepertory(abbrev: ${repertory}): user not allowed to access resource.")
+        NoContent
+      }
+      else {
+        val chapters = repertoryDao.getChaptersForBrowse(cleanedUpAbbrev)
+        if (chapters.isEmpty) {
+          Logger.info(s"Get: apiBrowseRepertory(abbrev: ${repertory}): no chapters found")
+          NoContent
+        }
+        else
+          Ok(RepertoryBrowseChaptersResponse(chapters).asJson.toString())
+      }
+    }
+
+  def apiBrowseChapter(repertory: String, chapterId: Int): Action[AnyContent] =
+    Action { (request: Request[AnyContent]) =>
+      val cleanedUpAbbrev = repertory.replaceAll("[^0-9A-Za-z\\-]", "")
+      if (repertoryDao.getRepsAndRemedies(getAuthenticatedUser(request)).find(_.info.abbrev == cleanedUpAbbrev).isEmpty) {
+        Logger.warn(s"Get: apiBrowseChapter(abbrev: ${repertory}, chapterId: ${chapterId}): user not allowed to access resource.")
+        NoContent
+      }
+      else {
+        val rubrics = repertoryDao.getBrowseChapterRubrics(cleanedUpAbbrev, chapterId)
+        Ok(RepertoryBrowseChapterResponse(chapterId, rubrics).asJson.toString())
+      }
+    }
+
+  def apiBrowseRubricRemedies(repertory: String, rubricId: Int): Action[AnyContent] =
+    Action { (request: Request[AnyContent]) =>
+      val cleanedUpAbbrev = repertory.replaceAll("[^0-9A-Za-z\\-]", "")
+      if (repertoryDao.getRepsAndRemedies(getAuthenticatedUser(request)).find(_.info.abbrev == cleanedUpAbbrev).isEmpty) {
+        Logger.warn(s"Get: apiBrowseRubricRemedies(abbrev: ${repertory}, rubricId: ${rubricId}): user not allowed to access resource.")
+        NoContent
+      }
+      else {
+        repertoryDao.getRubricRemediesForBrowse(cleanedUpAbbrev, rubricId) match {
+          case Some(result) => Ok(result.asJson.toString())
+          case None =>
+            Logger.info(s"Get: apiBrowseRubricRemedies(abbrev: ${repertory}, rubricId: ${rubricId}): rubric not found")
+            NoContent
+        }
+      }
+    }
+
 }
 
 // Used in HTML-templates/-files

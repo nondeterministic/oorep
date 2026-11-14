@@ -411,4 +411,61 @@ class RepertoryDao(dbContext: db.db.DBContext) {
     Some((ResultsCazeRubrics(totalNumberOfRepertoryRubrics, tmpRubricsAll.size, returnTotalNumberOfPages, page, caseRubrics), remedyStats.toList))
   }
 
+  def getChaptersForBrowse(abbrevFromMenu: String): List[RepertoryBrowseChapterInfo] = {
+    val abbrev = abbrevFromMenu.replaceAll("[^0-9A-Za-z\\-]", "")
+    val chapters = quote {
+      querySchema[Chapter]("chapter", _.text -> "textt")
+    }
+    val chapterList = run(quote(chapters.filter(_.abbrev == lift(abbrev)).sortBy(_.id)))
+    val chapterIds = chapterList.map(_.id)
+    val countsByChapter: Map[Int, Int] =
+      if (chapterIds.isEmpty) Map.empty
+      else run(
+        quote(
+          query[RubricRemedy]
+            .filter(rr => rr.abbrev == lift(abbrev) && liftQuery(chapterIds).contains(rr.chapterId))
+            .groupBy(_.chapterId)
+            .map { case (chapterId, rows) => (chapterId, rows.map(_.rubricId).distinct.size) }
+        )
+      ).map { case (chapterId, count) => (chapterId, count.toInt) }.toMap
+
+    chapterList.map(ch => RepertoryBrowseChapterInfo(ch, countsByChapter.getOrElse(ch.id, 0)))
+  }
+
+  def getBrowseChapterRubrics(abbrevFromMenu: String, chapterId: Int): List[RepertoryBrowseRubric] = {
+    val abbrev = abbrevFromMenu.replaceAll("[^0-9A-Za-z\\-]", "")
+    val rubrics = run(
+      quote(
+        query[Rubric]
+          .filter(r => r.abbrev == lift(abbrev) && r.chapterId == lift(chapterId))
+          .sortBy(r => r.id)
+      )
+    )
+    val rubricIdsWithRemedies =
+      if (rubrics.isEmpty) Set.empty[Int]
+      else run(
+        quote(
+          query[RubricRemedy]
+            .filter(rr => rr.abbrev == lift(abbrev) && rr.chapterId == lift(chapterId))
+            .map(_.rubricId)
+            .distinct
+        )
+      ).toSet
+
+    rubrics.map(r => RepertoryBrowseRubric(r.id, r.mother, r.isMother, r.chapterId, r.fullPath, r.path, rubricIdsWithRemedies.contains(r.id)))
+  }
+
+  def getRubricRemediesForBrowse(abbrevFromMenu: String, rubricId: Int): Option[RepertoryRubricRemedies] = {
+    val abbrev = abbrevFromMenu.replaceAll("[^0-9A-Za-z\\-]", "")
+    getRubric(rubricId, abbrev).map { rubric =>
+      val rubricRemedies = getRubricRemedies(rubricId, abbrev)
+      val remedies = if (rubricRemedies.isEmpty) List.empty[Remedy]
+      else run(quote(query[Remedy].filter(r => liftQuery(rubricRemedies.map(_.remedyId)).contains(r.id))))
+      val weighted = rubricRemedies.flatMap { rr =>
+        remedies.find(_.id == rr.remedyId).map(rem => WeightedRemedy(rem, rr.weight))
+      }.sortBy(wr => (-wr.weight, wr.remedy.nameAbbrev.toLowerCase))
+      RepertoryRubricRemedies(rubric, weighted)
+    }
+  }
+
 }

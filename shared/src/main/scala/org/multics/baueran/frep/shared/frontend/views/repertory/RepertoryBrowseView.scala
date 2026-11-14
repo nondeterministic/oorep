@@ -1,0 +1,649 @@
+package org.multics.baueran.frep.shared.frontend.views.repertory
+
+import io.circe.parser.parse
+import org.multics.baueran.frep.shared._
+import org.multics.baueran.frep.shared.Defs.{HeaderFields, ResourceAccessLvl}
+import org.multics.baueran.frep.shared.TopLevelUtilCode.getDocumentCsrfCookie
+import org.multics.baueran.frep.shared.frontend._
+import org.scalajs.dom
+import dom.Event
+import dom.html
+import scalatags.JsDom
+import scalatags.JsDom.all._
+
+import scala.collection.mutable
+import scala.scalajs.js
+import scala.scalajs.js.timers
+
+object RepertoryBrowseView extends TabView {
+
+  private val _prefix = "repertoryBrowseView"
+
+  // Cache: chapter metadata per repertory, and bounded LRU cache for loaded chapter rubrics (last 30, across repertories).
+  private val _chaptersCache = mutable.Map.empty[String, List[RepertoryBrowseChapterInfo]]
+  private val _chapterRubricsCache = new RepertoryBrowseCache()
+  private val _chapterLoading = mutable.Set.empty[(String, Int)]
+
+  private var _selectedRepertory: String = ""
+  private var _selectedRepInfo: Option[Info] = None
+  private var _availableReps: List[Info] = List.empty
+  private var _repsRequested: Boolean = false
+  private var _defaultRepertory: Option[String] = None
+  private var _autoLoadedDefault: Boolean = false
+  private var _loadError: Option[String] = None
+  private var _loadingChapters: Boolean = false
+
+  // ------------------------------------------------------------------------------------------------------------------
+  // OorepHtml-based UI elements
+
+  object SelectorButton extends OorepHtmlButton {
+    override def getId(): String = s"${_prefix}_repSelectionDropDownButton"
+    override def apply(): JsDom.TypedTag[html.Element] =
+      button(cls := "btn btn-secondary dropdown-toggle", `type` := "button", id := getId(),
+        data.toggle := "dropdown", aria.haspopup := "true", aria.expanded := "false",
+        if (_selectedRepertory.trim.isEmpty) "Repertory" else s"Repertory: ${_selectedRepertory}").asInstanceOf[JsDom.TypedTag[html.Element]]
+  }
+
+  object SelectorMenu extends OorepHtmlElement {
+    override def getId(): String = s"${_prefix}_repSelectionDropDown"
+    override def apply(): JsDom.TypedTag[html.Element] =
+      div(cls := "dropdown-menu", id := getId(), aria.labelledby := SelectorButton.getId()).asInstanceOf[JsDom.TypedTag[html.Element]]
+  }
+
+  object StatusDiv extends OorepHtmlElement {
+    override def getId(): String = s"${_prefix}_status"
+    override def apply(): JsDom.TypedTag[html.Element] = div(id := getId()).asInstanceOf[JsDom.TypedTag[html.Element]]
+  }
+
+  object ContentDiv extends OorepHtmlElement {
+    override def getId(): String = s"${_prefix}_content"
+    override def apply(): JsDom.TypedTag[html.Element] = div(id := getId(), cls := "container-fluid", style := "margin-top: 10px;").asInstanceOf[JsDom.TypedTag[html.Element]]
+  }
+
+  object ModalTitleEl extends OorepHtmlElement {
+    override def getId(): String = s"${_prefix}_rubricModalLabel"
+    override def apply(): JsDom.TypedTag[html.Element] = h5(cls := "modal-title", id := getId(), "Rubric").asInstanceOf[JsDom.TypedTag[html.Element]]
+  }
+
+  object ModalBodyEl extends OorepHtmlElement {
+    override def getId(): String = s"${_prefix}_rubricModalBody"
+    override def apply(): JsDom.TypedTag[html.Element] = div(cls := "modal-body", id := getId(), "Loading...").asInstanceOf[JsDom.TypedTag[html.Element]]
+  }
+
+  object ModalFooterEl extends OorepHtmlElement {
+    override def getId(): String = s"${_prefix}_rubricModalFooter"
+    override def apply(): JsDom.TypedTag[html.Element] =
+      div(cls := "modal-footer", id := getId(),
+        button(`type` := "button", cls := "btn btn-secondary", data.dismiss := "modal", "Close")).asInstanceOf[JsDom.TypedTag[html.Element]]
+  }
+
+  object RubricModal extends OorepHtmlElement {
+    override def getId(): String = s"${_prefix}_rubricModal"
+    override def apply(): JsDom.TypedTag[html.Element] =
+      div(cls := "modal fade", id := getId(), tabindex := "-1", role := "dialog", aria.labelledby := ModalTitleEl.getId(), aria.hidden := "true",
+        div(cls := "modal-dialog modal-lg", role := "document",
+          div(cls := "modal-content",
+            div(cls := "modal-header",
+              ModalTitleEl(),
+              button(`type` := "button", cls := "close", data.dismiss := "modal", aria.label := "Close",
+                span(aria.hidden := "true", raw("&times;"))
+              )
+            ),
+            ModalBodyEl(),
+            ModalFooterEl()
+          )
+        )
+      ).asInstanceOf[JsDom.TypedTag[html.Element]]
+  }
+
+  // ------------------------------------------------------------------------------------------------------------------
+  // TabView
+
+  override def getPrefix(): String = _prefix
+  override def tabLinkId(): String = "tab_repertory_browse_link"
+  override def tabPaneId(): String = "tab_repertory_browse"
+
+  override def toFront(): Unit = {
+    Option(dom.document.getElementById(tabLinkId())).foreach { el => el.classList.add("show"); el.classList.add("active") }
+    Option(dom.document.getElementById(tabPaneId())).foreach { el => el.classList.add("show"); el.classList.add("active") }
+  }
+
+  override def toBack(): Unit = {
+    Option(dom.document.getElementById(tabLinkId())).foreach { el => el.classList.remove("show"); el.classList.remove("active") }
+    Option(dom.document.getElementById(tabPaneId())).foreach { el => el.classList.remove("show"); el.classList.remove("active") }
+  }
+
+  override def tabLink() = {
+    a(cls := "nav-link", href := s"#${tabPaneId()}", id := tabLinkId(), data.toggle := "tab",
+      onclick := { (_: Event) =>
+        timers.setTimeout(0) {
+          bindCollapseEvents()
+          populateRepertorySelector()
+          maybeLoadDefaultRepertory()
+        }
+        if (CaseSection.size() > 0) CaseSection.showCase(RepertoryView.remedyFormat())
+      },
+      "Repertory browsing")
+  }
+
+  private def chapterDomId(chapterId: Int): String = s"${_prefix}_chapter_${chapterId}"
+  private def chapterBodyId(chapterId: Int): String = s"${_prefix}_chapter_body_${chapterId}"
+  private def chapterChevronId(chapterId: Int): String = s"${_prefix}_chapter_chevron_${chapterId}"
+  private def rubricChildrenDomId(rubricId: Int): String = s"${_prefix}_children_${rubricId}"
+  private def rubricChevronId(rubricId: Int): String = s"${_prefix}_chevron_${rubricId}"
+
+  private def isRoot(mother: Option[Int]): Boolean = mother.isEmpty || mother.contains(-1)
+  private def rubricLabel(r: RepertoryBrowseRubric): String = r.path.filter(_.trim.nonEmpty).getOrElse(r.fullPath)
+
+  private def chaptersForSelected(): List[RepertoryBrowseChapterInfo] =
+    _chaptersCache.getOrElse(_selectedRepertory, Nil)
+
+  // ------------------------------------------------------------------------------------------------------------------
+  // Rendering
+
+  private def selectorView(): JsDom.TypedTag[html.Div] =
+    div(cls := "container-fluid", style := "margin-top: 23px;",
+      div(cls := "row",
+        div(cls := "col-md-auto",
+          div(cls := "dropdown", SelectorButton(), SelectorMenu())
+        ),
+        div(cls := "col",
+          p(cls := "text-muted", style := "margin-top: 6px;",
+            "Browse the repertory hierarchy. Select a repertory, then unfold chapters to load them. Click a rubric's + to view remedies and add it to the case.")
+        )
+      )
+    )
+
+  private def renderStatus(): Unit = {
+    Option(dom.document.getElementById(StatusDiv.getId())).foreach { el =>
+      el.innerHTML = ""
+      val node: JsDom.TypedTag[html.Div] =
+        if (_loadingChapters)
+          div(cls := "alert alert-info", role := "alert", b("Loading chapters..."))
+        else _loadError match {
+          case Some(msg) => div(cls := "alert alert-danger", role := "alert", b(msg))
+          case None if _selectedRepertory.trim.isEmpty =>
+            div(cls := "alert alert-secondary", role := "alert", b("Select a repertory to browse."))
+          case None => div()
+        }
+      el.appendChild(node.render)
+    }
+  }
+
+  private def renderChapters(): Unit = {
+    Option(dom.document.getElementById(ContentDiv.getId())).foreach { container =>
+      container.innerHTML = ""
+      val chs = chaptersForSelected()
+      if (_selectedRepertory.trim.nonEmpty && !_loadingChapters && _loadError.isEmpty && chs.nonEmpty) {
+        container.appendChild(div(cls := "text-muted", style := "margin-bottom: 8px;",
+          s"${chs.size} chapters (unfold to load rubrics)").render)
+        chs.foreach(ch => container.appendChild(renderChapter(ch).render))
+        bindCollapseEvents()
+      }
+    }
+  }
+
+  private def chapterRootCollapseId(chapterId: Int): String = s"${_prefix}_chapter_root_${chapterId}"
+
+  private def renderChapter(info: RepertoryBrowseChapterInfo): JsDom.TypedTag[html.Div] = {
+    val ch = info.chapter
+    val abbrev = ch.abbrev
+    if (info.remedyRubricCount <= 0) {
+      div(cls := "card bg-light", style := "margin-bottom: 16px;",
+        div(cls := "card-body py-2",
+          span(ch.text),
+          span(cls := "text-muted", " (empty)")
+        )
+      )
+    } else {
+      div(cls := "card", style := "margin-bottom: 16px;",
+        div(cls := "card-header",
+          div(cls := "row",
+            div(cls := "col",
+              b(ch.text),
+              span(cls := "text-muted", style := "font-weight: normal;", s" (${info.remedyRubricCount} rubrics)")
+            ),
+            div(cls := "col-auto text-right",
+              a(href := "#", cls := "text-secondary", onclick := { (e: Event) => e.preventDefault(); expandEntireChapter(ch.id) }, "Expand all rubrics"),
+              span(" | "),
+              a(href := "#", cls := "text-secondary", onclick := { (e: Event) => e.preventDefault(); collapseEntireChapter(ch.id) }, "Hide all rubrics")
+            )
+          )
+        ),
+        div(cls := "card-body",
+          div(
+            a(href := s"#${chapterRootCollapseId(ch.id)}", data.toggle := "collapse", aria.expanded := "false",
+              attr("data-browse-chapter") := ch.id.toString,
+              onclick := { (_: Event) => js.timers.setTimeout(0)(loadChapterIfNeeded(abbrev, ch.id)) },
+              style := "text-decoration: none;",
+              span(id := chapterChevronId(ch.id), cls := "oi oi-chevron-right", aria.hidden := "true")
+            ),
+            raw("&nbsp;"),
+            span(b(ch.text), title := ch.text),
+            div(id := chapterRootCollapseId(ch.id), cls := "collapse",
+              attr("data-browse-chapter") := ch.id.toString,
+              div(id := chapterBodyId(ch.id), style := "margin-left: 8px; margin-top: 6px;",
+                em(cls := "text-muted", "Unfold to load…")
+              )
+            )
+          )
+        )
+      )
+    }
+  }
+
+  private def renderChapterTree(chapterId: Int, rubrics: List[RepertoryBrowseRubric]): Unit = {
+    Option(dom.document.getElementById(chapterBodyId(chapterId))).foreach { body =>
+      body.innerHTML = ""
+      if (rubrics.isEmpty) {
+        body.appendChild(span(cls := "text-muted", "No rubrics.").render)
+      } else {
+        val byMother = rubrics.filter(r => !isRoot(r.mother)).groupBy(_.mother.get)
+        val roots = rubrics.filter(r => isRoot(r.mother)).sortBy(r => (r.fullPath.toLowerCase, r.id))
+        // Avoid 3rd repetition: if a single root's label equals the chapter name (already shown as foldable entry), render its children directly.
+        val chName = chaptersForSelected().find(_.chapter.id == chapterId).map(_.chapter.text.trim.toLowerCase).getOrElse("")
+        val effectiveRoots =
+          if (roots.size == 1) {
+            val r = roots.head
+            val rLabel = rubricLabel(r).trim.toLowerCase
+            val children = byMother.getOrElse(r.id, Nil)
+            if (children.nonEmpty && chName.nonEmpty && (rLabel == chName || r.fullPath.trim.toLowerCase == chName))
+              children.sortBy(c => (c.fullPath.toLowerCase, c.id))
+            else roots
+          } else {
+            // also drop any root that is an exact chapter-name duplicate leaf/label-only node
+            roots.filterNot(r => chName.nonEmpty && rubricLabel(r).trim.toLowerCase == chName && byMother.getOrElse(r.id, Nil).isEmpty)
+          }
+
+        val tree = div(effectiveRoots.map(r => renderRubricNode(r, byMother)))
+        body.appendChild(tree.render)
+      }
+    }
+  }
+
+  private def setAllCollapses(body: dom.Element, show: Boolean): Unit = {
+    val nodes = body.querySelectorAll(".collapse")
+    for (i <- 0 until nodes.length) {
+      val node = nodes.item(i).asInstanceOf[dom.html.Element]
+      if (show) {
+        node.classList.add("show")
+        node.style.height = "auto"
+      } else {
+        node.classList.remove("show")
+        node.style.height = ""
+      }
+    }
+    val chevrons = body.querySelectorAll("span[id^='" + _prefix + "_chevron_']")
+    for (i <- 0 until chevrons.length) {
+      chevrons.item(i).asInstanceOf[dom.Element]
+        .setAttribute("class", if (show) "oi oi-chevron-bottom" else "oi oi-chevron-right")
+    }
+  }
+
+  private def expandEntireChapter(chapterId: Int): Unit = {
+    loadChapterIfNeeded(_selectedRepertory, chapterId)
+    val show = () => {
+      Option(dom.document.getElementById(chapterRootCollapseId(chapterId))).foreach { root =>
+        root.classList.add("show")
+        root.asInstanceOf[dom.html.Element].style.height = "auto"
+      }
+      toggleChevron(chapterChevronId(chapterId), open = true)
+      Option(dom.document.getElementById(chapterBodyId(chapterId))).foreach(body => setAllCollapses(body, show = true))
+    }
+    if (!_chapterRubricsCache.contains(_selectedRepertory, chapterId)) js.timers.setTimeout(600)(show()) else show()
+  }
+
+  private def collapseEntireChapter(chapterId: Int): Unit = {
+    Option(dom.document.getElementById(chapterBodyId(chapterId))).foreach(body => setAllCollapses(body, show = false))
+    Option(dom.document.getElementById(chapterRootCollapseId(chapterId))).foreach { root =>
+      root.classList.remove("show")
+      root.asInstanceOf[dom.html.Element].style.height = ""
+    }
+    toggleChevron(chapterChevronId(chapterId), open = false)
+  }
+
+  private def plusIcon(r: RepertoryBrowseRubric): Frag =
+    if (!r.hasRemedies) frag()
+    else frag(
+      raw("&nbsp;"),
+      button(`type` := "button", cls := "btn btn-sm px-1 py-0 btn-outline-primary",
+        style := "vertical-align: middle; line-height: 1; border-radius: 50%; width: 18px; height: 18px; padding: 0 !important;",
+        title := "Show remedies / add to case",
+        onclick := { (e: Event) => e.preventDefault(); e.stopPropagation(); openRubricModal(r) },
+        span(cls := "oi oi-info", aria.hidden := "true", style := "font-size: 10px;")
+      )
+    )
+
+  private def tooltipFor(r: RepertoryBrowseRubric): String = {
+    val fp = Option(r.fullPath).getOrElse("")
+    val chText = chaptersForSelected().find(_.chapter.id == r.chapterId).map(_.chapter.text.trim).getOrElse("")
+    if (chText.nonEmpty && fp.nonEmpty && !fp.toLowerCase.startsWith(chText.toLowerCase))
+      s"$chText, $fp"
+    else fp
+  }
+
+  private def compressDisplay(r: RepertoryBrowseRubric, byMother: Map[Int, List[RepertoryBrowseRubric]]): (String, RepertoryBrowseRubric, List[RepertoryBrowseRubric]) = {
+    var current = r
+    var label = rubricLabel(r)
+    var children = byMother.getOrElse(r.id, Nil).sortBy(c => (c.fullPath.toLowerCase, c.id))
+    var guard = 0
+    while (!current.hasRemedies && children.size == 1 && guard < 50) {
+      val next = children.head
+      label = label + ", " + rubricLabel(next)
+      current = next
+      children = byMother.getOrElse(current.id, Nil).sortBy(c => (c.fullPath.toLowerCase, c.id))
+      guard += 1
+    }
+    (label, current, children)
+  }
+
+  private def renderRubricNode(r: RepertoryBrowseRubric, byMother: Map[Int, List[RepertoryBrowseRubric]]): JsDom.TypedTag[html.Div] = {
+    val (label, node, children) = compressDisplay(r, byMother)
+    val hasChildren = children.nonEmpty
+
+    if (!hasChildren) {
+      div(cls := "rep-browse-node", style := "margin-left: 18px; padding: 2px 0;",
+        span(title := tooltipFor(node), label),
+        plusIcon(node)
+      )
+    } else {
+      div(cls := "rep-browse-node", style := "margin-left: 10px; padding: 2px 0;",
+        a(href := s"#${rubricChildrenDomId(node.id)}", data.toggle := "collapse", aria.expanded := "false",
+          style := "text-decoration: none;",
+          span(id := rubricChevronId(node.id), cls := "oi oi-chevron-right", aria.hidden := "true")
+        ),
+        raw("&nbsp;"),
+        span(title := tooltipFor(node), label),
+        plusIcon(node),
+        div(id := rubricChildrenDomId(node.id), cls := "collapse",
+          div(style := "margin-left: 14px; border-left: 1px solid #ddd; padding-left: 6px;",
+            children.map(c => renderRubricNode(c, byMother))
+          )
+        )
+      )
+    }
+  }
+
+  private def contentView(): JsDom.TypedTag[html.Div] =
+    div(cls := "container-fluid", selectorView(), StatusDiv(), ContentDiv(), RubricModal())
+
+  // ------------------------------------------------------------------------------------------------------------------
+  // Collapse events / lazy loading
+
+  private def bindCollapseEvents(): Unit = {
+    Option(dom.document.getElementById(tabPaneId())).foreach { pane =>
+      val jq = js.Dynamic.global.jQuery
+      jq(pane).off("show.bs.collapse.repbrowse hide.bs.collapse.repbrowse")
+      jq(pane).on("show.bs.collapse.repbrowse", { (e: dom.Event) =>
+        val target = e.target.asInstanceOf[dom.Element]
+        val tid = Option(target.getAttribute("id")).getOrElse("")
+        val chAttr = Option(target.getAttribute("data-browse-chapter")).getOrElse("")
+        if (tid.startsWith(chapterRootCollapseId(0).stripSuffix("0")) && chAttr.nonEmpty) {
+          try loadChapterIfNeeded(_selectedRepertory, chAttr.toInt) catch { case _: Throwable => () }
+          toggleChevron(chapterChevronId(chAttr.toInt), open = true)
+        } else if (tid.startsWith(s"${_prefix}_children_")) {
+          val rid = tid.stripPrefix(s"${_prefix}_children_")
+          toggleChevron(s"${_prefix}_chevron_${rid}", open = true)
+        }
+      })
+      jq(pane).on("hide.bs.collapse.repbrowse", { (e: dom.Event) =>
+        val target = e.target.asInstanceOf[dom.Element]
+        val tid = Option(target.getAttribute("id")).getOrElse("")
+        val chAttr = Option(target.getAttribute("data-browse-chapter")).getOrElse("")
+        if (tid.startsWith(chapterRootCollapseId(0).stripSuffix("0")) && chAttr.nonEmpty) {
+          toggleChevron(chapterChevronId(chAttr.toInt), open = false)
+        } else if (tid.startsWith(s"${_prefix}_children_")) {
+          val rid = tid.stripPrefix(s"${_prefix}_children_")
+          toggleChevron(s"${_prefix}_chevron_${rid}", open = false)
+        }
+      })
+    }
+  }
+
+  private def toggleChevron(chevronId: String, open: Boolean): Unit = {
+    Option(dom.document.getElementById(chevronId)).foreach { el =>
+      if (open) el.setAttribute("class", "oi oi-chevron-bottom")
+      else el.setAttribute("class", "oi oi-chevron-right")
+    }
+  }
+
+  // ------------------------------------------------------------------------------------------------------------------
+  // Data loading & cache
+
+  private def selectRepertory(abbrev: String): Unit = {
+    _selectedRepertory = abbrev
+    _selectedRepInfo = _availableReps.find(_.abbrev == abbrev)
+    _loadError = None
+    SelectorButton.setTextContent(s"Repertory: ${abbrev}")
+    if (_chaptersCache.contains(abbrev)) {
+      _loadingChapters = false
+      renderStatus(); renderChapters()
+    } else {
+      loadChapters(abbrev)
+    }
+  }
+
+  private def loadChapters(abbrev: String): Unit = {
+    _loadingChapters = true
+    _loadError = None
+    renderStatus(); renderChapters()
+    HttpRequest2("browse_repertory")
+      .withQueryParameters(("repertory", abbrev))
+      .withHeaders((HeaderFields.csrfToken.toString(), getDocumentCsrfCookie().getOrElse("")))
+      .onSuccess { (response: String) =>
+        parse(response).flatMap(_.as[RepertoryBrowseChaptersResponse]) match {
+          case Right(res) =>
+            _chaptersCache(abbrev) = res.chapters
+            _loadingChapters = false
+            _loadError = None
+          case Left(err) =>
+            _loadingChapters = false
+            _loadError = Some(s"Failed to load chapters: ${err.getMessage}")
+        }
+        if (_selectedRepertory == abbrev) { renderStatus(); renderChapters() }
+      }
+      .onFailure { (error: String) =>
+        _loadingChapters = false
+        _loadError = if (error == "204") Some("No chapters available for this repertory.") else Some(s"Failed to load chapters. ${error}")
+        if (_selectedRepertory == abbrev) { renderStatus(); renderChapters() }
+      }
+      .send()
+  }
+
+  private def loadChapterIfNeeded(abbrev: String, chapterId: Int): Unit = {
+    if (abbrev.trim.isEmpty) return
+    _chapterRubricsCache.getPage(abbrev, chapterId) match {
+      case Some(cached) =>
+        Option(dom.document.getElementById(chapterBodyId(chapterId))).foreach { body =>
+          if (Option(body.innerHTML).getOrElse("").contains("Unfold to load") || Option(body.innerHTML).getOrElse("").contains("Loading"))
+            renderChapterTree(chapterId, cached.rubrics)
+        }
+      case None =>
+        if (_chapterLoading.contains((abbrev, chapterId))) return
+        _chapterLoading.add((abbrev, chapterId))
+        Option(dom.document.getElementById(chapterBodyId(chapterId))).foreach(_.innerHTML = em(cls := "text-muted", "Loading…").toString)
+        HttpRequest2("browse_chapter")
+          .withQueryParameters(("repertory", abbrev), ("chapterId", chapterId.toString))
+          .withHeaders((HeaderFields.csrfToken.toString(), getDocumentCsrfCookie().getOrElse("")))
+          .onSuccess { (response: String) =>
+            _chapterLoading.remove((abbrev, chapterId))
+            parse(response).flatMap(_.as[RepertoryBrowseChapterResponse]) match {
+              case Right(res) =>
+                _chapterRubricsCache.addPage(BrowseChapterCachePage(abbrev, chapterId, res.rubrics))
+                if (_selectedRepertory == abbrev) renderChapterTree(chapterId, res.rubrics)
+              case Left(err) =>
+                if (_selectedRepertory == abbrev)
+                  Option(dom.document.getElementById(chapterBodyId(chapterId))).foreach(_.innerHTML = span(cls := "text-danger", s"Failed to load chapter: ${err.getMessage}").toString)
+            }
+          }
+          .onFailure { (error: String) =>
+            _chapterLoading.remove((abbrev, chapterId))
+            if (_selectedRepertory == abbrev)
+              Option(dom.document.getElementById(chapterBodyId(chapterId))).foreach(_.innerHTML = span(cls := "text-danger", s"Failed to load chapter. ${error}").toString)
+          }
+          .send()
+    }
+  }
+
+  // ------------------------------------------------------------------------------------------------------------------
+  // Repertory selector & default
+
+  private def renderRepertorySelectorItems(): Unit = {
+    Option(dom.document.getElementById(SelectorMenu.getId())).foreach { m =>
+      m.innerHTML = ""
+      _availableReps.sortBy(_.abbrev).foreach { info =>
+        val item = a(cls := "dropdown-item", href := "#",
+          onclick := { (e: Event) => e.preventDefault(); selectRepertory(info.abbrev) },
+          s"${info.abbrev} - ${info.displaytitle.getOrElse(info.title)}").render
+        m.appendChild(item)
+      }
+    }
+  }
+
+  private def ensureRepertoriesLoaded(): Unit = {
+    if (_availableReps.nonEmpty) { renderRepertorySelectorItems(); maybeLoadDefaultRepertory(); return }
+    if (_repsRequested) return
+    _repsRequested = true
+    HttpRequest2("available_rems_and_reps")
+      .withHeaders((HeaderFields.csrfToken.toString(), getDocumentCsrfCookie().getOrElse("")))
+      .onSuccess { (response: String) =>
+        parse(response).flatMap(_.as[List[InfoExtended]]) match {
+          case Right(infos) =>
+            _availableReps = infos.map(_.info)
+            _defaultRepertory = infos.find(_.info.access == ResourceAccessLvl.Default).map(_.info.abbrev)
+              .orElse(_availableReps.find(_.abbrev == "publicum").map(_.abbrev))
+            renderRepertorySelectorItems()
+            maybeLoadDefaultRepertory()
+          case Left(err) =>
+            _repsRequested = false
+            println(s"ERROR: RepertoryBrowseView failed to parse available repertories: $err")
+        }
+      }
+      .onFailure { (error: String) =>
+        _repsRequested = false
+        println(s"ERROR: RepertoryBrowseView failed to load available repertories: $error")
+      }
+      .send()
+  }
+
+  private def maybeLoadDefaultRepertory(): Unit = {
+    if (_selectedRepertory.trim.nonEmpty || _autoLoadedDefault) return
+    val target = _defaultRepertory.orElse(_availableReps.find(_.abbrev == "publicum").map(_.abbrev)).orElse(_availableReps.headOption.map(_.abbrev))
+    target.foreach { abbrev =>
+      _autoLoadedDefault = true
+      selectRepertory(abbrev)
+    }
+  }
+
+  private def populateRepertorySelector(): Unit = ensureRepertoriesLoaded()
+
+  // ------------------------------------------------------------------------------------------------------------------
+  // Modal / remedies
+
+  private def repertoryDisplayName(): String =
+    _selectedRepInfo.map(i => i.displaytitle.getOrElse(i.title)).filter(_.trim.nonEmpty).getOrElse(_selectedRepertory)
+
+  private def setModal(title: String, body: Frag, footerButtons: List[JsDom.TypedTag[html.Button]]): Unit = {
+    Option(dom.document.getElementById(ModalTitleEl.getId())).foreach(_.textContent = title)
+    Option(dom.document.getElementById(ModalBodyEl.getId())).foreach { b => b.innerHTML = ""; b.appendChild(div(body).render) }
+    Option(dom.document.getElementById(ModalFooterEl.getId())).foreach { f =>
+      f.innerHTML = ""
+      footerButtons.foreach(btn => f.appendChild(btn.render))
+      f.appendChild(button(`type` := "button", cls := "btn btn-secondary", data.dismiss := "modal", "Close").render)
+    }
+  }
+
+  private def openRubricModal(r: RepertoryBrowseRubric): Unit = {
+    val modalTitle = repertoryDisplayName()
+    setModal(modalTitle, span("Loading remedies..."), Nil)
+    showModal()
+    HttpRequest2("browse_rubric_remedies")
+      .withQueryParameters(("repertory", _selectedRepertory), ("rubricId", r.id.toString))
+      .withHeaders((HeaderFields.csrfToken.toString(), getDocumentCsrfCookie().getOrElse("")))
+      .onSuccess { (response: String) =>
+        parse(response).flatMap(_.as[RepertoryRubricRemedies]) match {
+          case Right(result) =>
+            val caseId = CaseSection.descr.map(_.id).getOrElse(-1)
+            val cazeRubric = CazeRubric(-1, caseId, List(CazeSubRubric(result.rubric, result.weightedRemedies)), 1, None)
+            val alreadyInCase = CaseSection.cRubrics.exists(_.containsSubRubric(result.rubric.id, result.rubric.abbrev))
+            val remediesFrags =
+              if (result.weightedRemedies.isEmpty) List(span("No remedies."))
+              else {
+                val formatted = new BetterCaseRubric(cazeRubric).getFormattedRemedyNames(RepertoryView.remedyFormat())
+                if (formatted.isEmpty) List(span("No remedies."))
+                else formatted.init.flatMap(f => List(f, span(", "))) :+ formatted.last
+              }
+            val body = frag(p(b(result.rubric.fullPath)), p(remediesFrags))
+            val addBtn =
+              if (alreadyInCase) button(`type` := "button", cls := "btn btn-primary", disabled := true, "Add to case")
+              else button(`type` := "button", cls := "btn btn-primary", onclick := { (_: Event) => addToCase(result) }, "Add to case")
+            setModal(modalTitle, body, List(addBtn))
+          case Left(_) => setModal(modalTitle, span("Failed to load remedies."), Nil)
+        }
+      }
+      .onFailure { (error: String) =>
+        val msg = if (error == "204") "No remedies found for this rubric." else s"Failed to load remedies. ${error}"
+        setModal(modalTitle, span(msg), Nil)
+      }
+      .send()
+  }
+
+  private def addToCase(result: RepertoryRubricRemedies): Unit = {
+    val caseId = CaseSection.descr.map(_.id).getOrElse(-1)
+    val cazeRubric = CazeRubric(-1, caseId, List(CazeSubRubric(result.rubric, result.weightedRemedies)), 1, None)
+    CaseSection.addRepertoryLookup(cazeRubric)
+    CaseSection.updateCaseViewAndDataStructures()
+    CaseSection.showCase(RepertoryView.remedyFormat())
+    MainView.toggleOnBeforeUnload()
+    hideModal()
+  }
+
+  private def showModal(): Unit = {
+    try { js.Dynamic.global.jQuery(s"#${RubricModal.getId()}").modal("show") } catch { case _: Throwable => () }
+  }
+
+  private def hideModal(): Unit = {
+    try { js.Dynamic.global.jQuery(s"#${RubricModal.getId()}").modal("hide") } catch { case _: Throwable => () }
+  }
+
+  // ------------------------------------------------------------------------------------------------------------------
+  // Lifecycle
+
+  private def updateView(): Unit = {
+    Option(dom.document.getElementById(tabPaneId())).foreach { pane =>
+      pane.innerHTML = ""
+      pane.appendChild(contentView().render)
+      bindCollapseEvents()
+      renderRepertorySelectorItems()
+      ensureRepertoriesLoaded()
+      renderStatus()
+      renderChapters()
+    }
+    Option(dom.document.getElementById(SelectorButton.getId())).foreach { btn =>
+      if (_selectedRepertory.trim.nonEmpty) btn.textContent = s"Repertory: ${_selectedRepertory}"
+    }
+    if (CaseSection.size() > 0) CaseSection.showCase(RepertoryView.remedyFormat())
+  }
+
+  override def drawWithoutResults() = {
+    timers.setTimeout(0) { bindCollapseEvents(); populateRepertorySelector(); maybeLoadDefaultRepertory(); renderStatus(); renderChapters() }
+    contentView()
+  }
+
+  override def drawWithResults() = {
+    timers.setTimeout(0) { bindCollapseEvents(); populateRepertorySelector(); maybeLoadDefaultRepertory(); renderStatus(); renderChapters() }
+    contentView()
+  }
+
+  override def onResultsDrawn(): Unit = {
+    bindCollapseEvents()
+    populateRepertorySelector()
+    maybeLoadDefaultRepertory()
+    renderStatus()
+    renderChapters()
+  }
+
+  override def containsAnyResults(): Boolean = _chapterRubricsCache.nonEmpty
+  override def containsUnsavedResults(): Boolean = CaseSection.containsUnsavedResults()
+  override def updateDataStructures(remedies: List[Remedy]): Unit = ()
+}

@@ -888,7 +888,7 @@ object RepertoryView extends TabView {
           showResults()
         )
       },
-      "Repertory")
+      "Repertory search")
   }
 
   // ------------------------------------------------------------------------------------------------------------------

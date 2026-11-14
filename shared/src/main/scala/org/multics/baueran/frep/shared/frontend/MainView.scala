@@ -5,7 +5,7 @@ import org.multics.baueran.frep.shared.Defs.CookieFields
 import org.multics.baueran.frep.shared.{HttpRequest2, Remedy}
 import org.multics.baueran.frep.shared.sec_frontend.FileModalCallbacks.updateMemberFiles
 import org.multics.baueran.frep.shared.frontend.views.materiamedica.MateriaMedicaView
-import org.multics.baueran.frep.shared.frontend.views.repertory.RepertoryView
+import org.multics.baueran.frep.shared.frontend.views.repertory.{RepertoryBrowseView, RepertoryView}
 import scalatags.JsDom.all.*
 import org.scalajs.dom
 import scalatags.JsDom
@@ -26,7 +26,7 @@ object MainView {
   private var _loadingSpinner: Option[LoadingSpinner] = None
 
   // Register tab views: order is relevant. First element is first tab, and so on...
-  private val _tabViews = List(RepertoryView, MateriaMedicaView)
+  private val _tabViews = List(RepertoryView, RepertoryBrowseView, MateriaMedicaView)
   private var _remedies: List[Remedy] = List.empty
 
   def init(loadingSpinner: LoadingSpinner): Unit = {

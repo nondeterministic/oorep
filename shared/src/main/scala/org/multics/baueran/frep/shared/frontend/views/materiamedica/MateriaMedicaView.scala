@@ -325,7 +325,7 @@ object MateriaMedicaView extends TabView {
         MMSelectionDropdown.refresh()
         renderMultiOccurrencesDiv()
       },
-      "Materia Medica")
+      "Materia medica")
   }
 
   override def drawWithoutResults() = WithoutResults()
