@@ -6,6 +6,8 @@ import dom.Event
 import io.circe.parser.parse
 import scalatags.JsDom
 
+import scala.collection.mutable
+import scala.scalajs.js
 import scala.scalajs.js.URIUtils._
 import scala.language.implicitConversions
 import org.multics.baueran.frep.shared._
@@ -58,6 +60,9 @@ object RepertoryView extends TabView {
   private var _showMultiOccurrences = false
   private val _prefix = "repertoryView"
   private var _advancedSearchOptionsVisible = false
+  private var _selectedChapterId: Option[Int] = None
+  private val _repChaptersCache = mutable.Map.empty[String, List[(Int, String)]]
+  private var _chaptersRequestedFor: Set[String] = Set.empty
 
   // ------------------------------------------------------------------------------------------------------------------
   private def resultsLink(): String = encodeURI(_currResultShareLink)
@@ -86,7 +91,7 @@ object RepertoryView extends TabView {
                   span(
                     (s"${count}x"),
                     a(href := "#", onclick := { (event: Event) =>
-                      doLookup(cachePage.abbrev, cachePage.symptom, None, Some(nameabbrev), 0)
+                      doLookup(cachePage.abbrev, cachePage.symptom, None, Some(nameabbrev), cachePage.minWeight, cachePage.chapterId)
                     }, nameabbrev),
                     ("(" + cumulativeWeight + "), ")
                   )
@@ -95,7 +100,7 @@ object RepertoryView extends TabView {
               span(
                 (s"${multiRemedies.last.count}x"),
                 a(href := "#", onclick := { (event: Event) =>
-                  doLookup(cachePage.abbrev, cachePage.symptom, None, Some(multiRemedies.last.nameabbrev), 0)
+                  doLookup(cachePage.abbrev, cachePage.symptom, None, Some(multiRemedies.last.nameabbrev), cachePage.minWeight, cachePage.chapterId)
                 }, multiRemedies.last.nameabbrev),
                 ("(" + multiRemedies.last.cumulativeweight + ")")
               ),
@@ -111,7 +116,7 @@ object RepertoryView extends TabView {
                   span(
                     (s"${count}x"),
                     a(href := "#", onclick := { (event: Event) =>
-                      doLookup(cachePage.abbrev, cachePage.symptom, None, Some(nameabbrev), 0)
+                      doLookup(cachePage.abbrev, cachePage.symptom, None, Some(nameabbrev), cachePage.minWeight, cachePage.chapterId)
                     }, nameabbrev),
                     ("(" + cumulativeWeight + "))")
                   )
@@ -145,7 +150,7 @@ object RepertoryView extends TabView {
       if (remedies.size > 0)
         tr(
           td(result.fullPath, style:="width:35%;"),
-          td(remedies.take(remedies.size - 1).map(l => span(l, ", ")) ::: List(remedies.last)),
+          td(if (remedies.size <= 1) remedies else remedies.init.flatMap(r => Seq[Frag](r, ", ")) ++ Seq(remedies.last)),
           td(cls := "text-right", cls := "minimal-column",
             button(cls := "btn btn-sm btn-secondary", `type` := "button", id := ("addBut_" + result.toString()),
               attr("data-crubric") := result.toJson().toString(),
@@ -253,7 +258,7 @@ object RepertoryView extends TabView {
 
           dom.document.getElementById(s"${_prefix}_paginationDiv")
             .appendChild(
-              htmlPg.toHtml(latestCachePage.abbrev, latestCachePage.symptom, latestCachePage.remedy, latestCachePage.minWeight, doLookup)
+              htmlPg.toHtml(latestCachePage.abbrev, latestCachePage.symptom, latestCachePage.remedy, latestCachePage.minWeight, latestCachePage.chapterId, (a: String, s: String, p: Option[Int], r: Option[String], mw: Int, ch: Option[Int]) => doLookup(a, s, p, r, mw, ch))
                 .render)
         }
       }
@@ -357,9 +362,9 @@ object RepertoryView extends TabView {
   private def onSymptomLinkClicked(symptom: String): Unit = {
     _pageCache.latest() match {
       case Some(latestCachePage) =>
-        doLookup(_selectedRepertory.toString(), symptom, None, latestCachePage.remedy, latestCachePage.minWeight)
+        doLookup(_selectedRepertory.toString(), symptom, None, latestCachePage.remedy, latestCachePage.minWeight, latestCachePage.chapterId)
       case _ =>
-        doLookup(_selectedRepertory.toString(), symptom, None, None, 0)
+        doLookup(_selectedRepertory.toString(), symptom, None, None, 0, _selectedChapterId)
     }
   }
 
@@ -379,9 +384,19 @@ object RepertoryView extends TabView {
         case otherwise => otherwise.toInt
       }
     }
+    val chapterIdOpt = dom.document.getElementById("chapterDropdown") match {
+      case null => _selectedChapterId
+      case element =>
+        val txt = element.asInstanceOf[dom.html.Button].getAttribute("data-chapter-id")
+        Option(txt).flatMap(_.toIntOption).filter(_ >= 0).orElse {
+          // fallback: parse if stored differently
+          None
+        }
+    }
+    _selectedChapterId = chapterIdOpt
     val symptom = dom.document.getElementById("inputField").asInstanceOf[dom.html.Input].value
 
-    doLookup(_selectedRepertory.toString(), symptom, None, remedyQuery, remedyMinWeight)
+    doLookup(_selectedRepertory.toString(), symptom, None, remedyQuery, remedyMinWeight, chapterIdOpt)
   }
 
   // ------------------------------------------------------------------------------------------------------------------
@@ -389,18 +404,86 @@ object RepertoryView extends TabView {
     _pageCache.latest() match {
       case Some(latestCachePage) =>
         dom.document.getElementById("inputField").asInstanceOf[dom.html.Input].value = latestCachePage.symptom
+        _selectedChapterId = latestCachePage.chapterId
 
-        latestCachePage.remedy match {
-          case Some(_) =>
-            onShowAdvancedSearchOptionsMainView(true, false)
-          case _ =>
-            if (latestCachePage.minWeight > 0)
-              onShowAdvancedSearchOptionsMainView(true, false)
-        }
+        val needsAdvanced = latestCachePage.remedy.isDefined || latestCachePage.minWeight > 0 || latestCachePage.chapterId.isDefined
+        if (needsAdvanced)
+          onShowAdvancedSearchOptionsMainView(true, false)
 
         dom.document.getElementById("inputField").asInstanceOf[dom.html.Input].focus()
       case _ =>
         println("RepertoryView: onSymptomListRedoPressed failed.")
+    }
+  }
+
+  private def ensureRepChaptersLoaded(abbrev: String)(onLoaded: () => Unit = () => ()): Unit = {
+    val ab = abbrev.trim
+    if (ab.isEmpty) { onLoaded(); return }
+    if (_repChaptersCache.contains(ab)) { onLoaded(); return }
+    if (_chaptersRequestedFor.contains(ab)) { js.timers.setTimeout(200)(onLoaded()); return }
+    _chaptersRequestedFor += ab
+    HttpRequest2("browse_repertory")
+      .withQueryParameters(("repertory", ab))
+      .withHeaders((HeaderFields.csrfToken.toString(), getDocumentCsrfCookie().getOrElse("")))
+      .onSuccess { (response: String) =>
+        _repChaptersCache(ab) =
+          parse(response).flatMap(_.as[RepertoryBrowseChaptersResponse]) match {
+            case Right(res) => res.chapters.map(c => (c.chapter.id, c.chapter.text))
+            case Left(_) => Nil
+          }
+        _chaptersRequestedFor -= ab
+        onLoaded()
+      }
+      .onFailure { (_: String) =>
+        _repChaptersCache(ab) = Nil
+        _chaptersRequestedFor -= ab
+        onLoaded()
+      }
+      .send()
+  }
+
+  private def refreshChapterDropdown(abbrev: String): Unit = {
+    val menu = dom.document.getElementById("chapterDropDownsDiv")
+    val btn = dom.document.getElementById("chapterDropdown")
+    if (menu == null || btn == null) return
+
+    val btnEl = btn.asInstanceOf[dom.html.Button]
+    while (menu.childNodes.length > 0) menu.removeChild(menu.firstChild)
+
+    def setChapterSelection(chId: Option[Int], label: String): Unit = {
+      _selectedChapterId = chId
+      btnEl.textContent = label
+      btnEl.setAttribute("data-chapter-id", chId.map(_.toString).getOrElse("-1"))
+    }
+
+    menu.appendChild(
+      a(cls := "dropdown-item", href := "#",
+        onclick := { (e: Event) => e.preventDefault(); setChapterSelection(None, "<all chapters>") },
+        "<all chapters>").render
+    )
+
+    _repChaptersCache.getOrElse(abbrev, Nil).foreach { case (chId, text) =>
+      menu.appendChild(
+        a(cls := "dropdown-item", href := "#",
+          onclick := { (e: Event) => e.preventDefault(); setChapterSelection(Some(chId), text) },
+          text).render
+      )
+    }
+
+    _selectedChapterId match {
+      case Some(id) =>
+        _repChaptersCache.getOrElse(abbrev, Nil).find(_._1 == id).map(_._2) match {
+          case Some(label) =>
+            btnEl.textContent = label
+            btnEl.setAttribute("data-chapter-id", id.toString)
+          case None =>
+            _selectedChapterId = None
+            btnEl.textContent = "<all chapters>"
+            btnEl.setAttribute("data-chapter-id", "-1")
+        }
+      case None =>
+        btnEl.textContent = "<all chapters>"
+        btnEl.setAttribute("data-chapter-id", "-1")
     }
   }
 
@@ -430,6 +513,20 @@ object RepertoryView extends TabView {
                     }, `placeholder` := "Enter a remedy abbreviation or fullname (for example: Sil. or Silica)"),
                   datalist(`id` := s"${_prefix}_remedyDataList")
                 )
+              ),
+              div(cls := "row", style := "margin-top:10px;",
+                div(cls := "col-md-auto my-auto",
+                  "Chapter:"),
+                div(cls := "col",
+                  div(id := "chapterDropDowns", cls := "dropdown show",
+                    button(id := "chapterDropdown", cls := "btn dropdown-toggle btn-secondary btn-block text-left", `type` := "button", data.toggle := "dropdown",
+                      style := "white-space: nowrap; overflow: hidden; text-overflow: ellipsis;",
+                      attr("data-chapter-id") := "-1",
+                      "<all chapters>"
+                    ),
+                    div(id:="chapterDropDownsDiv", cls:="dropdown-menu", style:="max-height: 300px; overflow-y: auto;")
+                  )
+                )
               )
             ),
             div(cls := "col-md-auto",
@@ -450,16 +547,22 @@ object RepertoryView extends TabView {
       case _ => ;
     }
 
-    // Set remedy input string, if one was previously submitted, and redo-button was pressed
+    // Set remedy input string and chapter selection, if previously submitted and redo/restore requested
     if (restorePreviousValues && _pageCache.size() > 0) {
       for {
         latestCachePage <- _pageCache.latest()
-      } yield for {
-        remedyAbbrev <- latestCachePage.remedy
-      } yield dom.document.getElementById("inputRemedy").asInstanceOf[dom.html.Input].value = remedyAbbrev
+      } yield {
+        latestCachePage.remedy.foreach { remedyAbbrev =>
+          dom.document.getElementById("inputRemedy").asInstanceOf[dom.html.Input].value = remedyAbbrev
+        }
+        _selectedChapterId = latestCachePage.chapterId
+      }
     }
 
     refreshRemedyDataList(_repertories.getRemedies(_selectedRepertory.toString()))
+    ensureRepChaptersLoaded(_selectedRepertory.toString()) { () =>
+      refreshChapterDropdown(_selectedRepertory.toString())
+    }
 
     // Add possible weights for search (4 is only in hering, 0 is only in bogboen)
     val weightDropDownsDiv = dom.document.getElementById("weightDropDownsDiv").asInstanceOf[dom.html.Div]
@@ -530,21 +633,30 @@ object RepertoryView extends TabView {
     buttonDiv.replaceChild(advancedButton, basicButton)
   }
 
-  def jsDoLookup(abbrev: String, symptom: String, page: Int, remedyString: String, minWeight: Int) = {
+  def jsDoLookup(abbrev: String, symptom: String, page: Int, remedyString: String, minWeight: Int): Unit =
+    jsDoLookup(abbrev, symptom, page, remedyString, minWeight, -1)
+
+  def jsDoLookup(abbrev: String, symptom: String, page: Int, remedyString: String, minWeight: Int, chapterId: Int): Unit = {
     // Hide navbar initially, while the spinner shows. (Later, the code in this file will show it again.)
     dom.document.getElementById("nav_bar").asInstanceOf[dom.html.Div].classList.add("d-none")
 
     _selectedRepertory.set(abbrev)
+    _selectedChapterId = if (chapterId >= 0) Some(chapterId) else None
 
     doLookup(abbrev,
       symptom,
       if (page > 0) Some(page) else None,
       if (remedyString.length > 0) Some(remedyString) else None,
-      if (minWeight > 0) minWeight else 0)
+      if (minWeight > 0) minWeight else 0,
+      _selectedChapterId)
   }
 
+  // Compatibility overloads
+  private def doLookup(abbrev: String, symptom: String, pageOpt: Option[Int], remedyStringOpt: Option[String], minWeight: Int): Unit =
+    doLookup(abbrev, symptom, pageOpt, remedyStringOpt, minWeight, _selectedChapterId)
+
   // ------------------------------------------------------------------------------------------------------------------
-  private def doLookup(abbrev: String, symptom: String, pageOpt: Option[Int], remedyStringOpt: Option[String], minWeight: Int): Unit = {
+  private def doLookup(abbrev: String, symptom: String, pageOpt: Option[Int], remedyStringOpt: Option[String], minWeight: Int, chapterIdOpt: Option[Int]): Unit = {
     val page = math.max(pageOpt.getOrElse(0), 0)
 
     val abbrevForRemedyEntered = {
@@ -561,10 +673,11 @@ object RepertoryView extends TabView {
     }
 
     def showRepertorisationResults(results: ResultsCazeRubrics, remedyStats: List[ResultsRemedyStats]): Unit = {
-      _pageCache.addPage(CachePage(abbrev, symptom, abbrevForRemedyEntered, minWeight, results, remedyStats))
+      _pageCache.addPage(CachePage(abbrev, symptom, abbrevForRemedyEntered, minWeight, chapterIdOpt, results, remedyStats))
 
+      val chapterParam = chapterIdOpt.map(id => s"&chapterId=${id.toString}").getOrElse("")
       _currResultShareLink =
-        s"${serverUrl()}/show?repertory=${abbrev}&symptom=${symptom}&page=${(pageOpt.getOrElse(0) + 1).toString}&remedyString=${abbrevForRemedyEntered.getOrElse("")}&minWeight=${minWeight.toString}"
+        s"${serverUrl()}/show?repertory=${abbrev}&symptom=${symptom}&page=${(pageOpt.getOrElse(0) + 1).toString}&remedyString=${abbrevForRemedyEntered.getOrElse("")}&minWeight=${minWeight.toString}${chapterParam}"
 
       _repertorisationResults.set(Some(results))
 
@@ -657,6 +770,11 @@ object RepertoryView extends TabView {
               if (minWeight > 0)
                 fullErrorMessage += s" with min. weight >= ${minWeight}"
 
+              chapterIdOpt.foreach { chId =>
+                val chName = _repChaptersCache.getOrElse(abbrev, Nil).find(_._1 == chId).map(_._2).getOrElse(chId.toString)
+                fullErrorMessage += s" in chapter '${chName}'"
+              }
+
               if (searchTerms.positive.length > 0)
                 fullErrorMessage += s". $tmpErrorMessage1"
 
@@ -667,8 +785,8 @@ object RepertoryView extends TabView {
         ).render)
     }
 
-    def getPageFromBackend(abbrev: String, symptom: String, remedyString: String, minWeight: Int, page: Int): Unit = {
-      val cachedRemedies = _pageCache.getRemedies(abbrev, symptom, if (remedyString.length == 0) None else Some(remedyString), minWeight)
+    def getPageFromBackend(abbrev: String, symptom: String, remedyString: String, minWeight: Int, chapterIdOpt: Option[Int], page: Int): Unit = {
+      val cachedRemedies = _pageCache.getRemedies(abbrev, symptom, if (remedyString.length == 0) None else Some(remedyString), minWeight, chapterIdOpt)
       val getRemedies = if (cachedRemedies.length == 0) "1" else "0"
 
       // If no results were found, either tell the user in the input screen,
@@ -683,15 +801,21 @@ object RepertoryView extends TabView {
           showRepertorisationResultsError(symptom, remedyString, minWeight)
       }
 
+      val baseParams = List(
+        ("symptom", symptom),
+        ("repertory", abbrev),
+        ("page", page.toString),
+        ("remedyString", remedyString),
+        ("minWeight", minWeight.toString),
+        ("getRemedies", getRemedies)
+      )
+      val params = chapterIdOpt match {
+        case Some(chId) => baseParams :+ ("chapterId", chId.toString)
+        case None => baseParams
+      }
+
       HttpRequest2("lookup_rep")
-        .withQueryParameters(
-          ("symptom", symptom),
-          ("repertory", abbrev),
-          ("page", page.toString),
-          ("remedyString", remedyString),
-          ("minWeight", minWeight.toString),
-          ("getRemedies", getRemedies)
-        )
+        .withQueryParameters(params*)
         .withHeaders((HeaderFields.csrfToken.toString(), getDocumentCsrfCookie().getOrElse("")))
         .onSuccess((response: String) =>
           parse(response) match {
@@ -770,11 +894,11 @@ object RepertoryView extends TabView {
 
     dom.document.body.classList.add("wait")
 
-    _pageCache.getPage(abbrev, symptom, abbrevForRemedyEntered, minWeight, page) match {
+    _pageCache.getPage(abbrev, symptom, abbrevForRemedyEntered, minWeight, chapterIdOpt, page) match {
       case Some(cachedPage) =>
         showRepertorisationResults(cachedPage.content, cachedPage.remedies)
       case None =>
-        getPageFromBackend(abbrev, symptom, abbrevForRemedyEntered.getOrElse(""), minWeight, page)
+        getPageFromBackend(abbrev, symptom, abbrevForRemedyEntered.getOrElse(""), minWeight, chapterIdOpt, page)
     }
   }
 
@@ -804,25 +928,31 @@ object RepertoryView extends TabView {
 
                   // Update available repertories in repertory dropdown button
                   if (dom.document.getElementById("repSelectionDropDown") != null && dom.document.getElementById("repSelectionDropDown").childNodes.length == 0) {
-                    extendedRepertoryInfos.map(_.info)
-                      .sortBy(_.abbrev)
-                      .foreach {
-                        case currRep => {
-                          dom.document.getElementById("repSelectionDropDown")
-                            .appendChild(a(cls := "dropdown-item", href := "#", data.value := currRep.abbrev,
-                              onclick := { (event: Event) =>
-                                _selectedRepertory.set(currRep.abbrev)
-                                dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[dom.html.Button].textContent = "Repertory: " + _selectedRepertory
-                              }, s"${currRep.abbrev} - ${currRep.displaytitle.getOrElse("")}").render)
+                    val sortedInfos = extendedRepertoryInfos.map(_.info).sortBy(_.abbrev.toLowerCase)
+                    val (deInfos, nonDeInfos) = sortedInfos.partition(_.abbrev.toLowerCase.endsWith("-de"))
+                    def appendRepItem(menu: dom.Element, currRep: org.multics.baueran.frep.shared.Info): Unit = {
+                      menu.appendChild(a(cls := "dropdown-item", href := "#", data.value := currRep.abbrev,
+                        onclick := { (event: Event) =>
+                          _selectedRepertory.set(currRep.abbrev)
+                          _selectedChapterId = None
+                          dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[dom.html.Button].textContent = "Repertory: " + _selectedRepertory
+                          ensureRepChaptersLoaded(currRep.abbrev) { () => refreshChapterDropdown(currRep.abbrev) }
+                        }, s"${currRep.abbrev} - ${currRep.displaytitle.getOrElse("")}").render)
 
-                          if (_selectedRepertory.toString().length > 0)
-                            dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[dom.html.Button].textContent = "Repertory: " + _selectedRepertory
-                          else {
-                            _selectedRepertory.set(_defaultRepertory)
-                            dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[dom.html.Button].textContent = "Repertory: " + _selectedRepertory
-                          }
-                        }
+                      if (_selectedRepertory.toString().length > 0)
+                        dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[dom.html.Button].textContent = "Repertory: " + _selectedRepertory
+                      else {
+                        _selectedRepertory.set(_defaultRepertory)
+                        _selectedChapterId = None
+                        dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[dom.html.Button].textContent = "Repertory: " + _selectedRepertory
+                        ensureRepChaptersLoaded(_defaultRepertory) { () => refreshChapterDropdown(_defaultRepertory) }
                       }
+                    }
+                    val menu = dom.document.getElementById("repSelectionDropDown")
+                    nonDeInfos.foreach(currRep => appendRepItem(menu, currRep))
+                    if (nonDeInfos.nonEmpty && deInfos.nonEmpty)
+                      menu.appendChild(div(cls := "dropdown-divider", role := "separator").render)
+                    deInfos.foreach(currRep => appendRepItem(menu, currRep))
                   }
 
                   runAfterUpdate()
@@ -840,18 +970,29 @@ object RepertoryView extends TabView {
     else {
       println("INFO: Updating repertory information from RAM")
       if (dom.document.getElementById("repSelectionDropDown").childNodes.length == 0) {
-        for (currRep <- _repertories.getInfos().map(_.info).sortBy(_.abbrev)) {
-          dom.document.getElementById("repSelectionDropDown")
-            .appendChild(a(cls := "dropdown-item", href := "#", data.value := currRep.abbrev,
-              onclick := { (event: Event) =>
-                _selectedRepertory.set(currRep.abbrev)
-                dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[dom.html.Button].textContent = "Repertory: " + _selectedRepertory
-              }, s"${currRep.abbrev} - ${currRep.displaytitle.getOrElse("")}").render)
+        val sortedInfos = _repertories.getInfos().map(_.info).sortBy(_.abbrev.toLowerCase)
+        val (deInfos, nonDeInfos) = sortedInfos.partition(_.abbrev.toLowerCase.endsWith("-de"))
+        val menu = dom.document.getElementById("repSelectionDropDown")
+        def appendRepItem(currRep: org.multics.baueran.frep.shared.Info): Unit = {
+          menu.appendChild(a(cls := "dropdown-item", href := "#", data.value := currRep.abbrev,
+            onclick := { (event: Event) =>
+              _selectedRepertory.set(currRep.abbrev)
+              _selectedChapterId = None
+              dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[dom.html.Button].textContent = "Repertory: " + _selectedRepertory
+              ensureRepChaptersLoaded(currRep.abbrev) { () => refreshChapterDropdown(currRep.abbrev) }
+            }, s"${currRep.abbrev} - ${currRep.displaytitle.getOrElse("")}").render)
         }
+        nonDeInfos.foreach(appendRepItem)
+        if (nonDeInfos.nonEmpty && deInfos.nonEmpty)
+          menu.appendChild(div(cls := "dropdown-divider", role := "separator").render)
+        deInfos.foreach(appendRepItem)
       }
 
-      if (_selectedRepertory.toString().length == 0)
+      if (_selectedRepertory.toString().length == 0) {
         _selectedRepertory.set(_defaultRepertory)
+        _selectedChapterId = None
+        ensureRepChaptersLoaded(_defaultRepertory) { () => refreshChapterDropdown(_defaultRepertory) }
+      }
       dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[dom.html.Button].textContent = "Repertory: " + _selectedRepertory
     }
   }
@@ -888,7 +1029,7 @@ object RepertoryView extends TabView {
           showResults()
         )
       },
-      "Repertory")
+      "Repertory search")
   }
 
   // ------------------------------------------------------------------------------------------------------------------
@@ -922,18 +1063,22 @@ object RepertoryView extends TabView {
 
     // Now fill them with data...
     if (!_repertories.isEmpty() && repSelectionDropDownDiv.childNodes.length == 0) {
-      _repertories.getInfos().map(_.info)
-        .sortBy(_.abbrev)
-        .foreach {
-          case currRep => {
-            repSelectionDropDownDiv
-              .appendChild(a(cls := "dropdown-item", href := "#", data.value := currRep.abbrev,
-                onclick := { (event: Event) =>
-                  _selectedRepertory.set(currRep.abbrev)
-                  dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[dom.html.Button].textContent = "Repertory: " + _selectedRepertory
-                }, s"${currRep.abbrev} - ${currRep.displaytitle.getOrElse("")}").render)
-          }
-        }
+      val sortedInfos = _repertories.getInfos().map(_.info).sortBy(_.abbrev.toLowerCase)
+      val (deInfos, nonDeInfos) = sortedInfos.partition(_.abbrev.toLowerCase.endsWith("-de"))
+      def appendRepItem(currRep: org.multics.baueran.frep.shared.Info): Unit = {
+        repSelectionDropDownDiv
+          .appendChild(a(cls := "dropdown-item", href := "#", data.value := currRep.abbrev,
+            onclick := { (event: Event) =>
+              _selectedRepertory.set(currRep.abbrev)
+              _selectedChapterId = None
+              dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[dom.html.Button].textContent = "Repertory: " + _selectedRepertory
+              ensureRepChaptersLoaded(currRep.abbrev) { () => refreshChapterDropdown(currRep.abbrev) }
+            }, s"${currRep.abbrev} - ${currRep.displaytitle.getOrElse("")}").render)
+      }
+      nonDeInfos.foreach(appendRepItem)
+      if (nonDeInfos.nonEmpty && deInfos.nonEmpty)
+        repSelectionDropDownDiv.appendChild(div(cls := "dropdown-divider", role := "separator").render)
+      deInfos.foreach(appendRepItem)
     }
 
     if (_selectedRepertory.toString().length > 0)
@@ -1066,8 +1211,10 @@ object RepertoryView extends TabView {
   override def updateDataStructures(remedies: List[Remedy]): Unit = {
     // See also MateriaMedicaView.scala for a similar after-update-handler!
     def runAfterUpdate(): Unit = {
-      if (_selectedRepertory.toString() == "")
+      if (_selectedRepertory.toString() == "") {
         _selectedRepertory.set(_defaultRepertory)
+        _selectedChapterId = None
+      }
 
       // The following code would work as in MateriaMedicaView.scala, but we don't need to draw twice, unless we have to:
       //

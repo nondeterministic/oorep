@@ -1,4 +1,4 @@
-FROM postgres
+FROM postgres:16
 
 ENV POSTGRES_DB=oorep
 ENV POSTGRES_USER=postgres

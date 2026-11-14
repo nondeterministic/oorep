@@ -4,6 +4,12 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 NC='\033[0m' # No Color
 
+# Derive test server from existing app variables if not explicitly provided.
+if [ -z "${OOREP_TEST_SERVER:-}" ] && [ -n "${OOREP_APP_PROTOCOL:-}" ] && [ -n "${OOREP_APP_HOSTNAME:-}" ] && [ -n "${OOREP_APP_DOMAIN:-}" ]; then
+    OOREP_TEST_SERVER="${OOREP_APP_PROTOCOL}://${OOREP_APP_HOSTNAME}.${OOREP_APP_DOMAIN}"
+fi
+OOREP_TEST_SERVER="${OOREP_TEST_SERVER%/}"
+
 # First arg is the test result, second arg is the expected value.
 print_result() {
     if [ $1 -eq $2 ]; then
@@ -16,8 +22,8 @@ print_result() {
 echo "####################################################"
 echo "## OOREP SYSTEM AND API-ENDPOINT TESTING"
 echo "## Settings:"
-echo "## - Application server: $OOREP_TEST_SERVER"
-echo "## - Existing email: $OOREP_TEST_EXISTING_EMAIL"
+echo "## - Application server: ${OOREP_TEST_SERVER:-<unset>}"
+echo "## - Existing email: ${OOREP_TEST_EXISTING_EMAIL:-<unset>}"
 echo "####################################################"
 
 echo "- I can request username for $OOREP_TEST_EXISTING_EMAIL...  [check your mail]"
@@ -56,3 +62,18 @@ test=`curl -k --write-out %{http_code} "$OOREP_TEST_SERVER/show?repertory=public
 print_result $test 1
 
 echo "####################################################"
+
+# Protected repertory access tests (search + browse), unauthenticated
+if [ -f "$(dirname "$0")/test_protected_repertory.sh" ]; then
+    . "$(dirname "$0")/test_protected_repertory.sh"
+fi
+
+# Protected materia medica access tests (direct lookup by exact abbrev), unauthenticated
+if [ -f "$(dirname "$0")/test_protected_materia_medica.sh" ]; then
+    . "$(dirname "$0")/test_protected_materia_medica.sh"
+fi
+
+# Direct exact-abbrev API access tests (public allowed, private denied), unauthenticated
+if [ -f "$(dirname "$0")/test_direct_exact_abbrev_access.sh" ]; then
+    . "$(dirname "$0")/test_direct_exact_abbrev_access.sh"
+fi
