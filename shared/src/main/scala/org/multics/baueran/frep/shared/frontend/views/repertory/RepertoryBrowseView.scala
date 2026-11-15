@@ -39,9 +39,11 @@ object RepertoryBrowseView extends TabView {
   object SelectorButton extends OorepHtmlButton {
     override def getId(): String = s"${_prefix}_repSelectionDropDownButton"
     override def apply(): JsDom.TypedTag[html.Element] =
-      button(cls := "btn btn-secondary dropdown-toggle", `type` := "button", id := getId(),
+      button(`type` := "button", id := getId(),
+        cls := "text-nowrap btn btn-block dropdown-toggle btn-secondary",
+        style := "min-width: 195px;",
         data.toggle := "dropdown", aria.haspopup := "true", aria.expanded := "false",
-        if (_selectedRepertory.trim.isEmpty) "Repertory" else s"Repertory: ${_selectedRepertory}").asInstanceOf[JsDom.TypedTag[html.Element]]
+        if (_selectedRepertory.trim.isEmpty) "Repertories" else s"Repertory: ${_selectedRepertory}").asInstanceOf[JsDom.TypedTag[html.Element]]
   }
 
   object SelectorMenu extends OorepHtmlElement {
@@ -142,15 +144,10 @@ object RepertoryBrowseView extends TabView {
   // Rendering
 
   private def selectorView(): JsDom.TypedTag[html.Div] =
-    div(cls := "container-fluid", style := "margin-top: 23px;",
+    div(cls := "container-fluid", style := "margin-top: 23px; margin-bottom: 15px;",
       div(cls := "row",
-        div(cls := "col-md-auto",
-          div(cls := "dropdown", SelectorButton(), SelectorMenu())
-        ),
-        div(cls := "col",
-          p(cls := "text-muted", style := "margin-top: 6px;",
-            "Browse the repertory hierarchy. Select a repertory, then unfold chapters to load them. Click a rubric's + to view remedies and add it to the case.")
-        )
+        div(cls := "dropdown col-md-2", style := "min-width:200px;",
+          SelectorButton(), SelectorMenu())
       )
     )
 
