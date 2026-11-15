@@ -175,8 +175,10 @@ object RepertoryBrowseView extends TabView {
       container.innerHTML = ""
       val chs = chaptersForSelected()
       if (_selectedRepertory.trim.nonEmpty && !_loadingChapters && _loadError.isEmpty && chs.nonEmpty) {
-        container.appendChild(div(cls := "text-muted", style := "margin-bottom: 8px;",
-          s"${chs.size} chapters (unfold to load rubrics)").render)
+        container.appendChild(
+          div(scalatags.JsDom.attrs.id := "RepertoryBrowseViewShowHowManyRubricsAreInARepertory", cls := "alert alert-secondary", role := "alert",
+            div(b(s"${chs.size} chapters (unfold to load rubrics)"))
+          ).render)
         chs.foreach(ch => container.appendChild(renderChapter(ch).render))
         bindCollapseEvents()
       }
@@ -204,9 +206,9 @@ object RepertoryBrowseView extends TabView {
               span(cls := "text-muted", style := "font-weight: normal;", s" (${info.remedyRubricCount} rubrics)")
             ),
             div(cls := "col-auto text-right",
-              a(href := "#", cls := "text-secondary", onclick := { (e: Event) => e.preventDefault(); expandEntireChapter(ch.id) }, "Expand all rubrics"),
+              a(href := "#", onclick := { (e: Event) => e.preventDefault(); expandEntireChapter(ch.id) }, "Expand all rubrics"),
               span(" | "),
-              a(href := "#", cls := "text-secondary", onclick := { (e: Event) => e.preventDefault(); collapseEntireChapter(ch.id) }, "Hide all rubrics")
+              a(href := "#", onclick := { (e: Event) => e.preventDefault(); collapseEntireChapter(ch.id) }, "Hide all rubrics")
             )
           )
         ),
@@ -541,7 +543,7 @@ object RepertoryBrowseView extends TabView {
   // Modal / remedies
 
   private def repertoryDisplayName(): String =
-    _selectedRepInfo.map(i => i.displaytitle.getOrElse(i.title)).filter(_.trim.nonEmpty).getOrElse(_selectedRepertory)
+    _selectedRepInfo.map(i => i.abbrev.trim() + " - "+ i.displaytitle.getOrElse(i.title)).filter(_.trim.nonEmpty).getOrElse(_selectedRepertory)
 
   private def setModal(title: String, body: Frag, footerButtons: List[JsDom.TypedTag[html.Button]]): Unit = {
     Option(dom.document.getElementById(ModalTitleEl.getId())).foreach(_.textContent = title)

@@ -224,7 +224,7 @@ object MateriaMedicaView extends TabView {
             button(`type` := "button", cls := "close", data.dismiss := "alert", span(aria.hidden := "true", raw("&times;"))),
             b(a(href := "#", onclick := {
               showLinksHandler(_)
-            }, "Show all result sections"),
+            }, "Expand all result sections"),
               raw(" | "),
               a(href := "#", onclick := {
                 hideLinksHandler(_)
