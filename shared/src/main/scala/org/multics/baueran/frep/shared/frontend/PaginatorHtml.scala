@@ -10,14 +10,14 @@ import org.scalajs.dom.Event
 class PaginatorHtml(paginationDivName: String, pagination: PaginationResult) {
 
   // currPage starts at 0 for the first page of results.
-  private def doToHtml(abbrev: String, symptom: String, remedyString: Option[String], minWeight: Int, callBack: (String, String, Option[Int], Option[String], Int) => Unit): JsDom.TypedTag[html.Element] = {
+  private def doToHtml(abbrev: String, symptom: String, remedyString: Option[String], minWeight: Int, chapterId: Option[Int], callBack: (String, String, Option[Int], Option[String], Int, Option[Int]) => Unit): JsDom.TypedTag[html.Element] = {
     var links: List[JsDom.TypedTag[html.Element]]  = List.empty
     val currPage = pagination.currPage - 1
 
     val minus10 =
       if (currPage >= 10)
         li(cls := "page-item", data.toggle:="tooltip", title:="-10",
-          a(cls:="page-link", href:=s"#${paginationDivName}", onclick:={ (event: Event) => callBack(abbrev, symptom, Some(currPage - 10), remedyString, minWeight) }, s"<<"))
+          a(cls:="page-link", href:=s"#${paginationDivName}", onclick:={ (event: Event) => callBack(abbrev, symptom, Some(currPage - 10), remedyString, minWeight, chapterId) }, s"<<"))
       else
         li(cls := "page-item disabled", data.toggle:="tooltip", title:="-10",
           a(cls:="page-link", href:=s"#${paginationDivName}", s"<<"))
@@ -25,7 +25,7 @@ class PaginatorHtml(paginationDivName: String, pagination: PaginationResult) {
     val plus10 =
       if (currPage < pagination.pageMax - 10)
         li(cls := "page-item", data.toggle:="tooltip", title:="+10",
-          a(cls:="page-link", href:=s"#${paginationDivName}", onclick:={ (event: Event) => callBack(abbrev, symptom, Some(currPage + 10), remedyString, minWeight) }, s">>"))
+          a(cls:="page-link", href:=s"#${paginationDivName}", onclick:={ (event: Event) => callBack(abbrev, symptom, Some(currPage + 10), remedyString, minWeight, chapterId) }, s">>"))
       else
         li(cls := "page-item disabled", data.toggle:="tooltip", title:="+10",
           a(cls:="page-link", href:=s"#${paginationDivName}", s">>"))
@@ -34,7 +34,7 @@ class PaginatorHtml(paginationDivName: String, pagination: PaginationResult) {
       items.sorted.map(p => {
         if (p - 1 != currPage)
           li(cls := "page-item",
-            a(cls:="page-link", href:=s"#${paginationDivName}", onclick:={ (event: Event) => callBack(abbrev, symptom, Some(p - 1), remedyString, minWeight) }, s"${p}"))
+            a(cls:="page-link", href:=s"#${paginationDivName}", onclick:={ (event: Event) => callBack(abbrev, symptom, Some(p - 1), remedyString, minWeight, chapterId) }, s"${p}"))
         else
           li(cls := "page-item disabled",
             a(cls:="page-link", href:=s"#${paginationDivName}", b(s"${p}")))
@@ -58,12 +58,19 @@ class PaginatorHtml(paginationDivName: String, pagination: PaginationResult) {
 
   // Called for/by MM
   def toHtml(abbrev: String, symptom: String, remedyString: Option[String], callBack: (String, String, Option[Int], Option[String]) => Unit): JsDom.TypedTag[html.Element] = {
-    def tmpCallBack(abbrev: String, symptom: String, page: Option[Int], remedyStringOpt: Option[String], IGNORE: Int): Unit = { callBack(abbrev, symptom, page, remedyStringOpt) }
-    doToHtml(abbrev, symptom, remedyString, -1, tmpCallBack)
+    def tmpCallBack(abbrev: String, symptom: String, page: Option[Int], remedyStringOpt: Option[String], IGNORE: Int, _ignoreChapter: Option[Int]): Unit = { callBack(abbrev, symptom, page, remedyStringOpt) }
+    doToHtml(abbrev, symptom, remedyString, -1, None, tmpCallBack)
   }
 
   // Called for/by Rep
-  def toHtml(abbrev: String, symptom: String, remedyString: Option[String], minWeight: Int, callBack: (String, String, Option[Int], Option[String], Int) => Unit): JsDom.TypedTag[html.Element] =
-    doToHtml(abbrev, symptom, remedyString, minWeight, callBack)
+  def toHtml(abbrev: String, symptom: String, remedyString: Option[String], minWeight: Int, chapterId: Option[Int], callBack: (String, String, Option[Int], Option[String], Int, Option[Int]) => Unit): JsDom.TypedTag[html.Element] =
+    doToHtml(abbrev, symptom, remedyString, minWeight, chapterId, callBack)
+
+  // Compatibility overload (no chapter restriction)
+  def toHtml(abbrev: String, symptom: String, remedyString: Option[String], minWeight: Int, callBack: (String, String, Option[Int], Option[String], Int) => Unit): JsDom.TypedTag[html.Element] = {
+    def tmpCallBack(abbrev: String, symptom: String, page: Option[Int], remedyStringOpt: Option[String], minWeight: Int, _chapterId: Option[Int]): Unit =
+      callBack(abbrev, symptom, page, remedyStringOpt, minWeight)
+    doToHtml(abbrev, symptom, remedyString, minWeight, None, tmpCallBack)
+  }
 
 }

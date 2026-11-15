@@ -24,7 +24,8 @@ trait MainUtil {
         val page = mainJSScript.getAttribute("data-page")
         val rem = mainJSScript.getAttribute("data-remedystring")
         val weight = mainJSScript.getAttribute("data-minweight")
-        RepertoryView.jsDoLookup(rep, sym, page.toInt, rem, weight.toInt)
+        val chapterId = Option(mainJSScript.getAttribute("data-chapterid")).getOrElse("-1")
+        RepertoryView.jsDoLookup(rep, sym, page.toInt, rem, weight.toInt, chapterId.toIntOption.getOrElse(-1))
       case "lookup_mm" =>
         val mm = mainJSScript.getAttribute("data-mm")
         val sym = decodeURIComponent(mainJSScript.getAttribute("data-symptom")).replace('+', ' ')

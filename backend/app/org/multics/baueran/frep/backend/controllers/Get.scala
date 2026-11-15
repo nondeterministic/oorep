@@ -74,8 +74,8 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     Redirect(sys.env.get("OOREP_URL_LOGOUT").getOrElse(""))
   }
 
-  def show(repertory: String, symptom: String, page: Int, remedyString: String, minWeight: Int) = Action { implicit request: Request[AnyContent] =>
-    Ok(views.html.index_lookup(request, repertory, URLEncoder.encode(symptom, StandardCharsets.UTF_8.toString()), page - 1, remedyString, minWeight, s"OOREP - ${symptom} (${repertory})"))
+  def show(repertory: String, symptom: String, page: Int, remedyString: String, minWeight: Int, chapterId: Int = -1) = Action { implicit request: Request[AnyContent] =>
+    Ok(views.html.index_lookup(request, repertory, URLEncoder.encode(symptom, StandardCharsets.UTF_8.toString()), page - 1, remedyString, minWeight, chapterId, s"OOREP - ${symptom} (${repertory})"))
   }
 
   def showMM(materiaMedica: String, symptom: String, page: Int, hideSections: Boolean, remedyString: String) = Action { implicit (request: Request[AnyContent]) =>
@@ -304,7 +304,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     }
   }
 
-  def apiLookupRep(repertoryAbbrev: String, symptom: String, page: Int, remedyString: String, minWeight: Int, getRemedies: Int): Action[AnyContent] =
+  def apiLookupRep(repertoryAbbrev: String, symptom: String, page: Int, remedyString: String, minWeight: Int, getRemedies: Int, chapterId: Int = -1): Action[AnyContent] =
     Action { (request: Request[AnyContent]) =>
       // We don't allow '*' in the middle of a search term.  '*' can only be at beginning or end of a word, whether exact search term or not.
       if (symptom.trim.matches(".*\\w+\\*\\w+.*") || symptom.trim.contains(" * ")) {
@@ -312,19 +312,20 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
       } else {
         val searchTerms = new SearchTerms(symptom.trim)
         val cleanedUpAbbrev = repertoryAbbrev.replaceAll("[^0-9A-Za-z\\-]", "")
+        val chapterFilter = if (chapterId >= 0) Some(chapterId) else None
 
         // Check if user is allowed to access the resource at all (might be Private or Protected and user not logged in)
         if (repertoryDao.getRepsAndRemedies(getAuthenticatedUser(request)).find(_.info.abbrev == cleanedUpAbbrev) == None) {
-          Logger.warn(s"Get: apiLookupRep(abbrev: ${repertoryAbbrev}, symptom: ${symptom}, page: ${page}, remedy: ${remedyString}, weight: ${minWeight}): user not allowed to access ressource.")
+          Logger.warn(s"Get: apiLookupRep(abbrev: ${repertoryAbbrev}, symptom: ${symptom}, page: ${page}, remedy: ${remedyString}, weight: ${minWeight}, chapterId: ${chapterId}): user not allowed to access ressource.")
           NoContent
         }
         else {
           // Do actual look-up and return results in case of success.
-          repertoryDao.queryRepertory(cleanedUpAbbrev, searchTerms, page, remedyString.trim, minWeight, getRemedies != 0) match {
+          repertoryDao.queryRepertory(cleanedUpAbbrev, searchTerms, page, remedyString.trim, minWeight, getRemedies != 0, chapterFilter) match {
             case Some((ResultsCazeRubrics(totalNumberOfRepertoryRubrics, totalNumberOfResults, totalNumberOfPages, page, results), remedyStats)) if (totalNumberOfPages > 0) =>
               Ok((ResultsCazeRubrics(totalNumberOfRepertoryRubrics, totalNumberOfResults, totalNumberOfPages, page, results), remedyStats).asJson.toString())
             case _ =>
-              Logger.info(s"Get: apiLookupRep(abbrev: ${repertoryAbbrev}, symptom: ${symptom}, page: ${page}, remedy: ${remedyString}, weight: ${minWeight}): no results found")
+              Logger.info(s"Get: apiLookupRep(abbrev: ${repertoryAbbrev}, symptom: ${symptom}, page: ${page}, remedy: ${remedyString}, weight: ${minWeight}, chapterId: ${chapterId}): no results found")
               NoContent
           }
         }

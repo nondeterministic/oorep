@@ -209,7 +209,7 @@ class RepertoryDao(dbContext: db.db.DBContext) {
     }
   }
 
-  def queryRepertory(abbrevFromMenu: String, searchTerms: SearchTerms, page: Int, remedyString: String, minWeight: Int, getRemedies: Boolean): Option[(ResultsCazeRubrics, List[ResultsRemedyStats])] = {
+  def queryRepertory(abbrevFromMenu: String, searchTerms: SearchTerms, page: Int, remedyString: String, minWeight: Int, getRemedies: Boolean, chapterIdOpt: Option[Int] = None): Option[(ResultsCazeRubrics, List[ResultsRemedyStats])] = {
     val abbrev = abbrevFromMenu.replaceAll("[^0-9A-Za-z\\-]", "")
 
     // Determining entered remedy is a bit more work than a simple declaration...
@@ -276,6 +276,7 @@ class RepertoryDao(dbContext: db.db.DBContext) {
                   rubric <- query[Rubric]
                   rubricRemedy <- query[RubricRemedy] if {
                     rubric.abbrev == lift(abbrev) &&
+                      (lift(chapterIdOpt).isEmpty || rubric.chapterId == lift(chapterIdOpt.getOrElse(-1))) &&
                       rubric.abbrev == rubricRemedy.abbrev &&
                       (rubric.fullPath.toLowerCase.like(lift(approximateSearchTerm)) ||
                         rubric.textt.getOrElse("").toLowerCase.like(lift(approximateSearchTerm)) ||
@@ -293,6 +294,7 @@ class RepertoryDao(dbContext: db.db.DBContext) {
                 query[Rubric]
                   .filter(rubric =>
                     rubric.abbrev == lift(abbrev) &&
+                      (lift(chapterIdOpt).isEmpty || rubric.chapterId == lift(chapterIdOpt.getOrElse(-1))) &&
                       (rubric.fullPath.toLowerCase.like(lift(approximateSearchTerm)) ||
                         rubric.textt.getOrElse("").toLowerCase.like(lift(approximateSearchTerm)) ||
                         rubric.path.getOrElse("").toLowerCase.like(lift(approximateSearchTerm)))
@@ -311,6 +313,7 @@ class RepertoryDao(dbContext: db.db.DBContext) {
                   rubric <- query[Rubric]
                   rubricRemedy <- query[RubricRemedy] if {
                     rubric.abbrev == lift(abbrev) &&
+                      (lift(chapterIdOpt).isEmpty || rubric.chapterId == lift(chapterIdOpt.getOrElse(-1))) &&
                       rubric.abbrev == rubricRemedy.abbrev &&
                       (rubric.fullPath.toLowerCase.like(lift(approximateSearchTerm)) ||
                         rubric.textt.getOrElse("").toLowerCase.like(lift(approximateSearchTerm)) ||
@@ -330,6 +333,7 @@ class RepertoryDao(dbContext: db.db.DBContext) {
                   rubric <- query[Rubric]
                   rubricRemedy <- query[RubricRemedy] if {
                     rubric.abbrev == lift(abbrev) &&
+                      (lift(chapterIdOpt).isEmpty || rubric.chapterId == lift(chapterIdOpt.getOrElse(-1))) &&
                       rubric.abbrev == rubricRemedy.abbrev &&
                       rubricRemedy.weight >= lift(minWeight) &&
                       rubricRemedy.rubricId == rubric.id &&
@@ -348,7 +352,10 @@ class RepertoryDao(dbContext: db.db.DBContext) {
       if (totalNumberOfRepertoryRubrics > smallRepertoriesMaxSize) {
         return None
       } else {
-        tmpRubricsAll = run(query[Rubric].filter(_.abbrev == lift(abbrev))).sortBy(_.fullPath)
+        tmpRubricsAll = chapterIdOpt match {
+          case Some(chId) => run(query[Rubric].filter(r => r.abbrev == lift(abbrev) && r.chapterId == lift(chId))).sortBy(_.fullPath)
+          case None => run(query[Rubric].filter(_.abbrev == lift(abbrev))).sortBy(_.fullPath)
+        }
       }
     }
 
