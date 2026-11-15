@@ -24,6 +24,7 @@ object RepertoryBrowseView extends TabView {
   private val _chapterRubricsCache = new RepertoryBrowseCache()
   private val _chapterLoading = mutable.Set.empty[(String, Int)]
   private val _expandedChapterIds = mutable.Set.empty[(String, Int)]
+  private val _expandedRubricNodeIds = mutable.Map.empty[(String, Int), mutable.Set[Int]]
 
   private var _selectedRepertory: String = ""
   private var _selectedRepInfo: Option[Info] = None
@@ -270,10 +271,32 @@ object RepertoryBrowseView extends TabView {
             roots.filterNot(r => chName.nonEmpty && rubricLabel(r).trim.toLowerCase == chName && byMother.getOrElse(r.id, Nil).isEmpty)
           }
 
-        val tree = div(effectiveRoots.map(r => renderRubricNode(r, byMother)))
+        val tree = div(effectiveRoots.map(r => renderRubricNode(r, byMother, chapterId)))
         body.appendChild(tree.render)
+        restoreExpandedRubricNodes(chapterId, body)
       }
     }
+  }
+
+  private def rubricNodeIdFromCollapseId(tid: String): Option[Int] =
+    if (tid.startsWith(s"${_prefix}_children_")) tid.stripPrefix(s"${_prefix}_children_").toIntOption else None
+
+  private def setExpandedRubricNode(abbrev: String, chapterId: Int, nodeId: Int, expanded: Boolean): Unit = {
+    val key = (abbrev, chapterId)
+    val set = _expandedRubricNodeIds.getOrElseUpdate(key, mutable.Set.empty[Int])
+    if (expanded) set.add(nodeId) else set.remove(nodeId)
+  }
+
+  private def setAllRubricNodesExpanded(abbrev: String, chapterId: Int, body: dom.Element, expanded: Boolean): Unit = {
+    val key = (abbrev, chapterId)
+    val nodes = body.querySelectorAll(s"div[id^='${_prefix}_children_']")
+    val set = if (expanded) mutable.Set.empty[Int] else { _expandedRubricNodeIds.getOrElseUpdate(key, mutable.Set.empty[Int]); _expandedRubricNodeIds(key).clear(); mutable.Set.empty[Int] }
+    for (i <- 0 until nodes.length) {
+      rubricNodeIdFromCollapseId(Option(nodes.item(i).asInstanceOf[dom.Element].getAttribute("id")).getOrElse("")).foreach { rid =>
+        if (expanded) set.add(rid)
+      }
+    }
+    if (expanded) _expandedRubricNodeIds(key) = set
   }
 
   private def setAllCollapses(body: dom.Element, show: Boolean): Unit = {
@@ -295,25 +318,45 @@ object RepertoryBrowseView extends TabView {
     }
   }
 
+  private def restoreExpandedRubricNodes(chapterId: Int, body: dom.Element): Unit = {
+    val expanded = _expandedRubricNodeIds.getOrElse((_selectedRepertory, chapterId), mutable.Set.empty[Int])
+    if (expanded.isEmpty) return
+    expanded.foreach { nodeId =>
+      Option(dom.document.getElementById(rubricChildrenDomId(nodeId))).foreach { node =>
+        node.classList.add("show")
+        node.asInstanceOf[dom.html.Element].style.height = "auto"
+      }
+      toggleChevron(rubricChevronId(nodeId), open = true)
+    }
+  }
+
   private def expandEntireChapter(chapterId: Int): Unit = {
     loadChapterIfNeeded(_selectedRepertory, chapterId)
+    _expandedChapterIds.add((_selectedRepertory, chapterId))
     val show = () => {
       Option(dom.document.getElementById(chapterRootCollapseId(chapterId))).foreach { root =>
         root.classList.add("show")
         root.asInstanceOf[dom.html.Element].style.height = "auto"
       }
       toggleChevron(chapterChevronId(chapterId), open = true)
-      Option(dom.document.getElementById(chapterBodyId(chapterId))).foreach(body => setAllCollapses(body, show = true))
+      Option(dom.document.getElementById(chapterBodyId(chapterId))).foreach { body =>
+        setAllCollapses(body, show = true)
+        setAllRubricNodesExpanded(_selectedRepertory, chapterId, body, expanded = true)
+      }
     }
     if (!_chapterRubricsCache.contains(_selectedRepertory, chapterId)) js.timers.setTimeout(600)(show()) else show()
   }
 
   private def collapseEntireChapter(chapterId: Int): Unit = {
-    Option(dom.document.getElementById(chapterBodyId(chapterId))).foreach(body => setAllCollapses(body, show = false))
+    Option(dom.document.getElementById(chapterBodyId(chapterId))).foreach { body =>
+      setAllCollapses(body, show = false)
+      setAllRubricNodesExpanded(_selectedRepertory, chapterId, body, expanded = false)
+    }
     Option(dom.document.getElementById(chapterRootCollapseId(chapterId))).foreach { root =>
       root.classList.remove("show")
       root.asInstanceOf[dom.html.Element].style.height = ""
     }
+    _expandedChapterIds.remove((_selectedRepertory, chapterId))
     toggleChevron(chapterChevronId(chapterId), open = false)
   }
 
@@ -352,7 +395,7 @@ object RepertoryBrowseView extends TabView {
     (label, current, children)
   }
 
-  private def renderRubricNode(r: RepertoryBrowseRubric, byMother: Map[Int, List[RepertoryBrowseRubric]]): JsDom.TypedTag[html.Div] = {
+  private def renderRubricNode(r: RepertoryBrowseRubric, byMother: Map[Int, List[RepertoryBrowseRubric]], chapterId: Int): JsDom.TypedTag[html.Div] = {
     val (label, node, children) = compressDisplay(r, byMother)
     val hasChildren = children.nonEmpty
 
@@ -371,8 +414,9 @@ object RepertoryBrowseView extends TabView {
         span(title := tooltipFor(node), label),
         plusIcon(node),
         div(id := rubricChildrenDomId(node.id), cls := "collapse",
+          attr("data-browse-chapter") := chapterId.toString,
           div(style := "margin-left: 14px; border-left: 1px solid #ddd; padding-left: 6px;",
-            children.map(c => renderRubricNode(c, byMother))
+            children.map(c => renderRubricNode(c, byMother, chapterId))
           )
         )
       )
@@ -398,8 +442,10 @@ object RepertoryBrowseView extends TabView {
           _expandedChapterIds.add((_selectedRepertory, chId))
           try loadChapterIfNeeded(_selectedRepertory, chId) catch { case _: Throwable => () }
           toggleChevron(chapterChevronId(chId), open = true)
-        } else if (tid.startsWith(s"${_prefix}_children_")) {
+        } else if (tid.startsWith(s"${_prefix}_children_") && chAttr.nonEmpty) {
           val rid = tid.stripPrefix(s"${_prefix}_children_")
+          val chId = chAttr.toInt
+          rid.toIntOption.foreach(nodeId => setExpandedRubricNode(_selectedRepertory, chId, nodeId, expanded = true))
           toggleChevron(s"${_prefix}_chevron_${rid}", open = true)
         }
       })
@@ -411,8 +457,10 @@ object RepertoryBrowseView extends TabView {
           val chId = chAttr.toInt
           _expandedChapterIds.remove((_selectedRepertory, chId))
           toggleChevron(chapterChevronId(chId), open = false)
-        } else if (tid.startsWith(s"${_prefix}_children_")) {
+        } else if (tid.startsWith(s"${_prefix}_children_") && chAttr.nonEmpty) {
           val rid = tid.stripPrefix(s"${_prefix}_children_")
+          val chId = chAttr.toInt
+          rid.toIntOption.foreach(nodeId => setExpandedRubricNode(_selectedRepertory, chId, nodeId, expanded = false))
           toggleChevron(s"${_prefix}_chevron_${rid}", open = false)
         }
       })
@@ -433,6 +481,8 @@ object RepertoryBrowseView extends TabView {
     _selectedRepertory = abbrev
     _selectedRepInfo = _availableReps.find(_.abbrev == abbrev)
     _loadError = None
+    _expandedChapterIds.retain(_._1 == abbrev)
+    _expandedRubricNodeIds.keys.filter(_._1 != abbrev).foreach(_expandedRubricNodeIds.remove)
     SelectorButton.setTextContent(s"Repertory: ${abbrev}")
     if (_chaptersCache.contains(abbrev)) {
       _loadingChapters = false
