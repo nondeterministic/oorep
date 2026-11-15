@@ -179,7 +179,7 @@ object MainView {
 
         div(cls:="container-fluid vertical-align",
 
-          h1(cls:="col-sm-12 text-center", img(src:=s"${serverUrl()}/assets/html/img/logo_small.png", style:="width:180px; height:65px;", alt:="OOREP - open online repertory of homeopathy")),
+          h1(cls:="col-sm-12 text-center", img(src:=s"${serverUrl()}/assets/html/img/logo_small.png", style:="width:180px; height:65px; margin-bottom: 5px;", alt:="OOREP - open online repertory of homeopathy")),
 
           div(cls:="container text-center",
             ul(cls:="nav nav-tabs",

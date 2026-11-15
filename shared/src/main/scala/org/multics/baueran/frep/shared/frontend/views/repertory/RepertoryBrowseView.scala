@@ -608,6 +608,28 @@ object RepertoryBrowseView extends TabView {
   // ------------------------------------------------------------------------------------------------------------------
   // Lifecycle
 
+  private def openBrowseView(): Unit = {
+    if (_selectedRepertory.trim.isEmpty)
+      maybeLoadDefaultRepertory()
+    MainView.resetContentView()
+    MainView.tabToFront(this)
+  }
+
+  private def landingView(): JsDom.TypedTag[html.Div] =
+    div(cls := "container-fluid text-center",
+      div(cls := "row justify-content-center align-items-center", style := "margin-bottom: 30px;",
+        div(cls := "dropdown col-md-2", style := "min-width:200px; margin-top:20px; margin-right:8px;",
+          SelectorButton(), SelectorMenu()
+        ),
+        div(cls := "col-md-auto", style := "margin-top:20px;",
+          button(cls := "btn btn-primary text-nowrap", style := "margin-top: 0;", `type` := "button",
+            onclick := { (e: Event) => e.stopPropagation(); openBrowseView() },
+            span(cls := "oi oi-book", title := "Browse repertory", aria.hidden := "true"), " Browse repertory"
+          )
+        )
+      )
+    )
+
   private def updateView(): Unit = {
     Option(dom.document.getElementById(tabPaneId())).foreach { pane =>
       pane.innerHTML = ""
@@ -625,8 +647,8 @@ object RepertoryBrowseView extends TabView {
   }
 
   override def drawWithoutResults() = {
-    timers.setTimeout(0) { bindCollapseEvents(); populateRepertorySelector(); maybeLoadDefaultRepertory(); renderStatus(); renderChapters() }
-    contentView()
+    timers.setTimeout(0) { populateRepertorySelector(); maybeLoadDefaultRepertory() }
+    landingView()
   }
 
   override def drawWithResults() = {
