@@ -23,6 +23,7 @@ object RepertoryBrowseView extends TabView {
   private val _chaptersCache = mutable.Map.empty[String, List[RepertoryBrowseChapterInfo]]
   private val _chapterRubricsCache = new RepertoryBrowseCache()
   private val _chapterLoading = mutable.Set.empty[(String, Int)]
+  private val _expandedChapterIds = mutable.Set.empty[(String, Int)]
 
   private var _selectedRepertory: String = ""
   private var _selectedRepInfo: Option[Info] = None
@@ -178,6 +179,21 @@ object RepertoryBrowseView extends TabView {
           ).render)
         chs.foreach(ch => container.appendChild(renderChapter(ch).render))
         bindCollapseEvents()
+        restoreExpandedChapters()
+      }
+    }
+  }
+
+  private def restoreExpandedChapters(): Unit = {
+    val abbrev = _selectedRepertory
+    chaptersForSelected().foreach { info =>
+      if (_expandedChapterIds.contains((abbrev, info.chapter.id))) {
+        loadChapterIfNeeded(abbrev, info.chapter.id)
+        Option(dom.document.getElementById(chapterRootCollapseId(info.chapter.id))).foreach { root =>
+          root.classList.add("show")
+          root.asInstanceOf[dom.html.Element].style.height = "auto"
+        }
+        toggleChevron(chapterChevronId(info.chapter.id), open = true)
       }
     }
   }
@@ -378,8 +394,10 @@ object RepertoryBrowseView extends TabView {
         val tid = Option(target.getAttribute("id")).getOrElse("")
         val chAttr = Option(target.getAttribute("data-browse-chapter")).getOrElse("")
         if (tid.startsWith(chapterRootCollapseId(0).stripSuffix("0")) && chAttr.nonEmpty) {
-          try loadChapterIfNeeded(_selectedRepertory, chAttr.toInt) catch { case _: Throwable => () }
-          toggleChevron(chapterChevronId(chAttr.toInt), open = true)
+          val chId = chAttr.toInt
+          _expandedChapterIds.add((_selectedRepertory, chId))
+          try loadChapterIfNeeded(_selectedRepertory, chId) catch { case _: Throwable => () }
+          toggleChevron(chapterChevronId(chId), open = true)
         } else if (tid.startsWith(s"${_prefix}_children_")) {
           val rid = tid.stripPrefix(s"${_prefix}_children_")
           toggleChevron(s"${_prefix}_chevron_${rid}", open = true)
@@ -390,7 +408,9 @@ object RepertoryBrowseView extends TabView {
         val tid = Option(target.getAttribute("id")).getOrElse("")
         val chAttr = Option(target.getAttribute("data-browse-chapter")).getOrElse("")
         if (tid.startsWith(chapterRootCollapseId(0).stripSuffix("0")) && chAttr.nonEmpty) {
-          toggleChevron(chapterChevronId(chAttr.toInt), open = false)
+          val chId = chAttr.toInt
+          _expandedChapterIds.remove((_selectedRepertory, chId))
+          toggleChevron(chapterChevronId(chId), open = false)
         } else if (tid.startsWith(s"${_prefix}_children_")) {
           val rid = tid.stripPrefix(s"${_prefix}_children_")
           toggleChevron(s"${_prefix}_chevron_${rid}", open = false)
