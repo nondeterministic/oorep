@@ -928,29 +928,31 @@ object RepertoryView extends TabView {
 
                   // Update available repertories in repertory dropdown button
                   if (dom.document.getElementById("repSelectionDropDown") != null && dom.document.getElementById("repSelectionDropDown").childNodes.length == 0) {
-                    extendedRepertoryInfos.map(_.info)
-                      .sortBy(_.abbrev)
-                      .foreach {
-                        case currRep => {
-                          dom.document.getElementById("repSelectionDropDown")
-                            .appendChild(a(cls := "dropdown-item", href := "#", data.value := currRep.abbrev,
-                              onclick := { (event: Event) =>
-                                _selectedRepertory.set(currRep.abbrev)
-                                _selectedChapterId = None
-                                dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[dom.html.Button].textContent = "Repertory: " + _selectedRepertory
-                                ensureRepChaptersLoaded(currRep.abbrev) { () => refreshChapterDropdown(currRep.abbrev) }
-                              }, s"${currRep.abbrev} - ${currRep.displaytitle.getOrElse("")}").render)
+                    val sortedInfos = extendedRepertoryInfos.map(_.info).sortBy(_.abbrev.toLowerCase)
+                    val (deInfos, nonDeInfos) = sortedInfos.partition(_.abbrev.toLowerCase.endsWith("-de"))
+                    def appendRepItem(menu: dom.Element, currRep: org.multics.baueran.frep.shared.Info): Unit = {
+                      menu.appendChild(a(cls := "dropdown-item", href := "#", data.value := currRep.abbrev,
+                        onclick := { (event: Event) =>
+                          _selectedRepertory.set(currRep.abbrev)
+                          _selectedChapterId = None
+                          dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[dom.html.Button].textContent = "Repertory: " + _selectedRepertory
+                          ensureRepChaptersLoaded(currRep.abbrev) { () => refreshChapterDropdown(currRep.abbrev) }
+                        }, s"${currRep.abbrev} - ${currRep.displaytitle.getOrElse("")}").render)
 
-                          if (_selectedRepertory.toString().length > 0)
-                            dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[dom.html.Button].textContent = "Repertory: " + _selectedRepertory
-                          else {
-                            _selectedRepertory.set(_defaultRepertory)
-                            _selectedChapterId = None
-                            dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[dom.html.Button].textContent = "Repertory: " + _selectedRepertory
-                            ensureRepChaptersLoaded(_defaultRepertory) { () => refreshChapterDropdown(_defaultRepertory) }
-                          }
-                        }
+                      if (_selectedRepertory.toString().length > 0)
+                        dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[dom.html.Button].textContent = "Repertory: " + _selectedRepertory
+                      else {
+                        _selectedRepertory.set(_defaultRepertory)
+                        _selectedChapterId = None
+                        dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[dom.html.Button].textContent = "Repertory: " + _selectedRepertory
+                        ensureRepChaptersLoaded(_defaultRepertory) { () => refreshChapterDropdown(_defaultRepertory) }
                       }
+                    }
+                    val menu = dom.document.getElementById("repSelectionDropDown")
+                    nonDeInfos.foreach(currRep => appendRepItem(menu, currRep))
+                    if (nonDeInfos.nonEmpty && deInfos.nonEmpty)
+                      menu.appendChild(div(cls := "dropdown-divider", role := "separator").render)
+                    deInfos.foreach(currRep => appendRepItem(menu, currRep))
                   }
 
                   runAfterUpdate()
@@ -968,16 +970,22 @@ object RepertoryView extends TabView {
     else {
       println("INFO: Updating repertory information from RAM")
       if (dom.document.getElementById("repSelectionDropDown").childNodes.length == 0) {
-        for (currRep <- _repertories.getInfos().map(_.info).sortBy(_.abbrev)) {
-          dom.document.getElementById("repSelectionDropDown")
-            .appendChild(a(cls := "dropdown-item", href := "#", data.value := currRep.abbrev,
-              onclick := { (event: Event) =>
-                _selectedRepertory.set(currRep.abbrev)
-                _selectedChapterId = None
-                dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[dom.html.Button].textContent = "Repertory: " + _selectedRepertory
-                ensureRepChaptersLoaded(currRep.abbrev) { () => refreshChapterDropdown(currRep.abbrev) }
-              }, s"${currRep.abbrev} - ${currRep.displaytitle.getOrElse("")}").render)
+        val sortedInfos = _repertories.getInfos().map(_.info).sortBy(_.abbrev.toLowerCase)
+        val (deInfos, nonDeInfos) = sortedInfos.partition(_.abbrev.toLowerCase.endsWith("-de"))
+        val menu = dom.document.getElementById("repSelectionDropDown")
+        def appendRepItem(currRep: org.multics.baueran.frep.shared.Info): Unit = {
+          menu.appendChild(a(cls := "dropdown-item", href := "#", data.value := currRep.abbrev,
+            onclick := { (event: Event) =>
+              _selectedRepertory.set(currRep.abbrev)
+              _selectedChapterId = None
+              dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[dom.html.Button].textContent = "Repertory: " + _selectedRepertory
+              ensureRepChaptersLoaded(currRep.abbrev) { () => refreshChapterDropdown(currRep.abbrev) }
+            }, s"${currRep.abbrev} - ${currRep.displaytitle.getOrElse("")}").render)
         }
+        nonDeInfos.foreach(appendRepItem)
+        if (nonDeInfos.nonEmpty && deInfos.nonEmpty)
+          menu.appendChild(div(cls := "dropdown-divider", role := "separator").render)
+        deInfos.foreach(appendRepItem)
       }
 
       if (_selectedRepertory.toString().length == 0) {
@@ -1055,20 +1063,22 @@ object RepertoryView extends TabView {
 
     // Now fill them with data...
     if (!_repertories.isEmpty() && repSelectionDropDownDiv.childNodes.length == 0) {
-      _repertories.getInfos().map(_.info)
-        .sortBy(_.abbrev)
-        .foreach {
-          case currRep => {
-            repSelectionDropDownDiv
-              .appendChild(a(cls := "dropdown-item", href := "#", data.value := currRep.abbrev,
-                onclick := { (event: Event) =>
-                  _selectedRepertory.set(currRep.abbrev)
-                  _selectedChapterId = None
-                  dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[dom.html.Button].textContent = "Repertory: " + _selectedRepertory
-                  ensureRepChaptersLoaded(currRep.abbrev) { () => refreshChapterDropdown(currRep.abbrev) }
-                }, s"${currRep.abbrev} - ${currRep.displaytitle.getOrElse("")}").render)
-          }
-        }
+      val sortedInfos = _repertories.getInfos().map(_.info).sortBy(_.abbrev.toLowerCase)
+      val (deInfos, nonDeInfos) = sortedInfos.partition(_.abbrev.toLowerCase.endsWith("-de"))
+      def appendRepItem(currRep: org.multics.baueran.frep.shared.Info): Unit = {
+        repSelectionDropDownDiv
+          .appendChild(a(cls := "dropdown-item", href := "#", data.value := currRep.abbrev,
+            onclick := { (event: Event) =>
+              _selectedRepertory.set(currRep.abbrev)
+              _selectedChapterId = None
+              dom.document.getElementById("repSelectionDropDownButton").asInstanceOf[dom.html.Button].textContent = "Repertory: " + _selectedRepertory
+              ensureRepChaptersLoaded(currRep.abbrev) { () => refreshChapterDropdown(currRep.abbrev) }
+            }, s"${currRep.abbrev} - ${currRep.displaytitle.getOrElse("")}").render)
+      }
+      nonDeInfos.foreach(appendRepItem)
+      if (nonDeInfos.nonEmpty && deInfos.nonEmpty)
+        repSelectionDropDownDiv.appendChild(div(cls := "dropdown-divider", role := "separator").render)
+      deInfos.foreach(appendRepItem)
     }
 
     if (_selectedRepertory.toString().length > 0)

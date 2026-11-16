@@ -15,8 +15,10 @@
 v0.19.0                                under development
 --------------------------------------------------------
 - Main features:
-  - Repertory browsing available
-  - Repertory search can be restricted to a chapter
+  - Repertory browsing now available
+  - Repertory search can be restricted to a single chapter
+  - Added repertory 'cowpert' (the German counterpart 'cowpert-de'
+    was already there)
 
 v0.18.1                  Sun Nov  8 10:55:16 AM CET 2026
 --------------------------------------------------------

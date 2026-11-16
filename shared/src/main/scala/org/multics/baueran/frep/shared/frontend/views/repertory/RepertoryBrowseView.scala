@@ -560,11 +560,22 @@ object RepertoryBrowseView extends TabView {
   private def renderRepertorySelectorItems(): Unit = {
     Option(dom.document.getElementById(SelectorMenu.getId())).foreach { m =>
       m.innerHTML = ""
-      _availableReps.sortBy(_.abbrev).foreach { info =>
+      val sorted = _availableReps.sortBy(_.abbrev.toLowerCase)
+      val (de, nonDe) = sorted.partition(_.abbrev.toLowerCase.endsWith("-de"))
+      val ordered = if (nonDe.nonEmpty && de.nonEmpty) (nonDe, Some(de)) else if (de.nonEmpty) (de, None) else (nonDe, None)
+      def appendInfo(info: Info): Unit = {
         val item = a(cls := "dropdown-item", href := "#",
           onclick := { (e: Event) => e.preventDefault(); selectRepertory(info.abbrev) },
           s"${info.abbrev} - ${info.displaytitle.getOrElse(info.title)}").render
         m.appendChild(item)
+      }
+      ordered match {
+        case (first, Some(second)) =>
+          first.foreach(appendInfo)
+          m.appendChild(div(cls := "dropdown-divider", role := "separator").render)
+          second.foreach(appendInfo)
+        case (only, None) =>
+          only.foreach(appendInfo)
       }
     }
   }
