@@ -410,20 +410,25 @@ package object uielements {
         getNode() match {
           case Some(dropDown: dom.html.Div) =>
             rmAllChildren()
-            MateriaMedicaView.materiaMedicas().getAll()
-              .sortBy { case (mminfo, remedies) => mminfo.abbrev }
-              .foreach { case (mminfo, remedies) =>
-                dropDown.append(
-                  a(cls := "dropdown-item", href := "#",
-                    onclick := { (_: Event) =>
-                      _selectedMateriaMedicaAbbrev = Some(mminfo.abbrev)
-                      MMSelectionDropdown.Button.setTextContent(s"M. Medica: ${mminfo.abbrev}")
-                      MateriaMedicaView.refreshRemedyDataList()
-                    },
-                    s"${mminfo.abbrev} - ${mminfo.displaytitle.getOrElse("")}"
-                  ).render
-                )
-              }
+            val sorted = MateriaMedicaView.materiaMedicas().getAll()
+              .sortBy { case (mminfo, _) => mminfo.abbrev.toLowerCase }
+            val (de, nonDe) = sorted.partition { case (mminfo, _) => mminfo.abbrev.toLowerCase.endsWith("-de") }
+            def appendItem(mminfo: org.multics.baueran.frep.shared.MMInfo): Unit = {
+              dropDown.append(
+                a(cls := "dropdown-item", href := "#",
+                  onclick := { (_: Event) =>
+                    _selectedMateriaMedicaAbbrev = Some(mminfo.abbrev)
+                    MMSelectionDropdown.Button.setTextContent(s"M. Medica: ${mminfo.abbrev}")
+                    MateriaMedicaView.refreshRemedyDataList()
+                  },
+                  s"${mminfo.abbrev} - ${mminfo.displaytitle.getOrElse("")}"
+                ).render
+              )
+            }
+            nonDe.foreach { case (mminfo, _) => appendItem(mminfo) }
+            if (nonDe.nonEmpty && de.nonEmpty)
+              dropDown.append(div(cls := "dropdown-divider", role := "separator").render)
+            de.foreach { case (mminfo, _) => appendItem(mminfo) }
           case _ => ;
         }
       }
