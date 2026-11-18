@@ -326,10 +326,16 @@ object RepertoryBrowseView extends TabView {
     chapterRubrics(_selectedRepertory, chapterId) match {
       case Some(rubrics) =>
         val byMother = byMotherMap(rubrics)
-        rubrics.flatMap { r =>
+        val result = scala.collection.mutable.ListBuffer.empty[Int]
+        def walk(r: RepertoryBrowseRubric): Unit = {
           val (_, node, children) = compressDisplay(r, byMother)
-          if (children.nonEmpty) Some(node.id) else None
-        }.distinct
+          if (children.nonEmpty) {
+            result += node.id
+            children.foreach(walk)
+          }
+        }
+        effectiveRootsFor(chapterId, rubrics).foreach(walk)
+        result.toList.distinct
       case None => Nil
     }
   }
@@ -370,23 +376,16 @@ object RepertoryBrowseView extends TabView {
     chapterRubrics(abbrev, chapterId) match {
       case Some(rubrics) =>
         val byMother = byMotherMap(rubrics)
-        // Build parent mapping in terms of rendered (compressed) node ids:
-        // when a rendered node (id = compressDisplay(r)._2.id) is expanded, we render shells for its children,
-        // each child shell having id = compressDisplay(child)._2.id. So parent[childRenderedId] = renderedNodeId.
+        // Build parent mapping in terms of actually rendered (compressed) node ids,
+        // following the same effective-roots + lazy child-rendering structure as the UI.
         val renderedIdToParent: Map[Int, Option[Int]] = {
           val m = mutable.Map.empty[Int, Option[Int]]
-          // roots rendered at chapter level
-          effectiveRootsFor(chapterId, rubrics).foreach { r =>
-            val (_, n, _) = compressDisplay(r, byMother)
-            m.update(n.id, None)
-          }
-          rubrics.foreach { r =>
+          def walk(r: RepertoryBrowseRubric, parentRenderedId: Option[Int]): Unit = {
             val (_, node, children) = compressDisplay(r, byMother)
-            children.foreach { c =>
-              val (_, cn, _) = compressDisplay(c, byMother)
-              m.update(cn.id, Some(node.id))
-            }
+            m.update(node.id, parentRenderedId)
+            if (children.nonEmpty) children.foreach(ch => walk(ch, Some(node.id)))
           }
+          effectiveRootsFor(chapterId, rubrics).foreach(r => walk(r, None))
           m.toMap
         }
         def ancestors(id: Int, acc: List[Int] = Nil): List[Int] = {
@@ -397,6 +396,7 @@ object RepertoryBrowseView extends TabView {
         }
         val needed = wanted.flatMap(id => ancestors(id).toSet ++ Set(id))
         val batchSize = 20
+        var stall = 0
         def step(): Unit = {
           if (chapterRubrics(abbrev, chapterId).isEmpty) return
           var processed = 0
@@ -422,11 +422,9 @@ object RepertoryBrowseView extends TabView {
               case None => true
             }
           }
-          if (remaining && processed > 0) {
-            js.timers.setTimeout(0)(step())
-          } else if (remaining && processed == 0) {
-            // containers for needed nodes not present yet; try again shortly (e.g. roots/parents still rendering)
-            js.timers.setTimeout(20)(step())
+          if (remaining) {
+            if (processed > 0) { stall = 0; js.timers.setTimeout(0)(step()) }
+            else { stall += 1; if (stall < 50) js.timers.setTimeout(20)(step()) }
           }
         }
         step()
@@ -451,6 +449,7 @@ object RepertoryBrowseView extends TabView {
       }
       // progressively render+open all expandable nodes in small batches to keep UI responsive
       val batchSize = 15
+      var stall = 0
       def step(): Unit = {
         if (chapterRubrics(_selectedRepertory, chapterId).isEmpty) return
         // if user collapsed chapter in the meantime, stop
@@ -484,7 +483,8 @@ object RepertoryBrowseView extends TabView {
           }
         }
         if (remaining) {
-          js.timers.setTimeout(20)(step())
+          if (processed > 0) { stall = 0; js.timers.setTimeout(20)(step()) }
+          else { stall += 1; if (stall < 50) js.timers.setTimeout(20)(step()) }
         }
       }
       step()
