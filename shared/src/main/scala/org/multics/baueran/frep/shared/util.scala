@@ -35,17 +35,17 @@ class BetterCaseRubric(val cr: CazeRubric) {
         val remedyName = if (format == RemedyFormat.Abbreviated) r.nameAbbrev else r.nameLong
 
         if (w == 0) // 0-valued, e.g., repertory bogboen
-          span(s"(${remedyName})")
+          s"(${remedyName})": Frag
         else if (w == 2)
-          b(remedyName)
+          b(remedyName): Frag
         else if (w == 3)
-          b(remedyName.toUpperCase())
+          b(remedyName.toUpperCase()): Frag
         else if (w == 4)
-          u(b(remedyName.toUpperCase()))
+          u(b(remedyName.toUpperCase())): Frag
         else if (w >= 5)
-          b(style:="text-decoration-line: underline; text-decoration-style: double;", remedyName.toUpperCase())
+          b(style:="text-decoration-line: underline; text-decoration-style: double;", remedyName.toUpperCase()): Frag
         else
-          span(remedyName) // 1-valued - the normal case
+          remedyName: Frag // 1-valued - the normal case
     }
   }
 

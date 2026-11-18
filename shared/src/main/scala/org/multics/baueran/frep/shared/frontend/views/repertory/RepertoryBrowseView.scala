@@ -176,7 +176,7 @@ object RepertoryBrowseView extends TabView {
       if (_selectedRepertory.trim.nonEmpty && !_loadingChapters && _loadError.isEmpty && chs.nonEmpty) {
         container.appendChild(
           div(scalatags.JsDom.attrs.id := "RepertoryBrowseViewShowHowManyRubricsAreInARepertory", cls := "alert alert-secondary", role := "alert",
-            div(b(s"${chs.size} chapters (unfold to load rubrics)"))
+            b(s"${chs.size} chapters (unfold to load rubrics)")
           ).render)
         chs.foreach(ch => container.appendChild(renderChapter(ch).render))
         bindCollapseEvents()
@@ -207,7 +207,7 @@ object RepertoryBrowseView extends TabView {
     if (info.remedyRubricCount <= 0) {
       div(cls := "card bg-light", style := "margin-bottom: 16px;",
         div(cls := "card-body py-2",
-          span(ch.text),
+          ch.text,
           span(cls := "text-muted", " (empty)")
         )
       )
@@ -221,26 +221,24 @@ object RepertoryBrowseView extends TabView {
             ),
             div(cls := "col-auto text-right",
               a(href := "#", onclick := { (e: Event) => e.preventDefault(); expandEntireChapter(ch.id) }, "Expand all rubrics"),
-              span(" | "),
+              " | ",
               a(href := "#", onclick := { (e: Event) => e.preventDefault(); collapseEntireChapter(ch.id) }, "Hide all rubrics")
             )
           )
         ),
         div(cls := "card-body",
-          div(
-            a(href := s"#${chapterRootCollapseId(ch.id)}", data.toggle := "collapse", aria.expanded := "false",
-              attr("data-browse-chapter") := ch.id.toString,
-              onclick := { (_: Event) => js.timers.setTimeout(0)(loadChapterIfNeeded(abbrev, ch.id)) },
-              style := "text-decoration: none;",
-              span(id := chapterChevronId(ch.id), cls := "oi oi-chevron-right", aria.hidden := "true")
-            ),
-            raw("&nbsp;"),
-            span(b(ch.text), title := ch.text),
-            div(id := chapterRootCollapseId(ch.id), cls := "collapse",
-              attr("data-browse-chapter") := ch.id.toString,
-              div(id := chapterBodyId(ch.id), style := "margin-left: 8px; margin-top: 6px;",
-                em(cls := "text-muted", "Unfold to load…")
-              )
+          a(id := chapterChevronId(ch.id), cls := "oi oi-chevron-right", aria.hidden := "true",
+            href := s"#${chapterRootCollapseId(ch.id)}", data.toggle := "collapse", aria.expanded := "false",
+            attr("data-browse-chapter") := ch.id.toString,
+            onclick := { (_: Event) => js.timers.setTimeout(0)(loadChapterIfNeeded(abbrev, ch.id)) },
+            style := "text-decoration: none;"
+          ),
+          raw("&nbsp;"),
+          b(title := ch.text, ch.text),
+          div(id := chapterRootCollapseId(ch.id), cls := "collapse",
+            attr("data-browse-chapter") := ch.id.toString,
+            div(id := chapterBodyId(ch.id), style := "margin-left: 8px; margin-top: 6px;",
+              em(cls := "text-muted", "Unfold to load…")
             )
           )
         )
@@ -271,8 +269,9 @@ object RepertoryBrowseView extends TabView {
             roots.filterNot(r => chName.nonEmpty && rubricLabel(r).trim.toLowerCase == chName && byMother.getOrElse(r.id, Nil).isEmpty)
           }
 
-        val tree = div(effectiveRoots.map(r => renderRubricNode(r, byMother, chapterId)))
-        body.appendChild(tree.render)
+        val fragNode = dom.document.createDocumentFragment()
+        effectiveRoots.foreach(r => fragNode.appendChild(renderRubricNode(r, byMother, chapterId).render))
+        body.appendChild(fragNode)
         restoreExpandedRubricNodes(chapterId, body)
       }
     }
@@ -311,7 +310,7 @@ object RepertoryBrowseView extends TabView {
         node.style.height = ""
       }
     }
-    val chevrons = body.querySelectorAll("span[id^='" + _prefix + "_chevron_']")
+    val chevrons = body.querySelectorAll(s"[id^='${_prefix}_chevron_']")
     for (i <- 0 until chevrons.length) {
       chevrons.item(i).asInstanceOf[dom.Element]
         .setAttribute("class", if (show) "oi oi-chevron-bottom" else "oi oi-chevron-right")
@@ -364,11 +363,11 @@ object RepertoryBrowseView extends TabView {
     if (!r.hasRemedies) frag()
     else frag(
       raw("&nbsp;"),
-      button(`type` := "button", cls := "btn btn-sm px-1 py-0 btn-outline-primary",
-        style := "vertical-align: middle; line-height: 1; border-radius: 50%; width: 18px; height: 18px; padding: 0 !important;",
+      button(`type` := "button", cls := "btn btn-sm px-1 py-0 btn-outline-primary oi oi-info",
+        style := "vertical-align: middle; line-height: 1; border-radius: 50%; width: 18px; height: 18px; padding: 0 !important; font-size: 10px;",
         title := "Show remedies / add to case",
-        onclick := { (e: Event) => e.preventDefault(); e.stopPropagation(); openRubricModal(r) },
-        span(cls := "oi oi-info", aria.hidden := "true", style := "font-size: 10px;")
+        aria.hidden := "true",
+        onclick := { (e: Event) => e.preventDefault(); e.stopPropagation(); openRubricModal(r) }
       )
     )
 
@@ -398,26 +397,26 @@ object RepertoryBrowseView extends TabView {
   private def renderRubricNode(r: RepertoryBrowseRubric, byMother: Map[Int, List[RepertoryBrowseRubric]], chapterId: Int): JsDom.TypedTag[html.Div] = {
     val (label, node, children) = compressDisplay(r, byMother)
     val hasChildren = children.nonEmpty
+    val tip = tooltipFor(node)
 
     if (!hasChildren) {
-      div(cls := "rep-browse-node", style := "margin-left: 18px; padding: 2px 0;",
-        span(title := tooltipFor(node), label),
+      div(cls := "rep-browse-node", style := "margin-left: 18px; padding: 2px 0;", title := tip,
+        label,
         plusIcon(node)
       )
     } else {
-      div(cls := "rep-browse-node", style := "margin-left: 10px; padding: 2px 0;",
-        a(href := s"#${rubricChildrenDomId(node.id)}", data.toggle := "collapse", aria.expanded := "false",
-          style := "text-decoration: none;",
-          span(id := rubricChevronId(node.id), cls := "oi oi-chevron-right", aria.hidden := "true")
+      div(cls := "rep-browse-node", style := "margin-left: 10px; padding: 2px 0;", title := tip,
+        a(id := rubricChevronId(node.id), cls := "oi oi-chevron-right", aria.hidden := "true",
+          href := s"#${rubricChildrenDomId(node.id)}", data.toggle := "collapse", aria.expanded := "false",
+          style := "text-decoration: none;"
         ),
         raw("&nbsp;"),
-        span(title := tooltipFor(node), label),
+        label,
         plusIcon(node),
         div(id := rubricChildrenDomId(node.id), cls := "collapse",
           attr("data-browse-chapter") := chapterId.toString,
-          div(style := "margin-left: 14px; border-left: 1px solid #ddd; padding-left: 6px;",
-            children.map(c => renderRubricNode(c, byMother, chapterId))
-          )
+          style := "margin-left: 14px; border-left: 1px solid #ddd; padding-left: 6px;",
+          children.map(c => renderRubricNode(c, byMother, chapterId))
         )
       )
     }
@@ -651,7 +650,8 @@ object RepertoryBrowseView extends TabView {
               else {
                 val formatted = new BetterCaseRubric(cazeRubric).getFormattedRemedyNames(RepertoryView.remedyFormat())
                 if (formatted.isEmpty) List(span("No remedies."))
-                else formatted.init.flatMap(f => List(f, span(", "))) :+ formatted.last
+                else if (formatted.size <= 1) formatted
+                else formatted.init.flatMap(f => List[Frag](f, ", ")) :+ formatted.last
               }
             val body = frag(p(b(result.rubric.fullPath)), p(remediesFrags))
             val addBtn =

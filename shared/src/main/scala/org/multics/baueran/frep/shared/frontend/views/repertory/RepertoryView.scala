@@ -150,7 +150,7 @@ object RepertoryView extends TabView {
       if (remedies.size > 0)
         tr(
           td(result.fullPath, style:="width:35%;"),
-          td(remedies.take(remedies.size - 1).map(l => span(l, ", ")) ::: List(remedies.last)),
+          td(if (remedies.size <= 1) remedies else remedies.init.flatMap(r => Seq[Frag](r, ", ")) ++ Seq(remedies.last)),
           td(cls := "text-right", cls := "minimal-column",
             button(cls := "btn btn-sm btn-secondary", `type` := "button", id := ("addBut_" + result.toString()),
               attr("data-crubric") := result.toJson().toString(),
