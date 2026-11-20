@@ -67,3 +67,13 @@ echo "####################################################"
 if [ -f "$(dirname "$0")/test_protected_repertory.sh" ]; then
     . "$(dirname "$0")/test_protected_repertory.sh"
 fi
+
+# Protected materia medica access tests (direct lookup by exact abbrev), unauthenticated
+if [ -f "$(dirname "$0")/test_protected_materia_medica.sh" ]; then
+    . "$(dirname "$0")/test_protected_materia_medica.sh"
+fi
+
+# Direct exact-abbrev API access tests (public allowed, private denied), unauthenticated
+if [ -f "$(dirname "$0")/test_direct_exact_abbrev_access.sh" ]; then
+    . "$(dirname "$0")/test_direct_exact_abbrev_access.sh"
+fi
