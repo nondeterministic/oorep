@@ -1,4 +1,4 @@
-@(request: Request[AnyContent], repertory: String, symptom: String, page: Int, remedyString: String, minWeight: Int, title: String)
+@(request: Request[AnyContent], repertory: String, symptom: String, page: Int, remedyString: String, minWeight: Int, chapterId: Int, title: String)
 
 @import org.multics.baueran.frep.backend.controllers._
 @import org.multics.baueran.frep.shared.Defs._
@@ -63,13 +63,13 @@
     @if(org.multics.baueran.frep.backend.controllers.getAuthenticatedUser(request) == None) {
 
         <script id="main_script" data-landing="lookup_rep"
-                data-repertory="@repertory" data-symptom="@symptom" data-page="@page" data-remedystring="@remedyString" data-minweight="@minWeight"
+                data-repertory="@repertory" data-symptom="@symptom" data-page="@page" data-remedystring="@remedyString" data-minweight="@minWeight" data-chapterid="@chapterId"
                 src="/assets/frontend-opt/main.js"></script>
 
     } else {
 
         <script id="main_script" data-landing="lookup_rep"
-                data-repertory="@repertory" data-symptom="@symptom" data-page="@page" data-remedystring="@remedyString" data-minweight="@minWeight"
+                data-repertory="@repertory" data-symptom="@symptom" data-page="@page" data-remedystring="@remedyString" data-minweight="@minWeight" data-chapterid="@chapterId"
                 src="/assets/sec_frontend-opt/main.js"></script>
 
     }

@@ -8,6 +8,7 @@ case class CachePage(abbrev: String,
                      symptom: String,
                      remedy: Option[String],
                      minWeight: Int,
+                     chapterId: Option[Int],
                      content: ResultsCazeRubrics,
                      remedies: List[ResultsRemedyStats])
 {
@@ -16,6 +17,7 @@ case class CachePage(abbrev: String,
       symptom == page.symptom &&
       remedy == page.remedy &&
       minWeight == page.minWeight &&
+      chapterId == page.chapterId &&
       content.currPage == page.content.currPage
 }
 
@@ -47,19 +49,20 @@ class PageCache {
       }
 
       _cache.addOne(page)
-      println(s"## Added element (${page.abbrev}, ${page.symptom}, ${page.remedy}, w. ${page.minWeight}, p. ${page.content.currPage}) to queue: #${_cache.length}")
+      println(s"## Added element (${page.abbrev}, ${page.symptom}, ${page.remedy}, w. ${page.minWeight}, ch. ${page.chapterId}, p. ${page.content.currPage}) to queue: #${_cache.length}")
   }
 
   def getPage(abbrev: String,
               symptomQuery: String,
               remedyQuery: Option[String],
               remedyMinWeight: Int,
+              chapterId: Option[Int],
               page: Int): Option[CachePage] = {
     boundary:
       for (i <- 0 to _cache.length - 1) {
         _cache(i) match {
           case cachedPage: CachePage => {
-            if (abbrev == cachedPage.abbrev && symptomQuery == cachedPage.symptom && remedyQuery == cachedPage.remedy && remedyMinWeight == cachedPage.minWeight && page == cachedPage.content.currPage) {
+            if (abbrev == cachedPage.abbrev && symptomQuery == cachedPage.symptom && remedyQuery == cachedPage.remedy && remedyMinWeight == cachedPage.minWeight && chapterId == cachedPage.chapterId && page == cachedPage.content.currPage) {
               // Update cache before returning result
               _cache.remove(i, 1)
               _cache.addOne(cachedPage)
@@ -78,12 +81,13 @@ class PageCache {
   def getRemedies(abbrev: String,
                   symptomQuery: String,
                   remedyQuery: Option[String],
-                  remedyMinWeight: Int): List[ResultsRemedyStats] = {
+                  remedyMinWeight: Int,
+                  chapterId: Option[Int]): List[ResultsRemedyStats] = {
     boundary:
       for (i <- 0 to _cache.length - 1) {
         _cache(i) match {
-          case CachePage(abr, symQu, remQu, remMWeight, _, remedies) => {
-            if (abr == abbrev && symQu == symptomQuery && remQu == remedyQuery && remedyMinWeight == remMWeight) {
+          case CachePage(abr, symQu, remQu, remMWeight, chId, _, remedies) => {
+            if (abr == abbrev && symQu == symptomQuery && remQu == remedyQuery && remedyMinWeight == remMWeight && chId == chapterId) {
               println(s"## Getting ${remedies.length} remedies from cache.")
               break(remedies)
             }

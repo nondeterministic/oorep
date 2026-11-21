@@ -12,6 +12,14 @@
      ██║ ╚████║███████╗╚███╔███╔╝███████║
      ╚═╝  ╚═══╝╚══════╝ ╚══╝╚══╝ ╚══════╝
 
+v0.19.0                  Sat Nov 21 01:21:35 PM CET 2026
+--------------------------------------------------------
+- Main features: 
+  - Repertory browsing now available
+  - Repertory search can be restricted to a single chapter
+  - Added repertory 'cowpert' (the German counterpart 'cowpert-de'
+    was already there)
+
 v0.18.1                  Sun Nov  8 10:55:16 AM CET 2026
 --------------------------------------------------------
 - Minor improvements and changes:
