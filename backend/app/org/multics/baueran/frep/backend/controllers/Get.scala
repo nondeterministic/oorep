@@ -7,6 +7,7 @@ import play.api.mvc._
 import org.multics.baueran.frep.backend.dao.{CazeDao, EmailHistoryDao, FileDao, MMDao, MemberDao, PasswordChangeRequestDao, RepertoryDao}
 import org.multics.baueran.frep.shared._
 import org.multics.baueran.frep.backend.db.db.DBContext
+import org.multics.baueran.frep.backend.security.{SessionGuard, SessionGuardDecision}
 import Defs._
 import play.api.libs.json.JsResult.Exception
 
@@ -19,7 +20,7 @@ import java.text.SimpleDateFormat
  */
 
 @Singleton
-class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends AbstractController(cc) with ServerUrl {
+class Get @Inject()(cc: ControllerComponents, dbContext: DBContext, sessionGuard: SessionGuard) extends AbstractController(cc) with ServerUrl {
   // TODO: I'm not sure, if DAOs shouldn't be local to the calling methods due to potential locking-waiting issues with many requests. I simply don't know enough how Play controllers handle concurrent access, really...
   // TODO: If there are every problems that smell like that, turn those DAOs local to the method that is using them and remove those global variables here!
   cazeDao = new CazeDao(dbContext)
@@ -31,6 +32,21 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
   mmDao = new MMDao(dbContext)
 
   private val Logger = play.api.Logger(this.getClass)
+
+  private def withAnonymousSession(result: Result, request: RequestHeader): Result = {
+    val (sid, _) = sessionGuard.ensureSession(request)
+    if (sid.nonEmpty && !request.session.get("sid").contains(sid)) result.addingToSession("sid" -> sid)(request)
+    else result
+  }
+
+  private def guardedApi(expensive: Boolean = false)(block: Request[AnyContent] => Result): Action[AnyContent] = Action { request =>
+    sessionGuard.checkPublicApi(request, expensive) match {
+      case SessionGuardDecision.Allowed(sid, newSession) =>
+        val res = block(request)
+        if (newSession && sid.nonEmpty) res.addingToSession("sid" -> sid)(request) else res
+      case SessionGuardDecision.Rejected(res) => res
+    }
+  }
 
   /**
     * Login is handled by an external service provider, such as mod_auth_mellon, and an external
@@ -75,15 +91,15 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
   }
 
   def show(repertory: String, symptom: String, page: Int, remedyString: String, minWeight: Int, chapterId: Int = -1) = Action { implicit request: Request[AnyContent] =>
-    Ok(views.html.index_lookup(request, repertory, URLEncoder.encode(symptom, StandardCharsets.UTF_8.toString()), page - 1, remedyString, minWeight, chapterId, s"OOREP - ${symptom} (${repertory})"))
+    withAnonymousSession(Ok(views.html.index_lookup(request, repertory, URLEncoder.encode(symptom, StandardCharsets.UTF_8.toString()), page - 1, remedyString, minWeight, chapterId, s"OOREP - ${symptom} (${repertory})")), request)
   }
 
   def showMM(materiaMedica: String, symptom: String, page: Int, hideSections: Boolean, remedyString: String) = Action { implicit (request: Request[AnyContent]) =>
-    Ok(views.html.index_lookup_mm(request, materiaMedica, URLEncoder.encode(symptom, StandardCharsets.UTF_8.toString()), page - 1, hideSections, remedyString, s"OOREP - ${symptom} (${materiaMedica})"))
+    withAnonymousSession(Ok(views.html.index_lookup_mm(request, materiaMedica, URLEncoder.encode(symptom, StandardCharsets.UTF_8.toString()), page - 1, hideSections, remedyString, s"OOREP - ${symptom} (${materiaMedica})")), request)
   }
 
   def serve_static_html(page: String) = Action { implicit request: Request[AnyContent] =>
-    page match {
+    val result = page match {
       case "index" => Ok(views.html.index_landing(request))
       case "cookies" => Ok(views.html.index_static_content(request, views.html.partial.cookies.render(), "OOREP - Privacy policy"))
       case "contact" => Ok(views.html.index_static_content(request, views.html.partial.contact.render(), "OOREP - Contact"))
@@ -94,6 +110,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
       case "register" => Ok(views.html.index_static_content(request, views.html.partial.register.render(), "OOREP - Registration"))
       case _ => NotFound(views.html.defaultpages.notFound("GET", page))
     }
+    withAnonymousSession(result, request)
   }
 
   def changePassword(pcrId: String) = Action { implicit request: Request[AnyContent] =>
@@ -145,15 +162,15 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     }
   }
 
-  def apiAvailableRemedies() = Action { (request: Request[AnyContent]) =>
+  def apiAvailableRemedies() = guardedApi() { (request: Request[AnyContent]) =>
     Ok(repertoryDao.getRemedies().asJson.toString())
   }
 
-  def apiAvailableRepertoriesAndRemedies() = Action { (request: Request[AnyContent]) =>
+  def apiAvailableRepertoriesAndRemedies() = guardedApi() { (request: Request[AnyContent]) =>
     Ok((repertoryDao.getRepsAndRemedies(getAuthenticatedUser(request)).asJson.toString))
   }
 
-  def apiAvailableMateriaMedicasAndRemedies() = Action { (request: Request[AnyContent]) =>
+  def apiAvailableMateriaMedicasAndRemedies() = guardedApi() { (request: Request[AnyContent]) =>
     Ok(mmDao.getMMsAndRemedies(getAuthenticatedUser(request)).asJson.toString())
   }
 
@@ -305,7 +322,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
   }
 
   def apiLookupRep(repertoryAbbrev: String, symptom: String, page: Int, remedyString: String, minWeight: Int, getRemedies: Int, chapterId: Int = -1): Action[AnyContent] =
-    Action { (request: Request[AnyContent]) =>
+    guardedApi(expensive = true) { (request: Request[AnyContent]) =>
       // We don't allow '*' in the middle of a search term.  '*' can only be at beginning or end of a word, whether exact search term or not.
       if (symptom.trim.matches(".*\\w+\\*\\w+.*") || symptom.trim.contains(" * ")) {
         NoContent
@@ -333,7 +350,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     }
 
   def apiLookupMM(mmAbbrev: String, symptom: String, page: Int, remedyString: String): Action[AnyContent] =
-    Action { (request: Request[AnyContent]) =>
+    guardedApi(expensive = true) { (request: Request[AnyContent]) =>
       // We don't allow '*' in the middle of a search term.  '*' can only be at beginning or end of a word, whether exact search term or not.
       if (symptom.trim.matches(".*\\w+\\*\\w+.*") || symptom.trim.contains(" * ")) {
         NoContent
@@ -360,7 +377,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     }
 
   def apiBrowseRepertory(repertory: String): Action[AnyContent] =
-    Action { (request: Request[AnyContent]) =>
+    guardedApi(expensive = true) { (request: Request[AnyContent]) =>
       val cleanedUpAbbrev = repertory.replaceAll("[^0-9A-Za-z\\-]", "")
       if (repertoryDao.getRepsAndRemedies(getAuthenticatedUser(request)).find(_.info.abbrev == cleanedUpAbbrev).isEmpty) {
         Logger.warn(s"Get: apiBrowseRepertory(abbrev: ${repertory}): user not allowed to access resource.")
@@ -378,7 +395,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     }
 
   def apiBrowseChapter(repertory: String, chapterId: Int): Action[AnyContent] =
-    Action { (request: Request[AnyContent]) =>
+    guardedApi(expensive = true) { (request: Request[AnyContent]) =>
       val cleanedUpAbbrev = repertory.replaceAll("[^0-9A-Za-z\\-]", "")
       if (repertoryDao.getRepsAndRemedies(getAuthenticatedUser(request)).find(_.info.abbrev == cleanedUpAbbrev).isEmpty) {
         Logger.warn(s"Get: apiBrowseChapter(abbrev: ${repertory}, chapterId: ${chapterId}): user not allowed to access resource.")
@@ -391,7 +408,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext) extends Abst
     }
 
   def apiBrowseRubricRemedies(repertory: String, rubricId: Int): Action[AnyContent] =
-    Action { (request: Request[AnyContent]) =>
+    guardedApi(expensive = true) { (request: Request[AnyContent]) =>
       val cleanedUpAbbrev = repertory.replaceAll("[^0-9A-Za-z\\-]", "")
       if (repertoryDao.getRepsAndRemedies(getAuthenticatedUser(request)).find(_.info.abbrev == cleanedUpAbbrev).isEmpty) {
         Logger.warn(s"Get: apiBrowseRubricRemedies(abbrev: ${repertory}, rubricId: ${rubricId}): user not allowed to access resource.")

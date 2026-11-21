@@ -11,6 +11,7 @@ val scriptsVersion     = "1.3.0"
 val apacheCommonsMailV = "1.5"
 val sttpVersion        = "4.0.0-M19"
 val monixVersion       = "3.4.1"
+val jedisVersion       = "5.2.0"
 
 useJCenter := true
 
@@ -38,6 +39,7 @@ lazy val backend = (project in file("backend")).settings(commonSettings).setting
     "io.circe" %% "circe-generic" % circeVersion,
     "io.circe" %% "circe-parser" % circeVersion,
     "org.scalatestplus.play" %% "scalatestplus-play" % scalaTestPlusVersion % "test",
+    "redis.clients" % "jedis" % jedisVersion,
     guice,
     specs2 % Test
   )
