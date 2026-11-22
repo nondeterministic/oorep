@@ -3,8 +3,14 @@
 
   <conversionRule conversionWord="coloredLevel" converterClass="play.api.libs.logback.ColoredLevel" />
 
-  <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+  <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
     <file>${application.home:-.}/logs/application.log</file>
+    <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+      <fileNamePattern>${application.home:-.}/logs/application.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+      <maxFileSize>50MB</maxFileSize>
+      <maxHistory>7</maxHistory>
+      <totalSizeCap>2GB</totalSizeCap>
+    </rollingPolicy>
     <encoder>
       <pattern>%date [%level] from %logger in %thread - %message%n%xException</pattern>
     </encoder>
@@ -26,6 +32,7 @@
 
   <root level="INFO">
     <appender-ref ref="ASYNCSTDOUT" />
+    <appender-ref ref="ASYNCFILE" />
   </root>
 
   <logger name="play" level="DEBUG">

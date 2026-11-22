@@ -51,6 +51,11 @@ class SessionGuard @Inject()(config: Configuration) {
     )
   }
 
+  private val banEnabled: Boolean = config.getOptional[Boolean]("oorep.security.session_guard.ban.enabled").getOrElse(true)
+  private val banBaseSeconds: Int = config.getOptional[Int]("oorep.security.session_guard.ban.base_seconds").getOrElse(60)
+  private val banMaxSeconds: Int = config.getOptional[Int]("oorep.security.session_guard.ban.max_seconds").getOrElse(7200)
+  private val banAbuseTtlSeconds: Int = config.getOptional[Int]("oorep.security.session_guard.ban.abuse_ttl_seconds").getOrElse(3600)
+
   private val redis: Option[JedisPooled] =
     if (!enabled) None
     else Try {
@@ -141,6 +146,9 @@ class SessionGuard @Inject()(config: Configuration) {
 
   private def sessionKey(sid: String): String = s"oorep:sess:${sid}"
   private def rlKey(scope: String, id: String, window: Long): String = s"oorep:rl:${scope}:${id}:${window}"
+  private def banKey(scope: String, id: String): String = s"oorep:ban:${scope}:${id}"
+  private def abuseKey(scope: String, id: String): String = s"oorep:abuse:${scope}:${id}"
+  private def abuseMarkKey(scope: String, id: String, window: Long): String = s"oorep:abuse:mark:${scope}:${id}:${window}"
 
   private def withRedis[T](fallback: => T)(f: JedisPooled => T): T = {
     redis match {
@@ -209,6 +217,74 @@ class SessionGuard @Inject()(config: Configuration) {
     count > limit.toLong
   }
 
+  private def banTtlSeconds(j: JedisPooled, scope: String, id: String): Long = {
+    if (!banEnabled) 0L
+    else {
+      val ttl = j.ttl(banKey(scope, id)) // -2 missing, -1 no expiry, >=0 remaining
+      if (ttl > 0L) ttl else 0L
+    }
+  }
+
+  private def registerViolation(j: JedisPooled, scope: String, id: String): Long = {
+    if (!banEnabled) 0L
+    else {
+      val nowWindow = System.currentTimeMillis() / 1000L / windowSeconds.toLong
+      val markKey = abuseMarkKey(scope, id, nowWindow)
+      val marked = j.setnx(markKey, "1")
+      if (marked == 1L) {
+        j.expire(markKey, (windowSeconds.toLong * 2) + 5)
+        val aKey = abuseKey(scope, id)
+        val abuseCount = j.incr(aKey)
+        j.expire(aKey, banAbuseTtlSeconds.toLong)
+        if (abuseCount <= 1L) 0L
+        else {
+          val exponent = math.min(abuseCount - 2L, 30L).toInt
+          val duration = math.min(banMaxSeconds.toLong, banBaseSeconds.toLong * (1L << exponent))
+          j.setex(banKey(scope, id), duration, abuseCount.toString)
+          duration
+        }
+      } else 0L
+    }
+  }
+
+  private def activeBanRetryAfter(j: JedisPooled, ip: String, sid: String): Long = {
+    val ipBan = banTtlSeconds(j, "ip", ip)
+    val sidBan = if (sid.nonEmpty) banTtlSeconds(j, "sid", sid) else 0L
+    math.max(ipBan, sidBan)
+  }
+
+  private def registerLimitViolation(j: JedisPooled, request: RequestHeader, ip: String, sid: String, ipHit: Boolean, sidHit: Boolean): Long = {
+    val ipBan = if (ipHit) registerViolation(j, "ip", ip) else 0L
+    val sidBan = if (sidHit && sid.nonEmpty) registerViolation(j, "sid", sid) else 0L
+    val banSeconds = math.max(ipBan, sidBan)
+    if (banSeconds > 0L)
+      logger.warn(s"SessionGuard: temporary ban set ${banSeconds}s for ${request.method} ${request.path} ip=${ip} sid=${sid.take(8)} ipHit=${ipHit} sidHit=${sidHit}")
+    banSeconds
+  }
+
+  private def rateLimitDecision(j: JedisPooled, request: RequestHeader, sid: String, ip: String, expensive: Boolean, newSession: Boolean): SessionGuardDecision = {
+    val banRetryAfter = activeBanRetryAfter(j, ip, sid)
+    if (banRetryAfter > 0L) {
+      logger.warn(s"SessionGuard: active ban ${banRetryAfter}s for ${request.method} ${request.path} ip=${ip} sid=${sid.take(8)}")
+      val res = Results.TooManyRequests("Too many requests. Please wait and try again.").withHeaders("Retry-After" -> banRetryAfter.toString)
+      if (logOnly) SessionGuardDecision.Allowed(sid, newSession = newSession) else SessionGuardDecision.Rejected(res)
+    } else {
+      val ipLimit = if (expensive) expensivePerIp else generalPerIp
+      val sidLimit = if (expensive) expensivePerSid else generalPerSid
+      val ipHit = rateLimitExceeded(j, "ip", ip, ipLimit)
+      val sidHit = rateLimitExceeded(j, "sid", sid, sidLimit)
+      if (ipHit || sidHit) {
+        logger.warn(s"SessionGuard: rate limit ${request.method} ${request.path} ip=${ip} sid=${sid.take(8)} ipHit=${ipHit} sidHit=${sidHit} newSession=${newSession}")
+        val banSeconds = registerLimitViolation(j, request, ip, sid, ipHit, sidHit)
+        val retryAfter = if (banSeconds > 0L) banSeconds else windowSeconds.toLong
+        val res = Results.TooManyRequests("Too many requests. Please wait and try again.").withHeaders("Retry-After" -> retryAfter.toString)
+        if (logOnly) SessionGuardDecision.Allowed(sid, newSession = newSession) else SessionGuardDecision.Rejected(res)
+      } else {
+        SessionGuardDecision.Allowed(sid, newSession = newSession)
+      }
+    }
+  }
+
   def checkPublicApi(request: RequestHeader, expensive: Boolean = false): SessionGuardDecision = {
     if (!enabled) return SessionGuardDecision.Allowed(request.session.get("sid").getOrElse(""), newSession = false)
 
@@ -230,18 +306,7 @@ class SessionGuard @Inject()(config: Configuration) {
             logger.info(s"SessionGuard: stale sid for ${request.method} ${request.path} from ${ip}; reissuing")
             val nsid = newSessionId()
             createSessionRecord(j, nsid, ip, request.headers.get("User-Agent").getOrElse(""))
-            // still rate-limit the new session/ip below
-            val ipLimit = if (expensive) expensivePerIp else generalPerIp
-            val sidLimit = if (expensive) expensivePerSid else generalPerSid
-            val ipHit = rateLimitExceeded(j, "ip", ip, ipLimit)
-            val sidHit = rateLimitExceeded(j, "sid", nsid, sidLimit)
-            if (ipHit || sidHit) {
-              logger.warn(s"SessionGuard: rate limit (new session) ${request.method} ${request.path} ip=${ip} sid=${nsid.take(8)} ipHit=${ipHit} sidHit=${sidHit}")
-              val res = Results.TooManyRequests("Too many requests. Please wait and try again.").withHeaders("Retry-After" -> windowSeconds.toString)
-              if (logOnly) SessionGuardDecision.Allowed(nsid, newSession = true) else SessionGuardDecision.Rejected(res)
-            } else {
-              SessionGuardDecision.Allowed(nsid, newSession = true)
-            }
+            rateLimitDecision(j, request, nsid, ip, expensive, newSession = true)
           } else {
             // existing session
             val lastIp = Option(j.hget(key, "ip_last")).getOrElse("")
@@ -255,17 +320,7 @@ class SessionGuard @Inject()(config: Configuration) {
             j.hset(key, "last_seen", System.currentTimeMillis().toString)
             j.expire(key, sessionTtlSeconds.toLong)
 
-            val ipLimit = if (expensive) expensivePerIp else generalPerIp
-            val sidLimit = if (expensive) expensivePerSid else generalPerSid
-            val ipHit = rateLimitExceeded(j, "ip", ip, ipLimit)
-            val sidHit = rateLimitExceeded(j, "sid", sid, sidLimit)
-            if (ipHit || sidHit) {
-              logger.warn(s"SessionGuard: rate limit ${request.method} ${request.path} ip=${ip} sid=${sid.take(8)} ipHit=${ipHit} sidHit=${sidHit}")
-              val res = Results.TooManyRequests("Too many requests. Please wait and try again.").withHeaders("Retry-After" -> windowSeconds.toString)
-              if (logOnly) SessionGuardDecision.Allowed(sid, newSession = false) else SessionGuardDecision.Rejected(res)
-            } else {
-              SessionGuardDecision.Allowed(sid, newSession = false)
-            }
+            rateLimitDecision(j, request, sid, ip, expensive, newSession = false)
           }
       }
     }
