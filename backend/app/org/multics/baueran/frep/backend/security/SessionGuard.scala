@@ -4,6 +4,7 @@ import javax.inject.{Inject, Singleton}
 import play.api.{Configuration, Logger}
 import play.api.mvc.{RequestHeader, Result, Results}
 
+import java.net.InetAddress
 import java.security.SecureRandom
 import scala.util.Try
 
@@ -38,6 +39,17 @@ class SessionGuard @Inject()(config: Configuration) {
   private val expensivePerIp: Int = config.getOptional[Int]("oorep.security.session_guard.rate_limit.expensive_per_ip").getOrElse(60)
   private val expensivePerSid: Int = config.getOptional[Int]("oorep.security.session_guard.rate_limit.expensive_per_sid").getOrElse(60)
   private val softIpBinding: Boolean = config.getOptional[Boolean]("oorep.security.session_guard.soft_ip_binding").getOrElse(true)
+  private val trustedProxies: Seq[String] = {
+    val csv = config.getOptional[String]("oorep.security.session_guard.trusted_proxies_csv")
+      .map(_.split(",").toSeq.map(_.trim).filter(_.nonEmpty))
+      .filter(_.nonEmpty)
+    csv.getOrElse(
+      config.getOptional[Seq[String]]("oorep.security.session_guard.trusted_proxies")
+        .getOrElse(Seq("127.0.0.1", "::1"))
+        .map(_.trim)
+        .filter(_.nonEmpty)
+    )
+  }
 
   private val redis: Option[JedisPooled] =
     if (!enabled) None
@@ -65,10 +77,66 @@ class SessionGuard @Inject()(config: Configuration) {
     bytes.map(b => f"$b%02x").mkString
   }
 
+  private def inetAddress(ip: String): Option[InetAddress] =
+    Try(InetAddress.getByName(ip.trim)).toOption
+
+  private def ipInCidr(ip: InetAddress, cidr: String): Boolean = {
+    cidr.split("/", 2).toList match {
+      case baseStr :: prefixStr :: Nil =>
+        (for {
+          base <- inetAddress(baseStr)
+          prefix <- Try(prefixStr.toInt).toOption
+          ipBytes = ip.getAddress
+          baseBytes = base.getAddress
+          if ipBytes.length == baseBytes.length
+          if prefix >= 0 && prefix <= ipBytes.length * 8
+        } yield {
+          var bits = prefix
+          var i = 0
+          var ok = true
+          while (i < ipBytes.length && ok) {
+            val mask = if (bits >= 8) 0xff else if (bits <= 0) 0x00 else (0xff << (8 - bits)) & 0xff
+            if ((ipBytes(i) & mask) != (baseBytes(i) & mask)) ok = false
+            bits -= 8
+            i += 1
+          }
+          ok
+        }).getOrElse(false)
+      case _ => false
+    }
+  }
+
+  private def isTrustedProxyIp(ip: String): Boolean = {
+    inetAddress(ip).exists { addr =>
+      trustedProxies.exists { pattern =>
+        if (pattern.contains("/")) ipInCidr(addr, pattern)
+        else inetAddress(pattern).exists(_.getAddress.sameElements(addr.getAddress))
+      }
+    }
+  }
+
+  private def isTrustedProxy(remoteAddress: String): Boolean = isTrustedProxyIp(remoteAddress)
+
+  private def forwardedClientIp(request: RequestHeader): Option[String] = {
+    val xff = request.headers.get("X-Forwarded-For")
+      .toSeq
+      .flatMap(_.split(","))
+      .map(_.trim)
+      .filter(_.nonEmpty)
+      .filter(ip => inetAddress(ip).isDefined)
+
+    // Walk right-to-left: skip trusted proxies, return first untrusted client IP.
+    // This prevents clients from spoofing the leftmost XFF entry through a trusted proxy.
+    val fromXff = xff.reverseIterator.find(ip => !isTrustedProxyIp(ip))
+    fromXff.orElse {
+      request.headers.get("X-Real-IP").map(_.trim).filter(ip => inetAddress(ip).isDefined)
+    }
+  }
+
   private def clientIp(request: RequestHeader): String = {
-    request.headers.get("X-Forwarded-For")
-      .flatMap(_.split(",").headOption.map(_.trim).filter(_.nonEmpty))
-      .getOrElse(request.remoteAddress)
+    val remote = request.remoteAddress
+    if (isTrustedProxy(remote)) forwardedClientIp(request).getOrElse(remote)
+    else remote
   }
 
   private def sessionKey(sid: String): String = s"oorep:sess:${sid}"

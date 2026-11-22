@@ -26,6 +26,11 @@ echo "## - Application server: ${OOREP_TEST_SERVER:-<unset>}"
 echo "## - Existing email: ${OOREP_TEST_EXISTING_EMAIL:-<unset>}"
 echo "####################################################"
 
+COOKIE_JAR="$(mktemp)"
+trap 'rm -f "$COOKIE_JAR"' EXIT
+# Establish anonymous session cookie required by SessionGuard.
+curl -s -k -c "$COOKIE_JAR" -b "$COOKIE_JAR" -o /dev/null "$OOREP_TEST_SERVER/" 2>/dev/null
+
 echo "- I can request username for $OOREP_TEST_EXISTING_EMAIL...  [check your mail]"
 input_email="inputEmail=$OOREP_TEST_EXISTING_EMAIL"
 curl --data "$input_email" -k "$OOREP_TEST_SERVER/api/request_username"
@@ -54,7 +59,7 @@ test=`curl -H "X-Remote-User: 1" -v -k  "$OOREP_TEST_SERVER/api/authenticate" 2>
 print_result $test 1
 
 echo -n "- Lookup of thumb in publicum is unprotected and has 279 results...  "
-test=`curl -k "$OOREP_TEST_SERVER/api/lookup_rep?repertory=publicum&symptom=thumb&page=1&remedyString=&minWeight=1&getRemedies=0" 2>/dev/null | grep totalNumberOfResults.*279 | wc -l`
+test=`curl -k -b "$COOKIE_JAR" -c "$COOKIE_JAR" "$OOREP_TEST_SERVER/api/lookup_rep?repertory=publicum&symptom=thumb&page=1&remedyString=&minWeight=1&getRemedies=0" 2>/dev/null | grep totalNumberOfResults.*279 | wc -l`
 print_result $test 1
 
 echo -n "- Calling of /show?... yields HTTP-status 200...  "

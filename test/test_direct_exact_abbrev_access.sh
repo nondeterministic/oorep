@@ -28,7 +28,7 @@ print_result() {
 
 DB_HOST="${OOREP_TEST_DB_HOST:-localhost}"
 DB_PORT="${OOREP_TEST_DB_PORT:-5001}"
-DB_NAME="${OOREP_TEST_DB_NAME:-oorep_opencode_copy}"
+DB_NAME="${OOREP_TEST_DB_NAME:-oorep}"
 DB_USER="${OOREP_TEST_DB_USER:-oorep_user}"
 
 if [ -z "${PGPASSWORD:-}" ] && [ -n "${OOREP_DB_PASS:-}" ]; then
@@ -68,10 +68,17 @@ echo "## Public rep: ${PUBLIC_REP:-<none>}  Private rep: ${PRIVATE_REP:-<none>}"
 echo "## Public MM:  ${PUBLIC_MM:-<none>}  Private MM:  ${PRIVATE_MM:-<none>}"
 echo
 
+if [ -z "${COOKIE_JAR:-}" ]; then
+    COOKIE_JAR="$(mktemp)"
+    trap 'rm -f "$COOKIE_JAR"' EXIT
+    # Establish anonymous session cookie required by SessionGuard.
+    curl -s -k -c "$COOKIE_JAR" -b "$COOKIE_JAR" -o /dev/null "$OOREP_TEST_SERVER/" 2>/dev/null
+fi
+
 # --- Repertories ---
 if [ -n "$PUBLIC_REP" ]; then
     echo -n "- Direct repertory search returns 200 for public repertory (exact abbrev)...  "
-    status=$(curl -s -k -o /dev/null -w '%{http_code}' "$OOREP_TEST_SERVER/api/lookup_rep?repertory=${PUBLIC_REP}&symptom=head&page=0&remedyString=&minWeight=0&getRemedies=0")
+    status=$(curl -s -k -b "$COOKIE_JAR" -c "$COOKIE_JAR" -o /dev/null -w '%{http_code}' "$OOREP_TEST_SERVER/api/lookup_rep?repertory=${PUBLIC_REP}&symptom=head&page=0&remedyString=&minWeight=0&getRemedies=0")
     print_result "$status" 200
 else
     echo -e "- Direct repertory search for public repertory...  ${RED}SKIPPED${NC} (none found)"
@@ -79,11 +86,11 @@ fi
 
 if [ -n "$PRIVATE_REP" ]; then
     echo -n "- Direct repertory search is denied for private repertory (exact abbrev)...  "
-    status=$(curl -s -k -o /dev/null -w '%{http_code}' "$OOREP_TEST_SERVER/api/lookup_rep?repertory=${PRIVATE_REP}&symptom=head&page=0&remedyString=&minWeight=0&getRemedies=0")
+    status=$(curl -s -k -b "$COOKIE_JAR" -c "$COOKIE_JAR" -o /dev/null -w '%{http_code}' "$OOREP_TEST_SERVER/api/lookup_rep?repertory=${PRIVATE_REP}&symptom=head&page=0&remedyString=&minWeight=0&getRemedies=0")
     print_result "$status" 204
 
     echo -n "- Direct repertory browse is denied for private repertory (exact abbrev)...  "
-    status=$(curl -s -k -o /dev/null -w '%{http_code}' "$OOREP_TEST_SERVER/api/browse_repertory?repertory=${PRIVATE_REP}")
+    status=$(curl -s -k -b "$COOKIE_JAR" -c "$COOKIE_JAR" -o /dev/null -w '%{http_code}' "$OOREP_TEST_SERVER/api/browse_repertory?repertory=${PRIVATE_REP}")
     print_result "$status" 204
 else
     echo -e "- Direct repertory access for private repertory...  ${RED}SKIPPED${NC} (none found)"
@@ -92,7 +99,7 @@ fi
 # --- Materia medicas ---
 if [ -n "$PUBLIC_MM" ]; then
     echo -n "- Direct materia medica search returns 200 for public MM (exact abbrev)...  "
-    status=$(curl -s -k -o /dev/null -w '%{http_code}' "$OOREP_TEST_SERVER/api/lookup_mm?mmAbbrev=${PUBLIC_MM}&symptom=head&page=0&remedyString=")
+    status=$(curl -s -k -b "$COOKIE_JAR" -c "$COOKIE_JAR" -o /dev/null -w '%{http_code}' "$OOREP_TEST_SERVER/api/lookup_mm?mmAbbrev=${PUBLIC_MM}&symptom=head&page=0&remedyString=")
     print_result "$status" 200
 else
     echo -e "- Direct materia medica search for public MM...  ${RED}SKIPPED${NC} (none found)"
@@ -100,11 +107,11 @@ fi
 
 if [ -n "$PRIVATE_MM" ]; then
     echo -n "- Direct materia medica symptom search is denied for private MM (exact abbrev)...  "
-    status=$(curl -s -k -o /dev/null -w '%{http_code}' "$OOREP_TEST_SERVER/api/lookup_mm?mmAbbrev=${PRIVATE_MM}&symptom=head&page=0&remedyString=")
+    status=$(curl -s -k -b "$COOKIE_JAR" -c "$COOKIE_JAR" -o /dev/null -w '%{http_code}' "$OOREP_TEST_SERVER/api/lookup_mm?mmAbbrev=${PRIVATE_MM}&symptom=head&page=0&remedyString=")
     print_result "$status" 204
 
     echo -n "- Direct materia medica remedy search is denied for private MM (exact abbrev)...  "
-    status=$(curl -s -k -o /dev/null -w '%{http_code}' "$OOREP_TEST_SERVER/api/lookup_mm?mmAbbrev=${PRIVATE_MM}&symptom=&page=0&remedyString=acon")
+    status=$(curl -s -k -b "$COOKIE_JAR" -c "$COOKIE_JAR" -o /dev/null -w '%{http_code}' "$OOREP_TEST_SERVER/api/lookup_mm?mmAbbrev=${PRIVATE_MM}&symptom=&page=0&remedyString=acon")
     print_result "$status" 204
 else
     echo -e "- Direct materia medica access for private MM...  ${RED}SKIPPED${NC} (none found)"

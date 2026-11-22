@@ -27,7 +27,7 @@ print_result() {
 
 DB_HOST="${OOREP_TEST_DB_HOST:-localhost}"
 DB_PORT="${OOREP_TEST_DB_PORT:-5001}"
-DB_NAME="${OOREP_TEST_DB_NAME:-oorep_opencode_copy}"
+DB_NAME="${OOREP_TEST_DB_NAME:-oorep}"
 DB_USER="${OOREP_TEST_DB_USER:-oorep_user}"
 
 if [ -z "${PGPASSWORD:-}" ] && [ -n "${OOREP_DB_PASS:-}" ]; then
@@ -55,20 +55,27 @@ if [ -z "${OOREP_TEST_SERVER:-}" ]; then
 fi
 echo
 
+if [ -z "${COOKIE_JAR:-}" ]; then
+    COOKIE_JAR="$(mktemp)"
+    trap 'rm -f "$COOKIE_JAR"' EXIT
+    # Establish anonymous session cookie required by SessionGuard.
+    curl -s -k -c "$COOKIE_JAR" -b "$COOKIE_JAR" -o /dev/null "$OOREP_TEST_SERVER/" 2>/dev/null
+fi
+
 echo -n "- Unauthenticated repertory search is denied for restricted repertory...  "
-status=$(curl -s -k -o /dev/null -w '%{http_code}' "$OOREP_TEST_SERVER/api/lookup_rep?repertory=${RESTRICTED_ABBREV}&symptom=head&page=0&remedyString=&minWeight=0&getRemedies=0")
+status=$(curl -s -k -b "$COOKIE_JAR" -c "$COOKIE_JAR" -o /dev/null -w '%{http_code}' "$OOREP_TEST_SERVER/api/lookup_rep?repertory=${RESTRICTED_ABBREV}&symptom=head&page=0&remedyString=&minWeight=0&getRemedies=0")
 print_result "$status" 204
 
 echo -n "- Unauthenticated browse repertory (chapters) is denied for restricted repertory...  "
-status=$(curl -s -k -o /dev/null -w '%{http_code}' "$OOREP_TEST_SERVER/api/browse_repertory?repertory=${RESTRICTED_ABBREV}")
+status=$(curl -s -k -b "$COOKIE_JAR" -c "$COOKIE_JAR" -o /dev/null -w '%{http_code}' "$OOREP_TEST_SERVER/api/browse_repertory?repertory=${RESTRICTED_ABBREV}")
 print_result "$status" 204
 
 echo -n "- Unauthenticated browse chapter is denied for restricted repertory...  "
-status=$(curl -s -k -o /dev/null -w '%{http_code}' "$OOREP_TEST_SERVER/api/browse_chapter?repertory=${RESTRICTED_ABBREV}&chapterId=1")
+status=$(curl -s -k -b "$COOKIE_JAR" -c "$COOKIE_JAR" -o /dev/null -w '%{http_code}' "$OOREP_TEST_SERVER/api/browse_chapter?repertory=${RESTRICTED_ABBREV}&chapterId=1")
 print_result "$status" 204
 
 echo -n "- Unauthenticated browse rubric remedies is denied for restricted repertory...  "
-status=$(curl -s -k -o /dev/null -w '%{http_code}' "$OOREP_TEST_SERVER/api/browse_rubric_remedies?repertory=${RESTRICTED_ABBREV}&rubricId=1")
+status=$(curl -s -k -b "$COOKIE_JAR" -c "$COOKIE_JAR" -o /dev/null -w '%{http_code}' "$OOREP_TEST_SERVER/api/browse_rubric_remedies?repertory=${RESTRICTED_ABBREV}&rubricId=1")
 print_result "$status" 204
 
 echo "####################################################"

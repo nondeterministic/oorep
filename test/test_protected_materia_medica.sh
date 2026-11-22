@@ -27,7 +27,7 @@ print_result() {
 
 DB_HOST="${OOREP_TEST_DB_HOST:-localhost}"
 DB_PORT="${OOREP_TEST_DB_PORT:-5001}"
-DB_NAME="${OOREP_TEST_DB_NAME:-oorep_opencode_copy}"
+DB_NAME="${OOREP_TEST_DB_NAME:-oorep}"
 DB_USER="${OOREP_TEST_DB_USER:-oorep_user}"
 
 if [ -z "${PGPASSWORD:-}" ] && [ -n "${OOREP_DB_PASS:-}" ]; then
@@ -57,15 +57,22 @@ fi
 echo "## Found ${#RESTRICTED_MMS[@]} restricted materia medica(s): [redacted in logs where possible]"
 echo
 
-available_mms=$(curl -s -k "$OOREP_TEST_SERVER/api/available_rems_and_mms" 2>/dev/null)
+if [ -z "${COOKIE_JAR:-}" ]; then
+    COOKIE_JAR="$(mktemp)"
+    trap 'rm -f "$COOKIE_JAR"' EXIT
+    # Establish anonymous session cookie required by SessionGuard.
+    curl -s -k -c "$COOKIE_JAR" -b "$COOKIE_JAR" -o /dev/null "$OOREP_TEST_SERVER/" 2>/dev/null
+fi
+
+available_mms=$(curl -s -k -b "$COOKIE_JAR" -c "$COOKIE_JAR" "$OOREP_TEST_SERVER/api/available_rems_and_mms" 2>/dev/null)
 
 for mm in "${RESTRICTED_MMS[@]}"; do
     echo -n "- Unauthenticated lookup_mm (symptom search) is denied for restricted MM...  "
-    status=$(curl -s -k -o /dev/null -w '%{http_code}' "$OOREP_TEST_SERVER/api/lookup_mm?mmAbbrev=${mm}&symptom=head&page=0&remedyString=")
+    status=$(curl -s -k -b "$COOKIE_JAR" -c "$COOKIE_JAR" -o /dev/null -w '%{http_code}' "$OOREP_TEST_SERVER/api/lookup_mm?mmAbbrev=${mm}&symptom=head&page=0&remedyString=")
     print_result "$status" 204
 
     echo -n "- Unauthenticated lookup_mm (remedy search) is denied for restricted MM...  "
-    status=$(curl -s -k -o /dev/null -w '%{http_code}' "$OOREP_TEST_SERVER/api/lookup_mm?mmAbbrev=${mm}&symptom=&page=0&remedyString=acon")
+    status=$(curl -s -k -b "$COOKIE_JAR" -c "$COOKIE_JAR" -o /dev/null -w '%{http_code}' "$OOREP_TEST_SERVER/api/lookup_mm?mmAbbrev=${mm}&symptom=&page=0&remedyString=acon")
     print_result "$status" 204
 
     echo -n "- Restricted MM is not listed in available_rems_and_mms (unauthenticated)...  "
