@@ -115,7 +115,7 @@ class MMDao(dbContext: db.db.DBContext) {
     *
     * @see getChapterHits
     */
-  def getSectionHits(abbrev: String, searchTerms: SearchTerms, page: Int, remedyFullName: Option[String]): Option[MMAllSearchResults] = {
+  def getSectionHits(abbrev: String, searchTerms: SearchTerms, page: Int, remedyFullName: Option[String], clientIp: String = "-"): Option[MMAllSearchResults] = {
     val cleanedUpAbbrev = abbrev.replaceAll("[^0-9A-Za-z\\-]", "")
 
     // Use of approximateSearchTerm is an oversimplification to narrow down the first
@@ -253,6 +253,7 @@ class MMDao(dbContext: db.db.DBContext) {
         MMSearchResult(abbrev, remedy_id, remedy_fullname, rawResults.collect { case (s, c) if c.remedy_id == remedy_id => s })
       })
 
+    Logger.info(s"[${clientIp}] getSectionHits(abbrev: ${abbrev}, symptom: ${searchTerms.symptom}, page: ${page}, remedy: ${remedyFullName.getOrElse("")}) found ${allSectionsPerChapter.map(_._2).sum} matching sections.")
     Some(MMAllSearchResults(searchResultsForOnePageOnly, allSectionsPerChapter))
   }
 

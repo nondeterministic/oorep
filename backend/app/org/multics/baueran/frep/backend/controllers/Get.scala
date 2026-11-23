@@ -353,7 +353,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext, sessionGuard
         }
         else {
           // Do actual look-up and return results in case of success.
-          mmDao.getSectionHits(cleanedUpAbbrev, searchTerms, page, Some(remedyString)) match {
+          mmDao.getSectionHits(cleanedUpAbbrev, searchTerms, page, Some(remedyString), clientIp = sessionGuard.clientIp(request)) match {
             case Some(sectionHits) if (sectionHits.results.length > 0 || sectionHits.numberOfMatchingSectionsPerChapter.length > 0) =>
               Ok(sectionHits.asJson.toString())
             case _ =>
