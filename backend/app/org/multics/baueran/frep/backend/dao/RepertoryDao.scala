@@ -209,7 +209,7 @@ class RepertoryDao(dbContext: db.db.DBContext) {
     }
   }
 
-  def queryRepertory(abbrevFromMenu: String, searchTerms: SearchTerms, page: Int, remedyString: String, minWeight: Int, getRemedies: Boolean, chapterIdOpt: Option[Int] = None): Option[(ResultsCazeRubrics, List[ResultsRemedyStats])] = {
+  def queryRepertory(abbrevFromMenu: String, searchTerms: SearchTerms, page: Int, remedyString: String, minWeight: Int, getRemedies: Boolean, chapterIdOpt: Option[Int] = None, clientIp: String = "-"): Option[(ResultsCazeRubrics, List[ResultsRemedyStats])] = {
     val abbrev = abbrevFromMenu.replaceAll("[^0-9A-Za-z\\-]", "")
 
     // Determining entered remedy is a bit more work than a simple declaration...
@@ -414,7 +414,7 @@ class RepertoryDao(dbContext: db.db.DBContext) {
       CazeRubric(-1, -1, List(CazeSubRubric(rubric, getWeightedRemedies(rubric))), 1, None)
     )
     val returnTotalNumberOfPages = math.ceil(tmpRubricsAll.size.toDouble / maxNumberOfResultsPerPage.toDouble).toInt
-    Logger.info(s"queryRepertory(abbrev: ${abbrev}, symptom: ${searchTerms.symptom}, page: ${page}, remedy: ${remedyString}, weight: ${minWeight}, getRemedies: $getRemedies) found ${tmpRubricsAll.size} case rubrics.")
+    Logger.info(s"[${clientIp}] queryRepertory(abbrev: ${abbrev}, symptom: ${searchTerms.symptom}, page: ${page}, remedy: ${remedyString}, weight: ${minWeight}, getRemedies: $getRemedies) found ${tmpRubricsAll.size} case rubrics.")
     Some((ResultsCazeRubrics(totalNumberOfRepertoryRubrics, tmpRubricsAll.size, returnTotalNumberOfPages, page, caseRubrics), remedyStats.toList))
   }
 

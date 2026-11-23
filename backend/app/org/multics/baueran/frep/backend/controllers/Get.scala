@@ -326,7 +326,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext, sessionGuard
         }
         else {
           // Do actual look-up and return results in case of success.
-          repertoryDao.queryRepertory(cleanedUpAbbrev, searchTerms, page, remedyString.trim, minWeight, getRemedies != 0, chapterFilter) match {
+          repertoryDao.queryRepertory(cleanedUpAbbrev, searchTerms, page, remedyString.trim, minWeight, getRemedies != 0, chapterFilter, clientIp = sessionGuard.clientIp(request)) match {
             case Some((ResultsCazeRubrics(totalNumberOfRepertoryRubrics, totalNumberOfResults, totalNumberOfPages, page, results), remedyStats)) if (totalNumberOfPages > 0) =>
               Ok((ResultsCazeRubrics(totalNumberOfRepertoryRubrics, totalNumberOfResults, totalNumberOfPages, page, results), remedyStats).asJson.toString())
             case _ =>
