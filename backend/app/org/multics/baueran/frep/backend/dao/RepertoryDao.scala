@@ -396,7 +396,7 @@ class RepertoryDao(dbContext: db.db.DBContext) {
       }
     }
 
-    println(s"tmpRemedies: #${tmpRemedies.length}")
+    // println(s"tmpRemedies: #${tmpRemedies.length}")
 
     def getWeightedRemedies(rubric: Rubric) = {
       tmpRubricRemedies.filter(_.rubricId == rubric.id).map(rr =>
