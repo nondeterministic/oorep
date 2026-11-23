@@ -35,6 +35,11 @@ When all is done, you should be able to point your web browser to `http://localh
 and see OOREP's landing page. Needless to say, those images are test-only and are not
 intended for any production environments or the like without further modifications.
 
+Please also be aware that pulled docker images may not always be as up to date as the
+rest of the OOREP source code.  Sometimes OOREP's code changes affect mostly the deployed
+version of OOREP on oorep.com, but has little effect for a locally run application.  Then
+I usually don't recreate all the docker images on dockerhub.
+
 ### Method 2: By building the project from scratch (for experts only)
 
 #### Prerequisites
@@ -50,34 +55,22 @@ OOREP-database; if you still encounter permission issues when restoring the data
 you may also want to try `ALTER ROLE "<your username>" superuser;`). Also, you will
 need to define the following environment variables:
 
-* `$OOREP_APP_PROTOCOL`: usually either `http` or `https`
-* `$OOREP_APP_HOSTNAME`: the part that follows `$OOREP_APP_PROTOCOL`,
-  such as `www`, for example, or any other hostname
-* `$OOREP_APP_DOMAIN`: your domain name, e.g., `oorep.com`, but do not set when, for
-  example, you're merely using `localhost` as hostname
-* `$OOREP_APP_PORT`: port of application server (normally `9000`), but should only be
-  set if application server is directly used (i.e., do not set when using a reverse
-  proxy!)
-* `$OOREP_APP_SECRET`: application-specific password you need to set if you run the 
-  application server using `https` instead of `http` (which I don't, since I use a
-  reverse proxy that does end-to-end encryption)
-* `$OOREP_DB_NAME`: name of your PostgreSQL database; set to `oorep`, unless 
-  you know better!
-* `$OOREP_DB_USER`: name of your PostgreSQL database user; set to `oorep_user`, unless
-  you know better!
-* `$OOREP_DB_PASS`: password of your PostgreSQL database; for test-environments, 
-  use the one from within the `docker` directory of this repository, unless you know better!
-* `$OOREP_DB_HOST`: full hostname of DB-server (e.g., `localhost` or `db.oorep.com`)
-* `$OOREP_DB_PORT`: port of DB-server (usually `5432`)
-* `$OOREP_URL_LOGOUT`: right now only mandatory if authentication is used:
-  the URL which users must click on in order to logout of OOREP (usually your
-  logout binding of an accompanying (SAML) Service Provider)
-* `$OOREP_MAIL_SERVER`: right now only mandatory if authentication is used:
-  hostname of your SMTP server to send password reset mails (e.g., mail.server.com)
-* `$OOREP_MAIL_USER`: right now only mandatory if authentication is used:
-  username on your SMTP server
-* `$OOREP_MAIL_PASS`: right now only mandatory if authentication is used:
-  password for that username on your SMTP server
+| Variable | Default | Description |
+| --- | --- | --- |
+| `OOREP_APP_PROTOCOL` | *(required)* | Usually either `http` or `https`. |
+| `OOREP_APP_HOSTNAME` | *(required)* | The part that follows `OOREP_APP_PROTOCOL`, such as `www`, or any other hostname. |
+| `OOREP_APP_DOMAIN` | *(optional)* | Your domain name, e.g. `oorep.com`; do not set when using `localhost` as hostname. |
+| `OOREP_APP_PORT` | *(optional)* | Port of application server (normally `9000`); only set if the application server is used directly (do not set when using a reverse proxy). |
+| `OOREP_APP_SECRET` | *(required for https)* | Application-specific secret; needed when running with `https` instead of `http`. |
+| `OOREP_DB_NAME` | `oorep` | Name of your PostgreSQL database, unless you know better. |
+| `OOREP_DB_USER` | `oorep_user` | Name of your PostgreSQL database user, unless you know better. |
+| `OOREP_DB_PASS` | *(required)* | Password of your PostgreSQL database user; for test environments, use the one from the `docker` directory, unless you know better. |
+| `OOREP_DB_HOST` | *(required)* | Full hostname of DB server (e.g. `localhost` or `db.oorep.com`). |
+| `OOREP_DB_PORT` | `5432` | Port of DB server. |
+| `OOREP_URL_LOGOUT` | *(required if auth used)* | URL users click to log out of OOREP (usually your logout binding of an accompanying (SAML) Service Provider). |
+| `OOREP_MAIL_SERVER` | *(required if auth used)* | Hostname of your SMTP server for password reset mails (e.g. `mail.server.com`). |
+| `OOREP_MAIL_USER` | *(required if auth used)* | Username on your SMTP server. |
+| `OOREP_MAIL_PASS` | *(required if auth used)* | Password for that username on your SMTP server. |
   
 Check `backend/conf/application.conf` for their respective use, and make other
 adjustments as you see fit there (especially if you alter the domain variable).
@@ -153,3 +146,36 @@ While to this end www.oorep.com uses a SAML solution, other authentication proto
 implementations can also be used. Also, it is probably not easy to get all this to work
 without using the aforementioned reverse-proxy, although it is not strictly an OOREP
 requirement.
+
+## Session management for anonymous users
+
+Since version 0.20.0, OOREP can now utilise a locally installed Redis memory database
+for session management of anonymous users as well.  It will work without Redis present,
+but it is designed to use it to detect request flooding and would be able to throttle
+those inside the application without reliance on external tools like fail2ban or what
+have you.
+
+The following environment variables can be used to configure it:
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `OOREP_SESSION_GUARD_ENABLED` | `true` | Enable/disable the anonymous session guard |
+| `OOREP_SESSION_GUARD_FAIL_OPEN` | `true` | Allow requests if Redis is unavailable |
+| `OOREP_SESSION_GUARD_LOG_ONLY` | `false` | Log guard decisions but do not block |
+| `OOREP_REDIS_HOST` | `localhost` | Redis host |
+| `OOREP_REDIS_PORT` | `6379` | Redis port |
+| `OOREP_REDIS_DB` | `0` | Redis DB index |
+| `OOREP_REDIS_PASSWORD` | *(unset)* | Redis password, if required |
+| `OOREP_REDIS_TIMEOUT_MS` | `2000` | Redis connection/socket timeout |
+| `OOREP_SESSION_TTL_SECONDS` | `86400` | Anonymous session TTL (sliding) |
+| `OOREP_RATE_LIMIT_WINDOW_SECONDS` | `60` | Rate-limit window |
+| `OOREP_RATE_LIMIT_GENERAL_PER_IP` | `120` | General API limit per IP/window |
+| `OOREP_RATE_LIMIT_GENERAL_PER_SID` | `120` | General API limit per session/window |
+| `OOREP_RATE_LIMIT_EXPENSIVE_PER_IP` | `60` | Expensive API limit per IP/window |
+| `OOREP_RATE_LIMIT_EXPENSIVE_PER_SID` | `60` | Expensive API limit per session/window |
+| `OOREP_SESSION_GUARD_BAN_ENABLED` | `true` | Enable incremental temporary bans |
+| `OOREP_SESSION_GUARD_BAN_BASE_SECONDS` | `60` | First ban duration |
+| `OOREP_SESSION_GUARD_BAN_MAX_SECONDS` | `7200` | Max ban duration (2h) |
+| `OOREP_SESSION_GUARD_BAN_ABUSE_TTL_SECONDS` | `3600` | Abuse-counter decay TTL |
+| `OOREP_TRUSTED_PROXIES` | `127.0.0.1,::1` | CSV of trusted proxy IPs/CIDRs for XFF |
+
