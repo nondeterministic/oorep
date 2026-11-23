@@ -15,7 +15,10 @@
 v0.20.0                                under development
 --------------------------------------------------------
 - Main features:
-  - Add user session management using a memory database
+  - Add user session management using an in-memory database
+
+- Minor improvements and changes:
+  - Update various library versions
 
 v0.19.0                  Sat Nov 21 01:21:35 PM CET 2026
 --------------------------------------------------------

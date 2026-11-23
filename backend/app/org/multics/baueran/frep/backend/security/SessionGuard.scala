@@ -138,7 +138,7 @@ class SessionGuard @Inject()(config: Configuration) {
     }
   }
 
-  private def clientIp(request: RequestHeader): String = {
+  def clientIp(request: RequestHeader): String = {
     val remote = request.remoteAddress
     if (isTrustedProxy(remote)) forwardedClientIp(request).getOrElse(remote)
     else remote
