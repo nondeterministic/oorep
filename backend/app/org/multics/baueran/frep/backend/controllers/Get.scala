@@ -66,12 +66,12 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext, sessionGuard
   def login() = Action { implicit request: Request[AnyContent] =>
     getAuthenticatedUser(request) match {
       case None =>
-        Logger.error(s"Get: [${sessionGuard.clientIp(request)}] login() not completed successfully: sending user to logout to be safe.")
+        Logger.error(s"[${sessionGuard.clientIp(request)}] login() not completed successfully: sending user to logout to be safe.")
         Redirect(sys.env.get("OOREP_URL_LOGOUT").getOrElse(""))
       case Some(member) =>
         memberDao.increaseLoginCounter(member.member_id)
         memberDao.setLastSeen(member.member_id, new MyDate())
-        Logger.debug(s"Get: [${sessionGuard.clientIp(request)}] login() completed for user ${member.member_id.toString}.")
+        Logger.debug(s"[${sessionGuard.clientIp(request)}] login() completed for user ${member.member_id.toString}.")
         Redirect(serverUrl(request))
           .withCookies(Cookie(CookieFields.cookiePopupAccepted.toString, "1", secure = true, httpOnly = false))
     }
@@ -156,7 +156,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext, sessionGuard
       case Some(member) =>
         Ok(member.member_id.toString)
       case None =>
-        Logger.error(s"Get: [${sessionGuard.clientIp(request)}] apiAuthenticate(): User cannot be authenticated.")
+        Logger.error(s"[${sessionGuard.clientIp(request)}] apiAuthenticate(): User cannot be authenticated.")
         Unauthorized(s"Get: apiAuthenticate(): User cannot be authenticated.")
     }
   }
@@ -176,11 +176,11 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext, sessionGuard
   def apiSecSettings(memberId: Int) = Action { implicit (request: Request[AnyContent]) =>
     getAuthenticatedUser(request) match {
       case None =>
-        Logger.error(s"Get: [${sessionGuard.clientIp(request)}] apiSecSettings() failed: not authenticated")
+        Logger.error(s"[${sessionGuard.clientIp(request)}] apiSecSettings() failed: not authenticated")
         Unauthorized(s"Get: apiSecSettings() failed: not authenticated")
       case Some(member) =>
         if (!isUserAuthorized(request, memberId)) {
-          Logger.error(s"Get: [${sessionGuard.clientIp(request)}] apiSecSettings() failed: not authorised")
+          Logger.error(s"[${sessionGuard.clientIp(request)}] apiSecSettings() failed: not authorised")
           Forbidden(s"Get: apiSecSettings() failed: not authorised")
         } else {
           Ok(member.asJson.toString())
@@ -194,11 +194,11 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext, sessionGuard
   def apiSecAvailableFiles(memberId: Int) = Action { (request: Request[AnyContent]) =>
     getAuthenticatedUser(request) match {
       case None =>
-        Logger.error(s"Get: [${sessionGuard.clientIp(request)}] apiSecAvailableFiles() failed: not authenticated")
+        Logger.error(s"[${sessionGuard.clientIp(request)}] apiSecAvailableFiles() failed: not authenticated")
         Unauthorized(s"Get: apiSecAvailableFiles() failed: not authenticated")
       case Some(_) =>
         if (!isUserAuthorized(request, memberId)) {
-          Logger.error(s"Get: [${sessionGuard.clientIp(request)}] apiSecAvailableFiles() failed: not authorised")
+          Logger.error(s"[${sessionGuard.clientIp(request)}] apiSecAvailableFiles() failed: not authorised")
           Forbidden(s"Get: apiSecAvailableFiles() failed: not authorised")
         } else {
           val dbFiles = fileDao.getDbFilesForMember(memberId)
@@ -210,19 +210,19 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext, sessionGuard
   def apiSecGetFile(fileId: String) = Action { (request: Request[AnyContent]) =>
     getAuthenticatedUser(request) match {
       case None =>
-        Logger.error(s"Get: [${sessionGuard.clientIp(request)}] apiSecGetFile(): not authenticated")
+        Logger.error(s"[${sessionGuard.clientIp(request)}] apiSecGetFile(): not authenticated")
         Unauthorized(s"Get: apiSecGetFile(): not authenticated")
       case Some(_) => {
         fileDao.getFIle(fileId.toInt) match {
           case file :: Nil =>
             if (!isUserAuthorized(request, file.member_id)) {
-              Logger.error(s"Get: [${sessionGuard.clientIp(request)}] apiSecGetFile() failed: not authorised")
+              Logger.error(s"[${sessionGuard.clientIp(request)}] apiSecGetFile() failed: not authorised")
               Forbidden(s"Get: apiSecGetFile() failed: not authorised")
             } else {
               Ok(file.asJson.toString())
             }
           case _ =>
-            Logger.error(s"Get: [${sessionGuard.clientIp(request)}] apiSecGetFile() returned nothing")
+            Logger.error(s"[${sessionGuard.clientIp(request)}] apiSecGetFile() returned nothing")
             BadRequest(s"Get: apiSecGetFile() returned nothing")
         }
       }
@@ -235,13 +235,13 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext, sessionGuard
         cazeDao.get(caseId.toInt) match {
           case Some(caze) if (caze.member_id == member.member_id) =>
             if (!isUserAuthorized(request, caze.member_id)) {
-              Logger.error(s"Get: [${sessionGuard.clientIp(request)}] apiSecGetCase() failed: not authorised.")
+              Logger.error(s"[${sessionGuard.clientIp(request)}] apiSecGetCase() failed: not authorised.")
               Forbidden(s"Get: apiSecGetCase() failed: not authorised.")
             } else {
               Ok(caze.asJson.toString())
             }
           case _ =>
-            Logger.error(s"Get: [${sessionGuard.clientIp(request)}] apiSecGetCase() failed: DB returned nothing.")
+            Logger.error(s"[${sessionGuard.clientIp(request)}] apiSecGetCase() failed: DB returned nothing.")
             BadRequest(s"Get: apiSecGetCase() failed: DB returned nothing.")
         }
       }
@@ -256,7 +256,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext, sessionGuard
         cazeDao.getCaseRubrics(caseId) match {
           case cazeRubrics  =>
             if (!isUserAuthorized(request, caseMemberId)) {
-              Logger.error(s"Get: [${sessionGuard.clientIp(request)}] apiSecGetCaseRubrics() failed: not authorised.")
+              Logger.error(s"[${sessionGuard.clientIp(request)}] apiSecGetCaseRubrics() failed: not authorised.")
               Forbidden(s"Get: apiSecGetCaseRubrics() failed: not authorised.")
             } else {
               Ok(cazeRubrics.asJson.toString())
@@ -293,18 +293,18 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext, sessionGuard
               )
 
           if (!isUserAuthorized(request, files.head.member_id)) {
-            Logger.error(s"Get: [${sessionGuard.clientIp(request)}] apiSecFileOverview() failed: not authorised")
+            Logger.error(s"[${sessionGuard.clientIp(request)}] apiSecFileOverview() failed: not authorised")
             Forbidden(s"Get: apiSecFileOverview() failed: not authorised")
           }
           else
             Ok(results.asJson.toString())
         }
         else {
-          Logger.warn(s"Get: [${sessionGuard.clientIp(request)}] apiSecFileOverview(${fileId}): nothing found.")
+          Logger.warn(s"[${sessionGuard.clientIp(request)}] apiSecFileOverview(${fileId}): nothing found.")
           NoContent
         }
       case _ =>
-        Logger.error(s"Get: [${sessionGuard.clientIp(request)}] apiSecFileOverview failed: not authenticated")
+        Logger.error(s"[${sessionGuard.clientIp(request)}] apiSecFileOverview failed: not authenticated")
         Unauthorized(s"Get: apiSecFileOverview failed: not authenticated")
     }
   }
@@ -321,7 +321,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext, sessionGuard
 
         // Check if user is allowed to access the resource at all (might be Private or Protected and user not logged in)
         if (repertoryDao.getRepsAndRemedies(getAuthenticatedUser(request)).find(_.info.abbrev == cleanedUpAbbrev) == None) {
-          Logger.warn(s"Get: [${sessionGuard.clientIp(request)}] apiLookupRep(abbrev: ${repertoryAbbrev}, symptom: ${symptom}, page: ${page}, remedy: ${remedyString}, weight: ${minWeight}, chapterId: ${chapterId}): user not allowed to access ressource.")
+          Logger.warn(s"[${sessionGuard.clientIp(request)}] apiLookupRep(abbrev: ${repertoryAbbrev}, symptom: ${symptom}, page: ${page}, remedy: ${remedyString}, weight: ${minWeight}, chapterId: ${chapterId}): user not allowed to access ressource.")
           NoContent
         }
         else {
@@ -330,7 +330,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext, sessionGuard
             case Some((ResultsCazeRubrics(totalNumberOfRepertoryRubrics, totalNumberOfResults, totalNumberOfPages, page, results), remedyStats)) if (totalNumberOfPages > 0) =>
               Ok((ResultsCazeRubrics(totalNumberOfRepertoryRubrics, totalNumberOfResults, totalNumberOfPages, page, results), remedyStats).asJson.toString())
             case _ =>
-              Logger.info(s"Get: [${sessionGuard.clientIp(request)}] apiLookupRep(abbrev: ${repertoryAbbrev}, symptom: ${symptom}, page: ${page}, remedy: ${remedyString}, weight: ${minWeight}, chapterId: ${chapterId}): no results found")
+              Logger.info(s"[${sessionGuard.clientIp(request)}] apiLookupRep(abbrev: ${repertoryAbbrev}, symptom: ${symptom}, page: ${page}, remedy: ${remedyString}, weight: ${minWeight}, chapterId: ${chapterId}): no results found")
               NoContent
           }
         }
@@ -348,7 +348,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext, sessionGuard
 
         // Check if user is allowed to access the resource at all (might be Private or Protected and user not logged in)
         if (mmDao.getMMsAndRemedies(getAuthenticatedUser(request)).find(_.mminfo.abbrev == cleanedUpAbbrev) == None) {
-          Logger.info(s"Get: [${sessionGuard.clientIp(request)}] apiLookupMM(abbrev: ${mmAbbrev}, symptom: ${symptom}, page: ${page}, remedy: ${remedyString}): user not allowed to access ressource.")
+          Logger.info(s"[${sessionGuard.clientIp(request)}] apiLookupMM(abbrev: ${mmAbbrev}, symptom: ${symptom}, page: ${page}, remedy: ${remedyString}): user not allowed to access ressource.")
           NoContent
         }
         else {
@@ -357,7 +357,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext, sessionGuard
             case Some(sectionHits) if (sectionHits.results.length > 0 || sectionHits.numberOfMatchingSectionsPerChapter.length > 0) =>
               Ok(sectionHits.asJson.toString())
             case _ =>
-              Logger.info(s"Get: [${sessionGuard.clientIp(request)}] apiLookupMM(abbrev: ${mmAbbrev}, symptom: ${symptom}, page: ${page}, remedy: ${remedyString}): no results found")
+              Logger.info(s"[${sessionGuard.clientIp(request)}] apiLookupMM(abbrev: ${mmAbbrev}, symptom: ${symptom}, page: ${page}, remedy: ${remedyString}): no results found")
               NoContent
           }
         }
@@ -368,13 +368,13 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext, sessionGuard
     guardedApi(expensive = true) { (request: Request[AnyContent]) =>
       val cleanedUpAbbrev = repertory.replaceAll("[^0-9A-Za-z\\-]", "")
       if (repertoryDao.getRepsAndRemedies(getAuthenticatedUser(request)).find(_.info.abbrev == cleanedUpAbbrev).isEmpty) {
-        Logger.warn(s"Get: [${sessionGuard.clientIp(request)}] apiBrowseRepertory(abbrev: ${repertory}): user not allowed to access resource.")
+        Logger.warn(s"[${sessionGuard.clientIp(request)}] apiBrowseRepertory(abbrev: ${repertory}): user not allowed to access resource.")
         NoContent
       }
       else {
         val chapters = repertoryDao.getChaptersForBrowse(cleanedUpAbbrev)
         if (chapters.isEmpty) {
-          Logger.info(s"Get: [${sessionGuard.clientIp(request)}] apiBrowseRepertory(abbrev: ${repertory}): no chapters found")
+          Logger.info(s"[${sessionGuard.clientIp(request)}] apiBrowseRepertory(abbrev: ${repertory}): no chapters found")
           NoContent
         }
         else
@@ -386,7 +386,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext, sessionGuard
     guardedApi(expensive = true) { (request: Request[AnyContent]) =>
       val cleanedUpAbbrev = repertory.replaceAll("[^0-9A-Za-z\\-]", "")
       if (repertoryDao.getRepsAndRemedies(getAuthenticatedUser(request)).find(_.info.abbrev == cleanedUpAbbrev).isEmpty) {
-        Logger.warn(s"Get: [${sessionGuard.clientIp(request)}] apiBrowseChapter(abbrev: ${repertory}, chapterId: ${chapterId}): user not allowed to access resource.")
+        Logger.warn(s"[${sessionGuard.clientIp(request)}] apiBrowseChapter(abbrev: ${repertory}, chapterId: ${chapterId}): user not allowed to access resource.")
         NoContent
       }
       else {
@@ -399,14 +399,14 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext, sessionGuard
     guardedApi(expensive = true) { (request: Request[AnyContent]) =>
       val cleanedUpAbbrev = repertory.replaceAll("[^0-9A-Za-z\\-]", "")
       if (repertoryDao.getRepsAndRemedies(getAuthenticatedUser(request)).find(_.info.abbrev == cleanedUpAbbrev).isEmpty) {
-        Logger.warn(s"Get: [${sessionGuard.clientIp(request)}] apiBrowseRubricRemedies(abbrev: ${repertory}, rubricId: ${rubricId}): user not allowed to access resource.")
+        Logger.warn(s"[${sessionGuard.clientIp(request)}] apiBrowseRubricRemedies(abbrev: ${repertory}, rubricId: ${rubricId}): user not allowed to access resource.")
         NoContent
       }
       else {
         repertoryDao.getRubricRemediesForBrowse(cleanedUpAbbrev, rubricId) match {
           case Some(result) => Ok(result.asJson.toString())
           case None =>
-            Logger.info(s"Get: [${sessionGuard.clientIp(request)}] apiBrowseRubricRemedies(abbrev: ${repertory}, rubricId: ${rubricId}): rubric not found")
+            Logger.info(s"[${sessionGuard.clientIp(request)}] apiBrowseRubricRemedies(abbrev: ${repertory}, rubricId: ${rubricId}): rubric not found")
             NoContent
         }
       }
