@@ -253,7 +253,7 @@ class MMDao(dbContext: db.db.DBContext) {
         MMSearchResult(abbrev, remedy_id, remedy_fullname, rawResults.collect { case (s, c) if c.remedy_id == remedy_id => s })
       })
 
-    Logger.info(s"[${clientIp}] getSectionHits(abbrev: ${abbrev}, symptom: ${searchTerms.symptom}, page: ${page}, remedy: ${remedyFullName.getOrElse("")}) found ${allSectionsPerChapter.map(_._2).sum} matching sections.")
+    Logger.info(s"[${clientIp}] getSectionHits(abbrev: ${abbrev}, symptom: ${searchTerms.symptom}, page: ${page}, remedy: ${remedyFullName.getOrElse("")}) found ${allSectionsPerChapter.map(_.hits).sum} matching sections.")
     Some(MMAllSearchResults(searchResultsForOnePageOnly, allSectionsPerChapter))
   }
 
