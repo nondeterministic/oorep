@@ -66,7 +66,7 @@ object MainView {
     dom.document.getElementById("content") match {
       case null =>
         println("ERROR: '#content'-div is null. This shoulnd't have happened.")
-      case contentDiv => {
+      case contentDiv =>
         contentDiv.asInstanceOf[dom.html.Element].innerHTML = ""
         contentDiv.asInstanceOf[dom.html.Element].appendChild(withResults().render)
 
@@ -89,7 +89,6 @@ object MainView {
             case _ => ;
           }
         }
-      }
     }
 
     // Make sure #about and #features are REALLY gone at this point

@@ -127,7 +127,8 @@ object RepertoryBrowseView extends TabView {
         }
         if (CaseSection.size() > 0) CaseSection.showCase(RepertoryView.remedyFormat())
       },
-      "Repertory browsing")
+      span(cls := "d-inline d-md-none", "Browse"),
+      span(cls := "d-none d-md-inline", "Repertory browsing"))
   }
 
   private def chapterDomId(chapterId: Int): String = s"${_prefix}_chapter_${chapterId}"

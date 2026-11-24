@@ -64,34 +64,40 @@ case class MMSection(id: Int,
 
   def renderContent(): scalatags.JsDom.TypedTag[dom.html.Div] = div(raw(s" ${renderContent("")}"))
 
-  def render(prefix: String, hideSections: Boolean, symptomString: String, indent: Int) = {
+  def render(prefix: String, hideSections: Boolean, symptomString: String, indent: Int,
+             expandedSectionIds: scala.collection.mutable.Set[Int] = scala.collection.mutable.Set.empty,
+             collapsedSectionIds: scala.collection.mutable.Set[Int] = scala.collection.mutable.Set.empty) = {
+    val isExpanded = if (hideSections) expandedSectionIds.contains(id) else !collapsedSectionIds.contains(id)
+
     val headingDiv =
       div(cls:="row",
         button(cls:="close", `type`:="button", scalatags.JsDom.all.id:=s"${prefix}_collapse_section_${id}_button", data.toggle:="collapse",
           onclick := { (_: Event) =>
             val toggleSpan = dom.document.getElementById(s"${prefix}_collapse_section_${id}_span").asInstanceOf[dom.html.Span]
+            val currentlyExpanded = toggleSpan.getAttribute("class") == "oi oi-chevron-bottom"
 
-            if (toggleSpan.getAttribute("class") == "oi oi-chevron-right") {
-              toggleSpan.setAttribute("class", "oi oi-chevron-bottom")
-              toggleSpan.setAttribute("title", "Show less")
-            } else {
+            if (currentlyExpanded) {
               toggleSpan.setAttribute("class", "oi oi-chevron-right")
               toggleSpan.setAttribute("title", "Show more...")
+              if (hideSections) expandedSectionIds.remove(id) else collapsedSectionIds.add(id)
+            } else {
+              toggleSpan.setAttribute("class", "oi oi-chevron-bottom")
+              toggleSpan.setAttribute("title", "Show less")
+              if (hideSections) expandedSectionIds.add(id) else collapsedSectionIds.remove(id)
             }
 
             for (i <- 0 to dom.document.getElementsByName(s"parent_${id}").length - 1) {
               val currSubDiv = dom.document.getElementsByName(s"parent_${id}").item(i).asInstanceOf[dom.html.Div]
-
-              if (currSubDiv.getAttribute("class").contains("hide"))
-                currSubDiv.setAttribute("class", "collapse show")
-              else
+              if (currentlyExpanded)
                 currSubDiv.setAttribute("class", "collapse hide")
+              else
+                currSubDiv.setAttribute("class", "collapse show")
             }
           },
-          if (hideSections)
-            span(scalatags.JsDom.all.id:=s"${prefix}_collapse_section_${id}_span", `type`:=s"${prefix}_mm_section_chevron_span", cls:="oi oi-chevron-right", style:="font-size: 14px;", title:="Show more...", aria.hidden:="true")
-          else
+          if (isExpanded)
             span(scalatags.JsDom.all.id:=s"${prefix}_collapse_section_${id}_span", `type`:=s"${prefix}_mm_section_chevron_span", cls:="oi oi-chevron-bottom", style:="font-size: 14px;", title:="Show less", aria.hidden:="true")
+          else
+            span(scalatags.JsDom.all.id:=s"${prefix}_collapse_section_${id}_span", `type`:=s"${prefix}_mm_section_chevron_span", cls:="oi oi-chevron-right", style:="font-size: 14px;", title:="Show more...", aria.hidden:="true")
         ),
         div(style:="padding:5px;",
           b(s"${heading.getOrElse("")}")
@@ -99,7 +105,7 @@ case class MMSection(id: Int,
       )
 
     val contentDiv =
-      div(name:=s"parent_${id}", `type`:=s"${prefix}_mm_section_span", cls := s"collapse ${if (hideSections) "hide" else "show"}",
+      div(name:=s"parent_${id}", `type`:=s"${prefix}_mm_section_span", cls := s"collapse ${if (isExpanded) "show" else "hide"}",
         raw(s" ${renderContent(symptomString)}")
       )
 

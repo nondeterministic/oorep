@@ -329,7 +329,10 @@ object RepertoryView extends TabView {
 
     _repertorisationResults.get() match {
       case Some(ResultsCazeRubrics(_, _, _, _, results)) =>
-        results.foreach(result => dom.document.getElementById("resultsTBody").appendChild(resultRow(result).render))
+        val tbody = dom.document.getElementById("resultsTBody")
+        val fragment = dom.document.createDocumentFragment()
+        results.foreach(result => fragment.appendChild(resultRow(result).render))
+        tbody.appendChild(fragment)
       case _ => ;
     }
 
@@ -1029,7 +1032,8 @@ object RepertoryView extends TabView {
           showResults()
         )
       },
-      "Repertory search")
+      span(cls := "d-inline d-md-none", "Search"),
+      span(cls := "d-none d-md-inline", "Repertory search"))
   }
 
   // ------------------------------------------------------------------------------------------------------------------

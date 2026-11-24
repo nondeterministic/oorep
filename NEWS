@@ -18,6 +18,8 @@ v0.20.0                                under development
   - Add user session management using an in-memory database
 
 - Minor improvements and changes:
+  - Speeding up the rendering a bit
+  - For authenticated users: "Last modified" column in File modal
   - Update various library versions
 
 v0.19.0                  Sat Nov 21 01:21:35 PM CET 2026

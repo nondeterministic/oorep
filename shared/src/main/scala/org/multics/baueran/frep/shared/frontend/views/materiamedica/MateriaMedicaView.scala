@@ -26,6 +26,8 @@ object MateriaMedicaView extends TabView {
 
   private var _sectionHits: List[MMSearchResult] = List.empty
   private val _allSectionsHide = com.raquo.laminar.api.L.Var(true)
+  private val _expandedMMSectionIds = scala.collection.mutable.Set[Int]()
+  private val _collapsedMMSectionIds = scala.collection.mutable.Set[Int]()
 
   private var _totalNumberOfResultRemedies = 0
   private var _page: Option[Int] = None
@@ -137,6 +139,8 @@ object MateriaMedicaView extends TabView {
           val currSpan = allMMSectionChevronSpans.item(i).asInstanceOf[dom.html.Div]
           currSpan.setAttribute("class", "oi oi-chevron-right")
         }
+        _expandedMMSectionIds.clear()
+        _collapsedMMSectionIds.clear()
         _allSectionsHide.set(true)
       }
 
@@ -152,6 +156,8 @@ object MateriaMedicaView extends TabView {
           val currSpan = allMMSectionChevronSpans.item(i).asInstanceOf[dom.html.Div]
           currSpan.setAttribute("class", "oi oi-chevron-bottom")
         }
+        _expandedMMSectionIds.clear()
+        _collapsedMMSectionIds.clear()
         _allSectionsHide.set(false)
       }
 
@@ -233,7 +239,7 @@ object MateriaMedicaView extends TabView {
           ),
         ),
 
-        _sectionHits.map(_.render(_prefix, _allSectionsHide, _latestSymptomString.getOrElse(""), _materiaMedicas, doLookup))
+        _sectionHits.map(_.render(_prefix, _allSectionsHide, _latestSymptomString.getOrElse(""), _materiaMedicas, doLookup, _expandedMMSectionIds, _collapsedMMSectionIds))
 
       )
     }
@@ -307,8 +313,7 @@ object MateriaMedicaView extends TabView {
       onclick := { (_: Event) =>
         dom.document.getElementById(s"${_prefix}_result_div") match {
           case null => ;
-          case resultDiv =>
-            resultDiv.innerHTML = ""
+          case resultDiv if resultDiv.childNodes.length == 0 =>
             resultDiv.appendChild(
               div(getResultsHtml(),
                 div(cls:= "container-fluid", id:=s"${_prefix}_paginationDiv",
@@ -319,13 +324,15 @@ object MateriaMedicaView extends TabView {
                 )
               ).render
             )
+          case _ => ;
         }
 
         MainView.CaseDiv.empty()
         MMSelectionDropdown.refresh()
         renderMultiOccurrencesDiv()
       },
-      "Materia medica")
+      span(cls := "d-inline d-md-none", "MM"),
+      span(cls := "d-none d-md-inline", "Materia medica"))
   }
 
   override def drawWithoutResults() = WithoutResults()
@@ -355,6 +362,8 @@ object MateriaMedicaView extends TabView {
       _totalNumberOfResultRemedies = searchResults.numberOfMatchingSectionsPerChapter.length
       _page = page
       _sectionHits = searchResults.results
+      _expandedMMSectionIds.clear()
+      _collapsedMMSectionIds.clear()
 
       dom.document.getElementById(s"${_prefix}_result_div") match {
         case null =>
