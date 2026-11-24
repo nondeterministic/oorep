@@ -2,7 +2,7 @@ package org.multics.baueran.frep.backend.dao
 
 import org.multics.baueran.frep.*
 import backend.db
-import shared.{BetterString, Caze, CazeRubric, CazeSubRubric, Rubric, WeightedRemedy, CazeRubricJsonHelper}
+import shared.{BetterString, Caze, CazeRubric, CazeSubRubric, MyDate, Rubric, WeightedRemedy, CazeRubricJsonHelper}
 import backend.dao.RepertoryDao
 import io.getquill.*
 import io.circe.{Decoder, *}
@@ -221,6 +221,11 @@ class CazeDao(dbContext: db.db.DBContext) {
     )).map(pcaze => Caze(pcaze.id, pcaze.header, pcaze.member_id, pcaze.date, pcaze.changed, pcaze.description))
   }
 
+  def getCaseChangedDates(caseIds: List[Int]): Map[Int, String] = {
+    if (caseIds.isEmpty) Map.empty
+    else run(quote { schemaCaze.filter(c => liftQuery(caseIds).contains(c.id)).map(c => (c.id, c.changed)) }).toMap
+  }
+
   // Return number of deleted case sub rubrics.
 
   def delCaseSubRubrics(caseRubricId: Int): Int = {
@@ -243,6 +248,7 @@ class CazeDao(dbContext: db.db.DBContext) {
   @targetName("delCaseRubrics_byObject")
   def delCaseRubrics(caseRubrics: List[CazeRubric]): Int = {
     var deletedCaseRubrics = 0
+    val caseIds = caseRubrics.map(_.cazeId).distinct
 
     // First attempt to delete subrubrics, then the rubrics themselves.
     transaction {
@@ -254,12 +260,22 @@ class CazeDao(dbContext: db.db.DBContext) {
         }}.toInt
     }
 
+    if (deletedCaseRubrics > 0) {
+      val now = new MyDate().toString()
+      caseIds.foreach { caseId =>
+        run(quote { schemaCaze.filter(_.id == lift(caseId)).update(_.changed -> lift(now)) })
+        new FileDao(dbContext).touchForCase(caseId, now)
+      }
+    }
     deletedCaseRubrics
   }
 
   @targetName("delCaseRubrics_byIDs")
   def delCaseRubrics(caseRubricIds: List[Int]): Int = {
     var deletedCaseRubrics = 0
+    val caseIds =
+      if (caseRubricIds.isEmpty) List.empty
+      else run(quote { schemaCazeRubric.filter(cr => liftQuery(caseRubricIds).contains(cr.id)).map(_.cazeId) }).distinct
 
     // First attempt to delete subrubrics, then the rubrics themselves.
     transaction {
@@ -271,6 +287,13 @@ class CazeDao(dbContext: db.db.DBContext) {
         }}.toInt
     }
 
+    if (deletedCaseRubrics > 0) {
+      val now = new MyDate().toString()
+      caseIds.foreach { caseId =>
+        run(quote { schemaCaze.filter(_.id == lift(caseId)).update(_.changed -> lift(now)) })
+        new FileDao(dbContext).touchForCase(caseId, now)
+      }
+    }
     deletedCaseRubrics
   }
 
@@ -287,7 +310,7 @@ class CazeDao(dbContext: db.db.DBContext) {
   }
 
   def addCaseRubrics(caseID: Int, caseRubrics: List[CazeRubric]): List[Int] = {
-    caseRubrics.map(cr =>
+    val ids = caseRubrics.map(cr =>
       val newCaseRubricId = run { quote {
         schemaCazeRubric.insert(
           _.cazeId -> lift(caseID),
@@ -299,6 +322,12 @@ class CazeDao(dbContext: db.db.DBContext) {
       addCaseSubRubrics(newCaseRubricId, cr.subRubrics)
       newCaseRubricId
     )
+    if (ids.nonEmpty) {
+      val now = new MyDate().toString()
+      run(quote { schemaCaze.filter(_.id == lift(caseID)).update(_.changed -> lift(now)) })
+      new FileDao(dbContext).touchForCase(caseID, now)
+    }
+    ids
   }
 
   def updateCaseSubRubric(caseRubricId: Int, caseSubRubric: CazeSubRubric): Int = {
@@ -314,7 +343,8 @@ class CazeDao(dbContext: db.db.DBContext) {
   }
 
   def updateCaseRubricUserDefinedValues(caseRubric: CazeRubric): Int = {
-    run { quote {
+    val now = new MyDate().toString()
+    val changedRows = run { quote {
       schemaCazeRubric
         .filter(_.id == lift(caseRubric.id))
         .update(
@@ -323,6 +353,11 @@ class CazeDao(dbContext: db.db.DBContext) {
           _.label -> lift(caseRubric.rubricLabel)
         )
     }}.toInt
+    if (changedRows > 0) {
+      run(quote { schemaCaze.filter(_.id == lift(caseRubric.cazeId)).update(_.changed -> lift(now)) })
+      new FileDao(dbContext).touchForCase(caseRubric.cazeId, now)
+    }
+    changedRows
   }
 
   def updateCaseRubricsUserDefinedValues(caseRubrics: List[CazeRubric]): Int = {
@@ -330,11 +365,17 @@ class CazeDao(dbContext: db.db.DBContext) {
   }
 
   def updateCaseDescription(cazeId: Int, caseDescription: String): Int = {
-    run { quote {
+    val now = new MyDate().toString()
+    val changedRows = run { quote {
       schemaCaze
         .filter(_.id == lift(cazeId))
-        .update(_.description -> lift(caseDescription))
+        .update(
+          _.description -> lift(caseDescription),
+          _.changed -> lift(now)
+        )
     }}.toInt
+    if (changedRows > 0) new FileDao(dbContext).touchForCase(cazeId, now)
+    changedRows
   }
 
 }

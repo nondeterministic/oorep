@@ -3,7 +3,7 @@ package org.multics.baueran.frep.backend.dao
 import org.multics.baueran.frep._
 import backend.db
 import io.getquill._
-import shared.{Caze, FIle, dbFile}
+import shared.{Caze, FIle, MyDate, dbFile}
 
 class FileDao(dbContext: db.db.DBContext) {
 
@@ -42,9 +42,23 @@ class FileDao(dbContext: db.db.DBContext) {
   def getDbFilesForMember(member_id: Int): List[dbFile] = {
     try {
       Logger.debug(s"FileDao: getDbFilesForMember($member_id)")
-      run ( quote {
+      val files = run ( quote {
         tableFile.filter(_.member_id == lift(member_id))
       })
+
+      val caseIds = files.flatMap(_.case_ids).distinct
+      val caseChanges =
+        if (caseIds.isEmpty) Map.empty[Int, String]
+        else new CazeDao(dbContext).getCaseChangedDates(caseIds)
+
+      files.map { f =>
+        val baseChanged = Option(f.changed).filter(_.nonEmpty).getOrElse(f.date)
+        val effectiveChanged =
+          f.case_ids.flatMap(caseChanges.get).filter(c => c != null && c.nonEmpty).foldLeft(baseChanged) { (acc, c) =>
+            if (c > acc) c else acc
+          }
+        f.copy(changed = effectiveChanged)
+      }
     } catch {
       case exception: Throwable =>
         Logger.warn(s"FileDao: getDbFilesForMember($member_id) == List(): ${exception.getStackTrace.map(_.toString).mkString("\n")}")
@@ -86,11 +100,15 @@ class FileDao(dbContext: db.db.DBContext) {
 
     dbFiles match {
       case file :: Nil =>
+        val now = new MyDate().toString()
         val updatedCaseIds = file.case_ids.filter(_ != caseId)
         run(quote {
           tableFile
             .filter(_.id == lift(file.id))
-            .update(f => f.case_ids -> lift(updatedCaseIds))
+            .update(
+              _.case_ids -> lift(updatedCaseIds),
+              _.changed -> lift(now)
+            )
         }).toInt
       case _ =>
         Logger.error(s"FileDao: delCaseId(${caseId}) failed.")
@@ -131,22 +149,26 @@ class FileDao(dbContext: db.db.DBContext) {
     transaction {
       cazeDao.get(cazeId) match {
         case Some(foundCase) =>
+          val now = new MyDate().toString()
           // Delete case ID from all files first, as a case can only have one parent file...
           for (file <- getFilesWithCase(foundCase.id)) {
             run(quote {
               tableFile
                 .filter(_.id == lift(file.id))
-                .update(f => f.case_ids -> lift(file.case_ids.filter(_ != foundCase.id)))
+                .update(
+                  _.case_ids -> lift(file.case_ids.filter(_ != foundCase.id)),
+                  _.changed -> lift(now)
+                )
             })
           }
 
           // Add case id to file
           val rawQuery = quote {
-            (localId: Int, localCazeId: Int) =>
-              sql"""UPDATE file SET case_ids=case_ids || $localCazeId WHERE id=$localId"""
+            (localId: Int, localCazeId: Int, localNow: String) =>
+              sql"""UPDATE file SET case_ids=case_ids || $localCazeId, changed=$localNow WHERE id=$localId"""
                 .as[Update[Caze]]
           }
-          if (run(rawQuery(lift(fileId), lift(foundCase.id))) > 0) {
+          if (run(rawQuery(lift(fileId), lift(foundCase.id), lift(now))) > 0) {
             Logger.debug(s"FileDao: ADDCASEIDTOFILE($cazeId, $fileId) succeeded.")
             updateSucceeded = true
           }
@@ -175,12 +197,16 @@ class FileDao(dbContext: db.db.DBContext) {
         }
       } match {
         case f :: Nil => {
+          val now = new MyDate().toString()
           val newCaseIds = f.case_ids.filter(_ != caseId)
           Right(
             run(quote(
               tableFile
                 .filter(file => file.id == lift(f.id) && file.member_id == lift(f.member_id))
-                .update(_.case_ids -> lift(newCaseIds)))).toInt
+                .update(
+                  _.case_ids -> lift(newCaseIds),
+                  _.changed -> lift(now)
+                ))).toInt
           )
         }
         case _ => Left(s"FileDao: REMOVECASEFROMFILE() failed for fileId ${fileId}, caseId ${caseId}")
@@ -213,12 +239,25 @@ class FileDao(dbContext: db.db.DBContext) {
   }
 
   def changeDescription(fileId: Int, newDescription: String): Long = {
+    val now = new MyDate().toString()
     val changedRows = run { quote {
       tableFile
         .filter(_.id == lift(fileId))
-        .update(_.description -> lift(newDescription))
+        .update(
+          _.description -> lift(newDescription),
+          _.changed -> lift(now)
+        )
     }}
     changedRows
+  }
+
+  def touchForCase(caseId: Int, now: String = new MyDate().toString()): Int = {
+    val rawQuery = quote {
+      (localCaseId: Int, localNow: String) =>
+        sql"""UPDATE file SET changed=$localNow WHERE $localCaseId = ANY(case_ids)"""
+          .as[Update[dbFile]]
+    }
+    run(rawQuery(lift(caseId), lift(now))).toInt
   }
 
 }

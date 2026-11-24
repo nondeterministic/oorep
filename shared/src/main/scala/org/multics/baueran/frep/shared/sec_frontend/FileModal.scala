@@ -12,7 +12,7 @@ import scala.util.boundary, boundary.break
 
 abstract class FileModal(idPrefix: String) {
 
-  private val headersClass = "col-6"
+  private val headersClass = "col-4"
 
   var selected_file_header: Option[String] = None
   var selected_file_id: Option[Int] = None
@@ -53,7 +53,8 @@ abstract class FileModal(idPrefix: String) {
           div(cls := headersClass, dbFile.header),
           // INFO: `d-none d-md-block` hides these columns on small-ish screen sizes
           div(cls := "d-none d-md-block col-3", s"${new MyDate(dbFile.date).toHumanReadable()}"),
-          div(cls := "d-none d-md-block col-3", s"${dbFile.case_ids.length}")
+          div(cls := "d-none d-md-block col-3", s"${new MyDate(if (dbFile.changed != null && dbFile.changed.length >= 10) dbFile.changed else dbFile.date).toHumanReadable()}"),
+          div(cls := "d-none d-md-block col-2", s"${dbFile.case_ids.length}")
         )
       )
 
@@ -85,7 +86,7 @@ abstract class FileModal(idPrefix: String) {
                 sortAscending = !sortAscending
                 updateData()
               }
-            } }, span(cls := "oi oi-elevator", title := "Sort by creation date", aria.hidden := "true")),
+            } }, span(cls := "oi oi-elevator", title := "Sort by name", aria.hidden := "true")),
             b(style:="margin-left:10px;", "Name")
           ),
           div(cls := "col-3",
@@ -105,13 +106,26 @@ abstract class FileModal(idPrefix: String) {
             a(href := "#", onclick := { (event: Event) => {
               if (divs.length > 0) {
                 if (sortAscending)
-                  divs = divs.sortBy(_.getElementsByClassName("col-3").item(1).asInstanceOf[dom.html.Div].innerHTML.toInt)
+                  divs = divs.sortBy(_.getElementsByClassName("col-3").item(1).asInstanceOf[dom.html.Div].innerHTML)
                 else
-                  divs = divs.sortBy(_.getElementsByClassName("col-3").item(1).asInstanceOf[dom.html.Div].innerHTML.toInt).reverse
+                  divs = divs.sortBy(_.getElementsByClassName("col-3").item(1).asInstanceOf[dom.html.Div].innerHTML).reverse
                 sortAscending = !sortAscending
                 updateData()
               }
-            } }, span(cls := "oi oi-elevator", title := "Sort by creation date", aria.hidden := "true")),
+            } }, span(cls := "oi oi-elevator", title := "Sort by last modified date", aria.hidden := "true")),
+            b(style:="margin-left:10px;", "Last modified")
+          ),
+          div(cls := "col-2",
+            a(href := "#", onclick := { (event: Event) => {
+              if (divs.length > 0) {
+                if (sortAscending)
+                  divs = divs.sortBy(_.getElementsByClassName("col-2").item(0).asInstanceOf[dom.html.Div].innerHTML.toInt)
+                else
+                  divs = divs.sortBy(_.getElementsByClassName("col-2").item(0).asInstanceOf[dom.html.Div].innerHTML.toInt).reverse
+                sortAscending = !sortAscending
+                updateData()
+              }
+            } }, span(cls := "oi oi-elevator", title := "Sort by number of cases", aria.hidden := "true")),
             b(style:="margin-left:10px;", "Cases")
           )
         )
