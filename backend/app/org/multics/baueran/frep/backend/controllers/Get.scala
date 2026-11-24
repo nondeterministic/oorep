@@ -156,7 +156,7 @@ class Get @Inject()(cc: ControllerComponents, dbContext: DBContext, sessionGuard
       case Some(member) =>
         Ok(member.member_id.toString)
       case None =>
-        Logger.error(s"[${sessionGuard.clientIp(request)}] apiAuthenticate(): User cannot be authenticated.")
+        Logger.warn(s"[${sessionGuard.clientIp(request)}] apiAuthenticate(): User cannot be authenticated.")
         Unauthorized(s"Get: apiAuthenticate(): User cannot be authenticated.")
     }
   }

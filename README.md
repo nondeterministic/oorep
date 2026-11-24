@@ -149,7 +149,7 @@ requirement.
 
 ## Session management for anonymous users
 
-Since version 0.20.0, OOREP can now utilise a locally installed Redis memory database
+Since version 0.20.0, OOREP can utilise a locally installed Redis memory database
 for session management of anonymous users as well.  It will work without Redis present,
 but it is designed to use it to detect request flooding and would be able to throttle
 those inside the application without reliance on external tools like fail2ban or what

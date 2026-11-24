@@ -414,7 +414,7 @@ class RepertoryDao(dbContext: db.db.DBContext) {
       CazeRubric(-1, -1, List(CazeSubRubric(rubric, getWeightedRemedies(rubric))), 1, None)
     )
     val returnTotalNumberOfPages = math.ceil(tmpRubricsAll.size.toDouble / maxNumberOfResultsPerPage.toDouble).toInt
-    Logger.info(s"[${clientIp}] queryRepertory(abbrev: ${abbrev}, symptom: ${searchTerms.symptom}, page: ${page}, remedy: ${remedyString}, weight: ${minWeight}, getRemedies: $getRemedies) found ${tmpRubricsAll.size} case rubrics.")
+    Logger.info(s"[${clientIp}] queryRepertory(abbrev: ${abbrev}, symptom: ${searchTerms.symptom}, page: ${page}, remedy: ${remedyString}, weight: ${minWeight}, getRemedies: $getRemedies) found ${tmpRubricsAll.size} rubrics.")
     Some((ResultsCazeRubrics(totalNumberOfRepertoryRubrics, tmpRubricsAll.size, returnTotalNumberOfPages, page, caseRubrics), remedyStats.toList))
   }
 
